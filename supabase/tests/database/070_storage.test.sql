@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(25);
+select plan(26);
 
 -- fixtures (written as the owner, i.e. as the trusted Storage service would)
 insert into storage.objects (bucket_id, name) values
@@ -51,10 +51,36 @@ select throws_ok($$ select tests.exec_as(tests.id('owner_b'), 'insert into stora
 -- NT-75: anonymous sees nothing in private buckets
 select is(tests.num_as(null, 'select count(*) from storage.objects where bucket_id <> ''cms'''), 0::bigint, 'NT-75 anonymous lists no private objects');
 
--- NT-76: no client update or delete of stored evidence
-select is(tests.num_as(tests.id('owner_a'), 'with d as (delete from storage.objects where bucket_id = ''application-docs'' returning 1) select count(*) from d'), 0::bigint, 'NT-76 applicant cannot delete uploaded files');
+-- NT-76: no client update or delete of stored evidence.
+-- The real Storage service guards storage.objects with a statement-level BEFORE DELETE trigger
+-- (storage.protect_delete, 42501) that refuses every direct DELETE; the Storage API deletes under the caller's RLS.
+-- This helper never disables or bypasses that trigger: it fingerprints all objects, makes the attempt as the user,
+-- accepts only a permission refusal (42501: RLS, grants or the Storage trigger), and reports whether anything changed.
+create function pg_temp.storage_unchanged_after(p_uid uuid, p_sql text) returns boolean
+  language plpgsql
+  as $f$
+declare
+  v_before text;
+  v_after text;
+begin
+  select md5(coalesce(string_agg(o.id::text || '|' || o.bucket_id || '|' || o.name, ',' order by o.id), '')) into v_before from storage.objects o;
+  begin
+    perform tests.num_as(p_uid, p_sql);
+  exception when insufficient_privilege then
+    null;  -- refused; the fingerprint below proves nothing was removed or changed
+  end;
+  select md5(coalesce(string_agg(o.id::text || '|' || o.bucket_id || '|' || o.name, ',' order by o.id), '')) into v_after from storage.objects o;
+  return v_before = v_after;
+end $f$;
+
+select ok(pg_temp.storage_unchanged_after(tests.id('owner_a'), 'with d as (delete from storage.objects where bucket_id = ''application-docs'' returning 1) select count(*) from d'), 'NT-76 applicant cannot delete uploaded files');
 select is(tests.num_as(tests.id('accounts_a'), 'with u as (update storage.objects set name = name || ''x'' where bucket_id = ''receipts'' returning 1) select count(*) from u'), 0::bigint, 'NT-76 receipts cannot be overwritten');
-select is(tests.num_as(tests.id('sg'), 'with d as (delete from storage.objects returning 1) select count(*) from d'), 0::bigint, 'NT-76 not even staff delete through the API');
+select ok(pg_temp.storage_unchanged_after(tests.id('sg'), 'with d as (delete from storage.objects returning 1) select count(*) from d'), 'NT-76 not even staff delete directly');
+-- The Storage API path: it deletes and updates as the caller under RLS, so no client policy for DELETE/UPDATE may exist.
+select is_empty($$ select tablename || ' ' || policyname || ' ' || cmd from pg_policies
+                   where schemaname = 'storage' and cmd in ('DELETE','UPDATE','ALL')
+                     and roles && array['public','anon','authenticated']::name[] $$,
+  'NT-76 no client DELETE/UPDATE policy on Storage tables, so Storage API deletes are refused for every role');
 
 select * from finish();
 rollback;
