@@ -45,7 +45,7 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
-      # M1 adds: supabase start + pnpm db:reset + RLS tests (docs/10-testing.md CI line)
+      # After the migrations are approved: supabase start + db reset + `supabase test db` on the full stack (docs/17 T-V3)
 
       - name: Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -70,3 +70,18 @@ jobs:
           name: shell-screenshots
           path: test-results/shells/
           retention-days: 14
+
+  db-security:
+    name: Database migrations + pgTAP security tests (rolled back)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - supabase/postgres:17.6.1.136 # self-hosted stack (docs/17 §1)
+          - supabase/postgres:17.11.0.004 # Supabase CLI 2.121 local image
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply migrations + seed + every test inside a rolled-back transaction
+        run: bash scripts/db/dry-run.sh ${{ matrix.image }}
