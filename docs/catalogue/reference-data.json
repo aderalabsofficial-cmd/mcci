@@ -1,0 +1,702 @@
+{
+ "settings": {
+  "tempDays": 60,
+  "tempExtendDays": 30,
+  "tempMaxExt": 1,
+  "tempAlert1": 15,
+  "tempAlert2": 7,
+  "autoTemp": true,
+  "tempInDirectory": true,
+  "tempServices": true,
+  "fees": {
+   "Corporate": {
+    "admission": 5000,
+    "subscription": 12000,
+    "card": 500
+   },
+   "Associate": {
+    "admission": 4000,
+    "subscription": 7000,
+    "card": 500
+   },
+   "Women": {
+    "admission": 2000,
+    "subscription": 5000,
+    "card": 500
+   },
+   "extraCard": 1000
+  },
+  "svcFee": {
+   "ebil": 2000,
+   "visa": 1500,
+   "guar": 3000,
+   "sample": 1500,
+   "other": 1000,
+   "co": 1000,
+   "att": 500
+  },
+  "corpTurnover": 50000000,
+  "processDays": 15,
+  "slaHours": 24,
+  "psidDays": 7,
+  "bank": {
+   "name": "MCCI bank (to be confirmed by MCCI)",
+   "title": "Multan Chamber of Commerce & Industry",
+   "iban": "PK00 XXXX 0000 0000 0000 0000",
+   "branch": "Any branch"
+  },
+  "legacyMembers": 1262,
+  "emailCopy": true,
+  "urduFirst": false,
+  "chamber": {
+   "name": "The Multan Chamber of Commerce & Industry",
+   "addr": "Shahrah-e-Aiwan-e-Tijarat-o-Sanat, Multan",
+   "tel": "92-61-4543530, 4517087",
+   "fax": "92-61-4570463",
+   "email": "info@mcci.org.pk",
+   "web": "www.mcci.org.pk"
+  },
+  "endorse": {
+   "sameClass": true,
+   "preferSector": true,
+   "days": 7,
+   "remindDay": 3,
+   "maxPerYear": 12,
+   "needCode": true
+  }
+ },
+ "BIZ": [
+  {
+   "k": "prop",
+   "en": "Proprietorship",
+   "ur": "واحد ملکیت",
+   "ic": "user",
+   "hint": "One owner"
+  },
+  {
+   "k": "aop",
+   "en": "Partnership / AOP",
+   "ur": "شراکت داری",
+   "ic": "users",
+   "hint": "Two or more partners"
+  },
+  {
+   "k": "pvt",
+   "en": "Ltd. / Pvt. Ltd Co.",
+   "ur": "پرائیویٹ لمیٹڈ کمپنی",
+   "ic": "build",
+   "hint": "Registered with SECP"
+  },
+  {
+   "k": "mnc",
+   "en": "Multinational Co.",
+   "ur": "ملٹی نیشنل کمپنی",
+   "ic": "globe",
+   "hint": "Foreign company, Pakistan office"
+  },
+  {
+   "k": "public",
+   "en": "Public Ltd. Co.",
+   "ur": "پبلک لمیٹڈ کمپنی",
+   "ic": "bank",
+   "hint": "Listed / public company"
+  }
+ ],
+ "DOCS": {
+  "prop": [
+   {
+    "k": "cnic",
+    "label": "A copy of CNIC / Passport of Proprietor",
+    "req": true,
+    "short": "CNIC / Passport"
+   },
+   {
+    "k": "ntn",
+    "label": "A copy of National Tax Number (NTN) certificate on the name of business",
+    "req": true,
+    "short": "NTN certificate"
+   },
+   {
+    "k": "itr",
+    "label": "Latest Income Tax Return where applicable on the name of business",
+    "req": false,
+    "short": "Income tax return"
+   },
+   {
+    "k": "st",
+    "label": "A copy of Sales Tax Registration Certificate and Sales Tax Return, if registered / applicable",
+    "req": false,
+    "short": "Sales tax certificate"
+   },
+   {
+    "k": "addr",
+    "label": "Proof of business addresses (copy of lease deed / allotment letter of the building / office)",
+    "req": true,
+    "short": "Address proof"
+   },
+   {
+    "k": "bank",
+    "label": "Original Bank Account Maintenance Certificate on the name of business",
+    "req": true,
+    "short": "Bank certificate"
+   },
+   {
+    "k": "photo",
+    "label": "Three photographs of the proprietor (latest + coloured)",
+    "req": true,
+    "short": "Passport photo"
+   }
+  ],
+  "aop": [
+   {
+    "k": "cnic",
+    "label": "Copies of CNICs / Passports of Partners",
+    "req": true,
+    "short": "CNIC / Passport"
+   },
+   {
+    "k": "ntn",
+    "label": "A copy of National Tax Number (NTN) certificate on the name of the firm",
+    "req": true,
+    "short": "NTN certificate"
+   },
+   {
+    "k": "itr",
+    "label": "Latest Income Tax Return where applicable on the name of the firm",
+    "req": false,
+    "short": "Income tax return"
+   },
+   {
+    "k": "st",
+    "label": "A copy of Sales Tax Registration Certificate and Sales Tax Return, if registered / applicable",
+    "req": false,
+    "short": "Sales tax certificate"
+   },
+   {
+    "k": "addr",
+    "label": "Proof of business addresses (copy of lease deed / allotment letter of the building / office)",
+    "req": true,
+    "short": "Address proof"
+   },
+   {
+    "k": "bank",
+    "label": "Original Bank Account Maintenance Certificate on the name of business",
+    "req": true,
+    "short": "Bank certificate"
+   },
+   {
+    "k": "deed",
+    "label": "An attested copy of Partnership Deed duly registered with Registrar of Firms, Multan",
+    "req": true,
+    "short": "Partnership deed"
+   },
+   {
+    "k": "formc",
+    "label": "An attested copy of Form “C” issued by Registrar of Firms",
+    "req": true,
+    "short": "Form \"C\""
+   },
+   {
+    "k": "auth",
+    "label": "An Authority Letter on Letterhead by all Partners for nominating one of the Partners as authorized representative in Multan Chamber of Commerce & Industry",
+    "req": true,
+    "short": "Authority letter"
+   },
+   {
+    "k": "photo",
+    "label": "Three photographs of authorized representative (latest + coloured)",
+    "req": true,
+    "short": "Passport photo"
+   }
+  ],
+  "pvt": [
+   {
+    "k": "cnic",
+    "label": "Copies of CNICs / Passports of Directors",
+    "req": true,
+    "short": "CNIC / Passport"
+   },
+   {
+    "k": "ntn",
+    "label": "A copy of National Tax Number (NTN) certificate on the name of the Company",
+    "req": true,
+    "short": "NTN certificate"
+   },
+   {
+    "k": "itr",
+    "label": "Latest Income Tax Return where applicable on the name of the Company",
+    "req": false,
+    "short": "Income tax return"
+   },
+   {
+    "k": "st",
+    "label": "A copy of Sales Tax Registration Certificate and Sales Tax Return, if registered / applicable",
+    "req": false,
+    "short": "Sales tax certificate"
+   },
+   {
+    "k": "moa",
+    "label": "A copy of Memorandum and Articles of Association duly approved by Securities & Exchange Commission of Pakistan (SECP) and attested by company secretary",
+    "req": true,
+    "short": "Memorandum & Articles"
+   },
+   {
+    "k": "inc",
+    "label": "Copy of Certificate of Incorporation by SECP and attested by company secretary",
+    "req": true,
+    "short": "Certificate of Incorporation"
+   },
+   {
+    "k": "addr",
+    "label": "Proof of business addresses (copy of lease deed / allotment letter of the building / office)",
+    "req": true,
+    "short": "Address proof"
+   },
+   {
+    "k": "bank",
+    "label": "Original Bank Account Maintenance Certificate on the name of business",
+    "req": true,
+    "short": "Bank certificate"
+   },
+   {
+    "k": "board",
+    "label": "Board Resolution on Letterhead for nominating one of the Directors as authorized representative in Multan Chamber of Commerce & Industry",
+    "req": true,
+    "short": "Board resolution / POA"
+   },
+   {
+    "k": "photo",
+    "label": "Three photographs of authorized representative (latest + coloured)",
+    "req": true,
+    "short": "Passport photo"
+   },
+   {
+    "k": "forma",
+    "label": "Latest copy of Form A & Form 9 duly certified by SECP",
+    "req": true,
+    "short": "Form A & Form 9"
+   }
+  ],
+  "mnc": [
+   {
+    "k": "cnic",
+    "label": "Copies of CNICs / Passports of Directors",
+    "req": true,
+    "short": "CNIC / Passport"
+   },
+   {
+    "k": "ntn",
+    "label": "A copy of National Tax Number (NTN) certificate on the name of the Company",
+    "req": true,
+    "short": "NTN certificate"
+   },
+   {
+    "k": "itr",
+    "label": "Latest Income Tax Return where applicable on the name of the Company",
+    "req": false,
+    "short": "Income tax return"
+   },
+   {
+    "k": "st",
+    "label": "A copy of Sales Tax Registration Certificate and Sales Tax Return, if registered / applicable",
+    "req": false,
+    "short": "Sales tax certificate"
+   },
+   {
+    "k": "moa",
+    "label": "A copy of Memorandum and Articles of Association duly approved by Securities & Exchange Commission of Pakistan (SECP) and attested by company secretary",
+    "req": true,
+    "short": "Memorandum & Articles"
+   },
+   {
+    "k": "inc",
+    "label": "Copy of Certificate of Incorporation by SECP or proof of filing form 38 to 45 with SECP and BOI letter",
+    "req": true,
+    "short": "Certificate of Incorporation"
+   },
+   {
+    "k": "addr",
+    "label": "Proof of business addresses (copy of lease deed / allotment letter of the building / office)",
+    "req": true,
+    "short": "Address proof"
+   },
+   {
+    "k": "bank",
+    "label": "Original Bank Account Maintenance Certificate on the name of business",
+    "req": true,
+    "short": "Bank certificate"
+   },
+   {
+    "k": "board",
+    "label": "Board Resolution or Power of Attorney, nominating one of Directors or General Manager / Country Manager as authorized representative in Multan Chamber of Commerce & Industry",
+    "req": true,
+    "short": "Board resolution / POA"
+   },
+   {
+    "k": "photo",
+    "label": "Three photographs of authorized representative (latest + coloured)",
+    "req": true,
+    "short": "Passport photo"
+   },
+   {
+    "k": "forma",
+    "label": "Latest copy of Form A & Form 9 duly certified by SECP",
+    "req": true,
+    "short": "Form A & Form 9"
+   }
+  ],
+  "public": [
+   {
+    "k": "cnic",
+    "label": "Copies of CNICs / Passports of Directors",
+    "req": true,
+    "short": "CNIC / Passport"
+   },
+   {
+    "k": "ntn",
+    "label": "A copy of National Tax Number (NTN) certificate on the name of the Company",
+    "req": true,
+    "short": "NTN certificate"
+   },
+   {
+    "k": "itr",
+    "label": "Latest Income Tax Return where applicable on the name of the Company",
+    "req": false,
+    "short": "Income tax return"
+   },
+   {
+    "k": "st",
+    "label": "A copy of Sales Tax Registration Certificate and Sales Tax Return, if registered / applicable",
+    "req": false,
+    "short": "Sales tax certificate"
+   },
+   {
+    "k": "moa",
+    "label": "A copy of Memorandum and Articles of Association duly approved by Securities & Exchange Commission of Pakistan (SECP) and attested by company secretary",
+    "req": true,
+    "short": "Memorandum & Articles"
+   },
+   {
+    "k": "inc",
+    "label": "Copy of Certificate of Incorporation by SECP or proof of filing form 38 to 45 with SECP and BOI letter",
+    "req": true,
+    "short": "Certificate of Incorporation"
+   },
+   {
+    "k": "addr",
+    "label": "Proof of business addresses (copy of lease deed / allotment letter of the building / office)",
+    "req": true,
+    "short": "Address proof"
+   },
+   {
+    "k": "bank",
+    "label": "Original Bank Account Maintenance Certificate on the name of business",
+    "req": true,
+    "short": "Bank certificate"
+   },
+   {
+    "k": "board",
+    "label": "Board Resolution or Power of Attorney, nominating one of Directors or General Manager / Country Manager as authorized representative in Multan Chamber of Commerce & Industry",
+    "req": true,
+    "short": "Board resolution / POA"
+   },
+   {
+    "k": "photo",
+    "label": "Three photographs of authorized representative (latest + coloured)",
+    "req": true,
+    "short": "Passport photo"
+   },
+   {
+    "k": "forma",
+    "label": "Latest copy of Form A & Form 9 duly certified by SECP",
+    "req": true,
+    "short": "Form A & Form 9"
+   }
+  ]
+ },
+ "FIELDS": {
+  "name": "Name of Business",
+  "address": "Business Address",
+  "ntn": "Business NTN",
+  "gst": "Business GST (if applicable)",
+  "tel": "Business Telephone No.",
+  "fax": "Fax No.",
+  "email": "Business Email ID",
+  "web": "Website",
+  "particulars": "Particulars of Business",
+  "est": "Date of Business Establishment",
+  "rep": "Name of Authorized Representative",
+  "desig": "Designation",
+  "cnic": "CNIC No.",
+  "mobile": "Mobile No.",
+  "sector": "Sector"
+ },
+ "SV": [
+  {
+   "k": "ebil",
+   "n": "E-BIL",
+   "full": "E-BIL — Electronic Business Invitation Letter",
+   "ur": "ای-بل دعوت نامہ",
+   "ic": "mail",
+   "c": "#3b82f6",
+   "docs": [
+    "Invitee passport copy",
+    "Purpose & itinerary of visit",
+    "Authority letter (if applicable)"
+   ],
+   "fields": [
+    "Invitee name",
+    "Passport no.",
+    "Nationality",
+    "Visit dates"
+   ],
+   "note": "Submitted and tracked online; letter issued with a verification QR"
+  },
+  {
+   "k": "visa",
+   "n": "Visa Recommendation",
+   "full": "Visa Recommendation Letter",
+   "ur": "ویزا سفارشی خط",
+   "ic": "users",
+   "c": "#14b8a6",
+   "docs": [
+    "Passport copy & CNIC",
+    "Invitation from host company",
+    "Travel itinerary"
+   ],
+   "fields": [
+    "Traveller name",
+    "Passport no.",
+    "Country",
+    "Embassy"
+   ],
+   "note": "Issued digitally with QR verification"
+  },
+  {
+   "k": "guar",
+   "n": "Visa Guarantee (China)",
+   "full": "Visa Guarantee Letter — for obtaining Chinese visa",
+   "ur": "چینی ویزا گارنٹی خط",
+   "ic": "shield",
+   "c": "#ef4444",
+   "docs": [
+    "Passport copy of traveller",
+    "Invitation letter from Chinese partner",
+    "Business registration proof"
+   ],
+   "fields": [
+    "Traveller name",
+    "Passport no.",
+    "Chinese company",
+    "City"
+   ],
+   "note": "AI pre-fills the form from your documents"
+  },
+  {
+   "k": "sample",
+   "n": "Free Samples Letter",
+   "full": "Recommendatory Letter — carry free commercial samples abroad",
+   "ur": "نمونہ جات سفارشی خط",
+   "ic": "folder",
+   "c": "#f59e0b",
+   "docs": [
+    "Sample list with values",
+    "Passport copy",
+    "Travel dates"
+   ],
+   "fields": [
+    "Traveller name",
+    "Destination",
+    "Sample value (USD)",
+    "Travel date"
+   ],
+   "note": "24-hour response target"
+  },
+  {
+   "k": "other",
+   "n": "Recommendatory Letter",
+   "full": "Other Recommendatory Letters — membership / company profile etc.",
+   "ur": "دیگر سفارشی خطوط",
+   "ic": "file",
+   "c": "#8b5cf6",
+   "docs": [
+    "Request purpose",
+    "Supporting documents"
+   ],
+   "fields": [
+    "Addressed to",
+    "Purpose"
+   ],
+   "note": "Letter templates managed by MCCI"
+  },
+  {
+   "k": "co",
+   "n": "Certificate of Origin",
+   "full": "Attestation of Certificate of Origin (C.O.)",
+   "ur": "سرٹیفکیٹ آف اوریجن",
+   "ic": "bank",
+   "c": "#c8963e",
+   "docs": [
+    "Commercial invoice",
+    "Packing list",
+    "Bill of lading / airway bill",
+    "C.O. form"
+   ],
+   "fields": [
+    "Consignee",
+    "Destination",
+    "HS code",
+    "Invoice value (USD)"
+   ],
+   "note": "Documents checked online; attested copy issued with a verification QR"
+  },
+  {
+   "k": "att",
+   "n": "Document Attestation",
+   "full": "Other Document Attestations — certificate, financial report, authority letter, MoU",
+   "ur": "دستاویزات کی تصدیق",
+   "ic": "check",
+   "c": "#1b4f9c",
+   "docs": [
+    "Document to attest",
+    "Covering request"
+   ],
+   "fields": [
+    "Document type",
+    "Addressed to"
+   ],
+   "note": "Every attested document gets a verification QR"
+  }
+ ],
+ "STAGES": {
+  "draft": "Draft",
+  "submitted": "Submitted",
+  "review": "In review",
+  "returned": "Returned for correction",
+  "proposer": "Awaiting Proposer / Seconder",
+  "committee": "With Committee",
+  "payment": "Awaiting payment",
+  "temp": "Temporary member",
+  "permanent": "Permanent member",
+  "rejected": "Rejected"
+ },
+ "tpl": [
+  {
+   "id": "TP-1",
+   "event": "Application received",
+   "key": "membership_received",
+   "ch": "Email, Portal",
+   "sent": 40,
+   "delivery": 96,
+   "status": "Live"
+  },
+  {
+   "id": "TP-2",
+   "event": "Returned for correction",
+   "key": "membership_returned",
+   "ch": "Email, Portal",
+   "sent": 93,
+   "delivery": 97,
+   "status": "Live"
+  },
+  {
+   "id": "TP-3",
+   "event": "Proposer / seconder request",
+   "key": "proposer_confirm_link",
+   "ch": "Email, Portal",
+   "sent": 146,
+   "delivery": 98,
+   "status": "Live"
+  },
+  {
+   "id": "TP-4",
+   "event": "Approved + payment voucher",
+   "key": "membership_approved_voucher",
+   "ch": "Email, Portal",
+   "sent": 199,
+   "delivery": 99,
+   "status": "Live"
+  },
+  {
+   "id": "TP-5",
+   "event": "Payment receipt verified",
+   "key": "payment_verified",
+   "ch": "Email, Portal",
+   "sent": 252,
+   "delivery": 96,
+   "status": "Live"
+  },
+  {
+   "id": "TP-6",
+   "event": "Temporary membership issued",
+   "key": "temp_membership_issued",
+   "ch": "Email, Portal",
+   "sent": 305,
+   "delivery": 97,
+   "status": "Live"
+  },
+  {
+   "id": "TP-7",
+   "event": "Temporary membership: 15 days left",
+   "key": "temp_expiry_15",
+   "ch": "Email, Portal",
+   "sent": 358,
+   "delivery": 98,
+   "status": "Live"
+  },
+  {
+   "id": "TP-8",
+   "event": "Temporary membership: 7 days left",
+   "key": "temp_expiry_7",
+   "ch": "Email, Portal",
+   "sent": 411,
+   "delivery": 99,
+   "status": "Live"
+  },
+  {
+   "id": "TP-9",
+   "event": "Temporary membership extended",
+   "key": "temp_extended",
+   "ch": "Email, Portal",
+   "sent": 64,
+   "delivery": 96,
+   "status": "Live"
+  },
+  {
+   "id": "TP-10",
+   "event": "Converted to permanent",
+   "key": "membership_permanent",
+   "ch": "Email, Portal",
+   "sent": 117,
+   "delivery": 97,
+   "status": "Live"
+  },
+  {
+   "id": "TP-11",
+   "event": "Certificate dispatched / ready to collect",
+   "key": "certificate_dispatched",
+   "ch": "Email, Portal",
+   "sent": 170,
+   "delivery": 98,
+   "status": "Draft"
+  },
+  {
+   "id": "TP-12",
+   "event": "Renewal window open (1 March)",
+   "key": "renewal_open",
+   "ch": "Email, Portal",
+   "sent": 223,
+   "delivery": 99,
+   "status": "Live"
+  },
+  {
+   "id": "TP-13",
+   "event": "Service request issued",
+   "key": "service_issued",
+   "ch": "Email, Portal",
+   "sent": 276,
+   "delivery": 96,
+   "status": "Live"
+  }
+ ]
+}

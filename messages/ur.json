@@ -1,0 +1,250 @@
+{
+  "meta": {
+    "title": "ایم سی سی آئی ڈیجیٹل",
+    "description": "ملتان چیمبر آف کامرس اینڈ انڈسٹری — رکنیت، خدمات اور تصدیق آن لائن۔"
+  },
+  "brand": {
+    "name": "ایم سی سی آئی",
+    "digitalChamber": "ڈیجیٹل چیمبر",
+    "chamber": "ایوانِ تجارت و صنعت ملتان",
+    "portal": "ممبر",
+    "portalSub": "ڈیجیٹل چیمبر پورٹل",
+    "admin": "ایڈمن",
+    "adminSub": "سیکریٹریٹ پینل",
+    "logoAlt": "ایم سی سی آئی لوگو"
+  },
+  "common": {
+    "skipToContent": "مواد پر جائیں",
+    "mainMenu": "مرکزی مینو",
+    "menu": "مینو",
+    "close": "بند کریں",
+    "more": "مزید",
+    "switchLanguage": "زبان انگریزی میں بدلیں",
+    "otherLanguage": "English",
+    "langEn": "EN",
+    "langUr": "اردو",
+    "theme": "روشن یا تاریک انداز",
+    "memberLogin": "ممبر لاگ اِن",
+    "notYet": "تیاری میں — مرحلہ {milestone}",
+    "bottomNav": "فوری رسائی",
+    "pageTabs": "اس صفحے کے حصے"
+  },
+  "nav": {
+    "site": {
+      "home": "ہوم",
+      "about": "تعارف",
+      "membership": "رکنیت",
+      "services": "خدمات",
+      "directory": "ڈائریکٹری",
+      "verify": "تصدیق",
+      "track": "ٹریک",
+      "news": "خبریں",
+      "resources": "وسائل",
+      "contact": "رابطہ"
+    },
+    "portal": {
+      "dashboard": "ہوم",
+      "membership": "میری رکنیت",
+      "endorse": "تائید کی درخواستیں",
+      "apply": "خدمت کی درخواست",
+      "documents": "میری دستاویزات",
+      "payments": "ادائیگیاں",
+      "support": "مدد اور رابطہ",
+      "events": "تقریبات",
+      "profile": "کمپنی پروفائل"
+    },
+    "admin": {
+      "dashboard": "ڈیش بورڈ",
+      "pipeline": "رکنیت کی پائپ لائن",
+      "tempCerts": "عارضی رکنیت اور سرٹیفکیٹ",
+      "membersRegister": "اراکین کا رجسٹر",
+      "serviceRequests": "خدمات کی درخواستیں",
+      "documentsQr": "دستاویزات اور کیو آر",
+      "payments": "ادائیگیاں",
+      "eventsMeetings": "تقریبات اور اجلاس",
+      "complaints": "شکایات ڈیسک",
+      "contentMessaging": "مواد اور پیغامات",
+      "reportsAi": "رپورٹس اور اے آئی",
+      "staffAudit": "عملہ اور آڈٹ",
+      "servicesIntegrations": "خدمات اور انٹیگریشنز",
+      "settings": "ترتیبات"
+    },
+    "sections": {
+      "membership": "رکنیت",
+      "services": "خدمات",
+      "help": "مدد",
+      "more": "مزید",
+      "servicesDesk": "خدمات ڈیسک",
+      "finance": "مالیات",
+      "engagement": "روابط",
+      "insights": "جائزہ اور پلیٹ فارم"
+    }
+  },
+  "bottom": {
+    "site": {
+      "home": "ہوم",
+      "services": "خدمات",
+      "verify": "تصدیق",
+      "directory": "ڈائریکٹری",
+      "more": "مزید"
+    },
+    "portal": {
+      "home": "ہوم",
+      "services": "خدمات",
+      "documents": "دستاویزات",
+      "messages": "پیغامات",
+      "more": "مزید"
+    },
+    "admin": {
+      "queue": "میرا کام",
+      "search": "تلاش",
+      "notifications": "اطلاعات",
+      "members": "اراکین",
+      "more": "مزید"
+    }
+  },
+  "screens": {
+    "site": {
+      "home": "ہوم",
+      "about": "تعارف",
+      "membership": "رکنیت",
+      "services": "خدمات",
+      "service": "خدمت کی تفصیل",
+      "directory": "ڈائریکٹری",
+      "verify": "تصدیق",
+      "track": "ٹریک",
+      "live": "لائیو بورڈ",
+      "news": "خبریں اور تقریبات",
+      "resources": "وسائل",
+      "contact": "رابطہ",
+      "login": "لاگ اِن"
+    },
+    "portal": {
+      "dashboard": "ہوم",
+      "membership": "میری رکنیت",
+      "join": "درخواست فارم",
+      "mtrack": "پیش رفت",
+      "form": "سرکاری فارم",
+      "apply": "خدمت کی درخواست",
+      "applications": "میری درخواستیں",
+      "application": "درخواست کی تفصیل",
+      "documents": "میری دستاویزات",
+      "payments": "ادائیگیاں",
+      "support": "مدد اور رابطہ",
+      "assistant": "اے آئی سے پوچھیں",
+      "notifications": "پیغامات",
+      "events": "تقریبات",
+      "opportunities": "تجارتی مواقع",
+      "profile": "کمپنی پروفائل",
+      "endorse": "تائید کی درخواستیں"
+    },
+    "admin": {
+      "dashboard": "ڈیش بورڈ",
+      "requests": "رکنیت کی پائپ لائن",
+      "mreview": "درخواست کا جائزہ",
+      "committee": "کمیٹی ڈیسک",
+      "temp": "عارضی رکنیتیں",
+      "certs": "طباعت اور وصولی",
+      "serials": "سیریل رجسٹر",
+      "members": "اراکین کا رجسٹر",
+      "member": "رکن کا ریکارڈ",
+      "import": "ڈیٹا امپورٹ",
+      "applications": "خدمات کی درخواستیں",
+      "review": "جائزہ ڈیسک",
+      "sla": "ایس ایل اے مانیٹر",
+      "approvals": "دستخط",
+      "documents": "دستاویزات اور کیو آر",
+      "payments": "ادائیگیاں",
+      "psid": "واؤچر اور رسیدیں",
+      "events": "تقریبات",
+      "meetings": "اجلاس اور کارروائی",
+      "complaints": "شکایات ڈیسک",
+      "content": "ویب سائٹ کا مواد",
+      "notify": "اطلاعات مرکز",
+      "reports": "رپورٹس",
+      "ai": "اے آئی جائزہ",
+      "staff": "عملہ اور کردار",
+      "audit": "آڈٹ ریکارڈ",
+      "services": "خدمات کی ترتیب",
+      "integrations": "انٹیگریشنز",
+      "settings": "ترتیبات"
+    }
+  },
+  "tabs": {
+    "portal": {
+      "membership": "کیفیت",
+      "join": "درخواست فارم",
+      "mtrack": "پیش رفت",
+      "form": "سرکاری فارم",
+      "apply": "نئی درخواست",
+      "applications": "میری درخواستیں",
+      "application": "تفصیل",
+      "support": "مدد",
+      "assistant": "اے آئی",
+      "notifications": "پیغامات",
+      "events": "تقریبات",
+      "opportunities": "تجارتی مواقع"
+    },
+    "admin": {
+      "requests": "پائپ لائن",
+      "mreview": "درخواست کا جائزہ",
+      "committee": "کمیٹی ڈیسک",
+      "temp": "عارضی رکنیتیں",
+      "certs": "طباعت اور وصولی",
+      "serials": "سیریل رجسٹر",
+      "members": "رجسٹر",
+      "member": "رکن کا ریکارڈ",
+      "import": "ڈیٹا امپورٹ",
+      "applications": "درخواستیں",
+      "review": "جائزہ ڈیسک",
+      "sla": "ایس ایل اے مانیٹر",
+      "approvals": "دستخط",
+      "payments": "ادائیگیاں",
+      "psid": "واؤچر اور رسیدیں",
+      "events": "تقریبات",
+      "meetings": "اجلاس اور کارروائی",
+      "content": "ویب سائٹ کا مواد",
+      "notify": "اطلاعات مرکز",
+      "reports": "رپورٹس",
+      "ai": "اے آئی جائزہ",
+      "staff": "عملہ اور کردار",
+      "audit": "آڈٹ ریکارڈ",
+      "services": "خدمات کی ترتیب",
+      "integrations": "انٹیگریشنز"
+    }
+  },
+  "footer": {
+    "services": "خدمات",
+    "chamber": "چیمبر",
+    "help": "مدد",
+    "ebil": "ای-بِل",
+    "origin": "سرٹیفکیٹ آف اوریجن",
+    "visa": "ویزا لیٹر",
+    "allServices": "تمام خدمات",
+    "aboutMcci": "ایم سی سی آئی کا تعارف",
+    "membership": "رکنیت",
+    "directory": "ڈائریکٹری",
+    "newsEvents": "خبریں اور تقریبات",
+    "verifyDocument": "دستاویز کی تصدیق",
+    "trackToken": "ٹوکن ٹریک کریں",
+    "complaintDesk": "شکایات ڈیسک",
+    "staffPortal": "اسٹاف پورٹل",
+    "tagline": "ملتان کے کاروبار کے لیے — تیز، شفاف، آن لائن",
+    "tel": "فون",
+    "copyright": "© {year} ایوانِ تجارت و صنعت ملتان"
+  },
+  "home": {
+    "eyebrow": "ایوانِ تجارت و صنعت ملتان",
+    "title": "ایم سی سی آئی ڈیجیٹل",
+    "subtitle": "رکنیت، چیمبر کی خدمات اور سرٹیفکیٹ کی تصدیق — آن لائن، انگریزی اور اردو میں۔"
+  },
+  "portal": {
+    "whatNow": "اب کیا کرنا ہے",
+    "setupTitle": "آپ کا ممبر پورٹل تیار کیا جا رہا ہے",
+    "setupBody": "ابھی کچھ کرنے کی ضرورت نہیں۔ لاگ اِن اور آپ کی رکنیت کی تفصیل جلد یہاں نظر آئیں گی۔"
+  },
+  "admin": {
+    "glanceTitle": "آج کا خلاصہ",
+    "glanceBody": "عملے کے لاگ اِن اور ڈیٹا کے منسلک ہونے کے بعد یہاں کام کی فہرستیں، اعداد و شمار اور تازہ سرگرمی نظر آئے گی۔"
+  }
+}

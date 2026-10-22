@@ -1,0 +1,10 @@
+# Only these packages may run install scripts (pnpm 11 blocks the rest).
+allowBuilds:
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: true
+  supabase: true
+  sharp: true
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - lucide-react@1.61.0

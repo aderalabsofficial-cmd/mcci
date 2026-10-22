@@ -1,0 +1,250 @@
+{
+  "meta": {
+    "title": "MCCI Digital",
+    "description": "Multan Chamber of Commerce & Industry — membership, services and verification online."
+  },
+  "brand": {
+    "name": "MCCI",
+    "digitalChamber": "Digital Chamber",
+    "chamber": "Multan Chamber of Commerce & Industry",
+    "portal": "Member",
+    "portalSub": "Digital Chamber Portal",
+    "admin": "Admin",
+    "adminSub": "Secretariat Panel",
+    "logoAlt": "MCCI logo"
+  },
+  "common": {
+    "skipToContent": "Skip to content",
+    "mainMenu": "Main menu",
+    "menu": "Menu",
+    "close": "Close",
+    "more": "More",
+    "switchLanguage": "Change language to Urdu",
+    "otherLanguage": "اردو",
+    "langEn": "EN",
+    "langUr": "اردو",
+    "theme": "Light or dark theme",
+    "memberLogin": "Member Login",
+    "notYet": "Being built — milestone {milestone}",
+    "bottomNav": "Quick navigation",
+    "pageTabs": "Sections of this page"
+  },
+  "nav": {
+    "site": {
+      "home": "Home",
+      "about": "About",
+      "membership": "Membership",
+      "services": "Services",
+      "directory": "Directory",
+      "verify": "Verify",
+      "track": "Track",
+      "news": "News",
+      "resources": "Resources",
+      "contact": "Contact"
+    },
+    "portal": {
+      "dashboard": "Home",
+      "membership": "My Membership",
+      "endorse": "Endorsement Requests",
+      "apply": "Request a Service",
+      "documents": "My Documents",
+      "payments": "Payments",
+      "support": "Help & Support",
+      "events": "Events & Trade",
+      "profile": "Company Profile"
+    },
+    "admin": {
+      "dashboard": "Dashboard",
+      "pipeline": "Membership Pipeline",
+      "tempCerts": "Temporary & Certificates",
+      "membersRegister": "Members Register",
+      "serviceRequests": "Service Requests",
+      "documentsQr": "Documents & QR",
+      "payments": "Payments",
+      "eventsMeetings": "Events & Meetings",
+      "complaints": "Complaint Desk",
+      "contentMessaging": "Content & Messaging",
+      "reportsAi": "Reports & AI",
+      "staffAudit": "Staff & Audit",
+      "servicesIntegrations": "Services & Integrations",
+      "settings": "Settings"
+    },
+    "sections": {
+      "membership": "MEMBERSHIP",
+      "services": "SERVICES",
+      "help": "HELP",
+      "more": "MORE",
+      "servicesDesk": "SERVICES DESK",
+      "finance": "FINANCE",
+      "engagement": "ENGAGEMENT",
+      "insights": "INSIGHTS & PLATFORM"
+    }
+  },
+  "bottom": {
+    "site": {
+      "home": "Home",
+      "services": "Services",
+      "verify": "Verify",
+      "directory": "Directory",
+      "more": "More"
+    },
+    "portal": {
+      "home": "Home",
+      "services": "Services",
+      "documents": "Documents",
+      "messages": "Messages",
+      "more": "More"
+    },
+    "admin": {
+      "queue": "My queue",
+      "search": "Search",
+      "notifications": "Alerts",
+      "members": "Members",
+      "more": "More"
+    }
+  },
+  "screens": {
+    "site": {
+      "home": "Home",
+      "about": "About",
+      "membership": "Membership",
+      "services": "Services",
+      "service": "Service detail",
+      "directory": "Directory",
+      "verify": "Verify",
+      "track": "Track",
+      "live": "Live board",
+      "news": "News & Events",
+      "resources": "Resources",
+      "contact": "Contact",
+      "login": "Login"
+    },
+    "portal": {
+      "dashboard": "Home",
+      "membership": "My Membership",
+      "join": "Application form",
+      "mtrack": "Track",
+      "form": "Official form",
+      "apply": "Request a Service",
+      "applications": "My requests",
+      "application": "Request detail",
+      "documents": "My Documents",
+      "payments": "Payments",
+      "support": "Help & Support",
+      "assistant": "Ask AI",
+      "notifications": "Messages",
+      "events": "Events & Trade",
+      "opportunities": "Trade opportunities",
+      "profile": "Company Profile",
+      "endorse": "Endorsement requests"
+    },
+    "admin": {
+      "dashboard": "Dashboard",
+      "requests": "Membership Pipeline",
+      "mreview": "Application Review",
+      "committee": "Committee Desk",
+      "temp": "Temporary Memberships",
+      "certs": "Printing & Receiving",
+      "serials": "Serial Register",
+      "members": "Members Register",
+      "member": "Member Record",
+      "import": "Data Import",
+      "applications": "Service Requests",
+      "review": "Review Desk",
+      "sla": "SLA Monitor",
+      "approvals": "Signing",
+      "documents": "Documents & QR",
+      "payments": "Payments",
+      "psid": "Vouchers & Receipts",
+      "events": "Events",
+      "meetings": "Meetings & Minutes",
+      "complaints": "Complaint Desk",
+      "content": "Website Content",
+      "notify": "Notification Center",
+      "reports": "Reports",
+      "ai": "AI Insights",
+      "staff": "Staff & Roles",
+      "audit": "Audit Trail",
+      "services": "Services Setup",
+      "integrations": "Integrations",
+      "settings": "Settings"
+    }
+  },
+  "tabs": {
+    "portal": {
+      "membership": "Status",
+      "join": "Application form",
+      "mtrack": "Track",
+      "form": "Official form",
+      "apply": "New request",
+      "applications": "My requests",
+      "application": "Request detail",
+      "support": "Help",
+      "assistant": "Ask AI",
+      "notifications": "Messages",
+      "events": "Events",
+      "opportunities": "Trade opportunities"
+    },
+    "admin": {
+      "requests": "Pipeline",
+      "mreview": "Application Review",
+      "committee": "Committee Desk",
+      "temp": "Temporary Memberships",
+      "certs": "Printing & Receiving",
+      "serials": "Serial Register",
+      "members": "Register",
+      "member": "Member Record",
+      "import": "Data Import",
+      "applications": "Requests",
+      "review": "Review Desk",
+      "sla": "SLA Monitor",
+      "approvals": "Signing",
+      "payments": "Payments",
+      "psid": "Vouchers & Receipts",
+      "events": "Events",
+      "meetings": "Meetings & Minutes",
+      "content": "Website Content",
+      "notify": "Notification Center",
+      "reports": "Reports",
+      "ai": "AI Insights",
+      "staff": "Staff & Roles",
+      "audit": "Audit Trail",
+      "services": "Services Setup",
+      "integrations": "Integrations"
+    }
+  },
+  "footer": {
+    "services": "Services",
+    "chamber": "Chamber",
+    "help": "Help",
+    "ebil": "E-BIL",
+    "origin": "Certificate of Origin",
+    "visa": "Visa letters",
+    "allServices": "All services",
+    "aboutMcci": "About MCCI",
+    "membership": "Membership",
+    "directory": "Directory",
+    "newsEvents": "News & Events",
+    "verifyDocument": "Verify a document",
+    "trackToken": "Track a token",
+    "complaintDesk": "Complaint desk",
+    "staffPortal": "Staff portal",
+    "tagline": "Fast, transparent and online — for Multan’s businesses",
+    "tel": "Tel",
+    "copyright": "© {year} Multan Chamber of Commerce & Industry"
+  },
+  "home": {
+    "eyebrow": "Multan Chamber of Commerce & Industry",
+    "title": "MCCI Digital",
+    "subtitle": "Membership, chamber services and certificate verification — online, in English and Urdu."
+  },
+  "portal": {
+    "whatNow": "What to do now",
+    "setupTitle": "Your member portal is being prepared",
+    "setupBody": "Nothing to do now. Sign-in and your membership details will appear here soon."
+  },
+  "admin": {
+    "glanceTitle": "Today at a glance",
+    "glanceBody": "Queues, figures and live activity will appear here once staff sign-in and data are connected."
+  }
+}

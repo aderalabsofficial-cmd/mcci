@@ -1,0 +1,4 @@
+# MCCI progress demo — aderalabs.tech/mcci-digital
+# Every page is a folder with its own index.html, so addresses have no .html
+# and no rewrite rules are needed. This file only names the start file.
+DirectoryIndex index.html

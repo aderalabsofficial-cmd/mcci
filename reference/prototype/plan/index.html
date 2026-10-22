@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MCCI Digital · Development Plan</title><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="icon" href="../assets/favicon.png"><link rel="stylesheet" href="../assets/style.css"><link rel="stylesheet" href="../assets/v7.css">
+<style>
+body{background:var(--bg)}
+.bp{max-width:1200px;margin:0 auto;padding:30px 24px 80px}.bp h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.02em;color:#fff}.bp h2{font-size:24px;margin:46px 0 8px;display:flex;gap:10px;align-items:center}.bp h2 i{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0b2a5b,#1b4f9c);color:#fff;font-style:normal;font-size:14px;flex:none}
+.bp .lead,.bp>p{color:var(--m);max-width:84ch}
+.bph{position:relative;overflow:hidden;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:#fff;border-radius:26px;padding:34px 34px;margin-bottom:14px;isolation:isolate}
+.bph:before{content:"";position:absolute;inset:0;background:url(../assets/hero-bg.jpg) center 60%/cover;z-index:-2;filter:blur(3px);transform:scale(1.05)}
+.bph:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(8,30,72,.88),rgba(8,30,72,.8) 50%,rgba(9,74,64,.75));z-index:-1}
+.bph>div{flex:1 1 520px}.bph p{opacity:.92;max-width:70ch}.bph img{height:84px}.bph .ur{font-family:"Jameel Noori Nastaleeq",serif;font-size:24px;color:#ffe7a3;line-height:1.9}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.chips span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:700}
+.nav{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card ul{margin:0;padding:0;list-style:none}.card li{padding:6px 0 6px 18px;position:relative;font-size:14px;border-bottom:1px dashed var(--b)}.card li:last-child{border-bottom:0}.card li:before{content:"";position:absolute;left:2px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--c,#1fa34a)}
+.wk{border-top:5px solid var(--c)}.wk b{font-size:17px;display:block}.wk small{color:var(--m);display:block;margin:2px 0 10px}
+.sm{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.sm span{padding:8px 12px;border-radius:12px;border:1px solid var(--b);background:var(--card);font-weight:700;font-size:13px}.sm span.e{border-color:#c8963e;background:rgba(200,150,62,.14)}.sm span.t{border-color:#14b8a6;background:rgba(20,184,166,.12)}.sm span.g{border-color:#1fa34a;background:rgba(31,163,74,.12)}.sm em{font-style:normal;color:var(--gt);font-weight:800}
+.stack td{font-size:14px;vertical-align:top}.stack td:first-child{font-weight:700;white-space:nowrap}
+.pgl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.pgl h3{margin-bottom:8px}.pgl a{display:block;padding:8px 10px;border-radius:10px;border:1px solid var(--b);margin-bottom:6px;background:var(--card);text-decoration:none;color:inherit}.pgl a:hover{border-color:var(--gt)}.pgl a b{display:block;font-size:13.5px}.pgl a small{color:var(--m);font-size:12px;line-height:1.35;display:block}
+.ph{font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px}.ph.Build{background:rgba(31,163,74,.15);color:#1a7f3c}.ph.UI{background:rgba(160,180,170,.2);color:var(--m)}.ph.Demo{background:rgba(124,58,237,.15);color:#7c3aed}
+.reg td{font-size:12.5px;vertical-align:top}.reg code{font-size:11.5px;background:var(--card2);padding:1px 5px;border-radius:5px}
+.dec li{padding:12px 14px!important;border:1px solid var(--b)!important;border-radius:12px;margin-bottom:8px;background:var(--card)}.dec li:before{display:none}.dec b{display:block}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}.kp div{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:16px;text-align:center}.kp b{display:block;font-size:30px;color:#1b4f9c}.kp small{color:var(--m);font-weight:600}
+#aud td{font-size:12.5px}
+@media(max-width:900px){.g2,.g3,.g4,.pgl,.kp{grid-template-columns:1fr 1fr}}@media(max-width:600px){.g2,.g3,.g4,.pgl,.kp{grid-template-columns:1fr}.bp{padding:16px}}
+</style></head>
+<body data-role="plan" data-page="plan"><div class="bp" id="bp"></div>
+<script src="../assets/js/qr.js"></script><script src="../assets/js/core.js"></script><script src="../assets/js/ui.js"></script><script src="../assets/js/actions.js"></script><script src="../assets/js/docs.js"></script><script src="../assets/js/site.js"></script><script src="../assets/js/member.js"></script><script src="../assets/js/admin.js"></script><script src="../assets/js/access.js"></script><script src="../assets/js/endorse.js"></script><script src="../assets/js/demo.js"></script>
+<script>
+(function(){const {esc,ic}=M;const IDX=/^https?:$/.test(location.protocol)?'':'index.html';const A=Object.values(M.A);const R=['site','member','admin'];const RN={site:'Public website',member:'Member portal',admin:'Admin panel'};
+const np=R.reduce((s,r)=>s+Object.keys(M.META[r]).length,0);const ph=p=>`<span class="ph ${p}">${p}</span>`;const L=(r,p)=>`../${r}/${p}/${IDX}`;
+const ul=(c,xs)=>`<ul style="--c:${c}">${xs.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+document.getElementById('bp').innerHTML=`
+<div class="bph"><div><h1>MCCI Digital Platform — final preview &amp; go-ahead plan</h1><p class="ur">ایوانِ تجارت و صنعت ملتان — ڈیجیٹل پلیٹ فارم</p><p>Prototype v10 · the screens, rules and build plan for <b>this phase</b>. Design and layout are final for sign-off; the build starts after MCCI’s go-ahead and runs 30 days, per the MoU.</p><div class="chips"><span>${np} screens</span><span>${A.length} wired actions</span><span>0 orphan buttons</span><span>English + Urdu</span><span>30-day build</span></div></div><img src="../assets/logo-white.png" alt="MCCI"></div>
+<div class="nav"><a class="btn" href="../${IDX}">${ic('home','currentColor',16)} Start page</a><a class="btn" href="${L('site','home')}">${ic('globe','currentColor',16)} Public website</a><a class="btn" href="${L('member','dashboard')}">${ic('user','currentColor',16)} Member portal</a><a class="btn" href="${L('admin','dashboard')}">${ic('shield','currentColor',16)} Admin panel</a><button class="btn p" ${M.da('bp.audit')}>${ic('search','#fff',16)} Run full orphan audit</button></div>
+
+<h2><i>1</i>What this phase delivers</h2>
+<div class="g3">
+<div class="card wk" style="--c:#1b4f9c"><b>Public website</b><small>Bilingual, animated, mobile first</small>${ul('#1b4f9c',['Full-width MCCI hero, transparent header, 80% brand colour layer for readability','Membership, fees and documents by business type (from the official form)','Seven services, directory, QR verification, token tracking, news, resources, complaint desk','Ask MCCI AI on every page, Urdu launch countdown in Jameel Noori'])}</div>
+<div class="card wk" style="--c:#1fa34a"><b>Member portal</b><small>Built for non-technical business owners</small>${ul('#1fa34a',['Six-step application on the official MCCI form: documents → AI fill → proposer &amp; seconder → signature → review','Passport photo auto-cropped 35 × 45 mm onto the form; drawn signature and stamp','Choose your own proposer &amp; seconder; they sign online; endorsement requests inbox for members','Payment voucher → receipt upload; 60-day temporary membership; permanent certificate','Seven service requests with tokens; documents, payments, messages, events; company users'])}</div>
+<div class="card wk" style="--c:#c8963e"><b>Admin panel</b><small>Secretariat, committee, accounts</small>${ul('#c8963e',['Pipeline, application review with document checklist, return / verify / reject','Committee desk, membership numbers, payment vouchers, receipt verification','Temporary memberships, print batches, serial registry, conversion to permanent','Service requests with 24-hour SLA, approvals, complaints, CMS, notifications, reports','Staff invitations by email, designations L1–L5, per-module limits, audit log, Excel import'])}</div></div>
+<div class="card" style="margin-top:14px"><b>Not in this phase</b> — no WhatsApp messaging. Bank payment confirmation (1Bill PSID / card) and courier booking switch on only when MCCI’s bank and courier provide their integrations; until then Accounts verify uploaded receipts and staff enter tracking numbers. Members see no difference when they are switched on.</div>
+
+<h2><i>2</i>30-day build plan</h2>
+<div class="g4">
+<div class="card wk" style="--c:#7c3aed"><b>Week 1 · Foundation</b><small>Days 1–7</small>${ul('#7c3aed',['Repository, environments, CI with tests and the orphan audit','Database schema, row-level security, storage buckets','Sign-in (password + email code), roles, staff invitations','Design system in code: colours, type, Urdu font, components','Public website pages from this prototype'])}</div>
+<div class="card wk" style="--c:#1b4f9c"><b>Week 2 · Apply</b><small>Days 8–14</small>${ul('#1b4f9c',['Application wizard on the official form, autosave','Document upload by business type, AI extraction with confidence','Photo crop, signature pad, stamp, official form PDF','Proposer &amp; seconder: eligible-member search, requests, digital signing, expiry','Applicant dashboard, tracker, messages'])}</div>
+<div class="card wk" style="--c:#1fa34a"><b>Week 3 · Decide &amp; issue</b><small>Days 15–21</small>${ul('#1fa34a',['Review desk, returns, verification, committee agenda and minutes','Membership numbers, payment vouchers, receipt verification','Temporary membership, alerts, extension, revoke','Print batches, serials, certificate upload, permanent conversion','QR certificates and public verification'])}</div>
+<div class="card wk" style="--c:#c8963e"><b>Week 4 · Services &amp; launch</b><small>Days 22–30</small>${ul('#c8963e',['Seven service workflows, tokens, SLA timers, signed letters','Email templates, notifications, reminders, scheduled jobs','Member Excel import, reports, backups, audit export','Accessibility, security and load checks; staff training','User acceptance with MCCI, go-live, 30-day support'])}</div></div>
+
+<h2><i>3</i>Technology</h2>
+<div class="card"><table class="stack"><tbody>
+<tr><td>Web app</td><td>Next.js (App Router) + TypeScript, server actions; Tailwind CSS with the prototype’s design tokens; English / Urdu with right-to-left layout and Jameel Noori Nastaleeq</td></tr>
+<tr><td>Database &amp; auth</td><td>Supabase: Postgres, Auth (email + password, email one-time codes, 2-step for staff), Storage for documents, Realtime for live updates, row-level security on every table</td></tr>
+<tr><td>AI</td><td>OpenAI structured outputs for reading CNIC, NTN, SECP and bank documents into the form, with a confidence score per field; MCCI knowledge base for “Ask MCCI AI”</td></tr>
+<tr><td>Documents</td><td>Server-side PDF of the official form, certificates and letters; QR codes linking to the public verify page; signatures and photos placed automatically</td></tr>
+<tr><td>Email</td><td>Transactional email (SMTP / provider) with bilingual templates editable by staff</td></tr>
+<tr><td>Jobs</td><td>Scheduled jobs for temporary-membership alerts and expiry, endorsement reminders and expiry, SLA breaches, renewals, backups</td></tr>
+<tr><td>Quality</td><td>Vitest unit tests, Playwright end-to-end tests that replay the prototype flows, automatic orphan-control audit, audit log of every change</td></tr>
+<tr><td>Hosting</td><td>Managed cloud hosting with SSL, daily backups, error monitoring; MCCI domain</td></tr></tbody></table></div>
+
+<h2><i>4</i>Membership lifecycle</h2>
+<div class="card"><div class="sm"><span>Draft on the official form</span><em>→</em><span class="e">Proposer &amp; seconder requested by the applicant</span><em>→</em><span>Submitted · token</span><em>→</em><span>Document check</span><em>⇄</em><span>Returned for correction</span><em>→</em><span class="e">Both endorsers signed</span><em>→</em><span>Membership Committee</span><em>→</em><span>Approved · Membership No. · payment voucher</span><em>→</em><span>Receipt uploaded</span><em>→</em><span class="t">Accounts verify → Temporary (60 days)</span><em>→</em><span class="t">Security printing</span><em>→</em><span class="t">Certificate received &amp; uploaded</span><em>→</em><span class="g">Permanent to 31 March</span></div><p class="muted" style="margin-top:12px">Endorsements and document checking run in parallel: the file goes to the committee as soon as documents are verified <b>and</b> both members have signed.</p></div>
+
+<h2><i>5</i>Proposer &amp; seconder — chosen by the applicant, signed online</h2>
+<p class="lead">MCCI does not arrange proposers. The applicant chooses two existing members; each member decides from their own portal. The design follows how other chambers and professional bodies run online endorsements: members in good standing, from different organisations, told beforehand, confirming electronically, with deadlines and reminders.</p>
+<div class="g2"><div class="card">${ul('#c8963e',['<b>Who can endorse:</b> permanent members in good standing (not temporary, not expired)','<b>Category:</b> same membership class as the applicant (Corporate / Associate) — a setting; same-sector members are listed first','<b>Conflicts blocked:</b> the applicant’s own business or directors, and two endorsers from the same organisation','<b>Fair use:</b> up to 12 endorsements per member per year (setting)','<b>Search:</b> by name, company, sector or membership number; only public fields are shown'])}</div>
+<div class="card">${ul('#1fa34a',['<b>Request:</b> with a personal note; live notification in the member’s portal plus email','<b>Decide:</b> the member reads an applicant summary and the official form (documents and CNICs stay private)','<b>Sign:</b> declaration + drawn or saved signature + one-time email code; time, device and a reference hash are stored','<b>Decline:</b> with a reason; the applicant is told at once and chooses someone else','<b>Deadlines:</b> 7 days to respond, reminder on day 3, then “expired”; the applicant can withdraw and choose again','<b>Staff:</b> can remind, never sign on a member’s behalf; the signature prints on the official form'])}</div></div>
+
+<h2><i>6</i>Temporary membership</h2>
+<div class="g2"><div class="card">${ul('#14b8a6',['<b>Issued</b> automatically when Accounts verify the payment receipt (or manually — setting)','<b>Validity</b> 60 days; alerts at 15 and 7 days left','<b>Gives</b> membership number, QR certificate, all seven services, directory listing labelled “Temporary”'])}</div><div class="card">${ul('#14b8a6',['<b>Extension</b> once, up to 30 days, by the Secretary General with a reason','<b>Conversion</b> staff upload the printed certificate scan and confirm the serial → permanent instantly','<b>QR</b> the temporary QR then shows “Superseded”; revoke possible with reason'])}</div></div>
+
+<h2><i>7</i>Staff and company access</h2>
+<div class="g2"><div class="card">${ul('#1b4f9c',['Staff are invited by email; the link expires in 7 days; 2-step sign-in','Designations L1–L5: Secretary General, President (signatory), Deputy Secretary, Membership / Services / Accounts Officers, Committee Secretary, Front Desk, Auditor','Per-module limits: none · view · edit · approve, editable by the Secretary General'])}</div><div class="card">${ul('#1b4f9c',['Menus, dashboards, screens and every button follow the person’s limits','Member companies invite colleagues as Manager, Services, Accounts or Viewer','Every change is written to the audit log with who, when and what'])}</div></div>
+
+<h2><i>8</i>What we need from MCCI</h2>
+<ul class="card dec">
+<li><b>Go-ahead and sign-off on this preview</b>Screens, wording, Urdu text and the rules in sections 5–7.</li>
+<li><b>Existing member list (Excel)</b>Membership numbers, class, company, representative, email, mobile, validity — needed in week 1 so members can endorse from day one.</li>
+<li><b>Staff list</b>Names, emails and designations for invitations.</li>
+<li><b>Bank account for vouchers</b>Bank, account title, IBAN, branch; and a bank contact for a later 1Bill / card integration.</li>
+<li><b>Security printer and serial format</b>Printer name and certificate serial pattern.</li>
+<li><b>Domain and email sender</b>DNS access for the site and the sending address.</li>
+<li><b>Courier</b>Which courier MCCI uses and whether an API will be provided.</li></ul>
+
+<h2><i>9</i>Decisions to confirm</h2>
+<ul class="card dec">
+<li><b>Endorser category</b>Same membership class (prototype default) or same sector only, or any valid member?</li>
+<li><b>Yearly endorsement limit</b>12 per member per year in the prototype.</li>
+<li><b>Can temporary members endorse?</b>Prototype: no — permanent members only.</li>
+<li><b>Temporary membership</b>60 days and one 30-day extension are assumptions.</li>
+<li><b>Original documents</b>Scans online; originals (bank certificate, photographs) handed over when collecting the certificate.</li>
+<li><b>Fees</b>Corporate 17,500 · Associate 11,500 · Women 7,500 · extra card 1,000 — confirm; service fees are placeholders.</li></ul>
+
+<h2><i>10</i>Every screen (${np})</h2>
+<div class="pgl">${R.map(r=>`<div><h3>${RN[r]} (${Object.keys(M.META[r]).length})</h3>${Object.entries(M.META[r]).map(([k,m])=>`<a href="${L(r,k)}"><b>${esc(m.t)}</b><small>${esc(m.d||'')}</small></a>`).join('')}</div>`).join('')}</div>
+
+<h2><i>11</i>Every button and what it will do (${A.length})</h2>
+<p class="muted">Phases: ${ph('Build')} built in this phase · ${ph('UI')} interface only · ${ph('Demo')} prototype helper, not built.</p>
+<div class="card"><div class="tbar"><input id="bpq" placeholder="Search ${A.length} actions…" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--b);background:var(--card2);color:inherit"></div><div class="tw"><table class="reg"><thead><tr><th>Action</th><th>Phase</th><th>Planned endpoint</th><th>Data</th><th>Who</th><th>In the real system</th></tr></thead><tbody id="bpb"></tbody></table></div></div>
+
+<h2><i>12</i>Data the system will hold</h2>
+<div class="card"><p>applications · application_documents · application_partners · <b>endorsements · endorsement_events · signatures</b> · committee_decisions · members · memberships (temporary / permanent, extensions) · certificates · print_batches · print_items · serials · payment_vouchers · payments · service_requests · service_documents · documents (QR registry) · notifications · email_templates · tickets · events · event_registrations · meetings · posts · company_users · invitations · staff · role_permissions · settings · audit_log</p></div>
+
+<h2><i>13</i>Launch checklist</h2>
+<div class="g2"><div class="card">${ul('#1fa34a',['Every flow in this prototype passes as an automated end-to-end test','Zero orphan buttons, tabs or links (audit runs on every build)','Row-level security tests: a member can never read another member’s documents','Urdu pages checked by MCCI staff'])}</div><div class="card">${ul('#1fa34a',['Member Excel imported and verified','Staff invited and trained by role','Backups and restore tested','Pilot with 5–10 applicants before public launch'])}</div></div>
+
+<h2><i>14</i>Orphan audit</h2><div class="card"><p class="muted" id="audS">Press “Run full orphan audit” — every screen is opened in the background and each clickable element is checked. (Works when the preview is opened from a web server.)</p><div class="tw"><table id="aud"></table></div></div>`;
+const draw=q=>{q=(q||'').toLowerCase();document.getElementById('bpb').innerHTML=A.filter(a=>JSON.stringify(a).toLowerCase().includes(q)).map(a=>{const p=(a.phase==='V1'||!a.phase)?'Build':a.phase;return `<tr class="st"><td><b>${esc(a.label||a.id)}</b><br><code>${esc(a.id)}</code></td><td>${ph(p)}</td><td><code>${esc(a.api||'—')}</code></td><td>${esc(a.tables||'—')}</td><td>${esc(a.roles||'—')}</td><td>${esc(a.live||'—')}</td></tr>`}).join('')};
+draw('');document.getElementById('bpq').oninput=e=>draw(e.target.value);
+M.act('bp.audit',{label:'Run full orphan audit',phase:'Demo',live:'Runs in CI on every build',run(){const list=R.flatMap(r=>Object.keys(M.META[r]).map(k=>[r+'/'+k,L(r,k)]));const out=[];let i=0;const st=document.getElementById('audS');const f=document.createElement('iframe');f.style.cssText='position:absolute;left:-9999px;width:1400px;height:900px';document.body.append(f);
+const next=()=>{if(i>=list.length){f.remove();const bad=out.filter(x=>x[1]>0);st.textContent=bad.length?bad.length+' screen(s) with unwired controls':'Passed: all '+list.length+' screens, '+out.reduce((s,x)=>s+x[2],0)+' controls wired, 0 orphans';document.getElementById('aud').innerHTML='<tr><th>Screen</th><th>Controls</th><th>Unwired</th></tr>'+out.map(x=>`<tr class="st"><td><a href="${x[4]}">${x[0]}</a></td><td>${x[2]}</td><td>${x[1]?'<b style="color:#ef4444">'+x[1]+'</b> '+esc(x[3]):'0 ✓'}</td></tr>`).join('');return}
+const [n,u]=list[i++];st.textContent='Checking '+n+' ('+i+'/'+list.length+')…';f.onload=()=>setTimeout(()=>{try{const W=f.contentWindow;const b=W.M.audit();out.push([n,b.length,W.document.querySelectorAll('[data-a],a[href]').length,b.slice(0,2).map(x=>x[1]).join('; '),u])}catch(e){out.push([n,0,0,'(open from a web server to audit)',u])}next()},700);f.src=u};next()}});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(el&&M.A[el.dataset.a]){e.preventDefault();M.A[el.dataset.a].run(el.dataset.p||'',el)}});
+})();
+</script></body></html>

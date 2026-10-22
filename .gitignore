@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# testing
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# env — never commit secrets (CLAUDE.md §1.10)
+.env
+.env.*
+!.env.example
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+
+# misc
+.DS_Store
+*.log
+*.tsbuildinfo
+.vercel
+
+# duplicate of reference/prototype (docs/16-gap-review.md A7) — keep out of the repo
+mcci-digital-prototypes/

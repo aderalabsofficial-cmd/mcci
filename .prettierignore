@@ -1,0 +1,12 @@
+reference/
+mcci-digital-prototypes/
+docs/
+.next/
+node_modules/
+pnpm-lock.yaml
+test-results/
+playwright-report/
+lib/supabase/types.ts
+public/
+CLAUDE.md
+README.md
