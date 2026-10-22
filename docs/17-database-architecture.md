@@ -1,7 +1,7 @@
 # 17 · Database architecture (self-hosted Supabase, PostgreSQL 17)
 
 **Status: proposed for review — 23 Oct 2026. Nothing has been applied to any real database.**
-Migrations: `supabase/migrations/20261023000100…000250_*.sql`. Tests: `supabase/tests/database/*.test.sql` (pgTAP).
+Migrations: `supabase/migrations/20261023000100…000260_*.sql`. Tests: `supabase/tests/database/*.test.sql` (pgTAP).
 This document and the migrations replace `docs/sql/0001_init.sql` and `0002_rls.sql`, which are kept only as history.
 
 ---
@@ -14,7 +14,7 @@ This document and the migrations replace `docs/sql/0001_init.sql` and `0002_rls.
 | 2 | Publishable / secret API keys, secret never in a client | Compatibility verified statically (§2). The env-var rename in `lib/supabase/*` and `.env.example` is a separate app change, not in this batch. |
 | 3 | Hybrid rate limiting | Redis for short-lived, high-volume limits when available (app layer, later). PostgreSQL: `private.rate_limits` + `api.rate_limit_take()` (service role only) as the durable store and the fallback; OTP attempts and the AI quota are enforced inside the database. |
 | 4 | Sensitive state changes through narrow database functions | `api.*` functions: `SECURITY DEFINER`, `search_path = ''`, permission checked inside, row lock + state check, `private.set_reason()` for the audit, `EXECUTE` granted to `authenticated` only. Clients have **no** UPDATE on stage / status / money / review / number columns. First two: `api.app_create`, `api.doc_review`; the rest arrive with their milestones. |
-| 5 | pgTAP for RLS and database security | 9 test files, 259 assertions, one or more negative tests for every finding (§6). Each file owns its transaction (`begin; … rollback;`) and installs `pgtap` in `extensions`, as `supabase test db` requires. |
+| 5 | pgTAP for RLS and database security | 10 test files, 276 assertions, one or more negative tests for every finding (§6). Each file owns its transaction (`begin; … rollback;`) and installs `pgtap` in `extensions`, as `supabase test db` requires. |
 | 6 | No annual reset of identifiers | The counters are defined by CLAUDE.md §6: application `MCCI-2026-M-0231` (`app_seq`), service request `MCCI-2026-10482` (`svc_seq`), voucher `PV-2026-0001` (`pv_seq`), membership number `MCCI-C-1134` / `MCCI-A-2205` (`member_no_c/_a`), plus `ticket_seq`. No spec asks for a yearly reset, so none resets. The year segment is the Asia/Karachi year of creation and is informational; the counter alone is unique, so the full reference is unique. `lpad` never truncates (the draft's `lpad(…, 4)` turned 10000 into 1000). |
 
 ## 2. Verification against the selected stack
@@ -26,10 +26,11 @@ This document and the migrations replace `docs/sql/0001_init.sql` and `0002_rls.
 | Extensions | `pgcrypto 1.3`, `citext 1.6`, `pg_trgm 1.6`, `pg_cron 1.6.4`, `pg_net 0.20.3`, `pgtap 1.3.3`, `supabase_vault 0.3.1`; `pg_cron` and `pg_net` preloaded | `pg_available_extensions`, `shared_preload_libraries` |
 | Roles / schemas | `anon`, `authenticated`, `service_role`, `authenticator`, `supabase_*`; schemas `auth`, `storage`, `extensions`, `vault` | catalog queries |
 | Default privileges | Upstream grants **ALL** on new `public` tables and **EXECUTE** on new functions to `anon`/`authenticated`. Migration 0100 revokes these; every grant is explicit. | `pg_default_acl` |
-| Migration compatibility | All 16 migrations + seed apply cleanly on **both** images; all 259 assertions pass on both; every test file leaves no rows behind after its own rollback | `scripts/db/dry-run.sh <image>` (each run inside one outer transaction that is rolled back, in a throwaway container; the file's own transaction runs as a savepoint, followed by a row-count leak check) |
+| Migration compatibility | All 17 migrations (0100–0260) + seed apply cleanly on **both** images; all 276 assertions in 10 files pass on both; every test file leaves no rows behind after its own rollback | `scripts/db/dry-run.sh <image>` (each run inside one outer transaction that is rolled back, in a throwaway container; the file's own transaction runs as a savepoint, followed by a row-count leak check) |
 | API keys | `@supabase/supabase-js` 2.118 recognises `sb_publishable_…` / `sb_secret_…` (`isNewApiKey`), sends them as `apikey`, never as a Bearer token. Self-hosted `.env` has `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `JWT_KEYS`/`JWT_JWKS` (ES256). CLI 2.121 issues both formats. | SDK source, upstream `.env.example`, CLI binary |
-| Local CLI stack | `supabase test db` on the running local stack (Postgres 17.11.0.004, real Auth schema, `storage-api` v1.82.1 tables and `storage.protect_delete` trigger): Files = 9, Tests = 259, PASS; afterwards the database held only the seed rows (counters advanced, gaps only) | `pnpm db:test` log, 23 Oct 2026 |
-| **Not yet verified** | The self-hosted stack itself (17.6.1.136); Auth sign-up through the Auth API; uploads/deletes through the Storage HTTP API; REST exposure (`private` hidden, `api` reachable); publishable/secret keys at runtime; Realtime with RLS — check **T-V3** | — |
+| Local CLI stack | `supabase test db` on the running local stack (Postgres 17.11.0.004, real Auth schema, `storage-api` v1.82.1 tables and `storage.protect_delete` trigger): Files = 9, Tests = 259, PASS; afterwards the database held only the seed rows (counters advanced, gaps only). This run predates 0260 / 090: **0260 is not applied to the local stack yet** (needs approval; `supabase migration up`, no reset) | `pnpm db:test` log, 23 Oct 2026 |
+| Realtime internals | The local Realtime's `realtime.apply_rls` builds change payloads only from columns the subscriber's role may SELECT (`has_column_privilege`), runs the subscriber's RLS check for INSERT/UPDATE, and sends DELETE events to **every** subscriber with `old_record` reduced to the primary key (not RLS-checked). Design in §4a. | function source on the local stack, read-only |
+| **Not yet verified** | The self-hosted stack itself (17.6.1.136); Auth sign-up through the Auth API (A1–A12, §11); uploads/deletes through the Storage HTTP API (S1–S12, §11); REST exposure (`private` hidden, `api` reachable); publishable/secret keys at runtime and gateway key enforcement (G1–G8, §3); Realtime subscriptions under RLS (`pnpm test:integration`, §4a, written but not run) — check **T-V3** | — |
 
 Storage: in the bare image the `storage` schema is empty until the Storage service boots, so the dry run uses a clearly
 marked stub of `storage.buckets` / `storage.objects` / `storage.foldername()`. `auth.jwt()` likewise arrives with the
@@ -58,6 +59,33 @@ Studio, Postgres port, pooler, MinIO console: admin network / VPN only. Backups:
 | B6 | Cron handlers idempotent, protected by `CRON_SECRET` (Vault on the DB side) | handler tests (later milestone) |
 | B7 | Audit by database triggers in the same transaction; "why" via `app.reason` | 0110, 0240; 001/030 tests |
 
+**Gateway key enforcement.** Grants and RLS are the security boundary; the gateway key check is a second layer.
+
+- **Local CLI stack (Kong), verified read-only:** no `key-auth` plugin on any route. The request transformer maps
+  the exact local secret key to the `service_role` JWT and the exact publishable key to the anon JWT; any other
+  value passes through, and PostgREST then treats the call as **anon**. A missing or wrong key is therefore not
+  rejected locally — by design of the CLI, not a production setting. The local ports (gateway 54321, Postgres
+  54322, Studio 54323) listen on 0.0.0.0 and `/pg/` (postgres-meta) answers without a key: firewall ports
+  54321–54329 or stop the stack on untrusted networks.
+- **Self-hosted (Envoy), from the pinned upstream configuration, not yet run:** missing or unknown key → 401 on
+  REST, Auth, GraphQL and Realtime; the OpenAPI root `/rest/v1/` and `/pg/` are service-role only; Realtime tenant
+  paths are denied. `/storage/v1/` and `/functions/v1/` have no gateway key check (Storage validates the JWT
+  itself). There is no Origin rule, so keeping the secret key out of browsers stays an application duty (B1).
+- **Decision:** use the pinned upstream Envoy configuration unchanged; block `/pg/`, Studio and `/rest-admin/` at
+  the TLS proxy outside the admin network. No gateway configuration is changed in this repository.
+- **Runtime tests for T-V3 (self-hosted stack):**
+
+| # | Request | Expected |
+|---|---|---|
+| G1 | REST call with no key | 401 |
+| G2 | REST call with an unknown `sb_publishable_…` key | 401 |
+| G3 | publishable key on `public_settings` | 200 |
+| G4 | publishable key on the OpenAPI root `/rest/v1/` | denied |
+| G5 | `/pg/` with the publishable key; `/pg/` from outside the admin network | denied; unreachable |
+| G6 | `/realtime/v1/api/tenants` | denied |
+| G7 | secret key | reaches service-role functions only from trusted handlers (T-B2) |
+| G8 | Studio | basic auth required |
+
 ## 4. Tenancy, roles, states
 
 - **Tenant = company.** `private.my_company_ids()` (active memberships). Company role levels come from the
@@ -69,6 +97,62 @@ Studio, Postgres port, pooler, MinIO console: admin network / VPN only. Backups:
   tracking only through trusted handlers.
 - **States** are exactly `docs/03` / `docs/04`; enums in 0100. Values that wait for a decision are not added yet
   (service `Draft` D-M10, QR `Replaced` D-M4). Voucher `Refund due` / `Refunded` added from `docs/16` D3.
+
+## 4a. Realtime (postgres_changes)
+
+Migration 0260 adds exactly the five tables behind `docs/01` §Live updates to the `supabase_realtime` publication:
+
+| Table | Live update it serves |
+|---|---|
+| `notifications` | bell badge and list (`docs/07`; badge within 3 s, `docs/04` acceptance test 1) |
+| `applications` | application status on the member dashboard and staff queues |
+| `endorsements` | endorsement requests and decisions (`docs/04` steps 2 and 5) |
+| `service_requests` | "My requests … live status" (`screens.md`) |
+| `payment_vouchers` | payment status (`docs/16` A6) |
+
+**How Realtime applies security (verified, §2):** each change is checked per subscriber with that subscriber's
+JWT. INSERT/UPDATE events are delivered only when the row passes the subscriber's RLS SELECT policy, and the
+payload holds only the columns the subscriber's role may SELECT. DELETE events are **not** RLS-checked: they reach
+every subscriber of the table with the primary key only. A client filter (`company_id=eq.…`) can only narrow,
+never widen, what RLS allows.
+
+**Rules that follow (enforced by 0260 and tested in 090):**
+
+1. Publish only tables with RLS enabled, no anon SELECT and **no client DELETE** (deletes would leak row ids to
+   every subscriber). Rows on published tables are removed only by trusted handlers, if ever.
+2. Columns a client must not see are hidden by **column grants**, never only by the UI. Realtime honours them.
+3. `endorsements.ip` and `endorsements.user_agent` (signing evidence) are no longer readable by clients: 0260
+   replaces the table-wide SELECT with a column grant of every other column. Neither REST nor Realtime returns
+   them; staff and the endorser see evidence only through an `api.*` function (M4). A column added to
+   `endorsements` later is unreadable until it is granted on purpose (090 pins the exact list).
+4. Sensitive or internal tables are never published (credentials, personal data, logs, `private`, `auth`,
+   `storage`). `realtime.messages` keeps RLS with no policy, so private broadcast channels stay closed.
+5. Not published now: `temp_memberships`, `documents`, `members` (`docs/05` M7 "updates live"). Those screens can
+   refresh from the `notifications` row the same flow writes; publishing them is decided when M7 is built.
+
+**Runtime tests** (`tests/integration/realtime.test.ts`, `pnpm test:integration`): synthetic `@test.local` users
+created and removed through the Auth admin API, fresh ids per run, local stack only (loopback URL and
+`sb_publishable_` / `sb_secret_` keys required; skipped unless `MCCI_IT_LOCAL=1`; keys never printed). Positive
+cases must arrive within 3 s; negative cases must stay silent for 5 s.
+
+| Case | Expected |
+|---|---|
+| Owner A, application of company A changes | received |
+| Owner B and an anonymous client, same change | nothing |
+| Membership Officer (mem ≥ 1), same change | received |
+| Owner B subscribing with filter `company_id=eq.A` | nothing |
+| personal notification for Owner A | Owner A only |
+| company `pay` notification for A | Owner received; Services user (pay = 0) nothing |
+| endorsement update | endorser and applicant receive it **without** `ip` / `user_agent`; Owner B nothing |
+| endorser company, application change | nothing |
+| new payment voucher for A | Owner received; Services user nothing |
+
+Still to add before M4: a deactivated staff user receives nothing; unpublished tables produce no events; joining a
+private broadcast channel is denied; what a DELETE event carries (expected: primary key only).
+
+Run locally (after 0260 is applied; PowerShell, values read from `supabase status -o env`, never echoed):
+`$env:MCCI_IT_LOCAL='1'`, `$env:MCCI_IT_SUPABASE_URL` = API_URL, `$env:MCCI_IT_PUBLISHABLE_KEY` = PUBLISHABLE_KEY,
+`$env:MCCI_IT_SECRET_KEY` = SECRET_KEY, then `pnpm test:integration`.
 
 ## 5. Tables (canonical inventory)
 
@@ -90,6 +174,7 @@ Studio, Postgres port, pooler, MinIO console: admin network / VPN only. Backups:
 | 0230 | 7 storage buckets + `storage.objects` policies |
 | 0240 | audit triggers on every business table (token hashes stripped; QR scan counter not audited) |
 | 0250 | `api.app_create`, `api.doc_review` (reference pattern) |
+| 0260 | `supabase_realtime` publication (5 tables, §4a); `endorsements` SELECT narrowed to column grants (no `ip`, `user_agent`) |
 
 Storage paths: `{company_id}/{entity}/{entity_id}/{file}`; buckets `application-docs`, `form-snapshots`, `receipts`,
 `certificates`, `service-docs`, `imports` (private) and `cms` (public). Clients never update or delete objects.
@@ -121,8 +206,9 @@ Storage paths: `{company_id}/{entity}/{entity_id}/{file}`; buckets `application-
 | F-21 | `endorsement_otps` | read hashes; brute force | private table, no grants; salt, resend time, attempts ≤ 5 (0160) | 001 · NT-26 ×2, attempt cap. Expiry/resend logic: test with `api.end_sign` (M4) |
 | F-22 | AI | cost abuse; cross-tenant leakage | `api.ai_extraction_begin` 15/application/day; company RLS on results; private conversations (0220) | 080 · NT-36 ×3, NT-35, conversations private |
 | F-23 | receipts | rejected receipts overwritten; one slip for two vouchers | receipt rows insert-only (via api in M6); `bank_ref` captured (0180) | 040 · F-23 ×3. Uniqueness waits for D-M9 |
+| F-24 | Realtime publication, `endorsements` | live payloads leak rows or columns (endorser IP / user agent to the applicant); delete events reveal ids; anonymous subscriptions | 5 tables only, RLS on, no anon SELECT, no client DELETE; evidence columns not granted (0260) | 090 · exact table list, RLS, anon, DELETE, excluded tables, `ip`/`user_agent` ×4, column list, RLS unchanged ×3, `apply_rls` uses column privileges, `realtime.messages` closed; runtime: §4a |
 
-Test totals per file (`plan(n)`): 001 = 26, 010 = 37, 020 = 24, 030 = 47, 040 = 22, 050 = 21, 060 = 20, 070 = 26, 080 = 36. Storage deletes: the real Storage service refuses every direct DELETE (`storage.protect_delete`); 070 asserts nothing changes and that no client DELETE/UPDATE policy exists, without bypassing the trigger.
+Test totals per file (`plan(n)`): 001 = 26, 010 = 37, 020 = 24, 030 = 47, 040 = 22, 050 = 21, 060 = 20, 070 = 26, 080 = 36, 090 = 17 (total 276). Storage deletes: the real Storage service refuses every direct DELETE (`storage.protect_delete`); 070 asserts nothing changes and that no client DELETE/UPDATE policy exists, without bypassing the trigger.
 Sequences are not transactional: tests never call `setval`, but inserts still advance counters (gaps only, local stack).
 
 ## 7. Authorization matrix
@@ -136,7 +222,7 @@ policies of each migration and is exercised by the tests in §6.
 
 ## 8. Migrations, seed, rollback, commands
 
-- **Order:** 0100 → 0250 as in §5. Every table gets RLS and grants in the same migration that creates it.
+- **Order:** 0100 → 0260 as in §5. Every table gets RLS and grants in the same migration that creates it.
 - **Reference data** is inside 0140 (all environments). `supabase/seed.sql` is **local + CI only** (test personas,
   `tests` helper schema). The prototype demo world (`docs/13`) will be a separate staging-only file.
 - **Rollback:** the CLI has no down-migrations → forward fixes only; destructive changes as expand → backfill →
@@ -150,6 +236,7 @@ bash scripts/db/dry-run.sh supabase/postgres:17.11.0.004
 ```
 After approval only (applies to the local stack): `pnpm db:start`, `pnpm db:reset`, `pnpm db:test`, `pnpm db:types`.
 CI job `db-security` runs the dry run on both images.
+Runtime integration tests (local stack only, env-gated, §4a): `pnpm test:integration` — never part of `pnpm test` or CI.
 
 ## 9. Settings
 
@@ -169,7 +256,12 @@ self-hosted release and upgrade staging first.
 
 | Item | When |
 |---|---|
-| T-V3: run the migrations and `supabase test db` on the full self-hosted stack (real Storage, Auth new keys, Realtime) | after approval |
+| T-V3: run the migrations and `supabase test db` on the full self-hosted stack (real Storage, Auth new keys, Realtime), plus gateway tests G1–G8 (§3) | after approval |
+| Apply 0260 to the local stack (`supabase migration up`, no reset) and run `pnpm test:integration` (§4a) | after approval |
+| Remaining Realtime cases (deactivated staff, unpublished tables, private broadcast denied, DELETE payload) | before M4 |
+| Auth API tests `tests/integration/auth.test.ts` (synthetic users): A1 sign-up creates the profile (language from metadata, no staff rights); A2 sign-in fails before email confirmation, works after (Mailpit); A3 password < 10 rejected; A4 email change needs secure double confirmation, `profiles.email` syncs after; A5 password change needs re-authentication; A6 TOTP enroll/challenge/verify reaches AAL2; A7 email one-time code incl. expiry; A8 anonymous sign-in rejected; A9 sign-out everywhere revokes refresh tokens; A10 sign-in and code requests rate-limited; A11 a user's JWT on REST returns only their own profile; A12 deleting an Auth user cascades to the profile | M1 |
+| Storage API tests `tests/integration/storage.test.ts` (synthetic files): S1 upload to own draft path sets the owner; S2 another company's prefix denied; S3 upload after submission denied; S4 > 10 MiB or disallowed type rejected; S5 signed URL 600 s for the owner, fails after expiry, other company cannot create one; S6 private object without auth denied, `cms` public; S7 delete through the API denied, object stays; S8 overwrite (`x-upsert`) denied; S9 endorser cannot download applicant files; S10 receipt upload only for an Unpaid voucher; S11 anonymous cannot list private buckets; S12 trusted service-role handler writes form snapshots | M1–M2 |
+| T-B1 client-bundle scan for `sb_secret_` and secret env names; CSP `connect-src` | with M1 auth |
 | Rename env vars to publishable/secret keys in `lib/supabase/*`, `.env.example` | with M1 auth |
 | Per-user read state for company-wide notifications (today only user rows can be marked read) | M8 |
 | `api.*` functions per milestone (end_*, cmt_*, pay_*, temp_*, svc_*, invite_*) with their tests | M1–M7 |
