@@ -1,5 +1,9 @@
 -- Identity, staff permissions, per-user tables. Findings F-08, F-15, F-17.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(37);
 
 -- F-15 / NT-08: profile self-service is limited to full_name, mobile, lang, prefs
 select hasnt_column('public', 'profiles', 'is_staff', 'F-15 profiles.is_staff removed (authority is public.staff)');
@@ -56,3 +60,4 @@ select is(tests.num_as(tests.id('owner_a'), 'select count(*) from public.audit_l
 select is(tests.num_as(tests.id('mo'), 'select count(*) from public.audit_log'), 0::bigint, 'staff without staff/audit level cannot read it');
 
 select * from finish();
+rollback;

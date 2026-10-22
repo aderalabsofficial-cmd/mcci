@@ -14,7 +14,7 @@ This document and the migrations replace `docs/sql/0001_init.sql` and `0002_rls.
 | 2 | Publishable / secret API keys, secret never in a client | Compatibility verified statically (§2). The env-var rename in `lib/supabase/*` and `.env.example` is a separate app change, not in this batch. |
 | 3 | Hybrid rate limiting | Redis for short-lived, high-volume limits when available (app layer, later). PostgreSQL: `private.rate_limits` + `api.rate_limit_take()` (service role only) as the durable store and the fallback; OTP attempts and the AI quota are enforced inside the database. |
 | 4 | Sensitive state changes through narrow database functions | `api.*` functions: `SECURITY DEFINER`, `search_path = ''`, permission checked inside, row lock + state check, `private.set_reason()` for the audit, `EXECUTE` granted to `authenticated` only. Clients have **no** UPDATE on stage / status / money / review / number columns. First two: `api.app_create`, `api.doc_review`; the rest arrive with their milestones. |
-| 5 | pgTAP for RLS and database security | 9 test files, 257 assertions, one or more negative tests for every finding (§6). |
+| 5 | pgTAP for RLS and database security | 9 test files, 258 assertions, one or more negative tests for every finding (§6). Each file owns its transaction (`begin; … rollback;`) and installs `pgtap` in `extensions`, as `supabase test db` requires. |
 | 6 | No annual reset of identifiers | The counters are defined by CLAUDE.md §6: application `MCCI-2026-M-0231` (`app_seq`), service request `MCCI-2026-10482` (`svc_seq`), voucher `PV-2026-0001` (`pv_seq`), membership number `MCCI-C-1134` / `MCCI-A-2205` (`member_no_c/_a`), plus `ticket_seq`. No spec asks for a yearly reset, so none resets. The year segment is the Asia/Karachi year of creation and is informational; the counter alone is unique, so the full reference is unique. `lpad` never truncates (the draft's `lpad(…, 4)` turned 10000 into 1000). |
 
 ## 2. Verification against the selected stack
@@ -26,7 +26,7 @@ This document and the migrations replace `docs/sql/0001_init.sql` and `0002_rls.
 | Extensions | `pgcrypto 1.3`, `citext 1.6`, `pg_trgm 1.6`, `pg_cron 1.6.4`, `pg_net 0.20.3`, `pgtap 1.3.3`, `supabase_vault 0.3.1`; `pg_cron` and `pg_net` preloaded | `pg_available_extensions`, `shared_preload_libraries` |
 | Roles / schemas | `anon`, `authenticated`, `service_role`, `authenticator`, `supabase_*`; schemas `auth`, `storage`, `extensions`, `vault` | catalog queries |
 | Default privileges | Upstream grants **ALL** on new `public` tables and **EXECUTE** on new functions to `anon`/`authenticated`. Migration 0100 revokes these; every grant is explicit. | `pg_default_acl` |
-| Migration compatibility | All 16 migrations + seed apply cleanly on **both** images; all 257 assertions pass on both | `scripts/db/dry-run.sh <image>` (each run inside one transaction that is rolled back, in a throwaway container) |
+| Migration compatibility | All 16 migrations + seed apply cleanly on **both** images; all 258 assertions pass on both; every test file leaves no rows behind after its own rollback | `scripts/db/dry-run.sh <image>` (each run inside one outer transaction that is rolled back, in a throwaway container; the file's own transaction runs as a savepoint, followed by a row-count leak check) |
 | API keys | `@supabase/supabase-js` 2.118 recognises `sb_publishable_…` / `sb_secret_…` (`isNewApiKey`), sends them as `apikey`, never as a Bearer token. Self-hosted `.env` has `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `JWT_KEYS`/`JWT_JWKS` (ES256). CLI 2.121 issues both formats. | SDK source, upstream `.env.example`, CLI binary |
 | **Not yet verified** | Runtime on the full self-hosted stack (Auth with new keys, real Storage tables, Realtime with RLS) — check **T-V3**, after approval | — |
 
@@ -121,7 +121,8 @@ Storage paths: `{company_id}/{entity}/{entity_id}/{file}`; buckets `application-
 | F-22 | AI | cost abuse; cross-tenant leakage | `api.ai_extraction_begin` 15/application/day; company RLS on results; private conversations (0220) | 080 · NT-36 ×3, NT-35, conversations private |
 | F-23 | receipts | rejected receipts overwritten; one slip for two vouchers | receipt rows insert-only (via api in M6); `bank_ref` captured (0180) | 040 · F-23 ×3. Uniqueness waits for D-M9 |
 
-Test totals per file: 001 = 25, 010 = 37, 020 = 24, 030 = 47, 040 = 22, 050 = 21, 060 = 20, 070 = 25, 080 = 36.
+Test totals per file (`plan(n)`): 001 = 26, 010 = 37, 020 = 24, 030 = 47, 040 = 22, 050 = 21, 060 = 20, 070 = 25, 080 = 36.
+Sequences are not transactional: tests never call `setval`, but inserts still advance counters (gaps only, local stack).
 
 ## 7. Authorization matrix
 

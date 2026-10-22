@@ -1,5 +1,9 @@
 -- Committee, printing, QR registry, temporary memberships. Findings F-09 (A3, A4), F-13.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(21);
 
 -- NT-40a (F-09, A3): view-only and even approve-level staff do not write committee rows directly
 select throws_ok($$ select tests.exec_as(tests.id('president'), 'insert into public.committee_items (application_id, meeting_id, decision) values (tests.id(''app_a_review''), ''MC-TEST-1'', ''Approved'')') $$, '42501', null, 'NT-40a President (cmt 1) cannot record a decision');
@@ -40,3 +44,4 @@ select is(tests.num_as(tests.id('owner_a'), 'select count(*) from public.temp_me
 select throws_ok($$ select tests.exec_as(tests.id('owner_b'), 'update public.temp_memberships set expires_at = now() + interval ''1 year''') $$, '42501', null, 'members cannot extend themselves');
 
 select * from finish();
+rollback;

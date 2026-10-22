@@ -1,7 +1,11 @@
 -- Storage buckets and object policies. Finding F-18 (NT-70 … NT-76, NT-80 for files).
 -- Paths: {company_id}/{entity}/{entity_id}/{file}. In the dry run, storage.objects is a stub of the Storage service
 -- tables; on a real stack the same policies run on the service's own tables (verification T-V3, docs/17).
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(25);
 
 -- fixtures (written as the owner, i.e. as the trusted Storage service would)
 insert into storage.objects (bucket_id, name) values
@@ -53,3 +57,4 @@ select is(tests.num_as(tests.id('accounts_a'), 'with u as (update storage.object
 select is(tests.num_as(tests.id('sg'), 'with d as (delete from storage.objects returning 1) select count(*) from d'), 0::bigint, 'NT-76 not even staff delete through the API');
 
 select * from finish();
+rollback;

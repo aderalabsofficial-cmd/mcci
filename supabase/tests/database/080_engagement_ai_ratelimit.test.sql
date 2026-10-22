@@ -1,6 +1,10 @@
 -- Notifications, settings, tickets, change requests, opportunities, events, AI cost guard, rate limits.
 -- Findings F-16, F-19, F-22, NT-47 (PostgreSQL rate-limit fallback, decision 3).
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(36);
 
 -- NT-46 (F-19): company notifications follow the company role's area level (default for decision D-M11)
 select is(tests.num_as(tests.id('services_a'), 'select count(*) from public.notifications'), 1::bigint, 'NT-46 Services user (pay 0) does not see the payment notice');
@@ -59,3 +63,4 @@ select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.rate_l
 select throws_ok($$ select tests.exec_as(null, 'select api.rate_limit_take(''x'', 1, 0)', 'service_role') $$, '22023', null, 'invalid window rejected');
 
 select * from finish();
+rollback;

@@ -1,5 +1,9 @@
 -- Membership applications and documents. Findings F-01 (A1), F-04, F-05, F-07, NT-43, NT-80.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(47);
 
 -- NT-01 / NT-02 (F-01, A1): applications are created only by api.app_create, for own company, by Owner/Manager
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public.applications (company_id, created_by) values (tests.id(''company_b''), tests.id(''owner_a''))') $$, '42501', null, 'NT-01 no direct insert at all');
@@ -70,3 +74,4 @@ select is(tests.num_as(tests.id('owner_b'), 'select count(*) from public.applica
 select is(tests.num_as(tests.id('mo'), 'select count(*) from public.applications'), 4::bigint, 'officer (mem >= 1) sees all applications');
 
 select * from finish();
+rollback;

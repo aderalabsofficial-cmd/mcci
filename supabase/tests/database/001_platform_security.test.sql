@@ -1,6 +1,10 @@
 -- Platform-wide security invariants: RLS everywhere, no FOR ALL policies, SECURITY DEFINER hardening, no default
 -- client privileges, private schema closed, append-only audit, numbering. Findings F-06, F-10, F-11, F-12, F-13, F-14, F-21.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(26);
 
 -- NT-60 (F-06): every table in public and private has row-level security enabled
 select is_empty($$
@@ -70,11 +74,21 @@ select throws_ok($$ select tests.exec_as(null, 'select private.staff_level(''mem
 select matches((select code from public.documents where id = tests.id('cert_b')), '^MCCI-QR-[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}$', 'T-Q1 QR code format');
 select is((select count(distinct private.new_qr_code()) from generate_series(1, 5000)), 5000::bigint, 'T-Q1 5000 codes, no collision');
 
--- T-F1 (F-11 / decision 6): counters never truncate and never reset; year segment is the Asia/Karachi year
-select setval('public.app_seq', 9999, false);
-insert into public.applications (company_id, created_by) values (tests.id('company_a'), tests.id('owner_a')), (tests.id('company_a'), tests.id('owner_a'));
-select results_eq($$ select right(token, 6) from public.applications where token like '%-M-9999' or token like '%-M-10000' order by 1 $$,
-  $$ values ('-10000'), ('M-9999') $$, 'T-F1 token 10000 is not cut to 1000');
+-- T-F1 (F-11 / decision 6): counters never truncate and never reset; year segment is the Asia/Karachi year.
+-- Checked without setval/nextval: sequence changes are NOT undone by ROLLBACK and would leak into the local database.
+select results_eq($$ select private.pad4(231), private.pad4(9999), private.pad4(10000), private.pad4(1234567) $$,
+  $$ values ('0231', '9999', '10000', '1234567') $$, 'T-F1 token 10000 is not cut to 1000');
+select is((select count(*) from pg_attrdef d join pg_class c on c.oid = d.adrelid
+           join pg_attribute a on a.attrelid = d.adrelid and a.attnum = d.adnum
+           where c.relnamespace = 'public'::regnamespace and a.atttypid = 'text'::regtype
+             and pg_get_expr(d.adbin, d.adrelid) like '%nextval(%'
+             and pg_get_expr(d.adbin, d.adrelid) like '%pad4(%' and pg_get_expr(d.adbin, d.adrelid) like '%pkt_year()%'),
+          (select count(*) from pg_attrdef d join pg_class c on c.oid = d.adrelid
+           join pg_attribute a on a.attrelid = d.adrelid and a.attnum = d.adnum
+           where c.relnamespace = 'public'::regnamespace and a.atttypid = 'text'::regtype
+             and pg_get_expr(d.adbin, d.adrelid) like '%nextval(%'),
+          'T-F1 every year-stamped counter default uses pad4 + the Asia/Karachi year');
 select is(private.pkt_year(), to_char(now() at time zone 'Asia/Karachi', 'YYYY'), 'token year uses Asia/Karachi');
 
 select * from finish();
+rollback;

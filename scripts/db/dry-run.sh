@@ -7,8 +7,12 @@
 # What it does:
 #   1. starts a throwaway container of the exact image (no published ports) and removes it on exit
 #   2. creates a minimal stub of the tables the Storage service normally creates at boot (marked below)
-#   3. for every supabase/tests/database/*.test.sql: BEGIN → all migrations → seed.sql → pgtap → test → ROLLBACK
-#   4. prints TAP output and exits non-zero if any migration fails or any test is "not ok"
+#   3. for every supabase/tests/database/*.test.sql: BEGIN → all migrations → seed.sql → snapshot → test → leak check
+#      → ROLLBACK. Each test file owns its transaction (begin … rollback, as `supabase test db` needs); inside the outer
+#      transaction its own begin/rollback run as SAVEPOINT / ROLLBACK TO SAVEPOINT, so the leak check proves the file's
+#      rollback undoes every row it wrote. Sequence movement is reported (nextval/setval are not transactional).
+#   4. prints TAP output and exits non-zero if any migration fails, any test is "not ok", a plan is not met, a file
+#      does not own its transaction, or a file leaks rows
 # Nothing is committed in the container and no project database is touched. Requires Docker.
 set -euo pipefail
 export MSYS_NO_PATHCONV=1   # Git Bash: do not rewrite container paths such as /tmp/mcci
@@ -65,21 +69,46 @@ docker cp "$(hostpath "$ROOT/supabase/migrations")" "$NAME:/tmp/mcci/migrations"
 docker cp "$(hostpath "$ROOT/supabase/seed.sql")" "$NAME:/tmp/mcci/seed.sql"
 docker cp "$(hostpath "$ROOT/supabase/tests")" "$NAME:/tmp/mcci/tests"
 
-bundle() { # $1 = test file inside the container, or empty for migrations only
+# row count of every table in the schemas the tests touch, and the last value of every public sequence
+SNAPSHOT_SQL="create temp table _leak_before as
+  select n.nspname || '.' || c.relname as t,
+         (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I.%I', n.nspname, c.relname), false, true, '')))[1]::text::bigint as n
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where c.relkind = 'r' and n.nspname in ('public','private','auth','storage');
+create temp table _seq_before as select schemaname || '.' || sequencename as s, coalesce(last_value, 0) as v from pg_sequences where schemaname = 'public';"
+
+LEAK_SQL="select '# leak: ' || b.t || ' ' || b.n || ' -> ' || a.n
+  from _leak_before b
+  cross join lateral (select (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %s', b.t), false, true, '')))[1]::text::bigint as n) a
+  where a.n <> b.n;
+select '# note: sequence ' || q.s || ' advanced by ' || (coalesce(p.last_value, 0) - q.v) || ' (not transactional)'
+  from _seq_before q join pg_sequences p on p.schemaname || '.' || p.sequencename = q.s
+  where coalesce(p.last_value, 0) <> q.v;"
+
+bundle() { # $1 = test file on the host, or empty for migrations only
   {
     echo '\set ON_ERROR_STOP 1'
     echo 'begin;'
     for f in "$ROOT"/supabase/migrations/*.sql; do echo "\\i /tmp/mcci/migrations/$(basename "$f")"; done
     echo '\i /tmp/mcci/seed.sql'
     if [ -n "$1" ]; then
-      echo 'create extension if not exists pgtap with schema extensions;'
-      echo 'set search_path = public, extensions, tests;'
-      echo "\\i $1"
+      echo "$SNAPSHOT_SQL"
+      # the file's own transaction becomes a savepoint inside the outer, always rolled-back transaction
+      sed -e 's/^begin;$/savepoint test_file;/' -e 's/^rollback;$/rollback to savepoint test_file;/' "$1"
+      echo "$LEAK_SQL"
     fi
     echo 'rollback;'
   } > "$WORK/bundle.sql"
   docker cp "$(hostpath "$WORK/bundle.sql")" "$NAME:/tmp/mcci/bundle.sql"
   docker exec "$NAME" psql -U postgres -h localhost -X -q -t -A -v ON_ERROR_STOP=1 -f /tmp/mcci/bundle.sql
+}
+
+# each test file must own its transaction: first statement 'begin;', last statement 'rollback;'
+owns_transaction() {
+  local first last
+  first="$(grep -vE '^[[:space:]]*(--.*)?$' "$1" | head -1)"
+  last="$(grep -vE '^[[:space:]]*(--.*)?$' "$1" | tail -1)"
+  [ "$first" = "begin;" ] && [ "$last" = "rollback;" ]
 }
 
 echo "# migrations + seed (rolled back)"
@@ -89,8 +118,10 @@ status=0
 for t in "$ROOT"/supabase/tests/database/*.test.sql; do
   [ -e "$t" ] || continue
   echo "# $(basename "$t")"
-  out="$(bundle "/tmp/mcci/tests/database/$(basename "$t")" 2>&1)" || { echo "$out"; status=1; continue; }
-  echo "$out" | grep -E '^(ok|not ok|#|1\.\.)' || true
-  echo "$out" | grep -q '^not ok' && status=1
+  if ! owns_transaction "$t"; then echo "not ok - $(basename "$t") must start with 'begin;' and end with 'rollback;'"; status=1; continue; fi
+  out="$(bundle "$t" 2>&1)" || { echo "$out"; status=1; continue; }
+  echo "$out" | grep -E '^(ok|not ok|#|1[.][.])' || true
+  echo "$out" | grep -qE '^not ok|^# Looks like you planned|^# leak:' && status=1
+  echo "$out" | grep -q '^# leak:' || echo "ok - $(basename "$t") leaves no rows behind after its rollback"
 done
 exit $status

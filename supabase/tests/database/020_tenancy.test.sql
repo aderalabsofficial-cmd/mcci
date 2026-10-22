@@ -1,5 +1,9 @@
 -- Company boundary, members, directory, company users. Findings F-03 (A2), F-20.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(24);
 
 -- NT-10 / NT-11 (F-03, A2): no "any signed-in user reads every member" any more
 select is(tests.num_as(tests.id('fresh'), 'select count(*) from public.members'), 0::bigint, 'NT-10 new account sees no members');
@@ -36,3 +40,4 @@ select is(private.company_role_level('Accounts', 'events'), 0::smallint, 'Accoun
 select is(private.company_role_level('Viewer', 'mship'), 1::smallint, 'Viewer mship 1');
 
 select * from finish();
+rollback;

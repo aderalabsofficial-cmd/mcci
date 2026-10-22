@@ -1,5 +1,9 @@
 -- Payment vouchers and receipts. Findings F-02, F-23.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(22);
 
 -- NT-20 / NT-21 (F-02): no client can change a voucher
 select throws_ok($$ select tests.exec_as(tests.id('accounts_a'), 'update public.payment_vouchers set amount = 1 where id = tests.id(''voucher_a_unpaid'')') $$, '42501', null, 'NT-20 Accounts user cannot change the amount');
@@ -35,3 +39,4 @@ select is(tests.num_as(tests.id('cs'), 'select count(*) from public.payment_vouc
 select matches((select voucher_no from public.payment_vouchers where id = tests.id('voucher_a_unpaid')), '^PV-[0-9]{4}-[0-9]{4,}$', 'voucher number format');
 
 select * from finish();
+rollback;

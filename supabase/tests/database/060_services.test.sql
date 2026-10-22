@@ -1,5 +1,9 @@
 -- Service requests, documents, messages. Finding F-07.
-select no_plan();
+-- Runs in its own transaction and rolls back (supabase test db / pg_prove run each file in a separate session).
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select plan(20);
 
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public.service_requests (company_id, service_key, sla_due_at) values (tests.id(''company_a''), ''ebil'', now())') $$, '42501', null, 'requests are created only by api.svc_submit (M7)');
 select throws_ok($$ select tests.exec_as(tests.id('so'), 'update public.service_requests set status = ''Issued''') $$, '42501', null, 'status moves only through api.svc_* (M7)');
@@ -30,3 +34,4 @@ select is(tests.num_as(tests.id('so'), 'select count(*) from public.service_requ
 select matches((select token from public.service_requests where id = tests.id('svc_a_issued')), '^MCCI-[0-9]{4}-[0-9]{4,}$', 'service token format');
 
 select * from finish();
+rollback;
