@@ -1,6 +1,7 @@
 # 02 · Data model
 
-The full DDL is in `sql/0001_init.sql`; policies in `sql/0002_rls.sql`. Copy both into `supabase/migrations/`
+**Superseded for DDL and policies by `docs/17-database-architecture.md` and `supabase/migrations/*`** (the draft
+`sql/*` files are history). Original note: the full DDL is in `sql/0001_init.sql`; policies in `sql/0002_rls.sql`. Copy both into `supabase/migrations/`
 (`20261101000001_init.sql`, `20261101000002_rls.sql`), run `pnpm db:reset`, then `pnpm db:types`.
 
 ## Entity map

@@ -1,3 +1,5 @@
+-- SUPERSEDED (23 Oct 2026) by supabase/migrations/* and docs/17-database-architecture.md. Kept as history only;
+-- it contains the security defects listed in docs/16 (A1–A6) and docs/17 §6. Do not apply.
 -- 0001_init.sql — MCCI Digital Platform, this phase.
 -- Starting point for supabase/migrations. Review names against docs/02-data-model.md before applying.
 

@@ -1,3 +1,5 @@
+-- SUPERSEDED (23 Oct 2026) by supabase/migrations/* and docs/17-database-architecture.md. Kept as history only;
+-- it contains the security defects listed in docs/16 (A1–A6) and docs/17 §6. Do not apply.
 -- 0002_rls.sql — row-level security. Every table has RLS on; default deny.
 -- Helper functions are SECURITY DEFINER and STABLE so policies stay fast.
 

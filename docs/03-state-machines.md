@@ -1,6 +1,8 @@
 # 03 · State machines
 
-All transitions are implemented in `lib/flow/*.ts` as pure functions + one server action each. A transition:
+All transitions are implemented in `lib/flow/*.ts` as pure functions + one server action each. Since 22 Oct 2026 the
+server action calls a narrow `api.*` database function that re-checks the permission inside PostgreSQL and writes the
+state, history and audit (decision 4, `docs/17` §1); the service role is not used for user actions. A transition:
 1. loads the row `for update`, 2. checks the current state is allowed, 3. checks the actor's permission,
 4. writes the new state + `application_history` + `audit_log`, 5. queues notifications, 6. returns the row.
 Illegal transitions throw `FlowError('…')` shown to the user as a friendly bilingual message.

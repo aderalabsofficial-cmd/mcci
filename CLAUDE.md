@@ -44,7 +44,7 @@ Read this file fully at the start of every session. Then read the doc for the mi
 | App | Next.js 15 (App Router, Server Components, Server Actions), TypeScript strict |
 | UI | Tailwind CSS 4 + shadcn/ui (Radix), lucide-react icons, design tokens copied from the prototype CSS |
 | i18n | next-intl, locales `en` and `ur` (`dir="rtl"` for ur) |
-| Database / Auth / Files / Live | Supabase: Postgres 15, Auth, Storage, Realtime, RLS; `@supabase/ssr` |
+| Database / Auth / Files / Live | Supabase (self-hosted, Docker): Postgres 17, Auth, Storage, Realtime, RLS; `@supabase/ssr` — `docs/17` |
 | Validation | Zod schemas shared by forms and server actions |
 | Forms | react-hook-form + zod resolver, autosave for the application wizard |
 | AI | OpenAI API with Structured Outputs (JSON schema) for document extraction; MCCI knowledge base for "Ask MCCI AI" |
@@ -96,7 +96,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 |---|---|
 | Scope, out of scope, dependencies | `docs/00-scope.md` |
 | Architecture, env vars, deployment | `docs/01-architecture.md` |
-| Tables, enums, indexes | `docs/02-data-model.md` + `docs/sql/0001_init.sql` |
+| Tables, enums, indexes, RLS, grants | `docs/17-database-architecture.md` + `supabase/migrations/*` (`docs/sql/*` is superseded) |
 | Row-level security | `docs/sql/0002_rls.sql` |
 | Membership / temp / print / voucher / service state machines | `docs/03-state-machines.md` |
 | Proposer & seconder (endorsement) | `docs/04-endorsement.md` |
@@ -111,7 +111,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 | Seed data and member Excel import | `docs/13-seed-import.md` |
 | What MCCI must provide / decide | `docs/14-mcci-dependencies.md` |
 | Android app, compact mobile UI, Play release | `docs/15-mobile-app.md` |
-| Spec defects and missing features (fix A1–A6 before M1) | `docs/16-gap-review.md` |
+| Spec defects and missing features (fix A1–A6 before M1) | `docs/16-gap-review.md` (A1–A6 fixed in `docs/17` migrations) |
 | Every screen / every action / reference data | `docs/catalogue/*` |
 
 ## 6. Conventions

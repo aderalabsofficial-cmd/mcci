@@ -20,6 +20,9 @@
 
 ## Decisions (defaults used until MCCI confirms — all stored in settings)
 
+Database and hosting decisions D-M1 … D-M21 (hosting location, gapless numbers, backups, CNIC protection, NTN
+uniqueness, refunds, endorser privacy, QR format, …) are listed in `docs/17-database-architecture.md` §12.
+
 | Decision | Default |
 |---|---|
 | Endorser category | Same membership class as applicant; same sector shown first |
