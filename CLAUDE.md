@@ -22,7 +22,7 @@ Read this file fully at the start of every session. Then read the doc for the mi
    uses in `docs/catalogue/actions.md`. Same sections, same labels (EN + UR), same order, same empty states.
 3. **No orphan controls.** Every button, tab and link must do something real or be removed. The e2e suite runs an
    orphan audit on every page (see `docs/10-testing.md`). A PR that adds an unwired control fails CI.
-4. **Security first.** Row-level security on every table (`docs/sql/0002_rls.sql`). Members only ever see their own
+4. **Security first.** Row-level security on every table (`supabase/migrations/*`, model in `docs/17-database-architecture.md`). Members only ever see their own
    company's data. Staff see what their designation allows (`docs/06-roles-permissions.md`). Authorisation is
    checked **on the server** in every server action, never only in the UI.
 5. **Every change is audited.** Any insert/update/delete done by a person writes `audit_log` (who, what, old → new, why).
@@ -101,7 +101,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 | Scope, out of scope, dependencies | `docs/00-scope.md` |
 | Architecture, env vars, deployment | `docs/01-architecture.md` |
 | Tables, enums, indexes, RLS, grants | `docs/17-database-architecture.md` + `supabase/migrations/*` (`docs/sql/*` is superseded) |
-| Row-level security | `docs/sql/0002_rls.sql` |
+| Row-level security, grants, storage policies | `docs/17-database-architecture.md` §5–7 + `supabase/migrations/*`; pgTAP tests in `supabase/tests/database/` |
 | Membership / temp / print / voucher / service state machines | `docs/03-state-machines.md` |
 | Proposer & seconder (endorsement) | `docs/04-endorsement.md` |
 | Module specs + acceptance criteria | `docs/05-modules.md` |
