@@ -51,8 +51,8 @@ Read this file fully at the start of every session. Then read the doc for the mi
 | PDF / QR | `@react-pdf/renderer` (or Playwright print-to-PDF of an HTML template) + `qrcode` |
 | Email | React Email templates + SMTP / transactional provider (Resend or the provider MCCI prefers) |
 | Jobs | Supabase `pg_cron` calling Edge Functions / Next.js route handlers protected by a cron secret |
-| Tests | Vitest (unit), Playwright (e2e + orphan audit + accessibility via axe), pgTAP or SQL tests for RLS |
-| Hosting | Vercel (app) + Supabase (managed) — or MCCI's preferred cloud; see `docs/01-architecture.md` |
+| Tests | Vitest (unit), Playwright (e2e + orphan audit + accessibility via axe), pgTAP for RLS and database security (`supabase/tests/database`) |
+| Hosting | Self-hosted Supabase (Docker) on an MCCI-controlled server; location subject to MCCI approval (`docs/17` D-M1). Host for the Next.js app not decided yet. Nothing is deployed. See `docs/01-architecture.md`, `docs/17` |
 | Android | Capacitor 7 shell loading `APP_URL` + native plugins (push/FCM, ML Kit scanner & QR, biometric, share); AAB built in GitHub Actions |
 
 ## 3. Repository layout (target)
@@ -70,9 +70,11 @@ components/                      ui/ (shadcn), shared/, site/, portal/, admin/
 lib/                             supabase/ (server, client, admin), auth/, permissions/, flow/ (state machines),
                                  endorse/, ai/, pdf/, qr/, email/, audit/, i18n/, validation/
 messages/                        en.json, ur.json
-supabase/migrations/             SQL migrations (start from docs/sql/*.sql)
-supabase/seed.sql                demo + reference data
-tests/unit, tests/e2e, tests/rls
+supabase/migrations/             SQL migrations — canonical schema, RLS, grants (docs/17; docs/sql/* is superseded)
+supabase/seed.sql                LOCAL + CI only: test personas for pgTAP (reference data lives in a migration)
+supabase/tests/database/         pgTAP security tests
+scripts/db/                      reference-seed generator, rolled-back dry run (dry-run.sh)
+tests/unit, tests/e2e
 mobile/                          Capacitor Android shell, offline screen, store assets (docs/15-mobile-app.md)
 reference/prototype/             v10 prototype (read-only)
 docs/                            these specs
@@ -85,7 +87,9 @@ pnpm dev                  # app on http://localhost:3000
 pnpm typecheck && pnpm lint
 pnpm test                 # vitest
 pnpm test:e2e             # playwright (starts the app)
-pnpm db:reset             # supabase db reset (migrations + seed)
+pnpm db:dry-run           # migrations + seed + pgTAP in a throwaway container, rolled back (Docker)
+pnpm db:reset             # supabase db reset (migrations + seed) — local stack only, after review approval
+pnpm db:test              # supabase test db (pgTAP) against the local stack
 pnpm db:types             # supabase gen types typescript --local > lib/supabase/types.ts
 npx serve reference/prototype   # view the prototype at http://localhost:3000 (use another port if needed)
 ```
