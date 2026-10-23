@@ -603,3 +603,33 @@ describe('selfhost backup and restore-drill scripts (docs/17 §10)', () => {
     expect(existsSync(join(ROOT, 'backups-must-not-be-here'))).toBe(false);
   });
 });
+
+describe('proposed TLS proxy for mcci.aderalabs.tech (docs/18 §5)', () => {
+  const stage2 = readFileSync('deploy/selfhost/nginx/mcci.aderalabs.tech.conf.proposed', 'utf8');
+  const stage1 = readFileSync('deploy/selfhost/nginx/mcci.aderalabs.tech.http-only.conf.proposed', 'utf8');
+  const active = (s: string) =>
+    s
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('#'))
+      .join('\n');
+
+  it('overwrites the client address headers Auth rate-limits on (never appends)', () => {
+    expect(active(stage2)).toMatch(/proxy_set_header X-Real-IP \$remote_addr;/);
+    expect(active(stage2)).toMatch(/proxy_set_header X-Forwarded-For \$remote_addr;/);
+    expect(active(stage2)).not.toMatch(/proxy_add_x_forwarded_for/);
+  });
+
+  it('proxies only the four client APIs to the loopback gateway; admin paths and everything else get 404', () => {
+    expect(active(stage2).match(/proxy_pass [^;]+;/g)).toEqual(['proxy_pass http://127.0.0.1:18000;']);
+    expect(active(stage2)).toMatch(/location ~ \^\/\(rest\|auth\|storage\|realtime\)\/v1\/ \{/);
+    expect(active(stage2)).toMatch(/location \^~ \/realtime\/v1\/api\/ \{\s+return 404;/);
+    expect(active(stage2)).toMatch(/location \/ \{\s+return 404;/);
+    expect(active(stage1)).not.toMatch(/proxy_pass/);
+  });
+
+  it('uses nginx 1.20 syntax and the host certbot webroot', () => {
+    expect(active(stage2)).not.toMatch(/^\s*http2 on;/m);
+    expect(active(stage2)).toMatch(/listen 443 ssl http2;/);
+    for (const s of [stage1, stage2]) expect(active(s)).toMatch(/root \/var\/www\/letsencrypt;/);
+  });
+});

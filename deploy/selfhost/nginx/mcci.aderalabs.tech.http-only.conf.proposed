@@ -1,0 +1,19 @@
+# PROPOSED — NOT APPLIED. Stage 1 of 2 for mcci.aderalabs.tech (docs/18 §5): port 80 only, so certbot can prove the
+# domain with the host's existing webroot before any 443 block refers to a certificate. Proxies nothing to the stack.
+# Target: /etc/nginx/conf.d/mcci.aderalabs.tech.conf; replaced by mcci.aderalabs.tech.conf.proposed after issuance.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name mcci.aderalabs.tech;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location / {
+        return 404;
+    }
+}

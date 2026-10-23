@@ -1,6 +1,7 @@
-# PROPOSED — NOT APPLIED. TLS reverse proxy for the self-hosted Supabase API of the MCCI staging stack
-# (docs/17 §3, §10, D-M23; deploy/selfhost/README.md §9). Needs explicit approval before it is copied to
-# /etc/nginx/conf.d/ on the VPS, together with the certificate step and the runtime .env change listed in README §9.
+# PROPOSED — NOT APPLIED. Stage 2 of 2: TLS reverse proxy for the self-hosted Supabase API of the MCCI staging stack
+# (docs/17 §3, §10, D-M23; docs/18 §5). Needs explicit approval. It replaces the stage-1 file
+# (mcci.aderalabs.tech.http-only.conf.proposed) only after certbot has issued the certificate: nginx refuses a 443
+# block whose certificate files do not exist yet. Target: /etc/nginx/conf.d/mcci.aderalabs.tech.conf (nginx 1.20.1).
 #
 # Exposes ONLY the four client APIs of the gateway (127.0.0.1:18000, loopback-only). Everything else — Studio (/),
 # postgres-meta (/pg/), /mcp, /api/mcp, Realtime admin (/realtime/v1/api/), /functions/v1/ (not run), /graphql/v1/
@@ -18,8 +19,11 @@ server {
     listen [::]:80;
     server_name mcci.aderalabs.tech;
 
+    # same webroot as the host's other certbot renewals (/etc/letsencrypt/renewal/*.conf)
     location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
+        root /var/www/letsencrypt;
+        default_type text/plain;
+        try_files $uri =404;
     }
     location / {
         return 301 https://$host$request_uri;

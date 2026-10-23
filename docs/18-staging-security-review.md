@@ -1,8 +1,9 @@
 # 18 · Staging security hardening and production-readiness review
 
 Self-hosted Supabase staging stack on the MCCI VPS (`vmi3652958`, `169.58.124.24`), Compose project `mcci-selfhost`,
-runtime `/var/lib/mcci-selfhost/recovery-new`. Work of 23 Oct 2026 (UTC) on branch `db/schema-proposal`, commits
-`f1fd9f7` and `f82e5fe` (pushed), deployed from checkout `/opt/mcci-deploy-f82e5fe`. Companion to `docs/17` (design)
+runtime `/var/lib/mcci-selfhost/recovery-new`. Work of 23 Oct 2026 (UTC) on branch `db/schema-proposal`, code
+commits `f1fd9f7` and `f82e5fe` (deployed from checkout `/opt/mcci-deploy-f82e5fe`) plus documentation and test-only
+commits after them. Companion to `docs/17` (design)
 and `deploy/selfhost/README.md` (runbook). **The system is not production-ready** — see §7.
 
 Status words: **verified** = run and passed on staging with the result kept; **validated** = run in a throwaway
@@ -17,13 +18,14 @@ database or locally, not on staging; **proposed** = written, not applied; **open
 | Auth A1–A12 (`auth.test.ts`) | staging via tunnel, SQL hook on | **15/15** (A5 and A7 each have a time-travel case) |
 | Storage S1–S12 + D-M24 (`storage.test.ts`) | staging via tunnel, SQL hook on | **14/14** |
 | Realtime (`realtime.test.ts`) | staging via tunnel | **12/12** |
-| Integration total | staging, after deploy | **51/51, run twice, 0 skipped** |
+| Integration total | staging, after deploy | **51/51, run twice, 0 skipped**; a third run after the test seed was removed: **51/51** |
 | Baseline before the fixes (Auth + Storage, config of `aa0fd70`) | staging | 26/29: A10 and D-M24 failed (findings F1, F2); one failure was a regex bug in the test itself, fixed |
 | Migrations + seed + pgTAP in a throwaway database (`scripts/db/dry-run.sh`) | local Docker, image 17.6.1.136 | 0 not ok (287 ok lines), exit 0 |
-| Unit (`pnpm test`) | local | **162/162** (10 files) |
+| Unit (`pnpm test`) | local | **165/165** (10 files) |
 | typecheck, ESLint, Prettier, shell `bash -n` (11), `node --check`, upstream integrity 63/63, Compose config (on the VPS) | local / VPS | pass |
 | T-B1 bundle scan (`pnpm scan:bundle`) | local build | 0 findings in 33 client files and 339 tracked files; a planted control was caught (5 rules) |
-| Realtime soak > 10 min (`realtime-soak.test.ts`) | staging | **open — not completed** (interrupted twice by session loss; no result) |
+| Realtime soak > 10 min (`realtime-soak.test.ts`) | staging, 16:00:59 → 16:36:04 UTC | **PASS, completed: 35.08 min, 666 changes sent, 666 received, 0 missed, 0 later than 3 s, max 785 ms**; subscription confirmed at start and again after the token refresh at minute 20, no drop; cleanup deleted 666 rows, nothing left. Report: `docs/evidence/realtime-soak-20261023.json`. (Two earlier attempts were cut off by session loss after ~2 min; their data was removed.) |
+| Proxy-path rate limits (§5) | staging, temporary nginx | **verified** |
 
 ## 2. Findings and fixes
 
@@ -64,9 +66,12 @@ relayed by the Next.js server; none tested. **Security-review decision required 
 or anonymise rows of published tables, change the `notifications` cascades. **Decision required before production
 and before M9 account deletion / the retention job.**
 
-**Realtime reconnect (supabase/realtime#2289).** The soak test exists (one subscription, one change every 3 s,
-token refresh every 20 min, every change must arrive) but has **not completed** on staging. Status: unverified;
-screens must still re-read on focus (docs/17 §4a).
+**Realtime reconnect (supabase/realtime#2289).** Threat: missed live updates (stale status shown to a member or
+officer). Evidence: the 35-minute soak (one subscription, one change every 3 s, token refresh at minute 20) delivered
+666/666 changes across three 10-minute reconnect cycles, with upstream's `REGION: us-east-1` workaround in place.
+Mitigation: keep the workaround until a pinned release has the fix; screens still re-read on focus/navigation
+(docs/17 §4a), because one 35-minute run is evidence, not a guarantee. Regression test: `realtime-soak.test.ts`
+(`MCCI_IT_SOAK_MINUTES=35`), rerun after every Realtime upgrade. No business decision needed.
 
 ## 4. Backup and restore — verified
 
@@ -74,6 +79,8 @@ screens must still re-read on focus (docs/17 §4a).
 |---|---|
 | Set 1 `mcci-20261023T151612Z` | 7 encrypted files, LSN 0/4000028 → 0/4000120, `backup-verify`: ciphertext checksums OK, each file decrypts, plaintext checksum OK, readable (tar listing, JSON, `pg_restore --list`) |
 | Set 2 `mcci-20261023T151718Z` (with the Vault canary) | same checks, all OK |
+| Set 3 `mcci-20261023T155814Z` (before recording the migration history) | same checks, all OK |
+| Set 4 `mcci-20261023T163636Z` (before removing the test seed) | same checks, all OK |
 | Encryption | GnuPG 2.3.3: `cipher 9` (AES-256), `aead 0`, S2K mode 3 SHA-512, MDC-protected packet; files 600, directories 700, root |
 | Restore drill on set 2 | 13 PASS, 0 FAIL: cluster starts; WAL replay reaches consistency; no network/ports; server version, 31 roles, 2 databases, 17 schemas, 8 extensions, 88 policies, 37 functions identical; row counts identical in all 101 tables (1,098 rows); the Vault secret decrypts with the restored pgsodium key; **negative control**: with a fresh key it does not. Containers, volumes and decrypted files removed afterwards; staging untouched (9/9 healthy). |
 | Passphrase | `/root/.config/mcci-backup/passphrase` (600) on the VPS; off-server copy at the operator's workstation `C:\Users\DELL\.mcci-secrets\` (ACL: owner only, excluded from the home-folder git repository); both copies verified identical by hash. Move it into MCCI's password manager. |
@@ -89,37 +96,62 @@ Limitations and the runbook: `deploy/selfhost/README.md` §7.
 | From the VPS to its own addresses (169.58.124.24, 172.17.0.1, 172.18.0.1) × ports 18000, 15432, 5432, 6543, 4000, 8000, 3000, 8080, 5000, 9999 | 30/30 closed — verified |
 | From outside to 169.58.124.24, same ports | refused or filtered — verified |
 | Public routing | `http://mcci.aderalabs.tech/rest/v1/` → 404 (no route to the stack); HTTPS for that name not configured |
-| Rate limit through the proposed proxy (`X-Real-IP` overwritten, forged per request) | **open** — test ran in a temporary separate nginx on `127.0.0.1:18081` but the session was lost before its result was recorded |
+| Rate limit through the proposed proxy, a **different forged** `X-Real-IP`/`X-Forwarded-For` on every request (15:55 UTC) | **verified** in a temporary, separate nginx 1.20.1 (own prefix and pid, `127.0.0.1:18081`, the proposal's API blocks; stopped and removed afterwards): `/verify` ×40 → first 429 at request 31 (30×403, 10×429); `/token` ×160 → first 429 at request 33 (41×400, 119×429); nginx logged all 203 requests as the one real client. Control, directly to the gateway with the same forged headers: 40×403 and 160×400, never limited — the overwrite is what enforces the limits, so the gateway must stay loopback-only. Through the proxy, Studio `/` and `/pg/` → 404. Password sign-in limits at ≈ 30, not 150: it is governed by a stricter limiter than token refresh. |
 | Unrelated on the host (not changed) | nginx 80/443 for other sites, MariaDB `*:3306` (public), Node `0.0.0.0:3001`, host PostgreSQL `127.0.0.1:5432` |
 
-**TLS proposal** (`deploy/selfhost/nginx/mcci.aderalabs.tech.conf.proposed`, not applied): port 80 → HTTPS plus ACME
-webroot; 443 proxies only `/rest|auth|storage|realtime/v1/` to `127.0.0.1:18000`, overwriting `X-Real-IP` and
-`X-Forwarded-For`, websockets for Realtime, 11 MB body limit, HSTS; `/realtime/v1/api/`, Studio, `/pg/`, `/mcp`,
-`/api/mcp`, `/functions/v1/`, `/graphql/v1/` → 404. Admins use an SSH tunnel to Studio. DNS for
-`mcci.aderalabs.tech` already points at the VPS. Approval package: §7.
+**Production nginx, inspected read-only:** nginx 1.20.1 (`http_v2`, `ssl`, `realip` modules); `nginx.conf` includes
+`/etc/nginx/conf.d/*.conf` and has the stock catch-all server on port 80 (that is the 404 `mcci.aderalabs.tech`
+gets today); no `default_server` on 443, so HTTPS for an unknown name is answered by the first TLS site and fails the
+name check. Five other sites (aderalabs.tech, fintax, tax/api.tax, iqpigeon.com, whatsappapi.iqpigeon.com) with
+certbot certificates (webroot `/var/www/letsencrypt`, `certbot-renew.timer` active). `firewalld` is **inactive**: every
+port bound to a public address is reachable (relevant to MariaDB `*:3306`). SELinux `httpd_can_network_connect` is on,
+so nginx may proxy to `127.0.0.1:18000`. Live configuration fingerprint unchanged throughout (`39b2d943…`).
+
+**TLS proposal (not applied), two stages** — nginx refuses a 443 block whose certificate does not exist yet:
+1. `deploy/selfhost/nginx/mcci.aderalabs.tech.http-only.conf.proposed` → `/etc/nginx/conf.d/mcci.aderalabs.tech.conf`:
+   port 80, ACME webroot `/var/www/letsencrypt`, everything else 404; proxies nothing.
+2. `certbot certonly --webroot -w /var/www/letsencrypt -d mcci.aderalabs.tech` (renewed by the existing timer).
+3. `deploy/selfhost/nginx/mcci.aderalabs.tech.conf.proposed` replaces the stage-1 file: 80 → HTTPS (+ ACME); 443
+   (`listen 443 ssl http2`, TLS 1.2/1.3, HSTS, nosniff, no-referrer) proxies only `/rest|auth|storage|realtime/v1/` to
+   `127.0.0.1:18000`, **overwriting** `X-Real-IP` and `X-Forwarded-For`, websockets for Realtime, 11 MB body limit;
+   `/realtime/v1/api/`, Studio `/`, `/pg/`, `/mcp`, `/api/mcp`, `/functions/v1/`, `/graphql/v1/` → 404. Admins reach
+   Studio only through `ssh -N -L 18000:127.0.0.1:18000 mcci-vps`.
+4. Runtime `.env`: `API_EXTERNAL_URL` and `SUPABASE_PUBLIC_URL` = `https://mcci.aderalabs.tech`; recreate `auth`,
+   `storage`, `studio` with `compose.sh up -d --no-deps --wait …`.
+
+Both files pass `nginx -t` with the host's nginx 1.20.1 (isolated check, stage 2 with a throwaway certificate); unit
+guards in `tests/unit/selfhost-scripts.test.ts` pin the header overwrite and the 404s. DNS for `mcci.aderalabs.tech`
+already points at the VPS; no firewall change is needed for the stack.
 
 ## 6. Migration history and test seed
 
 | Item | Status |
 |---|---|
-| `supabase/ops/record-applied-migrations.sql` | **validated** in a throwaway database with CLI 2.121: before, `db push --dry-run` would re-run all 17; after, "Remote database is up to date"; second run no-op; refuses (records nothing) on a database without the migrations. **Staging: open.** |
-| `supabase/ops/remove-test-seed.sql` | **validated**: removal returns the database to the migrations-only state (schemas + every row count; `audit_log` kept, append-only); refuses and changes nothing when a non-seed user is attached to a seed company; second run no-op. **Staging: open** (run after the soak, it disables the pgTAP suite there until re-seeded). |
+| `supabase/ops/record-applied-migrations.sql` | **validated** twice in a throwaway database with CLI 2.121 (before: `db push --dry-run` would re-run all 17; after: "Remote database is up to date"; second run no-op; refuses on a database without the migrations). **Verified on staging (15:58 UTC)**, after backup set `mcci-20261023T155814Z` (verified): run through `compose.sh psql-file`, 17 rows `20261023000100`–`20261023000260`, second run no-op; then the CLI against staging (temporary SSH tunnel to the db container, password only in `PGPASSWORD`): `migration list` 17 local / 17 remote / 0 pending, `db push --dry-run` "Remote database is up to date". No migration was re-applied. |
+| `supabase/ops/remove-test-seed.sql` | **validated** (returns a throwaway database to the migrations-only state; refuses and changes nothing when a non-seed user is attached to a seed company; second run no-op). Rollback rehearsal on staging: guards passed, nothing changed. **Verified on staging (16:37 UTC)**, after backup set 4 and after all results above were recorded: exactly the seed's rows went (`auth.users`/`profiles` 16 → 0, `staff` 8 → 0, `company_users` 7 → 0, companies, applications, documents, vouchers, service requests, members, endorsements, invitations, meetings, print batches, overrides, 2 notifications → 0; `tests` schema dropped); 74 of 94 tables unchanged, including all reference data (settings 12, designations 9, document requirements 50, role permissions 108, service types 7), 7 buckets, 17 history rows and the Vault canary (still decrypts); `audit_log` 575 → 627 (the deletions are audited; append-only). Second run: no-op. Consequence: the pgTAP suite cannot run on staging until the seed is applied again (it ran 276/276 before). |
 | Interrupted soak run `1df0d959` | removed after identification: 38 notifications `soak-1df0d959-*` and user `it-1df0d959-soak@test.local` (+ profile, 1 session) — verified 0 left |
 
 ## 7. Open gates (not production-ready)
 
-1. Realtime soak > 10 min on staging — open.
-2. Rate limit through the real proxy path — open (and the proxy itself awaits approval).
-3. Migration history recorded on staging; test seed removed from staging — open.
-4. Production SMTP (F4) and D-M22 email budget — open; sign-up does not work until then.
-5. R-RT1 and R-RT2 security-review decisions — open.
-6. Off-host backup target, key holders, schedule and retention (D-M1, D-M3) — open.
-7. TLS proxy + certificate for `mcci.aderalabs.tech`, admin access rule (D-M23) — proposed, needs approval.
-8. T-B1 on a build with the real environment, and CSP `connect-src` — open (scan of an env-less build is clean).
-9. Unrelated but material: MariaDB listens publicly on `*:3306` — owner's decision.
+Closed on 23 Oct: Auth/Storage suites, F1–F3, D-M24, the Realtime soak, rate limits through the proxy logic, backup +
+restore drill, migration history, test-seed removal, T-B1 on an env-less build.
 
-**Actions that need approval:** (a) copy the proposed nginx file to `/etc/nginx/conf.d/mcci.aderalabs.tech.conf`,
-`nginx -t`, reload; (b) issue the certificate (`certbot certonly --webroot -w /var/www/certbot -d mcci.aderalabs.tech`);
-(c) set `API_EXTERNAL_URL` / `SUPABASE_PUBLIC_URL` in the runtime `.env` to `https://mcci.aderalabs.tech` and
-recreate `auth`, `storage`, `studio`; (d) install the backup schedule; (e) firewall: no change needed for the stack
-(nothing of it is public), 3306 is an owner decision.
+Still open — each blocks production:
+
+1. **Production SMTP** (F4) and the **D-M22 email budget**: public sign-up, email change and re-authentication fail
+   (500) until then.
+2. **R-RT1 and R-RT2**: security-review decisions (accept, or adopt and test an alternative).
+3. **TLS proxy and certificate** for `mcci.aderalabs.tech` and the admin-access rule (D-M23): proposed (§5), not
+   applied. Until then the per-IP Auth limits are not in force for real clients, because only the proxy sets `X-Real-IP`.
+4. **Backups off the host**: target, key holders, schedule and retention (D-M1, D-M3); no WAL archiving yet. Sets and
+   passphrase are on the VPS (plus the operator's workstation copy of the passphrase).
+5. **T-B1 on a build with the real environment** and a CSP `connect-src`; the Next.js app's host is not decided, and
+   server-side Auth calls must forward the client address in `X-Real-IP` (D-M22).
+6. **Host hygiene, not part of this stack** (owner's decision): `firewalld` is inactive, so MariaDB `*:3306` and Node
+   `0.0.0.0:3001` are public.
+
+**Actions that need approval** (exact steps in §5): (a) install the stage-1 nginx file, `nginx -t`, reload;
+(b) `certbot certonly --webroot -w /var/www/letsencrypt -d mcci.aderalabs.tech`; (c) replace it with the stage-2 file,
+`nginx -t`, reload; (d) set `API_EXTERNAL_URL` / `SUPABASE_PUBLIC_URL` to `https://mcci.aderalabs.tech` in the runtime
+`.env` and recreate `auth`, `storage`, `studio`; (e) install the backup schedule (README §7 proposal); (f) firewall
+rules for the host's other services — owner's decision; no change is needed for the stack.
