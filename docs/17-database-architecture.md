@@ -145,7 +145,8 @@ that subscriber's JWT, inside `realtime.apply_rls`.
    replaces the table-wide SELECT with a column grant of every other column. Neither REST nor Realtime returns
    them; staff and the endorser see evidence only through an `api.*` function (M4). A column added to
    `endorsements` later is unreadable until it is granted on purpose (090 pins the exact list). Consequence for
-   app code: a client `select('*')` on `endorsements` fails with "permission denied" (verified); list the columns.
+   app code: a client `select('*')` on `endorsements` fails with "permission denied" (verified); list the columns
+   (ESLint flags the literal forms; it cannot see every form, see the coverage tables below).
 4. Sensitive or internal tables are never published (credentials, personal data, logs, `private`, `auth`,
    `storage`). `realtime.messages` keeps RLS with no policy, so private broadcast channels stay closed.
 5. Not published now: `temp_memberships`, `documents`, `members` (`docs/05` M7 "updates live"). Those screens can
@@ -206,15 +207,45 @@ Run locally (after 0260 is applied; PowerShell, values read from `supabase statu
 `$env:MCCI_IT_LOCAL='1'`, `$env:MCCI_IT_SUPABASE_URL` = API_URL, `$env:MCCI_IT_PUBLISHABLE_KEY` = PUBLISHABLE_KEY,
 `$env:MCCI_IT_SECRET_KEY` = SECRET_KEY, then `pnpm test:integration`.
 
-**Generated types and restricted columns (limitation).** `supabase gen types` describes table columns, not grants,
-so `lib/supabase/types.ts` still lists `endorsements.ip` / `user_agent`. That is correct for the trusted
-service-role client (`lib/supabase/admin.ts`), which may read them, but over-promises for the user clients
-(`client.ts`, `server.ts`): selecting those columns compiles and then fails at runtime with "permission denied".
-The project has no mechanism today to derive a client-side type from column privileges. Options, not implemented:
-a hand-written `ClientDatabase` type that omits restricted columns (drift risk as grants change), or a small
-generator that reads `information_schema.column_privileges` for `authenticated` from the local database and emits
-that type, checked in CI. Until then: do not hand-edit the generated file, list endorsement columns explicitly, and
-treat the database (090) — not the type — as the guarantee.
+**Generated types and restricted columns.** `supabase gen types` describes table columns, not grants, so the
+generated `lib/supabase/types.ts` (never hand-edited) still lists `endorsements.ip` / `user_agent`. That is correct
+for the service-role client (`lib/supabase/admin.ts`), which keeps the full `Database` type and may read them. The
+two user-session clients run with the user's column privileges and are typed with `ClientDatabase`
+(`lib/supabase/client-types.ts`): the generated type minus `RESTRICTED_CLIENT_COLUMNS` (`endorsements`: `ip`,
+`user_agent`). That covers the browser client (`client.ts`) and the cookie-session server client (`server.ts`).
+
+**Caught** (types, and the `no-restricted-syntax` guard in `eslint.config.mjs`; examples pinned in
+`tests/unit/eslint-endorsements.test.ts`). The lint guard inspects the first argument of `.select()` when it is a
+string literal, or the static text of a template literal. It applies to `*.ts` / `*.tsx` everywhere except
+`tests/**`. In the service-role paths (`app/api/**`, `lib/pdf/**`, `lib/supabase/admin.ts`) the evidence columns may
+be named, but `*` must still be avoided.
+
+| Pattern on a user-session client | Enforcement |
+|---|---|
+| `select('ip')`, `select('id, ip')`, `addr:ip`, `ip::text`, `` select(`id, ip`) `` | type: the result is a `SelectQueryError`, so any use of the data fails to compile (postgrest-js does not reject the `.select()` call itself); lint: rejected outside service-role paths |
+| embedded `endorsements(ip)`, `endorsements(members(id), ip)`, the same in a template literal | type (as above) and lint, outside service-role paths |
+| `.from('endorsements')` with `select('*')`, `select()`, `select('id, *')`, `select('*', { count })`, `` select(`*`) ``, and a `*` in the static part of a template with substitutions (`` `id, ${x}, *` ``) | lint only (type-checks, typed without the evidence columns, but fails at runtime) |
+| embedded `endorsements(*)` and `endorsements(id, *)`, also aliased (`e:endorsements!inner(…)`), spread (`...endorsements(…)`), nested inside another embed, multi-line in a string with `\n` escapes or in a template literal | lint only |
+
+**Not reliably caught** — the database grants (090) remain the guarantee; the query fails with "permission denied":
+
+| Pattern | Why |
+|---|---|
+| split builders: `const q = db.from('endorsements'); q.select('*')` | the guard needs `.from('endorsements')` in the same call chain as `.select()` |
+| table or column strings held in variables or constants: `db.from(t)`, `select(COLS)` | only literal arguments are inspected |
+| computed method calls: `db['from']('endorsements')['select']('*')` | the guard matches `.from` / `.select` property access only |
+| `${…}` substitutions in a template: `` select(`${cols}`) ``, `` endorsements(${cols}) `` | substituted values are not known statically; postgrest-js types such a select as an error ("Received a generic string"), so code must cast its result, and the cast hides which columns are read |
+| `*` or an evidence column after more than two levels of nested embeds inside `endorsements(…)` | the pattern skips at most two nested levels |
+| filters and ordering on restricted columns: `.eq('ip', …)`, `.order('user_agent')` | neither types nor lint inspect filter columns |
+| `.js` / `.jsx` / `.mjs` files | the guard is scoped to `*.ts` / `*.tsx` (the project is TypeScript; `allowJs` is off, but Next.js would still compile `.jsx`) |
+| a client created outside `lib/supabase/*` with the full `Database` type | outside the typed factories |
+
+Drift guard: test 090 pins the exact client-readable `endorsements` columns in the database;
+`tests/unit/client-types.test.ts` checks that `RESTRICTED_CLIENT_COLUMNS` equals the generated columns minus that
+pinned list, and (via `pnpm typecheck`) that the client types lack exactly those columns while `Database` keeps them.
+A grant change therefore fails 090 first and then this unit test until the list is updated.
+`tests/unit/eslint-endorsements.test.ts` runs the real ESLint config against flagged and allowed queries, and pins
+the `${…}` limitation as not flagged. ESLint therefore narrows, but does not close, the `select('*')` gap.
 
 ## 5. Tables (canonical inventory)
 
@@ -322,7 +353,7 @@ self-hosted release and upgrade staging first.
 | Run `pnpm test:integration` on the self-hosted stack (§4a; local stack verified) | with T-V3 |
 | R-RT1 security review: accept anonymous metadata notices for production or adopt a tested alternative (§4a) — not approved for production | before staging |
 | R-RT2 security review: deleted-row ids reach every subscriber; decide soft-delete / anonymise / cascade changes / accept, and analyse which other client-readable references are visible across companies (§4a) — not approved for production | before staging; before M9 account deletion or the retention job |
-| Client-side type for restricted columns (`ClientDatabase` derived from column privileges, §4a) | M4 (separate task) |
+| Client-side type for restricted columns: `ClientDatabase` + ESLint guard, done (§4a). Remaining: add each new column-restricted table to `RESTRICTED_CLIENT_COLUMNS` with its pgTAP pin | with each grant change |
 | Auth API tests `tests/integration/auth.test.ts` (synthetic users): A1 sign-up creates the profile (language from metadata, no staff rights); A2 sign-in fails before email confirmation, works after (Mailpit); A3 password < 10 rejected; A4 email change needs secure double confirmation, `profiles.email` syncs after; A5 password change needs re-authentication; A6 TOTP enroll/challenge/verify reaches AAL2; A7 email one-time code incl. expiry; A8 anonymous sign-in rejected; A9 sign-out everywhere revokes refresh tokens; A10 sign-in and code requests rate-limited; A11 a user's JWT on REST returns only their own profile; A12 deleting an Auth user cascades to the profile | M1 |
 | Storage API tests `tests/integration/storage.test.ts` (synthetic files): S1 upload to own draft path sets the owner; S2 another company's prefix denied; S3 upload after submission denied; S4 > 10 MiB or disallowed type rejected; S5 signed URL 600 s for the owner, fails after expiry, other company cannot create one; S6 private object without auth denied, `cms` public; S7 delete through the API denied, object stays; S8 overwrite (`x-upsert`) denied; S9 endorser cannot download applicant files; S10 receipt upload only for an Unpaid voucher; S11 anonymous cannot list private buckets; S12 trusted service-role handler writes form snapshots | M1–M2 |
 | T-B1 client-bundle scan for `sb_secret_` and secret env names; CSP `connect-src` | with M1 auth |
