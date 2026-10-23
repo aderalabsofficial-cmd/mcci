@@ -52,9 +52,9 @@ work="$set_dir/.work"
 mkdir "$work"
 gpg_home
 done_ok=0
-PSQL_PID=
+psql_pid=
 cleanup() {
-  [ -n "$PSQL_PID" ] && kill "$PSQL_PID" 2>/dev/null || true
+  [ -n "$psql_pid" ] && kill "$psql_pid" 2>/dev/null || true
   gpg_cleanup
   rm -rf "$work"
   if [ "$done_ok" != 1 ] && [ -d "$set_dir" ]; then
@@ -78,7 +78,12 @@ encrypt() {
   echo "  wrote $name.gpg ($(stat -c %s "$set_dir/$name.gpg") bytes)"
 }
 
-coproc PSQL { docker exec -i "$db" psql -X -q -A -t -U supabase_admin -d postgres -v ON_ERROR_STOP=1 2>&1; }
+# Warnings and errors only: pg_backup_stop's NOTICE about WAL archiving must not be read as the label line.
+coproc PSQL {
+  docker exec -i -e PGOPTIONS='-c client_min_messages=warning' "$db" \
+    psql -X -q -A -t -U supabase_admin -d postgres -v ON_ERROR_STOP=1 2>&1
+}
+psql_pid=$PSQL_PID # bash unsets PSQL_PID when the coprocess ends
 # sql STATEMENT LABEL — sends one statement; its single output line is left in ROW
 sql() {
   printf '%s\n' "$1" >&"${PSQL[1]}"
@@ -109,8 +114,8 @@ echo "  backup stopped at $stop_lsn"
 sql "$STATE_SQL" "state"
 printf '%s\n' "$ROW" | encrypt state.json
 printf '\\q\n' >&"${PSQL[1]}"
-wait "$PSQL_PID" 2>/dev/null || true
-PSQL_PID=
+wait "$psql_pid" 2>/dev/null || true
+psql_pid=
 tar_live --numeric-owner -cf - -C "$datadir" pg_wal -C "$work" "${extra[@]}" | encrypt db-wal.tar
 
 docker exec "$db" pg_dump -U supabase_admin -Fc -d postgres | encrypt postgres.dump
@@ -126,7 +131,7 @@ for f in $BACKUP_FILES; do printf '%s  %s\n' "$(cat "$work/$f.sha256")" "$f"; do
   echo "db_image=$db_image"
   echo "start_lsn=$start_lsn"
   echo "stop_lsn=$stop_lsn"
-  echo "encryption=gpg symmetric AES256, s2k SHA512 x65011712, no compression"
+  echo "encryption=gpg symmetric AES256 (RFC 4880, MDC), s2k SHA512 x65011712, no compression"
 } >"$set_dir/backup-info.txt"
 chmod 600 "$set_dir"/*
 

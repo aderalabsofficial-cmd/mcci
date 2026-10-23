@@ -78,7 +78,10 @@ start() { # NAME DATA VOLUME
   done
   return 1
 }
-state() { docker exec -i "$1" psql -X -q -A -t -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<<"$STATE_SQL"; }
+state() {
+  docker exec -i -e PGOPTIONS='-c client_min_messages=warning' "$1" \
+    psql -X -q -A -t -U supabase_admin -d postgres -v ON_ERROR_STOP=1 <<<"$STATE_SQL"
+}
 
 result=0
 pass() { echo "PASS  $*"; }

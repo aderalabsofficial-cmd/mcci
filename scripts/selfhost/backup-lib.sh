@@ -31,8 +31,10 @@ gpg_cleanup() {
   rm -rf "$GNUPG_TMP"
 }
 
+# --rfc4880: classic MDC-protected packets (SEIPD v1) instead of GnuPG 2.3's OCB/AEAD default, so any OpenPGP tool
+# (GnuPG 2.2+, Sequoia, …) can decrypt the set off-host; integrity is still checked on decryption.
 gpg_encrypt() { # stdin → $1
-  gpg --homedir "$GNUPG_TMP" --batch --yes --quiet --no-tty --pinentry-mode loopback \
+  gpg --homedir "$GNUPG_TMP" --batch --yes --quiet --no-tty --pinentry-mode loopback --rfc4880 \
     --passphrase-file "$BACKUP_PASSPHRASE_FILE" --symmetric --cipher-algo AES256 --s2k-mode 3 \
     --s2k-digest-algo SHA512 --s2k-count 65011712 --compress-algo none --output "$1"
 }
