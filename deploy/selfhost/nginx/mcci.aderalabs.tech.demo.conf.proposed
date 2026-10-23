@@ -1,0 +1,59 @@
+# PROPOSED — NOT APPLIED. Demonstration site for https://mcci.aderalabs.tech (docs/18 §8): serves the static v10
+# prototype (reference/prototype — public site, member dashboard, admin panel; demo data only, no backend calls, no
+# form posts) from /var/www/mcci-demo. It proxies NOTHING to the Supabase gateway: no API, no Auth (so no sign-up),
+# no Storage, no Realtime, no Studio. Use after stage 1 (mcci.aderalabs.tech.http-only.conf.proposed) and certbot.
+# Replaced later by the production proxy (mcci.aderalabs.tech.conf.proposed). Target:
+# /etc/nginx/conf.d/mcci.aderalabs.tech.conf (nginx 1.20.1). Rollback: remove the file, nginx -t, reload.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name mcci.aderalabs.tech;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/letsencrypt;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    # nginx 1.20.1: HTTP/2 is a listen parameter
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name mcci.aderalabs.tech;
+
+    ssl_certificate     /etc/letsencrypt/live/mcci.aderalabs.tech/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mcci.aderalabs.tech/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    server_tokens off;
+
+    root /var/www/mcci-demo;
+    index index.html;
+
+    # A demo, not a launch: keep it out of search engines; no HSTS (it is sticky in browsers and would make a
+    # rollback harder — the production configuration adds it).
+    add_header X-Robots-Tag "noindex, nofollow" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options DENY always;
+    add_header Referrer-Policy no-referrer always;
+
+    # Optional (decision): password-protect the whole demo
+    # auth_basic "MCCI demo";
+    # auth_basic_user_file /etc/nginx/mcci-demo.htpasswd;
+
+    # Phase-2 screens are not shown (CLAUDE.md §1.1: no 1Bill PSID, no integrations in this phase)
+    location ^~ /admin/psid/ {
+        return 404;
+    }
+    location ^~ /admin/integrations/ {
+        return 404;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
