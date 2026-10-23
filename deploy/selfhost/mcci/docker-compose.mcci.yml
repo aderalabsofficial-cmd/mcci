@@ -57,6 +57,13 @@ services:
       GOTRUE_RATE_LIMIT_VERIFY: '30' # token_verifications
       GOTRUE_RATE_LIMIT_SMS_SENT: '30'
       GOTRUE_RATE_LIMIT_WEB3: '30'
+      # Auth applies the per-IP limits above (sign-in/token, verify, OTP, sign-up, recover, …) ONLY when this header
+      # is set and the request carries it; unset (upstream's default) they are not applied at all — measured on
+      # staging: 160 failed sign-ins and 40 wrong codes in a row, no 429 (tests/integration/auth.test.ts A10). The TLS
+      # proxy must OVERWRITE it with the peer address (nginx: proxy_set_header X-Real-IP $remote_addr), the gateway is
+      # loopback-only, and server-side callers (Next.js) must forward the end user's address in it. Requests without it
+      # are still not limited, so this is effective only behind that proxy (docs/17 §12 D-M22).
+      GOTRUE_RATE_LIMIT_HEADER: X-Real-IP
       # Email limits are UNRESOLVED (decision D-M22, docs/17 §12) and deliberately not set here, so Auth's own
       # defaults apply (upstream CONFIG.md): GOTRUE_RATE_LIMIT_EMAIL_SENT 30 per hour (whole instance) and
       # GOTRUE_SMTP_MAX_FREQUENCY 1m per address. config.toml's local values (2/hour, 1s) are CLI conveniences: 1s
@@ -88,6 +95,10 @@ services:
     environment:
       FILE_SIZE_LIMIT: '10485760' # 10 MiB, supabase/config.toml [storage] file_size_limit (docs/01, docs/08)
       ENABLE_IMAGE_TRANSFORMATION: 'false' # off in the local CLI stack too; imgproxy is not run
+      # D-M24: the S3 protocol endpoint (/storage/v1/s3) authenticates with S3_PROTOCOL_ACCESS_KEY_* (SigV4), which
+      # bypass every object policy of migration 0230. No MCCI component uses it (uploads go through the Storage REST
+      # API under RLS), so it is off; it answered through the gateway before (tests/integration/storage.test.ts).
+      S3_PROTOCOL_ENABLED: 'false'
       JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
     volumes:
       - ${MCCI_SELFHOST_DATA_DIR}/storage:/var/lib/storage:z

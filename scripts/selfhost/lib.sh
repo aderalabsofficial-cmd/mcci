@@ -36,37 +36,46 @@ refuse_if_in_git() {
   die "cannot verify that $dir is outside every git repository (git said: $(printf '%s' "$out" | head -n 1))"
 }
 
-# Validates MCCI_SELFHOST_RUNTIME and sets SELFHOST_RUNTIME to its physical path. With "new" a missing directory is
-# created — only after every check has passed.
-require_runtime() {
-  local raw=${MCCI_SELFHOST_RUNTIME:-} mode=${1:-existing} probe rest='' resolved target
-  [ -n "$raw" ] || die "set MCCI_SELFHOST_RUNTIME to an absolute directory outside every git repository"
-  case "$raw" in *$'\n'* | *$'\r'* | *$'\t'*) die "MCCI_SELFHOST_RUNTIME contains control characters" ;; esac
+# Validates the directory named by environment variable NAME (absolute, no '.'/'..', not a file-system root, outside
+# this repository and every git working tree) and sets RESOLVED_DIR to its physical path. LABEL names it in messages.
+# With "new" a missing directory is created (mode from the caller's umask) — only after every check has passed.
+resolve_external_dir() {
+  local name=$1 label=$2 mode=${3:-existing} raw probe rest='' resolved target
+  raw=${!name:-}
+  [ -n "$raw" ] || die "set $name to an absolute directory outside every git repository"
+  case "$raw" in *$'\n'* | *$'\r'* | *$'\t'*) die "$name contains control characters" ;; esac
   raw=${raw//\\//}
-  case "$raw" in /* | [A-Za-z]:/*) ;; *) die "MCCI_SELFHOST_RUNTIME must be an absolute path: $raw" ;; esac
-  case "/$raw/" in */./* | */../*) die "MCCI_SELFHOST_RUNTIME must not contain '.' or '..' segments: $raw" ;; esac
+  case "$raw" in /* | [A-Za-z]:/*) ;; *) die "$name must be an absolute path: $raw" ;; esac
+  case "/$raw/" in */./* | */../*) die "$name must not contain '.' or '..' segments: $raw" ;; esac
   while case "$raw" in */) true ;; *) false ;; esac && [ "$raw" != / ]; do raw=${raw%/}; done
 
   # Deepest existing ancestor, resolved physically (symlinks, junctions); the missing tail must be plain names.
   probe=$raw
   while [ ! -d "$probe" ]; do
-    [ -e "$probe" ] && die "MCCI_SELFHOST_RUNTIME exists but is not a directory: $raw"
+    [ -e "$probe" ] && die "$name exists but is not a directory: $raw"
     rest="/${probe##*/}$rest"
     probe=${probe%/*}
     case "$probe" in '' | /) probe=/ ;; [A-Za-z]:) probe="$probe/" ;; esac
   done
-  [ -z "$rest" ] || [ "$mode" = new ] || die "runtime directory does not exist: $raw"
+  [ -z "$rest" ] || [ "$mode" = new ] || die "$label does not exist: $raw"
   resolved=$(cd -P "$probe" 2>/dev/null && pwd -P) || die "cannot resolve $probe"
   if [ "$resolved" = / ]; then target=${rest:-/}; else target=$resolved$rest; fi
-  case "$(path_key "$target")" in '' | / | /[a-z] | [a-z]: | [a-z]:/) die "refusing a file-system root as runtime directory" ;; esac
-  path_within "$target" "$SELFHOST_ROOT" && die "the runtime directory must be outside this repository: $raw"
+  case "$(path_key "$target")" in '' | / | /[a-z] | [a-z]: | [a-z]:/) die "refusing a file-system root as $label" ;; esac
+  path_within "$target" "$SELFHOST_ROOT" && die "$label must be outside this repository: $raw"
   refuse_if_in_git "$resolved"
 
-  [ -z "$rest" ] || mkdir -p "$target" || die "cannot create the runtime directory: $raw"
-  SELFHOST_RUNTIME=$(cd -P "$target" && pwd -P) || die "cannot resolve the runtime directory: $raw"
+  [ -z "$rest" ] || mkdir -p "$target" || die "cannot create $label: $raw"
+  RESOLVED_DIR=$(cd -P "$target" && pwd -P) || die "cannot resolve $label: $raw"
   # Re-check the created/resolved path (a link could have appeared in between).
-  path_within "$SELFHOST_RUNTIME" "$SELFHOST_ROOT" && die "the runtime directory must be outside this repository: $raw"
-  refuse_if_in_git "$SELFHOST_RUNTIME"
+  path_within "$RESOLVED_DIR" "$SELFHOST_ROOT" && die "$label must be outside this repository: $raw"
+  refuse_if_in_git "$RESOLVED_DIR"
+}
+
+# Validates MCCI_SELFHOST_RUNTIME and sets SELFHOST_RUNTIME to its physical path. With "new" a missing directory is
+# created — only after every check has passed.
+require_runtime() {
+  resolve_external_dir MCCI_SELFHOST_RUNTIME "the runtime directory" "${1:-existing}"
+  SELFHOST_RUNTIME=$RESOLVED_DIR
 }
 
 require_env_file() {

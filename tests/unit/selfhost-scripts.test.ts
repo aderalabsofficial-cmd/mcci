@@ -513,3 +513,93 @@ describe('selfhost database configuration volume (staging regression, commit 7ee
     expect(active('scripts/selfhost/init-runtime.sh').join('\n')).not.toMatch(/data\/db\/config/);
   });
 });
+
+describe('selfhost Auth and Storage hardening (docs/17 §12 D-M22, D-M24)', () => {
+  const override = readFileSync('deploy/selfhost/mcci/docker-compose.mcci.yml', 'utf8');
+  const service = (name: string) => override.split(/\n(?=  [a-z-]+:\n)/).find((b) => b.startsWith(`  ${name}:`)) ?? '';
+
+  it('Auth keys its per-IP rate limits on X-Real-IP (without a header GoTrue applies none)', () => {
+    expect(service('auth')).toMatch(/^\s+GOTRUE_RATE_LIMIT_HEADER: X-Real-IP$/m);
+  });
+
+  it('the Storage S3 protocol endpoint (SigV4 keys bypass RLS) is switched off', () => {
+    expect(service('storage')).toMatch(/^\s+S3_PROTOCOL_ENABLED: 'false'$/m);
+  });
+});
+
+describe('selfhost backup and restore-drill scripts (docs/17 §10)', () => {
+  const src = (f: string) => readFileSync(`scripts/selfhost/${f}`, 'utf8');
+  const code = (f: string) =>
+    src(f)
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('#'))
+      .join('\n');
+  const scripts = ['backup.sh', 'backup-verify.sh', 'restore-drill.sh'];
+
+  it('run strict, with a private umask, and share lib.sh and backup-lib.sh', () => {
+    for (const f of scripts) {
+      expect(code(f), f).toMatch(/^set -euo pipefail$/m);
+      expect(code(f), f).toMatch(/^umask 077$/m);
+      expect(code(f), f).toMatch(/\. "\$here\/lib\.sh"\n\. "\$here\/backup-lib\.sh"/);
+    }
+  });
+
+  it('back up the database, Storage, the db-config volume (pgsodium key) and the runtime .env', () => {
+    expect(src('backup-lib.sh')).toMatch(
+      /^BACKUP_FILES="db-base\.tar db-wal\.tar state\.json postgres\.dump storage\.tar db-config\.tar runtime-env\.tar"$/m,
+    );
+    expect(src('backup-lib.sh')).toMatch(/^DB_CONFIG_VOLUME=mcci-selfhost_db-config$/m);
+    for (const name of [
+      'db-base.tar',
+      'db-wal.tar',
+      'state.json',
+      'postgres.dump',
+      'storage.tar',
+      'db-config.tar',
+      'runtime-env.tar',
+    ]) {
+      expect(code('backup.sh')).toContain(`encrypt ${name}`);
+    }
+    expect(code('backup.sh')).toMatch(/pg_backup_start\(/);
+    expect(code('backup.sh')).toMatch(/pg_backup_stop\(false\)/);
+  });
+
+  it('encrypt with AES-256 from a passphrase file only (never on a command line, never printed)', () => {
+    const lib = code('backup-lib.sh');
+    expect(lib).toMatch(/--symmetric --cipher-algo AES256/);
+    expect(lib).toMatch(/--passphrase-file "\$BACKUP_PASSPHRASE_FILE"/);
+    expect(lib).toMatch(/case "\$mode" in\s+600 \| 400\)/);
+    for (const f of [...scripts, 'backup-lib.sh']) {
+      expect(code(f), f).not.toMatch(/--passphrase[ =](?!-file)/);
+      expect(code(f), f).not.toMatch(/(cat|less|head|tail)[^\n|]*PASSPHRASE/);
+    }
+  });
+
+  it('never delete or overwrite existing data, volumes or backups', () => {
+    for (const f of ['backup.sh', 'backup-verify.sh']) {
+      expect(code(f), f).not.toMatch(/\brm -rf\b(?! "\$work")|docker volume rm|docker rm\b|\bdown\b|--force\b/);
+    }
+    expect(code('backup.sh')).toMatch(/\[ ! -e "\$set_dir" \] \|\| die/);
+    expect(code('backup.sh')).toMatch(/mv "\$set_dir" "\$set_dir\.FAILED"/);
+    // the drill removes only what it created: names with its own prefix, refused if they already exist
+    const drill = code('restore-drill.sh');
+    expect(drill).toMatch(/^id="mcci-restore-drill-\$\(date/m);
+    expect(drill).toMatch(/docker volume inspect "\$v" >\/dev\/null 2>&1 \|\| die "volume \$v already exists"/);
+    expect(drill.match(/docker volume rm [^\n]*/g)).toEqual([
+      'docker volume rm "$vol" "$vol_fresh" >/dev/null 2>&1 || true',
+    ]);
+    expect(drill.match(/docker rm -f [^\n]*/g)?.every((l) => /"\$ctr(_fresh)?"/.test(l))).toBe(true);
+    expect(drill).toMatch(/--network none/);
+    expect(drill).not.toMatch(/ -p |--publish/);
+  });
+
+  it.skipIf(!BASH || !OUTSIDE_BASE)('refuses a backup or drill directory inside this repository', () => {
+    const r = bash(
+      ['-c', '. "$1" && resolve_external_dir MCCI_BACKUP_DIR "the backup directory" new', '_', LIB],
+      cleanEnv({ MCCI_BACKUP_DIR: posix(join(ROOT, 'backups-must-not-be-here')) }),
+    );
+    expect(r.status).not.toBe(0);
+    expect(r.stderr).toMatch(/the backup directory must be outside this repository|inside a git repository/);
+    expect(existsSync(join(ROOT, 'backups-must-not-be-here'))).toBe(false);
+  });
+});

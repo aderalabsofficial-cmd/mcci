@@ -120,6 +120,21 @@ insert into auth.users (instance_id, id, aud, role, email, raw_user_meta_data, c
   ('00000000-0000-0000-0000-000000000000', '22222222-0000-0000-0000-000000000007', 'authenticated', 'authenticated', 'inactive@test.local',   '{"full_name":"Inactive Officer"}', now(), now()),
   ('00000000-0000-0000-0000-000000000000', '22222222-0000-0000-0000-000000000008', 'authenticated', 'authenticated', 'so@test.local',         '{"full_name":"Services Officer"}', now(), now());
 
+-- GoTrue reads these token columns as non-null strings: NULL makes its admin user list fail for the whole instance
+-- ("Database error finding users", seen on the self-hosted stack). Rows Auth creates itself hold ''. The columns
+-- exist only after GoTrue's own migrations (not in the bare image used by scripts/db/dry-run.sh), hence the check.
+do $$
+declare
+  col text;
+begin
+  foreach col in array array['confirmation_token', 'recovery_token', 'email_change_token_new', 'email_change'] loop
+    if exists (select 1 from information_schema.columns
+               where table_schema = 'auth' and table_name = 'users' and column_name = col) then
+      execute format('update auth.users set %1$I = coalesce(%1$I, %2$L) where email like %3$L', col, '', '%@test.local');
+    end if;
+  end loop;
+end $$;
+
 insert into public.staff (user_id, designation) values
   ('22222222-0000-0000-0000-000000000001', 'Secretary General'),
   ('22222222-0000-0000-0000-000000000002', 'President (Signatory)'),

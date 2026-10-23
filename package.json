@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "scan:bundle": "node scripts/security/scan-client-bundle.mjs",
     "shots": "playwright test screenshots",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
