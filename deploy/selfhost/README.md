@@ -22,7 +22,7 @@ scripts/selfhost/
 ## Rules
 
 - Secrets and data live in the **runtime directory** `MCCI_SELFHOST_RUNTIME`: `.env` (mode 600), `data/db/data`,
-  `data/db/config`, `data/storage`, `data/snippets`. The scripts accept only an absolute path without `.`/`..`
+  `data/storage`, `data/snippets` — plus one Docker named volume, `mcci-selfhost_db-config` (below). The scripts accept only an absolute path without `.`/`..`
   segments that resolves (symlinks and junctions followed, letter case ignored) outside this repository **and
   outside every git working tree**, and they validate before creating anything. On Windows, restrict the folder's ACL
   to your account; Postgres data on a Windows (NTFS) bind mount is not supported by Postgres — run the stack on Linux
@@ -161,8 +161,22 @@ service role) is **on** by default. Upstream `CONFIG.md` documents `S3_PROTOCOL_
 ## 7. Backups (before any real data — docs/17 §10)
 
 Self-hosted Supabase has no built-in backups. Nightly `scripts/selfhost/compose.sh pg-dump > <encrypted off-host
-target>` (custom format of database `postgres`), WAL archiving, and a copy of `data/storage` and `data/db/config`
-(pgsodium key) to a second location, encrypted; restore tested quarterly.
+target>` (custom format of database `postgres`), WAL archiving, and a copy of `data/storage` and of the named volume
+`mcci-selfhost_db-config` (below) to a second location, encrypted; restore tested quarterly.
+
+### The database configuration volume `mcci-selfhost_db-config`
+
+`/etc/postgresql-custom` in the `db` container is upstream's named volume `db-config` (Compose project
+`mcci-selfhost`), not a runtime-directory bind mount. On first use Docker copies the image's files into a new named
+volume — `supautils.conf`, `conf.d/`, `extension-custom-scripts/`, `read-replica.conf`, `wal-g.conf` — and the image
+then generates **`pgsodium_root.key`, a secret**: it protects pgsodium/Vault-encrypted data, and losing it makes that
+data unrecoverable. Treat the volume like the `.env`: include it in encrypted backups, never print or copy the key
+anywhere else, and never remove the volume (the wrapper refuses `down -v`).
+
+Never bind-mount a directory over `/etc/postgresql-custom`: an empty host directory hides the image's configuration
+and Postgres cannot finish first-start initialisation — the cluster is left half-built (only `supabase_admin`, no
+`postgres` role, no `_supabase` database) and later starts skip initialisation. This happened on the first staging
+attempt (commit `7eede6d`); `tests/unit/selfhost-scripts.test.ts` now guards against it.
 
 ## 8. Stop / remove (isolated stack only)
 

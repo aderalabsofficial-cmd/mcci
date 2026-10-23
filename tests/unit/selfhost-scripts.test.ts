@@ -487,3 +487,29 @@ describe('selfhost Compose interpolation is fully covered by the runtime .env te
     expect([...used].filter((v) => !template.has(v) && !allowed.has(v))).toEqual([]);
   });
 });
+
+describe('selfhost database configuration volume (staging regression, commit 7eede6d)', () => {
+  const active = (file: string) =>
+    readFileSync(file, 'utf8')
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('#'));
+
+  it('nothing is bind-mounted over /etc/postgresql-custom; upstream keeps its named volume db-config', () => {
+    for (const f of [
+      'deploy/selfhost/mcci/docker-compose.mcci.yml',
+      'deploy/selfhost/mcci/docker-compose.mcci.db-loopback.yml',
+    ]) {
+      expect(
+        active(f).filter((l) => /:\/etc\/postgresql-custom(:|\s|$)/.test(l)),
+        f,
+      ).toEqual([]);
+    }
+    expect(active('deploy/selfhost/upstream/docker-compose.yml')).toContainEqual(
+      expect.stringMatching(/^\s+- db-config:\/etc\/postgresql-custom\s*$/),
+    );
+  });
+
+  it('init-runtime.sh no longer creates data/db/config', () => {
+    expect(active('scripts/selfhost/init-runtime.sh').join('\n')).not.toMatch(/data\/db\/config/);
+  });
+});

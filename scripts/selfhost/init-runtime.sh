@@ -50,6 +50,7 @@ case "$(env_get SUPABASE_PUBLISHABLE_KEY || true)" in sb_publishable_*) ;; *) ec
 case "$(env_get SUPABASE_SECRET_KEY || true)" in sb_secret_*) ;; *) echo "BAD FORMAT  SUPABASE_SECRET_KEY"; status=1 ;; esac
 [ "$status" = 0 ] || die "the generated .env is incomplete"
 
-mkdir -p data/db/data data/db/config data/storage data/snippets
+# No data/db/config: /etc/postgresql-custom lives on the named volume db-config (docker-compose.mcci.yml).
+mkdir -p data/db/data data/storage data/snippets
 completed=1
 echo "runtime ready: $SELFHOST_RUNTIME (.env mode 600; on Windows restrict the folder's ACL to your account)"

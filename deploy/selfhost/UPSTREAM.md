@@ -47,6 +47,13 @@ Logs/analytics (Logflare + Vector) are only in `docker-compose.logs.yml`, so the
 - Storage v1.81.0 adds one-way migrations: back up before upgrading, never roll back past it.
 - Kong is deprecated; Envoy is the default gateway (docs/17 §3).
 
+## MCCI deviation that was reverted
+
+Commit `7eede6d` bind-mounted the runtime directory over the `db` service's `/etc/postgresql-custom`. Upstream
+uses the named volume `db-config` there on purpose: Docker seeds a new named volume from the image's files, a bind
+mount does not. The override now keeps upstream's named volume (project volume `mcci-selfhost_db-config`, which also
+holds the secret `pgsodium_root.key`); see deploy/selfhost/README.md §7.
+
 ## Updating the pin
 
 1. `node scripts/selfhost/sync-upstream.mjs --ref self-hosted/vX.Y.Z` — read-only report of upstream changes and of

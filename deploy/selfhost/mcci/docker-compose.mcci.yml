@@ -112,7 +112,10 @@ services:
     # (or scripts/selfhost/db-tests.sh for the pgTAP suite); the wrapper refuses exec.
     volumes:
       - ${MCCI_SELFHOST_DATA_DIR:?set MCCI_SELFHOST_DATA_DIR (runtime data directory outside the repo)}/db/data:/var/lib/postgresql/data:Z
-      - ${MCCI_SELFHOST_DATA_DIR}/db/config:/etc/postgresql-custom
+      # /etc/postgresql-custom stays on upstream's named volume db-config (project volume mcci-selfhost_db-config):
+      # Docker fills a new named volume from the image (supautils.conf, conf.d/, extension scripts) and the image
+      # then adds pgsodium_root.key. A bind mount would hide those files and break first-start initialisation, so
+      # never bind-mount over it. Back the volume up: pgsodium_root.key is a secret (deploy/selfhost/README.md §7).
 
   supavisor:
     image: supabase/supavisor:2.9.13@sha256:07f1a6098ffc04b80263bca4eb5c3e7bd2e03dfd1fc465aa108d7329000a1a4e
