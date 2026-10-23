@@ -116,6 +116,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 | What MCCI must provide / decide | `docs/14-mcci-dependencies.md` |
 | Android app, compact mobile UI, Play release | `docs/15-mobile-app.md` |
 | Spec defects and missing features (fix A1–A6 before M1) | `docs/16-gap-review.md` (A1–A6 fixed in `docs/17` migrations) |
+| Staging security review: test evidence, findings, backups, open gates | `docs/18-staging-security-review.md` |
 | Every screen / every action / reference data | `docs/catalogue/*` |
 
 ## 6. Conventions

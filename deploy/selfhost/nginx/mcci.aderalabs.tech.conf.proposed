@@ -27,9 +27,9 @@ server {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    # nginx on the VPS is 1.20.1: HTTP/2 is a listen parameter there (`http2 on;` needs 1.25.1+)
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name mcci.aderalabs.tech;
 
     ssl_certificate     /etc/letsencrypt/live/mcci.aderalabs.tech/fullchain.pem;

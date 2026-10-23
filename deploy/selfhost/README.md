@@ -160,9 +160,45 @@ service role) is **on** by default. Upstream `CONFIG.md` documents `S3_PROTOCOL_
 
 ## 7. Backups (before any real data — docs/17 §10)
 
-Self-hosted Supabase has no built-in backups. Nightly `scripts/selfhost/compose.sh pg-dump > <encrypted off-host
-target>` (custom format of database `postgres`), WAL archiving, and a copy of `data/storage` and of the named volume
-`mcci-selfhost_db-config` (below) to a second location, encrypted; restore tested quarterly.
+Self-hosted Supabase has no built-in backups. On the Docker host, as the user that owns the runtime directory:
+
+```bash
+export MCCI_SELFHOST_RUNTIME=/var/lib/mcci-selfhost/recovery-new
+export MCCI_BACKUP_DIR=/var/lib/mcci-selfhost/backups                         # outside the runtime dir, mode 700
+export MCCI_BACKUP_PASSPHRASE_FILE=/root/.config/mcci-backup/passphrase       # mode 600, ≥ 32 bytes, never printed
+scripts/selfhost/backup.sh                                                    # new set mcci-<UTC stamp>, then verify
+scripts/selfhost/backup-verify.sh "$MCCI_BACKUP_DIR/mcci-<stamp>"              # again later, e.g. after copying off-host
+MCCI_DRILL_DIR=/var/lib/mcci-selfhost/restore-drill-<stamp> scripts/selfhost/restore-drill.sh "$MCCI_BACKUP_DIR/mcci-<stamp>"
+```
+
+A set holds, each encrypted with GnuPG (AES-256, RFC 4880 packets with MDC, passphrase from the file only):
+`db-base.tar` + `db-wal.tar` (online physical base backup with `pg_backup_start`/`pg_backup_stop` and the WAL that
+makes it consistent — the whole cluster: roles, `postgres`, `_supabase`), `state.json` (roles, schemas, row counts,
+Vault fingerprints for the drill), `postgres.dump` (logical `pg_dump -Fc`, for single-table restores), `storage.tar`,
+`db-config.tar` (the volume below, with `pgsodium_root.key`) and `runtime-env.tar` (the runtime `.env`). Plus
+`MANIFEST.sha256` (ciphertext), `PLAINTEXT.sha256` and `backup-info.txt` (image digest, LSNs; no secrets). The scripts
+never delete a set; a failed run is renamed `*.FAILED`.
+
+**Restore drill** (`restore-drill.sh`): decrypts into a new directory and new volumes, starts the backed-up image with
+`--network none` and no ports, requires WAL replay to reach a consistent state, compares roles, databases, schemas,
+extensions, policy/function counts, every row count and every Vault secret with `state.json`, and — as a negative
+control — shows that the same data with a fresh `db-config` volume (new pgsodium key) cannot decrypt the Vault
+secrets. It then removes its containers, volumes and decrypted files. The Vault secret `mcci_backup_canary` (random,
+synthetic) exists so every drill exercises the key; the app does not use it.
+
+**Real restore** (after a loss; same image digest from `backup-info.txt`): stop the stack (`compose.sh stop`), move
+the damaged `data/db/data` aside (never delete it), extract `db-base.tar` then `db-wal.tar` into an empty
+`data/db/data` as root (`tar --numeric-owner -xf -`), restore `db-config.tar` into a NEW volume only if
+`mcci-selfhost_db-config` itself is lost, restore `storage.tar` into `data/storage` and `runtime-env.tar` into the
+runtime directory, then `compose.sh up -d --wait` and run `db-tests.sh` / the integration suites. Rehearse it with the
+drill first.
+
+**Limitations (open):** no off-host copy yet (target and key holders: D-M1, D-M3) — sets and the passphrase file live
+on the same VPS; the passphrase is also kept off-server by the operator. No WAL archiving, so the recovery point is the
+last backup. No schedule is installed (proposal: nightly via a root cron entry or systemd timer, keep 14 daily + 8
+weekly sets, drill monthly — needs approval). Storage files are copied after the database, so objects written during
+a backup may be on disk without a row (harmless) or vice versa. Logical replication slots (Realtime) are not in the
+base backup; Realtime recreates them.
 
 ### The database configuration volume `mcci-selfhost_db-config`
 
