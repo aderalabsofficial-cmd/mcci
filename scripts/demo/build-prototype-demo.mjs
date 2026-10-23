@@ -54,6 +54,13 @@ patched += patch(
 );
 // dashboard tiles that opened the vouchers page open Payments instead (in scope: voucher + receipt verification)
 patched += patch('assets/js/admin.js', "'nav', 'psid.html')", "'nav', 'payments.html')", 4);
+// global search (Ctrl K) lists every registered page: do not register the hidden admin screens at all, so they
+// appear in no search result, menu or access list
+patched += patch(
+  'assets/js/ui.js',
+  'M.page = (role, name, meta, fn) => { M.P[role][name] = fn; M.META[role][name] = meta; };',
+  "M.page = (role, name, meta, fn) => { if (role === 'admin' && (name === 'psid' || name === 'integrations')) return; M.P[role][name] = fn; M.META[role][name] = meta; };",
+);
 // staff-access module list
 patched += patch('assets/js/access.js', "['services', 'integrations', 'settings']", "['services', 'settings']");
 // "Development plan" links: top-bar menu, site footer, hub tile

@@ -662,7 +662,7 @@ describe('static demo site for mcci.aderalabs.tech (docs/18 §8)', () => {
     });
     expect(r.status, r.stderr).toBe(0);
     expect(r.stdout).toMatch(
-      /patches applied: 11; left out: admin\/psid, admin\/integrations, plan; no link to them remains/,
+      /patches applied: 12; left out: admin\/psid, admin\/integrations, plan; no link to them remains/,
     );
     for (const d of ['admin/psid', 'admin/integrations', 'plan']) expect(existsSync(join(out, d))).toBe(false);
     const dash = readFileSync(join(out, 'admin/dashboard/index.html'), 'utf8');
