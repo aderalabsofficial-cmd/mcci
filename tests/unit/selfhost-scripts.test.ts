@@ -633,3 +633,40 @@ describe('proposed TLS proxy for mcci.aderalabs.tech (docs/18 §5)', () => {
     for (const s of [stage1, stage2]) expect(active(s)).toMatch(/root \/var\/www\/letsencrypt;/);
   });
 });
+
+describe('static demo site for mcci.aderalabs.tech (docs/18 §8)', () => {
+  const demo = readFileSync('deploy/selfhost/nginx/mcci.aderalabs.tech.demo.conf.proposed', 'utf8')
+    .split('\n')
+    .filter((l) => !l.trim().startsWith('#'))
+    .join('\n');
+
+  it('serves static files only: nothing is proxied to the Supabase gateway or any other backend', () => {
+    expect(demo).not.toMatch(/proxy_pass|fastcgi_pass|uwsgi_pass|grpc_pass|127\.0\.0\.1:18000/);
+    expect(demo).toMatch(/root \/var\/www\/mcci-demo;/);
+  });
+
+  it('is password-protected, noindex, without HSTS, and hides the screens not shown in this presentation', () => {
+    expect(demo).toMatch(/auth_basic "MCCI demonstration";\s+auth_basic_user_file \/etc\/nginx\/mcci-demo\.htpasswd;/);
+    expect(demo).toMatch(/X-Robots-Tag "noindex, nofollow"/);
+    expect(demo).not.toMatch(/Strict-Transport-Security/);
+    for (const p of ['/admin/psid/', '/admin/integrations/', '/plan/']) {
+      expect(demo).toContain(`location ^~ ${p} {\n        return 404;`);
+    }
+  });
+
+  it('the presentation build leaves out those screens and every link to them', () => {
+    const out = join(tmpRoot, 'demo-build');
+    const r = spawnSync(process.execPath, ['scripts/demo/build-prototype-demo.mjs', out], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toMatch(
+      /patches applied: 11; left out: admin\/psid, admin\/integrations, plan; no link to them remains/,
+    );
+    for (const d of ['admin/psid', 'admin/integrations', 'plan']) expect(existsSync(join(out, d))).toBe(false);
+    const dash = readFileSync(join(out, 'admin/dashboard/index.html'), 'utf8');
+    expect(dash).toMatch(/<meta name="robots" content="noindex, nofollow">/);
+    expect(dash).toMatch(/Demonstration prototype · sample data only · not connected to MCCI systems/);
+  });
+});
