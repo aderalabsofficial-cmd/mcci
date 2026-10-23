@@ -1,0 +1,376 @@
+{
+  "repo": "supabase/supabase",
+  "tag": "self-hosted/v0.8.3",
+  "tagObject": "2a678bd96864b71b3148cf0dfb0dcd8fc399749a",
+  "commit": "bc27d2661edd09a5d0b8d76ce33da6d4071a756e",
+  "commitDate": "2026-10-16T11:38:49Z",
+  "subtree": "docker",
+  "subtreeSha": "f0cb4e6a71b05cc2160a88a7c86d84e8d096c829",
+  "exclude": ["dev/"],
+  "license": {
+    "path": "LICENSE",
+    "spdx": "Apache-2.0",
+    "sha": "49ea124025275674563eeff03af0f653ca49fdc0"
+  },
+  "verifiedAt": "2026-10-23",
+  "images": {
+    "studio": {
+      "image": "supabase/studio:2026.10.12-sha-3699278",
+      "digest": "sha256:948770ec467f00e6ae34c35018ef7cb23d7b30eb806b42c2cc0d7bcfdcf8a7a8"
+    },
+    "api-gw": {
+      "image": "envoyproxy/envoy:v1.39.1",
+      "digest": "sha256:57e14a549d7bd43c8d3f6d03e8cfa653e037d4b38e133acd9b54f38c524401b4"
+    },
+    "auth": {
+      "image": "supabase/gotrue:v2.197.0",
+      "digest": "sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b"
+    },
+    "rest": {
+      "image": "postgrest/postgrest:v14.18",
+      "digest": "sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf"
+    },
+    "realtime": {
+      "image": "supabase/realtime:v2.143.3",
+      "digest": "sha256:768b559241dd234c4e8852c5c0f504e598b80f1df2ad4dd78d5486fbed2f17a2"
+    },
+    "storage": {
+      "image": "supabase/storage-api:v1.81.0",
+      "digest": "sha256:98ffec5d0678803783c30e404c27f4ec65e97efbe014088f2a86b4b8b54b9f54"
+    },
+    "imgproxy": {
+      "image": "darthsim/imgproxy:v3.31.4",
+      "digest": "sha256:73c5dda13199745b0d2d00e4149d4a589c5b2e205dbf335ca05eca8276b54712",
+      "omitted": "storage image transformation is off, as in the local CLI stack (docs/17 §8a)"
+    },
+    "meta": {
+      "image": "supabase/postgres-meta:v0.100.0",
+      "digest": "sha256:145325b7e39f8ef4931d6e8cfd3f6f4d655de09d72a2ccc96d9513542c2202bd"
+    },
+    "functions": {
+      "image": "supabase/edge-runtime:v1.77.4",
+      "digest": "sha256:ad45164b7548bf5820ed7be714789c17ac2865edce79a09cfb4c3756c3d365a8",
+      "omitted": "no Edge Functions in this architecture; jobs are Next.js route handlers (docs/01)"
+    },
+    "db": {
+      "image": "supabase/postgres:17.6.1.136",
+      "digest": "sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00"
+    },
+    "supavisor": {
+      "image": "supabase/supavisor:2.9.13",
+      "digest": "sha256:07f1a6098ffc04b80263bca4eb5c3e7bd2e03dfd1fc465aa108d7329000a1a4e"
+    }
+  },
+  "files": [
+    {
+      "path": ".env.example",
+      "mode": "100644",
+      "sha": "eb130e1cfe9da16117e5f1d9b11ebb9805b21f55"
+    },
+    {
+      "path": ".gitattributes",
+      "mode": "100644",
+      "sha": "95aa9f9114204497683680cfe7c54b722015f806"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "1f9c3436196b0344538482ffbca81676e0a67759"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "mode": "100644",
+      "sha": "83d1020a01a93ca202603e6c0434a03f7d7a41be"
+    },
+    {
+      "path": "CONFIG.md",
+      "mode": "100644",
+      "sha": "0cc6a74784b9f548194afedd42943381e8c5248a"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "sha": "8d6f6774b48a0309db7ec7de234b923f6f6e5cc2"
+    },
+    {
+      "path": "docker-compose.caddy.yml",
+      "mode": "100644",
+      "sha": "9f99ff3b2a84569517dcbfa66f0d3378e84e399f"
+    },
+    {
+      "path": "docker-compose.envoy.yml",
+      "mode": "100644",
+      "sha": "93ff2b0cfbc8939f286881a5e26541a2ea95958c"
+    },
+    {
+      "path": "docker-compose.kong.yml",
+      "mode": "100644",
+      "sha": "74793f6dd559827d4c4ad4c0c1ae08693e36d255"
+    },
+    {
+      "path": "docker-compose.logs.yml",
+      "mode": "100644",
+      "sha": "ca2f76e8a14c6600f336abc49a33b1727637b60c"
+    },
+    {
+      "path": "docker-compose.nginx.yml",
+      "mode": "100644",
+      "sha": "f46dc2b59641cf3a3e0a8a6ee70a4fcb6840e1e6"
+    },
+    {
+      "path": "docker-compose.pg15.yml",
+      "mode": "100644",
+      "sha": "f87fe8c4828f354d6f73ba171d5d3f6295ed7370"
+    },
+    {
+      "path": "docker-compose.pg17.yml",
+      "mode": "100644",
+      "sha": "a8e37117e1bc3287686886ce5937a46e64d28e67"
+    },
+    {
+      "path": "docker-compose.pgbouncer.yml",
+      "mode": "100644",
+      "sha": "d745ed484d506bd4b11a3c9794fa95fec25ffda1"
+    },
+    {
+      "path": "docker-compose.rustfs.yml",
+      "mode": "100644",
+      "sha": "79df5d9685fa12241430e45c8777c2b4f8ce8852"
+    },
+    {
+      "path": "docker-compose.s3.yml",
+      "mode": "100644",
+      "sha": "165463f9d01285abdaafd5c305c3a316fe31113b"
+    },
+    {
+      "path": "docker-compose.yml",
+      "mode": "100644",
+      "sha": "2a478896b9dbe32a078a01dbce28131754b0a45c"
+    },
+    {
+      "path": "reset.sh",
+      "mode": "100755",
+      "sha": "aada4eb5e01345baea5913c36029d78d1a826afd"
+    },
+    {
+      "path": "run.sh",
+      "mode": "100755",
+      "sha": "397816869d651cfb27cde92ea1cc76866fc838a3"
+    },
+    {
+      "path": "setup.sh",
+      "mode": "100755",
+      "sha": "007d0c2464789703bac58548fbb4a4380d3d9c6d"
+    },
+    {
+      "path": "tests/docker-compose.rustfs.test.yml",
+      "mode": "100644",
+      "sha": "e7a7641c8e8a127b6eafa14732ddda2dfbc52778"
+    },
+    {
+      "path": "tests/docker-compose.s3.test.yml",
+      "mode": "100644",
+      "sha": "c2e34f4d1ae15ef11e46c202a2473cbc5421189c"
+    },
+    {
+      "path": "tests/test-auth-keys.sh",
+      "mode": "100644",
+      "sha": "b16af48c7dd625679f3ddc46d2123a2b6b2fc2e1"
+    },
+    {
+      "path": "tests/test-container-logs.sh",
+      "mode": "100644",
+      "sha": "85a64b6d78e15fba0080a622b0745e038a519dc3"
+    },
+    {
+      "path": "tests/test-pg17-upgrade.sh",
+      "mode": "100644",
+      "sha": "16aeb1f8f1aa5f3cca73a40c47cced89e296053e"
+    },
+    {
+      "path": "tests/test-s3-backend.sh",
+      "mode": "100644",
+      "sha": "9c0d619a6fa72120a0bcb78efbe4935ddaa54311"
+    },
+    {
+      "path": "tests/test-s3.sh",
+      "mode": "100644",
+      "sha": "36518dfdc3ce2393c2b7db7fed126b0f614f42c8"
+    },
+    {
+      "path": "tests/test-self-hosted.sh",
+      "mode": "100644",
+      "sha": "086dcea85946424eda8bc2e679d0ccc4a9550618"
+    },
+    {
+      "path": "tests/test-update.sh",
+      "mode": "100644",
+      "sha": "c1bc0e770c1a909a4a410e708668507d2020966a"
+    },
+    {
+      "path": "tests/test-upgrades-manifest.sh",
+      "mode": "100644",
+      "sha": "4fa6a3e2e67b87048d5b82057afa84a96c3e81ea"
+    },
+    {
+      "path": "update.sh",
+      "mode": "100755",
+      "sha": "cf3313b639ff2d05429f4937fd1b7c05d1521c14"
+    },
+    {
+      "path": "upgrades.json",
+      "mode": "100644",
+      "sha": "411fcd49c912ef01afda702de1799f29739fab3b"
+    },
+    {
+      "path": "utils/add-new-auth-keys.sh",
+      "mode": "100644",
+      "sha": "f921b6e876ab783de4077434c07bace2741a27e1"
+    },
+    {
+      "path": "utils/db-passwd.sh",
+      "mode": "100644",
+      "sha": "40c9122f3733895a305c73219c84c538367119a8"
+    },
+    {
+      "path": "utils/generate-keys.sh",
+      "mode": "100644",
+      "sha": "da1fc19218cf50146e9ca6f7313248ba94d22a2e"
+    },
+    {
+      "path": "utils/reassign-owner.sh",
+      "mode": "100644",
+      "sha": "d13b1707337679b2ceb70fb112b093e54b3f7516"
+    },
+    {
+      "path": "utils/rotate-new-api-keys.sh",
+      "mode": "100644",
+      "sha": "7ab951670add659a92e71450429a7e697d652e1c"
+    },
+    {
+      "path": "utils/upgrade-pg17.sh",
+      "mode": "100644",
+      "sha": "c05a7b25718934dd214ab9eed8b3ccb1e0a5aa08"
+    },
+    {
+      "path": "versions.md",
+      "mode": "100644",
+      "sha": "bbe63c14914e2f062d3239316abdd19a1e913efb"
+    },
+    {
+      "path": "volumes/api/envoy/cds.yaml",
+      "mode": "100644",
+      "sha": "2d47842d6b44dfc0e05619086c00a5a17d28fcd1"
+    },
+    {
+      "path": "volumes/api/envoy/docker-entrypoint.sh",
+      "mode": "100755",
+      "sha": "2c67584a30e151879e11b21939b9f1ed9857a38f"
+    },
+    {
+      "path": "volumes/api/envoy/envoy.yaml",
+      "mode": "100644",
+      "sha": "def443b68817921d98180b58d558006a2f86233f"
+    },
+    {
+      "path": "volumes/api/envoy/lds.template.yaml",
+      "mode": "100644",
+      "sha": "aff4b7b6d29d6e96beb8ec08877a5f69935d105e"
+    },
+    {
+      "path": "volumes/api/kong-entrypoint.sh",
+      "mode": "100755",
+      "sha": "c5180dbbfaef6f584aa0df80c131be3afdeae238"
+    },
+    {
+      "path": "volumes/api/kong.yml",
+      "mode": "100644",
+      "sha": "71f7bebd06d1678fa5957e4b828f01fe7bbdd6c2"
+    },
+    {
+      "path": "volumes/db/_supabase.sql",
+      "mode": "100644",
+      "sha": "6236ae1bccc21f929362bb617947174ccd1519d3"
+    },
+    {
+      "path": "volumes/db/init/data.sql",
+      "mode": "100755",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "volumes/db/jwt.sql",
+      "mode": "100644",
+      "sha": "09a728366624abe35e2a54cdda333a5c5d5f3ebe"
+    },
+    {
+      "path": "volumes/db/logs.sql",
+      "mode": "100644",
+      "sha": "255c0f407b8d5b1c72b75c4daad0ca4fe3ff3eef"
+    },
+    {
+      "path": "volumes/db/pooler.sql",
+      "mode": "100644",
+      "sha": "162c5b96aae50ab4c03b034a2d096898b1df4cd0"
+    },
+    {
+      "path": "volumes/db/realtime.sql",
+      "mode": "100644",
+      "sha": "4d4b9ffb912b9312dd78257956c180f12913264d"
+    },
+    {
+      "path": "volumes/db/roles.sql",
+      "mode": "100644",
+      "sha": "8f7161a6db66d75288722b60577ed30c81cc4f62"
+    },
+    {
+      "path": "volumes/db/webhooks.sql",
+      "mode": "100644",
+      "sha": "fe273decb89efc18c75e6f4a77953402c8f36555"
+    },
+    {
+      "path": "volumes/functions/deno.jsonc",
+      "mode": "100644",
+      "sha": "db206e8f4672a6a07efdc38f487de0ecfd3dee52"
+    },
+    {
+      "path": "volumes/functions/hello/index.ts",
+      "mode": "100644",
+      "sha": "50d0e6be8c46df9090503441a92f2fc4c522f93c"
+    },
+    {
+      "path": "volumes/functions/main/index.ts",
+      "mode": "100644",
+      "sha": "7a2b16f8482b33143690a4522f1e4a569eaa37a1"
+    },
+    {
+      "path": "volumes/logs/vector.yml",
+      "mode": "100644",
+      "sha": "f63bfd8ad10182a677811f66cfd58ad4217cbe50"
+    },
+    {
+      "path": "volumes/pooler/pooler.exs",
+      "mode": "100644",
+      "sha": "06f05e1b4acde4c34b25a136c6a701e651655a44"
+    },
+    {
+      "path": "volumes/proxy/caddy/Caddyfile",
+      "mode": "100644",
+      "sha": "f067c935d0ac569515bed2edb1ea3bab50195edf"
+    },
+    {
+      "path": "volumes/proxy/nginx/supabase-nginx.conf.tpl",
+      "mode": "100644",
+      "sha": "e02f34f451d7e5fc539c94e133d0c0156d5c3563"
+    },
+    {
+      "path": "volumes/snippets/.gitkeep",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "volumes/storage/.gitkeep",
+      "mode": "100644",
+      "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    }
+  ]
+}

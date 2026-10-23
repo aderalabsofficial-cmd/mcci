@@ -1,0 +1,7 @@
+# OPT-IN overlay (MCCI_SELFHOST_DB_LOOPBACK=1 scripts/selfhost/compose.sh …): publishes Postgres on the host's
+# loopback interface only, so migrations and pgTAP can run from this machine (or through an SSH tunnel to a VM's
+# loopback). Never bind it to another interface and never use it on a publicly reachable host without a firewall.
+services:
+  db:
+    ports:
+      - 127.0.0.1:${MCCI_DB_LOOPBACK_PORT:-15432}:5432/tcp

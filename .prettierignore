@@ -1,5 +1,6 @@
 reference/
 mcci-digital-prototypes/
+deploy/selfhost/upstream/
 docs/
 .next/
 node_modules/

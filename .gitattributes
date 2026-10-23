@@ -2,3 +2,5 @@
 *.woff2 binary
 *.png binary
 *.jpg binary
+# Verbatim upstream (deploy/selfhost/UPSTREAM.md): never edited, so no whitespace-error checks there
+deploy/selfhost/upstream/** -whitespace

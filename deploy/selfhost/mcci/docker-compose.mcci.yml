@@ -1,0 +1,119 @@
+# MCCI overrides for the vendored upstream self-hosted Supabase stack (deploy/selfhost/UPSTREAM.md).
+# Upstream files in ../upstream stay byte-for-byte unchanged; every MCCI difference lives here and is explained inline.
+# Always run through scripts/selfhost/compose.sh, which applies this file after upstream's docker-compose.yml, uses
+# the external runtime .env and never prints it. Requires Docker Compose >= 2.24 (!override / !reset).
+name: mcci-selfhost
+
+# Persistent data lives under MCCI_SELFHOST_DATA_DIR (outside the repo; set by scripts/selfhost/compose.sh).
+services:
+  studio:
+    image: supabase/studio:2026.10.12-sha-3699278@sha256:948770ec467f00e6ae34c35018ef7cb23d7b30eb806b42c2cc0d7bcfdcf8a7a8
+    environment:
+      # docs/17 B4: REST exposes public and api only; never private or graphql_public
+      PGRST_DB_SCHEMAS: public,api
+      PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
+    volumes:
+      - ${MCCI_SELFHOST_DATA_DIR}/snippets:/app/snippets:z
+
+  # Studio is served at / and postgres-meta at /pg/ on this same gateway port (basic auth / service-role key only).
+  # Locally the port is bound to 127.0.0.1; on staging it must sit behind the TLS proxy, which admits /, /pg/, /mcp
+  # and /api/mcp from the admin network only (docs/17 §3, §10).
+  api-gw:
+    image: envoyproxy/envoy:v1.39.1@sha256:57e14a549d7bd43c8d3f6d03e8cfa653e037d4b38e133acd9b54f38c524401b4
+    ports: !override
+      - 127.0.0.1:${API_GW_HTTP_PORT:-18000}:8000/tcp
+
+  auth:
+    image: supabase/gotrue:v2.197.0@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b
+    environment:
+      # Asymmetric signing keys (upstream ships this line commented out; utils/add-new-auth-keys.sh would uncomment it)
+      GOTRUE_JWT_KEYS: ${JWT_KEYS:-[]}
+      # Same settings as supabase/config.toml [auth], except the email limits (left at Auth's defaults pending D-M22,
+      # see below). Variable names as the Supabase CLI 2.121 maps them; each name is confirmed in ../upstream/CONFIG.md,
+      # which lists the exact variables the service code reads. Effect at
+      # runtime is NOT yet verified (deploy/selfhost/README.md "Settings: static vs runtime verification").
+      # Security switches are fixed here so a runtime .env cannot weaken them.
+      GOTRUE_MAILER_AUTOCONFIRM: 'false' # enable_confirmations = true
+      GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: 'true' # double_confirm_changes
+      GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: 'true' # secure_password_change
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: 'false'
+      GOTRUE_EXTERNAL_PHONE_ENABLED: 'false'
+      GOTRUE_SMS_AUTOCONFIRM: 'false'
+      GOTRUE_SECURITY_MANUAL_LINKING_ENABLED: 'false'
+      GOTRUE_PASSWORD_MIN_LENGTH: '10' # docs/09
+      GOTRUE_PASSWORD_REQUIRED_CHARACTERS: ''
+      GOTRUE_SECURITY_REFRESH_TOKEN_ROTATION_ENABLED: 'true'
+      GOTRUE_SECURITY_REFRESH_TOKEN_REUSE_INTERVAL: '10'
+      GOTRUE_MAILER_OTP_LENGTH: '6'
+      GOTRUE_MAILER_OTP_EXP: '3600'
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: 'true' # docs/09: TOTP mandatory for staff (enforced by the app)
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: 'true'
+      GOTRUE_MFA_PHONE_ENROLL_ENABLED: 'false'
+      GOTRUE_MFA_PHONE_VERIFY_ENABLED: 'false'
+      GOTRUE_MFA_MAX_ENROLLED_FACTORS: '10'
+      GOTRUE_RATE_LIMIT_ANONYMOUS_USERS: '30'
+      GOTRUE_RATE_LIMIT_TOKEN_REFRESH: '150'
+      GOTRUE_RATE_LIMIT_OTP: '30' # sign_in_sign_ups
+      GOTRUE_RATE_LIMIT_VERIFY: '30' # token_verifications
+      GOTRUE_RATE_LIMIT_SMS_SENT: '30'
+      GOTRUE_RATE_LIMIT_WEB3: '30'
+      # Email limits are UNRESOLVED (decision D-M22, docs/17 §12) and deliberately not set here, so Auth's own
+      # defaults apply (upstream CONFIG.md): GOTRUE_RATE_LIMIT_EMAIL_SENT 30 per hour (whole instance) and
+      # GOTRUE_SMTP_MAX_FREQUENCY 1m per address. config.toml's local values (2/hour, 1s) are CLI conveniences: 1s
+      # would be 60x weaker per recipient. TODO(MCCI): agree both values before production.
+
+  rest:
+    image: postgrest/postgrest:v14.18@sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf
+    environment:
+      PGRST_DB_SCHEMAS: public,api
+      PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
+      PGRST_DB_MAX_ROWS: '1000'
+
+  realtime:
+    image: supabase/realtime:v2.143.3@sha256:768b559241dd234c4e8852c5c0f504e598b80f1df2ad4dd78d5486fbed2f17a2
+    environment:
+      # Upstream 0.8.3 known issue (supabase/realtime#2289): Postgres Changes are missed for a few seconds every 10
+      # minutes; upstream's documented workaround until the fix ships. Remove when the pinned release includes it.
+      REGION: us-east-1
+      # Verify ES256 tokens issued for the sb_ publishable/secret keys (upstream ships this commented out)
+      API_JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
+
+  storage:
+    image: supabase/storage-api:v1.81.0@sha256:98ffec5d0678803783c30e404c27f4ec65e97efbe014088f2a86b4b8b54b9f54
+    depends_on: !override
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      FILE_SIZE_LIMIT: '10485760' # 10 MiB, supabase/config.toml [storage] file_size_limit (docs/01, docs/08)
+      ENABLE_IMAGE_TRANSFORMATION: 'false' # off in the local CLI stack too; imgproxy is not run
+      JWT_JWKS: ${JWT_JWKS:-{"keys":[]}}
+    volumes:
+      - ${MCCI_SELFHOST_DATA_DIR}/storage:/var/lib/storage:z
+
+  # Optional services, not started unless their profile is requested explicitly.
+  imgproxy:
+    profiles: [imgproxy]
+    image: darthsim/imgproxy:v3.31.4@sha256:73c5dda13199745b0d2d00e4149d4a589c5b2e205dbf335ca05eca8276b54712
+    volumes:
+      - ${MCCI_SELFHOST_DATA_DIR}/storage:/var/lib/storage:z
+
+  functions:
+    profiles: [functions] # no Edge Functions in this architecture: jobs are Next.js route handlers (docs/01)
+    image: supabase/edge-runtime:v1.77.4@sha256:ad45164b7548bf5820ed7be714789c17ac2865edce79a09cfb4c3756c3d365a8
+
+  meta:
+    image: supabase/postgres-meta:v0.100.0@sha256:145325b7e39f8ef4931d6e8cfd3f6f4d655de09d72a2ccc96d9513542c2202bd
+
+  db:
+    image: supabase/postgres:17.6.1.136@sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00
+    # No ports: the database is reachable only on the Compose network. Use scripts/selfhost/compose.sh psql-file
+    # (or scripts/selfhost/db-tests.sh for the pgTAP suite); the wrapper refuses exec.
+    volumes:
+      - ${MCCI_SELFHOST_DATA_DIR:?set MCCI_SELFHOST_DATA_DIR (runtime data directory outside the repo)}/db/data:/var/lib/postgresql/data:Z
+      - ${MCCI_SELFHOST_DATA_DIR}/db/config:/etc/postgresql-custom
+
+  supavisor:
+    image: supabase/supavisor:2.9.13@sha256:07f1a6098ffc04b80263bca4eb5c3e7bd2e03dfd1fc465aa108d7329000a1a4e
+    ports: !reset []

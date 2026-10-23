@@ -58,6 +58,7 @@ const config = [
       'playwright-report/**',
       'lib/supabase/types.ts',
       'next-env.d.ts',
+      'deploy/selfhost/upstream/**', // verbatim upstream (deploy/selfhost/UPSTREAM.md)
     ],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),

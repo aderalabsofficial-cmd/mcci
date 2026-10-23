@@ -26,6 +26,7 @@ This document and the migrations replace `docs/sql/0001_init.sql` and `0002_rls.
 | Check | Result | Evidence |
 |---|---|---|
 | Self-hosted image | `supabase/postgres:17.6.1.136` (upstream `docker/docker-compose.yml`, read 22 Oct 2026; self-hosted default moved to Postgres 17 in release `v1.26.07`, 9 Jul 2026) | `select version()` → PostgreSQL 17.6 |
+| Self-hosted release pin | `supabase/supabase` **`self-hosted/v0.8.3`** (annotated tag `2a678bd9…` → commit `bc27d2661edd09a5d0b8d76ce33da6d4071a756e`, 16 Oct 2026). Its `docker/` folder is vendored verbatim in `deploy/selfhost/upstream/` (62 files without `dev/`, plus the Apache-2.0 `LICENSE`; every file's git blob hash checked by `scripts/selfhost/sync-upstream.mjs`). Every service is pinned by registry digest in `deploy/selfhost/mcci/docker-compose.mcci.yml`; the Postgres digest `sha256:f371b5f3…7c00` is the image the dry runs used. The merged Compose configuration validates statically (`docker compose config --quiet`). **No self-hosted container has been started.** | `deploy/selfhost/UPSTREAM.md` / `UPSTREAM.json`, 23 Oct 2026 |
 | CLI local image | Supabase CLI 2.121 uses `supabase/postgres:17.11.0.004` for `major_version = 17` | image string in the CLI binary; `select version()` → PostgreSQL 17.11 |
 | Extensions | `pgcrypto 1.3`, `citext 1.6`, `pg_trgm 1.6`, `pg_cron 1.6.4`, `pg_net 0.20.3`, `pgtap 1.3.3`, `supabase_vault 0.3.1`; `pg_cron` and `pg_net` preloaded | `pg_available_extensions`, `shared_preload_libraries` |
 | Roles / schemas | `anon`, `authenticated`, `service_role`, `authenticator`, `supabase_*`; schemas `auth`, `storage`, `extensions`, `vault` | catalog queries |
@@ -73,24 +74,37 @@ Studio, Postgres port, pooler, MinIO console: admin network / VPN only. Backups:
   rejected locally — by design of the CLI, not a production setting. The local ports (gateway 54321, Postgres
   54322, Studio 54323) listen on 0.0.0.0 and `/pg/` (postgres-meta) answers without a key: firewall ports
   54321–54329 or stop the stack on untrusted networks.
-- **Self-hosted (Envoy), from the pinned upstream configuration, not yet run:** missing or unknown key → 401 on
-  REST, Auth, GraphQL and Realtime; the OpenAPI root `/rest/v1/` and `/pg/` are service-role only; Realtime tenant
-  paths are denied. `/storage/v1/` and `/functions/v1/` have no gateway key check (Storage validates the JWT
-  itself). There is no Origin rule, so keeping the secret key out of browsers stays an application duty (B1).
-- **Decision:** use the pinned upstream Envoy configuration unchanged; block `/pg/`, Studio and `/rest-admin/` at
-  the TLS proxy outside the admin network. No gateway configuration is changed in this repository.
+- **Self-hosted (Envoy `v1.39.1`), read from the pinned `deploy/selfhost/upstream/volumes/api/envoy/lds.template.yaml`,
+  not yet run:** a missing or unknown key gets 401 on REST, Auth, GraphQL, Realtime and `/pg/`; an `sb_…` value
+  that is not one of the two configured keys gets "Invalid API key". The OpenAPI root `/rest/v1/` and `/pg/`
+  (postgres-meta) admit only the service-role keys (the secret key is translated to one); Realtime
+  `api/tenants` and `api/openapi`, `/mcp` and `/api/mcp` are denied to everyone. `/storage/v1/` and `/functions/v1/`
+  have no gateway key check (Storage validates the JWT itself). The legacy HS256 `ANON_KEY` / `SERVICE_ROLE_KEY`
+  are still accepted alongside the `sb_` keys: never hand them out. There is no Origin rule, so keeping the secret
+  key out of browsers stays an application duty (B1).
+- **Studio shares the gateway port:** every path not matched above (`/`) goes to Studio behind HTTP basic auth
+  (`DASHBOARD_USERNAME` / `DASHBOARD_PASSWORD`, SHA-1 hashed — TLS required). Upstream binds the gateway (8000) and
+  the pooler (5432, 6543) to **all interfaces** by default.
+- **Decision:** use the pinned upstream Envoy configuration unchanged. MCCI differences live only in
+  `deploy/selfhost/mcci/docker-compose.mcci.yml`: gateway on `127.0.0.1:18000` for the isolated test stack, no
+  database or pooler ports, digest pins. On staging the TLS proxy admits Studio (`/`), `/pg/`, `/mcp` and `/api/mcp`
+  from the admin network only (D-M23); the gateway port itself is never public.
 - **Runtime tests for T-V3 (self-hosted stack):**
 
 | # | Request | Expected |
 |---|---|---|
-| G1 | REST call with no key | 401 |
-| G2 | REST call with an unknown `sb_publishable_…` key | 401 |
-| G3 | publishable key on `public_settings` | 200 |
-| G4 | publishable key on the OpenAPI root `/rest/v1/` | denied |
-| G5 | `/pg/` with the publishable key; `/pg/` from outside the admin network | denied; unreachable |
-| G6 | `/realtime/v1/api/tenants` | denied |
-| G7 | secret key | reaches service-role functions only from trusted handlers (T-B2) |
-| G8 | Studio | basic auth required |
+| G1 | no `apikey` on `/rest/v1/public_settings` and `/auth/v1/settings` | 401 |
+| G2 | an unknown `sb_publishable_…` key; `invalid-key` | 401 |
+| G3 | publishable key on `/rest/v1/public_settings` | 200, 4 rows |
+| G4 | OpenAPI root `/rest/v1/`: publishable key / secret key (control) | 403 / 200 |
+| G5 | (a) `/pg/config/version`: no key / publishable / secret (control); (b) the gateway port on every non-loopback IPv4 of the host — fails if there is none, so it cannot pass without probing; on staging, `/pg/` through the TLS proxy from outside the admin network | 401 / 403 / 200; not open; denied |
+| G6 | `/realtime/v1/api/tenants`, `/realtime/v1/api/openapi` with either key | 403 |
+| G7 | `rpc/settings_for_server` (service-role only): publishable / secret (control); `Accept-Profile: private`; `/mcp`, `/api/mcp`; client-bundle scan for `sb_secret_` (T-B1) | 401–403 / 200; 406; 403; no match |
+| G8 | (a) Studio `/`: no credentials / wrong credentials / correct credentials (control, required); (b) **unverified expectation, not a security check:** the 401 carries `WWW-Authenticate: Basic` (upstream's tests assert only the status) | 401 / 401 / 2xx–3xx; header present |
+
+Automated in `tests/integration/gateway.test.ts` (run by `scripts/selfhost/gateway-checks.sh`, loopback only,
+`MCCI_IT_SELFHOST=1`). **Not run yet:** no self-hosted stack has been started. The staging-only parts (G5 through the
+proxy and firewall) and the T-B1 build scan are not covered by that test.
 
 ## 4. Tenancy, roles, states
 
@@ -177,6 +191,14 @@ review. Not approved for production.**
 | Not claimed | That random UUIDs make this harmless: some ids are correlatable (above) and the analysis is incomplete. |
 | Options (to evaluate; none tested) | Soft-delete (status) rows of published tables instead of hard deletes; have account deletion and the retention job anonymise rather than delete them; change the `notifications` cascades; or accept R-RT2. |
 | Decision required | MCCI security review before production, and in any case before account deletion (M9) or the retention job is built. Tracked in §11. |
+
+**Pinned self-hosted Realtime (`v2.143.3`, release 0.8.3).** It contains the fix for GHSA-9vjf-j9f7-j42c (forged
+Postgres Changes events injected by anonymous clients through binary broadcasts), relevant to R-RT1. Known issue
+supabase/realtime#2289: every 10 minutes Realtime restarts its database connection and Postgres Changes made during
+the few seconds of reconnection are **not delivered** — app requirement: screens must not rely on a live event
+alone and must re-read their data on focus / navigation. Upstream's workaround `REGION: us-east-1` is applied in `deploy/selfhost/mcci/docker-compose.mcci.yml`;
+remove it when a pinned release contains the fix. The local CLI stack runs Realtime `v2.143.4` and Storage `v1.82.1`,
+the pinned release `v2.143.3` and `v1.81.0`: local results do not carry over (T-V3).
 
 **Runtime tests** (`tests/integration/realtime.test.ts`, `pnpm test:integration`): synthetic `@test.local` users
 created and removed through the Auth admin API, fresh ids per run, local stack only (loopback URL and
@@ -345,12 +367,22 @@ SMTP + SPF/DKIM/DMARC; nightly dump + WAL archiving + storage-volume backup to a
 tested quarterly; logs/analytics override or external log shipping; uptime check on `/api/health`; pin the
 self-hosted release and upgrade staging first.
 
+Prepared in the repository (configuration only, nothing started): pinned release and digests
+(`deploy/selfhost/UPSTREAM.md`), MCCI override with Auth / Storage / API settings equal to `supabase/config.toml`
+except the email limits, which are left at Auth's defaults pending D-M22 (`deploy/selfhost/mcci/`), silent secret
+generation into a runtime directory outside the repository, isolated migration / test commands and backups
+(`deploy/selfhost/README.md`). Edge Functions, imgproxy and the
+logs/analytics add-on are not run. Still open: the staging VM and TLS proxy (D-M1, D-M23), production SMTP, the
+backup target, and the email rate limit (D-M22).
+
 ## 11. Engineering follow-ups (no MCCI input needed)
 
 | Item | When |
 |---|---|
-| T-V3: run the migrations and `supabase test db` on the full self-hosted stack (real Storage, Auth new keys, Realtime), plus gateway tests G1–G8 (§3) | after approval |
+| T-V3: run the migrations and the pgTAP suite with `scripts/selfhost/db-tests.sh` (psql inside the database container) on the full self-hosted stack (real Storage, Auth new keys, Realtime), plus gateway tests G1–G8 (§3). Configuration, runbook and test scaffolding ready in `deploy/selfhost/` and `scripts/selfhost/`; **blocked** until a host is chosen (staging VM, or this machine with ≥ 8 GiB Docker memory) | after approval |
 | Run `pnpm test:integration` on the self-hosted stack (§4a; local stack verified) | with T-V3 |
+| Staging: VM, TLS proxy, firewall (only 443/80 public; admin-network rules for Studio, `/pg/`, `/mcp`, `/api/mcp`), G5 through the proxy | with D-M1 / D-M23 |
+| Drop the Realtime `REGION` workaround and re-pin when upstream ships the realtime#2289 fix (`node scripts/selfhost/sync-upstream.mjs --ref …`) | next self-hosted release |
 | R-RT1 security review: accept anonymous metadata notices for production or adopt a tested alternative (§4a) — not approved for production | before staging |
 | R-RT2 security review: deleted-row ids reach every subscriber; decide soft-delete / anonymise / cascade changes / accept, and analyse which other client-readable references are visible across companies (§4a) — not approved for production | before staging; before M9 account deletion or the retention job |
 | Client-side type for restricted columns: `ClientDatabase` + ESLint guard, done (§4a). Remaining: add each new column-restricted table to `RESTRICTED_CLIENT_COLUMNS` with its pgTAP pin | with each grant change |
@@ -388,3 +420,6 @@ self-hosted release and upgrade staging first.
 | D-M19 | QR verification codes change from `MCCI-QR-T7K2-0231` to `MCCI-QR-XXXXX-XXXXX` (security). Acceptable on printed certificates? | new format |
 | D-M20 | Real starting numbers for applications, vouchers, service requests and memberships (spec values are samples) | spec samples (231, 1, 10482, 1134/2205) |
 | D-M21 | Urdu labels for document requirements; email template wording (EN/UR) | English labels only; templates not seeded |
+| D-M22 | Auth email limits: `GOTRUE_RATE_LIMIT_EMAIL_SENT` (emails per hour for the whole instance: sign-up, invite, magic link, recovery, OTP) and `GOTRUE_SMTP_MAX_FREQUENCY` (minimum interval between emails to one address). `config.toml`'s 2/hour and 1s are CLI local values (1s is 60× weaker than Auth's default) | both left unset in the override, so Auth's defaults apply: 30/hour and 1m (upstream `CONFIG.md`) — not an approved production value |
+| D-M23 | Admin network (VPN or IP ranges) allowed to reach Studio, `/pg/` and `/mcp` on staging/production; TLS proxy choice (upstream nginx-certbot / Caddy overlay or MCCI's own) | not reachable at all until decided |
+| D-M24 | Storage S3 protocol endpoint (`/storage/v1/s3`, SigV4 with `S3_PROTOCOL_ACCESS_KEY_*`, bypasses RLS): turn it off with `S3_PROTOCOL_ENABLED=false` (documented in upstream `CONFIG.md`, Storage, default `true`) unless MCCI needs S3 clients | on (upstream default), not changed until decided |
