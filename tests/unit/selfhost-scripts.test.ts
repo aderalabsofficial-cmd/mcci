@@ -325,7 +325,7 @@ describe.skipIf(!BASH || !OUTSIDE_BASE)('selfhost compose.sh: strict argument ha
     run(['ps'], { MCCI_SELFHOST_DB_LOOPBACK: '1' });
     expect(logged().filter((x) => x === '-f')).toHaveLength(3);
     expect(logged().some((x) => x.endsWith('docker-compose.mcci.db-loopback.yml'))).toBe(true);
-  });
+  }, 30_000); // two full wrapper runs under Git Bash: ~3–6 s on Windows, over the 5 s default under load
 });
 
 describe.skipIf(!BASH || !OUTSIDE_BASE)('selfhost with-env.sh and init-runtime.sh (M6, L1)', () => {
