@@ -560,5 +560,260 @@
       "Accounts": "اکاؤنٹس",
       "Viewer": "ناظر"
     }
+  },
+  "membership": {
+    "biz": {
+      "prop": {
+        "name": "واحد ملکیت",
+        "hint": "ایک مالک"
+      },
+      "aop": {
+        "name": "شراکت داری",
+        "hint": "دو یا زیادہ شراکت دار"
+      },
+      "pvt": {
+        "name": "پرائیویٹ لمیٹڈ کمپنی",
+        "hint": "ایس ای سی پی میں رجسٹرڈ"
+      },
+      "mnc": {
+        "name": "ملٹی نیشنل کمپنی",
+        "hint": "غیر ملکی کمپنی، پاکستان دفتر"
+      },
+      "public": {
+        "name": "پبلک لمیٹڈ کمپنی",
+        "hint": "لسٹڈ / پبلک کمپنی"
+      },
+      "mfg": {
+        "name": "مینوفیکچرنگ ادارہ",
+        "hint": "فیکٹری / پیداوار · یہ بھی منتخب کریں"
+      }
+    },
+    "nature": {
+      "mfg": {
+        "name": "صنعت و پیداوار",
+        "items": {
+          "textile-spinning-and-weaving": "ٹیکسٹائل اسپننگ و ویونگ",
+          "garments-and-home-textiles": "گارمنٹس و ہوم ٹیکسٹائل",
+          "cotton-ginning": "کاٹن جننگ",
+          "food-processing": "فوڈ پروسیسنگ",
+          "flour-rice-and-oil-mills": "آٹا، چاول و آئل ملز",
+          "sugar-mill": "شوگر مل",
+          "pharmaceuticals": "ادویہ سازی",
+          "chemicals-and-fertilizer": "کیمیکلز و کھاد",
+          "plastics-and-packaging": "پلاسٹک و پیکجنگ",
+          "engineering-and-steel": "انجینئرنگ و اسٹیل",
+          "furniture-and-woodwork": "فرنیچر و لکڑی کا کام",
+          "leather-and-footwear": "چمڑا و جوتے"
+        }
+      },
+      "trade": {
+        "name": "تھوک و ترسیل",
+        "items": {
+          "wholesaler": "تھوک فروش",
+          "distributor": "ڈسٹری بیوٹر",
+          "dealer-stockist": "ڈیلر / اسٹاکسٹ",
+          "commission-agent-arhti": "کمیشن ایجنٹ (آڑھتی)",
+          "retail-shop-chain": "پرچون دکان / چین",
+          "super-store": "سپر اسٹور"
+        }
+      },
+      "impex": {
+        "name": "درآمد و برآمد",
+        "items": {
+          "exporter": "برآمد کنندہ",
+          "importer": "درآمد کنندہ",
+          "importer-and-exporter": "درآمد و برآمد کنندہ",
+          "indenting-agent": "انڈینٹنگ ایجنٹ",
+          "customs-clearing-agent": "کسٹمز کلیئرنگ ایجنٹ",
+          "freight-forwarder": "فریٹ فارورڈر"
+        }
+      },
+      "it": {
+        "name": "آئی ٹی و ڈیجیٹل",
+        "items": {
+          "software-house": "سافٹ ویئر ہاؤس",
+          "it-services-and-support": "آئی ٹی خدمات و سپورٹ",
+          "call-centre-bpo": "کال سینٹر / بی پی او",
+          "e-commerce": "ای کامرس",
+          "digital-marketing-agency": "ڈیجیٹل مارکیٹنگ ایجنسی",
+          "telecom-and-internet-services": "ٹیلی کام و انٹرنیٹ خدمات"
+        }
+      },
+      "agri": {
+        "name": "زراعت و خوراک",
+        "items": {
+          "agri-inputs-seed-pesticide-fertilizer": "زرعی مداخل (بیج، کیڑے مار ادویات، کھاد)",
+          "cotton-and-grain-trading": "کپاس و اناج کی تجارت",
+          "mango-and-fruit-vegetables": "آم و پھل / سبزیاں",
+          "dairy-and-livestock": "ڈیری و مویشی",
+          "poultry-and-feed": "پولٹری و فیڈ",
+          "cold-storage": "کولڈ اسٹوریج"
+        }
+      },
+      "build": {
+        "name": "تعمیرات و جائیداد",
+        "items": {
+          "builder-and-developer": "بلڈر و ڈیولپر",
+          "construction-contractor": "تعمیراتی ٹھیکیدار",
+          "building-materials": "تعمیراتی سامان",
+          "real-estate-agency": "رئیل اسٹیٹ ایجنسی",
+          "architects-and-engineers": "آرکیٹیکٹس و انجینئرز"
+        }
+      },
+      "health": {
+        "name": "صحت و ادویات",
+        "items": {
+          "hospital-clinic": "ہسپتال / کلینک",
+          "pharmacy-medical-store": "فارمیسی / میڈیکل اسٹور",
+          "pharma-distribution": "ادویات کی ترسیل",
+          "diagnostic-laboratory": "تشخیصی لیبارٹری",
+          "medical-equipment": "طبی آلات"
+        }
+      },
+      "logi": {
+        "name": "ٹرانسپورٹ و سفر",
+        "items": {
+          "goods-transport": "مال بردار ٹرانسپورٹ",
+          "courier-and-delivery": "کوریئر و ڈیلیوری",
+          "warehousing": "گودام داری",
+          "travel-and-tour-agency": "ٹریول و ٹور ایجنسی",
+          "passenger-transport": "مسافر ٹرانسپورٹ"
+        }
+      },
+      "fin": {
+        "name": "مالیات و پیشہ ورانہ خدمات",
+        "items": {
+          "bank-financial-institution": "بینک / مالیاتی ادارہ",
+          "insurance": "انشورنس",
+          "chartered-accountants": "چارٹرڈ اکاؤنٹنٹس",
+          "legal-and-tax-consultants": "قانونی و ٹیکس مشیر",
+          "management-consultancy": "مینجمنٹ کنسلٹنسی"
+        }
+      },
+      "energy": {
+        "name": "توانائی و آٹو",
+        "items": {
+          "petroleum-cng-station": "پیٹرول / سی این جی اسٹیشن",
+          "solar-and-renewable-energy": "سولر و قابلِ تجدید توانائی",
+          "electrical-goods": "برقی سامان",
+          "auto-dealer": "آٹو ڈیلر",
+          "auto-parts-and-workshop": "آٹو پارٹس و ورکشاپ"
+        }
+      },
+      "hosp": {
+        "name": "مہمان نوازی و تعلیم",
+        "items": {
+          "hotel": "ہوٹل",
+          "restaurant-and-catering": "ریسٹورنٹ و کیٹرنگ",
+          "school-college": "اسکول / کالج",
+          "training-institute": "تربیتی ادارہ",
+          "events-and-marriage-hall": "ایونٹس و شادی ہال"
+        }
+      },
+      "svc": {
+        "name": "میڈیا و دیگر خدمات",
+        "items": {
+          "printing-and-publishing": "طباعت و اشاعت",
+          "advertising-and-media": "اشتہارات و میڈیا",
+          "security-services": "سیکیورٹی خدمات",
+          "cleaning-and-facility-services": "صفائی و فیسلٹی خدمات",
+          "other-services": "دیگر خدمات"
+        }
+      }
+    },
+    "fields": {
+      "name": "کاروبار کا نام",
+      "address": "کاروبار کا پتہ",
+      "ntn": "کاروبار کا این ٹی این",
+      "gst": "کاروبار کا جی ایس ٹی (اگر لاگو ہو)",
+      "tel": "کاروبار کا ٹیلیفون نمبر",
+      "fax": "فیکس نمبر",
+      "email": "کاروبار کی ای میل",
+      "web": "ویب سائٹ",
+      "particulars": "کاروبار کی تفصیل",
+      "est": "کاروبار کے قیام کی تاریخ",
+      "rep": "مجاز نمائندہ کا نام",
+      "desig": "عہدہ",
+      "cnic": "شناختی کارڈ نمبر",
+      "mobile": "موبائل نمبر"
+    },
+    "docs": {
+      "cnic": "شناختی کارڈ / پاسپورٹ",
+      "ntn": "این ٹی این سرٹیفکیٹ",
+      "itr": "انکم ٹیکس ریٹرن",
+      "st": "سیلز ٹیکس سرٹیفکیٹ",
+      "addr": "پتے کا ثبوت",
+      "bank": "بینک سرٹیفکیٹ",
+      "photo": "پاسپورٹ سائز تصویر",
+      "deed": "شراکت نامہ",
+      "formc": "فارم \"سی\"",
+      "auth": "اختیار نامہ",
+      "moa": "میمورنڈم و آرٹیکلز",
+      "inc": "سرٹیفکیٹ آف انکارپوریشن",
+      "board": "بورڈ قرارداد / مختار نامہ",
+      "forma": "فارم اے و فارم 9"
+    },
+    "missing": {
+      "biz": "کاروبار کی قسم (متعلقہ خانہ منتخب کریں)",
+      "nature": "کاروبار کی نوعیت",
+      "juris": "کاروبار ملتان چیمبر کے دائرہ اختیار میں",
+      "addr": "پتہ این ٹی این سرٹیفکیٹ کے مطابق",
+      "partners": "کم از کم دو شراکت دار / ڈائریکٹر",
+      "sign": "دستخط",
+      "stamp": "کمپنی کی مہر",
+      "decl": "دونوں اقرارات",
+      "notFound": "درخواست نہیں ملی"
+    },
+    "journey": {
+      "submitted": {
+        "name": "جمع ہو گئی",
+        "who": "آپ"
+      },
+      "review": {
+        "name": "کاغذات کی جانچ",
+        "who": "ایم سی سی آئی"
+      },
+      "proposer": {
+        "name": "تجویز کنندہ و تائید کنندہ",
+        "who": "اراکین"
+      },
+      "committee": {
+        "name": "کمیٹی کی منظوری",
+        "who": "کمیٹی"
+      },
+      "payment": {
+        "name": "فیس کی ادائیگی",
+        "who": "آپ"
+      },
+      "temp": {
+        "name": "عارضی رکنیت",
+        "who": "60 دن"
+      },
+      "printing": {
+        "name": "سرٹیفکیٹ کی چھپائی",
+        "who": "پرنٹر"
+      },
+      "permanent": {
+        "name": "مستقل رکن",
+        "who": "مکمل"
+      }
+    },
+    "classes": {
+      "Corporate": "کارپوریٹ",
+      "Associate": "ایسوسی ایٹ"
+    },
+    "fee": {
+      "cls": "آپ کی کلاس",
+      "women": "خاتون کاروباری",
+      "admission": "داخلہ فیس",
+      "subscription": "سالانہ رکنیت فیس",
+      "card": "کارڈ — مجاز نمائندہ",
+      "extra": "اضافی کارڈ ({n})",
+      "total": "کل — منظوری کے بعد ادا کریں",
+      "whyCorporateBody": "کمپنی / ملٹی نیشنل کارپوریٹ رکن ہوتی ہے۔",
+      "whyMfg": "سیلز ٹیکس میں رجسٹرڈ مینوفیکچرنگ ادارہ کارپوریٹ رکن ہوتا ہے۔",
+      "whyTurnover": "سیلز ٹیکس میں رجسٹرڈ اور 5 کروڑ یا زیادہ ٹرن اوور والا کاروبار کارپوریٹ رکن ہوتا ہے۔",
+      "whyAssociate": "نہ کمپنی، نہ سیلز ٹیکس میں رجسٹرڈ مینوفیکچرر اور ٹرن اوور 5 کروڑ سے کم، اس لیے ایسوسی ایٹ رکن۔"
+    }
   }
 }

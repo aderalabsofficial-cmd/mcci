@@ -560,5 +560,260 @@
       "Accounts": "Accounts",
       "Viewer": "Viewer"
     }
+  },
+  "membership": {
+    "biz": {
+      "prop": {
+        "name": "Proprietorship",
+        "hint": "One owner"
+      },
+      "aop": {
+        "name": "Partnership / AOP",
+        "hint": "Two or more partners"
+      },
+      "pvt": {
+        "name": "Ltd. / Pvt. Ltd Co.",
+        "hint": "Registered with SECP"
+      },
+      "mnc": {
+        "name": "Multinational Co.",
+        "hint": "Foreign company, Pakistan office"
+      },
+      "public": {
+        "name": "Public Ltd. Co.",
+        "hint": "Listed / public company"
+      },
+      "mfg": {
+        "name": "Manufacturing Concern",
+        "hint": "Factory / production · tick as well"
+      }
+    },
+    "nature": {
+      "mfg": {
+        "name": "Manufacturing & Industry",
+        "items": {
+          "textile-spinning-and-weaving": "Textile spinning & weaving",
+          "garments-and-home-textiles": "Garments & home textiles",
+          "cotton-ginning": "Cotton ginning",
+          "food-processing": "Food processing",
+          "flour-rice-and-oil-mills": "Flour, rice & oil mills",
+          "sugar-mill": "Sugar mill",
+          "pharmaceuticals": "Pharmaceuticals",
+          "chemicals-and-fertilizer": "Chemicals & fertilizer",
+          "plastics-and-packaging": "Plastics & packaging",
+          "engineering-and-steel": "Engineering & steel",
+          "furniture-and-woodwork": "Furniture & woodwork",
+          "leather-and-footwear": "Leather & footwear"
+        }
+      },
+      "trade": {
+        "name": "Wholesale & Distribution",
+        "items": {
+          "wholesaler": "Wholesaler",
+          "distributor": "Distributor",
+          "dealer-stockist": "Dealer / stockist",
+          "commission-agent-arhti": "Commission agent (Arhti)",
+          "retail-shop-chain": "Retail shop / chain",
+          "super-store": "Super store"
+        }
+      },
+      "impex": {
+        "name": "Import & Export",
+        "items": {
+          "exporter": "Exporter",
+          "importer": "Importer",
+          "importer-and-exporter": "Importer & exporter",
+          "indenting-agent": "Indenting agent",
+          "customs-clearing-agent": "Customs clearing agent",
+          "freight-forwarder": "Freight forwarder"
+        }
+      },
+      "it": {
+        "name": "IT & Digital",
+        "items": {
+          "software-house": "Software house",
+          "it-services-and-support": "IT services & support",
+          "call-centre-bpo": "Call centre / BPO",
+          "e-commerce": "E-commerce",
+          "digital-marketing-agency": "Digital marketing agency",
+          "telecom-and-internet-services": "Telecom & internet services"
+        }
+      },
+      "agri": {
+        "name": "Agriculture & Food",
+        "items": {
+          "agri-inputs-seed-pesticide-fertilizer": "Agri inputs (seed, pesticide, fertilizer)",
+          "cotton-and-grain-trading": "Cotton & grain trading",
+          "mango-and-fruit-vegetables": "Mango & fruit / vegetables",
+          "dairy-and-livestock": "Dairy & livestock",
+          "poultry-and-feed": "Poultry & feed",
+          "cold-storage": "Cold storage"
+        }
+      },
+      "build": {
+        "name": "Construction & Real Estate",
+        "items": {
+          "builder-and-developer": "Builder & developer",
+          "construction-contractor": "Construction contractor",
+          "building-materials": "Building materials",
+          "real-estate-agency": "Real estate agency",
+          "architects-and-engineers": "Architects & engineers"
+        }
+      },
+      "health": {
+        "name": "Health & Pharma",
+        "items": {
+          "hospital-clinic": "Hospital / clinic",
+          "pharmacy-medical-store": "Pharmacy / medical store",
+          "pharma-distribution": "Pharma distribution",
+          "diagnostic-laboratory": "Diagnostic laboratory",
+          "medical-equipment": "Medical equipment"
+        }
+      },
+      "logi": {
+        "name": "Transport & Travel",
+        "items": {
+          "goods-transport": "Goods transport",
+          "courier-and-delivery": "Courier & delivery",
+          "warehousing": "Warehousing",
+          "travel-and-tour-agency": "Travel & tour agency",
+          "passenger-transport": "Passenger transport"
+        }
+      },
+      "fin": {
+        "name": "Finance & Professional",
+        "items": {
+          "bank-financial-institution": "Bank / financial institution",
+          "insurance": "Insurance",
+          "chartered-accountants": "Chartered accountants",
+          "legal-and-tax-consultants": "Legal & tax consultants",
+          "management-consultancy": "Management consultancy"
+        }
+      },
+      "energy": {
+        "name": "Energy & Automotive",
+        "items": {
+          "petroleum-cng-station": "Petroleum / CNG station",
+          "solar-and-renewable-energy": "Solar & renewable energy",
+          "electrical-goods": "Electrical goods",
+          "auto-dealer": "Auto dealer",
+          "auto-parts-and-workshop": "Auto parts & workshop"
+        }
+      },
+      "hosp": {
+        "name": "Hospitality & Education",
+        "items": {
+          "hotel": "Hotel",
+          "restaurant-and-catering": "Restaurant & catering",
+          "school-college": "School / college",
+          "training-institute": "Training institute",
+          "events-and-marriage-hall": "Events & marriage hall"
+        }
+      },
+      "svc": {
+        "name": "Media & Other Services",
+        "items": {
+          "printing-and-publishing": "Printing & publishing",
+          "advertising-and-media": "Advertising & media",
+          "security-services": "Security services",
+          "cleaning-and-facility-services": "Cleaning & facility services",
+          "other-services": "Other services"
+        }
+      }
+    },
+    "fields": {
+      "name": "Name of Business",
+      "address": "Business Address",
+      "ntn": "Business NTN",
+      "gst": "Business GST (if applicable)",
+      "tel": "Business Telephone No.",
+      "fax": "Fax No.",
+      "email": "Business Email ID",
+      "web": "Website",
+      "particulars": "Particulars of Business",
+      "est": "Date of Business Establishment",
+      "rep": "Name of Authorized Representative",
+      "desig": "Designation",
+      "cnic": "CNIC No.",
+      "mobile": "Mobile No."
+    },
+    "docs": {
+      "cnic": "CNIC / Passport",
+      "ntn": "NTN certificate",
+      "itr": "Income tax return",
+      "st": "Sales tax certificate",
+      "addr": "Address proof",
+      "bank": "Bank certificate",
+      "photo": "Passport photo",
+      "deed": "Partnership deed",
+      "formc": "Form \"C\"",
+      "auth": "Authority letter",
+      "moa": "Memorandum & Articles",
+      "inc": "Certificate of Incorporation",
+      "board": "Board resolution / POA",
+      "forma": "Form A & Form 9"
+    },
+    "missing": {
+      "biz": "Business type (tick relevant box)",
+      "nature": "Nature of business",
+      "juris": "Business within Multan Chamber jurisdiction",
+      "addr": "Address matches NTN certificate",
+      "partners": "At least two partners / directors",
+      "sign": "Signature",
+      "stamp": "Company stamp / seal",
+      "decl": "Both declarations",
+      "notFound": "Application not found"
+    },
+    "journey": {
+      "submitted": {
+        "name": "Submitted",
+        "who": "You"
+      },
+      "review": {
+        "name": "Document check",
+        "who": "MCCI"
+      },
+      "proposer": {
+        "name": "Proposer & Seconder",
+        "who": "Members"
+      },
+      "committee": {
+        "name": "Committee approval",
+        "who": "Committee"
+      },
+      "payment": {
+        "name": "Fee payment",
+        "who": "You"
+      },
+      "temp": {
+        "name": "Temporary membership",
+        "who": "60 days"
+      },
+      "printing": {
+        "name": "Certificate printing",
+        "who": "Printer"
+      },
+      "permanent": {
+        "name": "Permanent member",
+        "who": "Done"
+      }
+    },
+    "classes": {
+      "Corporate": "Corporate",
+      "Associate": "Associate"
+    },
+    "fee": {
+      "cls": "Your class",
+      "women": "Women Entrepreneur",
+      "admission": "Admission",
+      "subscription": "Annual subscription",
+      "card": "Card — authorized representative",
+      "extra": "Extra cards ({n})",
+      "total": "Total — paid after approval",
+      "whyCorporateBody": "A body corporate / multinational is a Corporate Member.",
+      "whyMfg": "A sales-tax-registered manufacturing concern is a Corporate Member.",
+      "whyTurnover": "A sales-tax-registered business with turnover of Rs. 50 million or more is a Corporate Member.",
+      "whyAssociate": "Not a body corporate, not a sales-tax-registered manufacturer and turnover below Rs. 50 million, so Associate Member."
+    }
   }
 }

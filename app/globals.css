@@ -112,6 +112,12 @@
   --em: #1b4f9c;
   --mint: #1fa6a0;
   --gt: #8a5f12;
+  --cy: #2a8fd0;
+  --g: #1b4f9c;
+  --mt: #0b7a75;
+  --at: #8a5a00;
+  --ct: #1b4f9c;
+  --r: 16px;
   --sh: 0 14px 34px rgba(14, 27, 51, 0.12);
 
   /* public hero colour layer (site.css) */
@@ -149,6 +155,10 @@
   --hov: #16386c;
   --em: #4a86e0;
   --gt: #f0c46a;
+  --g: #4a86e0;
+  --mt: #5fd6cf;
+  --at: #f0c46a;
+  --ct: #7cc0ff;
   --sh: 0 18px 44px rgba(0, 0, 0, 0.4);
   color-scheme: dark;
 }
