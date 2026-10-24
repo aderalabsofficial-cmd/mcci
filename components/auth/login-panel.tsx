@@ -162,7 +162,7 @@ export function LoginPanel({
             </div>
             <Link
               href="/login/forgot"
-              className="text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline"
+              className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline"
             >
               {text.forgot}
             </Link>

@@ -18,7 +18,7 @@ const PROTECTED = /^\/(?:ur\/)?(portal|admin)(?:\/|$)/;
  * Gives the page the session auth.setup.ts saved for a synthetic member or (TOTP-verified) staff member — a real
  * session from the login page, not a bypass. Without a backend the test is skipped and says why.
  */
-export async function signInAs(page: Page, who: 'member' | 'staff') {
+export async function signInAs(page: Page, who: 'member' | 'staff' | 'sg') {
   test.skip(!readAccounts().backend, NO_BACKEND);
   const state = JSON.parse(readFileSync(STATE[who], 'utf8')) as {
     cookies: Parameters<BrowserContext['addCookies']>[0];
@@ -26,10 +26,13 @@ export async function signInAs(page: Page, who: 'member' | 'staff') {
   await page.context().addCookies(state.cookies);
 }
 
-/** Signs in as the right person for protected routes (/portal → member, /admin → staff). */
+/**
+ * Signs in as the right person for protected routes (/portal → member, /admin → staff). Staff & Roles is opened by
+ * the Secretary General, so the audits see the full screen rather than the "outside your limits" card.
+ */
 export async function authFor(page: Page, url: string) {
   const area = PROTECTED.exec(url)?.[1];
-  if (area) await signInAs(page, area === 'admin' ? 'staff' : 'member');
+  if (area) await signInAs(page, area === 'portal' ? 'member' : /\/admin\/staff/.test(url) ? 'sg' : 'staff');
 }
 
 /** Go to a page and wait until web fonts (incl. Jameel Noori) are in, so text widths are final. */
@@ -58,11 +61,14 @@ export async function expectNoOrphans(page: Page) {
   expect(bad).toEqual([]);
 }
 
-/** docs/15-mobile-app.md §8: no horizontal scroll. */
+/**
+ * docs/15-mobile-app.md §8: no horizontal scroll. Compared with clientWidth: on an emulated phone the layout viewport
+ * (innerWidth) grows with too-wide content, so innerWidth alone would hide the overflow.
+ */
 export async function expectNoHorizontalOverflow(page: Page) {
-  const { scrollWidth, innerWidth } = await page.evaluate(() => ({
+  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
-    innerWidth: window.innerWidth,
+    clientWidth: document.documentElement.clientWidth,
   }));
-  expect(scrollWidth, `page is ${scrollWidth}px wide in a ${innerWidth}px viewport`).toBeLessThanOrEqual(innerWidth);
+  expect(scrollWidth, `page is ${scrollWidth}px wide in a ${clientWidth}px viewport`).toBeLessThanOrEqual(clientWidth);
 }

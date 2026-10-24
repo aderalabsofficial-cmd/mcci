@@ -36,6 +36,7 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
       memberNo: `MCCI-C-9${randomInt(10000, 99999)}`,
     },
     staff: { id: '', email: `e2e-${run}-staff@test.local`, password: pw(), totpSecret: '' },
+    sg: { id: '', email: `e2e-${run}-sg@test.local`, password: pw(), totpSecret: '' },
     reset: { id: '', email: `e2e-${run}-reset@test.local`, password: pw() },
     companyId: randomUUID(),
     memberRowId: randomUUID(),
@@ -43,14 +44,19 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
   // written first, so teardown can clean up whatever exists even if a later step fails
   writeFileSync(ACCOUNTS_FILE, JSON.stringify(accounts));
 
-  for (const who of ['member', 'staff', 'reset'] as const) {
+  for (const who of ['member', 'staff', 'sg', 'reset'] as const) {
     const a = accounts[who]!;
     const created = await admin.auth.admin.createUser({
       email: a.email,
       password: a.password,
       email_confirm: true,
       user_metadata: {
-        full_name: { member: `E2E Member ${run}`, staff: `E2E Officer ${run}`, reset: `E2E Reset ${run}` }[who],
+        full_name: {
+          member: `E2E Member ${run}`,
+          staff: `E2E Officer ${run}`,
+          sg: `E2E Secretary ${run}`,
+          reset: `E2E Reset ${run}`,
+        }[who],
       },
     });
     expect(created.error).toBeNull();
@@ -77,23 +83,27 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
     }),
   );
   ok(await admin.from('staff').insert({ user_id: accounts.staff!.id, designation: 'Membership Officer' }));
+  ok(await admin.from('staff').insert({ user_id: accounts.sg!.id, designation: 'Secretary General' }));
 
-  // the officer's authenticator, enrolled with the officer's own session (as the 2-step page does)
-  const officer = createClient(env.url, env.publishableKey, noSession);
-  ok(await officer.auth.signInWithPassword({ email: accounts.staff!.email, password: accounts.staff!.password }));
-  const enrolled = await officer.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'e2e' });
-  ok(enrolled);
-  const factor = enrolled.data as { id: string; totp: { secret: string } };
-  const challenge = await officer.auth.mfa.challenge({ factorId: factor.id });
-  ok(
-    await officer.auth.mfa.verify({
-      factorId: factor.id,
-      challengeId: challenge.data!.id,
-      code: totp(factor.totp.secret),
-    }),
-  );
-  accounts.staff!.totpSecret = factor.totp.secret;
-  writeFileSync(ACCOUNTS_FILE, JSON.stringify(accounts));
+  // each staff authenticator, enrolled with the person's own session (as the 2-step page does)
+  for (const who of ['staff', 'sg'] as const) {
+    const a = accounts[who]!;
+    const person = createClient(env.url, env.publishableKey, noSession);
+    ok(await person.auth.signInWithPassword({ email: a.email, password: a.password }));
+    const enrolled = await person.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'e2e' });
+    ok(enrolled);
+    const factor = enrolled.data as { id: string; totp: { secret: string } };
+    const challenge = await person.auth.mfa.challenge({ factorId: factor.id });
+    ok(
+      await person.auth.mfa.verify({
+        factorId: factor.id,
+        challengeId: challenge.data!.id,
+        code: totp(factor.totp.secret),
+      }),
+    );
+    a.totpSecret = factor.totp.secret;
+    writeFileSync(ACCOUNTS_FILE, JSON.stringify(accounts));
+  }
 
   // sign in through the real login page and keep the sessions
   const member = await browser.newContext();
@@ -106,17 +116,20 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
   await member.storageState({ path: STATE.member });
   await member.close();
 
-  const staff = await browser.newContext();
-  const sp = await staff.newPage();
-  await sp.goto('/login');
-  await sp.getByRole('tab', { name: 'Staff' }).click();
-  await sp.getByLabel('Staff email').fill(accounts.staff!.email);
-  await sp.getByRole('tabpanel', { name: 'Staff' }).getByLabel('Password').fill(accounts.staff!.password);
-  await sp.locator('[data-action="login.staff"]').click();
-  await expect(sp).toHaveURL(/\/login\/verify$/);
-  await sp.getByLabel('6-digit code').fill(totp(accounts.staff!.totpSecret));
-  await sp.locator('[data-action="login.staff"]').click();
-  await expect(sp).toHaveURL(/\/admin$/);
-  await staff.storageState({ path: STATE.staff });
-  await staff.close();
+  for (const who of ['staff', 'sg'] as const) {
+    const a = accounts[who]!;
+    const ctx = await browser.newContext();
+    const sp = await ctx.newPage();
+    await sp.goto('/login');
+    await sp.getByRole('tab', { name: 'Staff' }).click();
+    await sp.getByLabel('Staff email').fill(a.email);
+    await sp.getByRole('tabpanel', { name: 'Staff' }).getByLabel('Password').fill(a.password);
+    await sp.locator('[data-action="login.staff"]').click();
+    await expect(sp).toHaveURL(/\/login\/verify$/);
+    await sp.getByLabel('6-digit code').fill(totp(a.totpSecret));
+    await sp.locator('[data-action="login.staff"]').click();
+    await expect(sp).toHaveURL(/\/admin$/);
+    await ctx.storageState({ path: STATE[who] });
+    await ctx.close();
+  }
 });

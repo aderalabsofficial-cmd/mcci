@@ -19,6 +19,11 @@ export type Database = {
               "id": string,"token": string
             }[]
                            },
+"company_people":
+{ Args: { "p_company": string }; Returns: {
+              "created_at": string,"email": string,"full_name": string,"role": Database["public"]['Enums']["company_role"],"user_id": string
+            }[]
+                           },
 "company_user_update":
 { Args: { "p_active": boolean,"p_company": string,"p_role": Database["public"]['Enums']["company_role"],"p_user": string }; Returns: undefined
                            },
@@ -57,8 +62,22 @@ export type Database = {
 "rate_limit_take":
 { Args: { "p_bucket": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },
+"role_permission_set":
+{ Args: { "p_designation": string,"p_level": number,"p_module": string }; Returns: undefined
+                           },
+"role_permissions_reset":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "settings_for_server":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"staff_directory":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "active": boolean,"created_at": string,"designation": string,"email": string,"full_name": string,"last_sign_in_at": string,"seniority": number,"totp": boolean,"user_id": string
+            }[]
+                           },
+"staff_mfa_reset":
+{ Args: { "p_user": string }; Returns: undefined
                            },
 "staff_update":
 { Args: { "p_active": boolean,"p_designation": string,"p_user": string }; Returns: undefined

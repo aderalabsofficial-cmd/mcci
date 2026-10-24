@@ -60,7 +60,7 @@ screen (mock data in the browser) — or static content where noted. "DB" = what
 | Messages | `/portal/notifications` | N | U | `notifications` (Realtime published), `profiles.prefs` | M8 |
 | Events & Trade | `/portal/events` | N | U | `events`, `event_registrations` | M8 |
 | Trade opportunities | `/portal/opportunities` | N | U | `opportunities`, `opportunity_replies` | M8 |
-| Company Profile | `/portal/profile` | N | U | `companies`, `company_users`, `change_requests`, `invitations` | M1/M8 |
+| Company Profile | `/portal/profile` | **P** (24 Oct) — particulars + request change, partners (from the application), colleagues (invite / role / remove / resend / cancel), Urdu-first preference; directory toggle and member cards wait for M8/M3 | U | `companies`, `company_users`, `change_requests`, `invitations`, `api.company_people` | M1/M8 |
 | Endorsement requests | `/portal/endorse` | N | U | `endorsements`, `private.endorsement_otps` (Realtime published) | M4 |
 
 ### Admin panel (29)
@@ -91,7 +91,7 @@ screen (mock data in the browser) — or static content where noted. "DB" = what
 | Notification Center | `/admin/notify` | N | U | `email_templates`, `email_log`, `push_log` | M8 |
 | Reports | `/admin/reports` | N | U | read access; report builder not built | M9 |
 | AI Insights | `/admin/ai` | N | U | `ai_extractions` | M9 |
-| Staff & Roles | `/admin/staff` | N | U | `staff`, `designations`, `role_permissions`, overrides, `invitations` | M1 |
+| Staff & Roles | `/admin/staff` | **W** (24 Oct, local stack) — KPIs, staff table (search, filter, sort, CSV), invite / resend / cancel, designation + status, 2-step reset, limits grid + reset; "View panel as" is demo-only and not built | U | `staff`, `designations`, `role_permissions`, `invitations`, 0280/0290 functions | M1 |
 | Audit Trail | `/admin/audit` | N | U | `audit_log` (append-only, triggers on every table) | M9 |
 | Services Setup | `/admin/services` | N | U | `service_types`, `document_requirements` | M7 |
 | Integrations | `/admin/integrations` | N | U | — (phase 2 items are shown as dependencies only) | M9 |
@@ -149,6 +149,27 @@ now" — never as "code sent". Staff must pass TOTP before any admin page or sta
 
 CI gap: the GitHub workflow has no Supabase stack, so in CI every portal/admin test is skipped (M0 tested the empty shells without sign-in). Follow-up: start the local stack in CI (docs/17 T-V3 note in ci.yml).
 
-Blocked or open: terms/privacy consent at registration (E5) needs MCCI's published documents; `/admin/staff`
-(invitations, M1 screen) and company-user invitations, account & security (C1 change email, sign out everywhere,
-C2 delete-account request) are next; the `BUILT` flag for M1 stays off until `/admin/staff` works.
+Blocked or open: terms/privacy consent at registration (E5) needs MCCI's published documents; account & security
+(C1 change email, sign out everywhere, C2 delete-account request) are next.
+
+### M1 · invitations, Staff & Roles, company users (24 Oct 2026)
+
+| Piece | Where | Evidence |
+|---|---|---|
+| `api.staff_directory`, `api.company_people`, `api.role_permission_set`, `api.role_permissions_reset`, `api.staff_mfa_reset`, `private.role_permission_defaults` | migration `20261024000290` | pgTAP `120_staff_company_people` (27); local 355/355; dry run clean |
+| Server actions (permission first, then the user's own session calls `api.*`, which re-checks and audits) | `lib/staff/actions.ts`, `lib/company/actions.ts`, `lib/invitations/*`, `lib/auth/admin/invitations.ts` | unit `access.test.ts` |
+| `/admin/staff` (Staff & Audit level 1 to view, 3 to change; others see "outside your limits") | `app/[locale]/admin/staff`, `components/admin/*` | e2e `access.spec.ts` |
+| `/invite/[token]` — set password (account created confirmed: the emailed link proves the address), or sign in, or accept; expired / cancelled / used links explained; no referrer, not indexed | `app/[locale]/(site)/invite/[token]`, `components/auth/invite-forms.tsx` | e2e `access.spec.ts` |
+| `/portal/profile` | `app/[locale]/portal/profile`, `components/portal/company-profile.tsx` | e2e `access.spec.ts` |
+| Bilingual invitation email (EN + UR in one message) via the app sender (`EMAIL_FROM`, SMTP) | `lib/invitations/email.ts` | unit + e2e through the local mail catcher |
+
+Evidence (local stack, 24 Oct): `access.spec.ts` 7/7 on desktop; full e2e on all three projects 152 passed, the
+remaining failures fixed and their specs re-run green (overflow, orphans, axe, tap targets, access: 117 passed); the
+one open failure is `auth.spec` "6-digit code", blocked by the local Auth limit of 2 emails/hour after repeated runs
+(the page correctly shows "Too many attempts") and by the MCCI templates not being loaded (§5 above) — not verified.
+Unit 192/192, typecheck, lint, client-bundle scan 0 findings. New audits found and fixed: the login page's tabs and
+links were under 44 px in the app shell (first audited now that `/login` is built), and the overflow check now compares
+with `clientWidth` (an emulated phone widens `innerWidth` to fit too-wide content, which hid a profile overflow).
+
+`BUILT` now contains M1 (`/login`, `/admin/staff`, `/portal/profile`). Not on staging/production yet: see
+`docs/20-deployment-plan.md`.

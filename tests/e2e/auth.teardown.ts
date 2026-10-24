@@ -17,13 +17,21 @@ teardown('remove e2e accounts', async () => {
     };
     if (accounts.memberRowId)
       await step('member', () => admin.from('members').delete().eq('id', accounts.memberRowId!));
+    if (accounts.companyId)
+      await step('change requests', () => admin.from('change_requests').delete().eq('company_id', accounts.companyId!));
     if (accounts.companyId) await step('company', () => admin.from('companies').delete().eq('id', accounts.companyId!));
-    if (accounts.staff?.id) await step('staff', () => admin.from('staff').delete().eq('user_id', accounts.staff!.id));
+    for (const who of ['staff', 'sg'] as const) {
+      const id = accounts[who]?.id;
+      if (id) await step(who, () => admin.from('staff').delete().eq('user_id', id));
+    }
+    // invitations sent by the tests (staff and company users), and staff rows of accepted test invitations
+    await step('invitations', () => admin.from('invitations').delete().like('email', `e2e-${accounts.run}-%`));
     // the two accounts above plus any created by the tests themselves (registration): all e2e-<run>-…@test.local
-    const ids = new Set([accounts.member?.id, accounts.staff?.id].filter((x): x is string => !!x));
+    const ids = new Set([accounts.member?.id, accounts.staff?.id, accounts.sg?.id].filter((x): x is string => !!x));
     const extra = await admin.from('profiles').select('id').like('email', `e2e-${accounts.run}-%@test.local`);
     if (extra.error) failures.push(`list e2e profiles: ${extra.error.message}`);
     for (const p of extra.data ?? []) ids.add(p.id);
+    for (const id of ids) await step(`staff row ${id}`, () => admin.from('staff').delete().eq('user_id', id));
     for (const id of ids) await step(`auth user ${id}`, () => admin.auth.admin.deleteUser(id));
     const left = await admin
       .from('profiles')

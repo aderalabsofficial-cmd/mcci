@@ -61,5 +61,7 @@ export default defineConfig({
     timeout: 300_000,
     stdout: 'ignore',
     stderr: 'pipe',
+    // lets app email (invitations) reach the local mail catcher in this production build (lib/email/send.ts)
+    env: { MCCI_E2E: '1' },
   },
 });

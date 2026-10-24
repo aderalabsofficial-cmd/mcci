@@ -337,6 +337,11 @@
     cursor: pointer;
     transition: 0.2s;
   }
+  @media (max-width: 640px) {
+    .pill-tabs button {
+      min-height: 44px; /* docs/15 §8 tap targets */
+    }
+  }
   .pill-tabs button:hover {
     border-color: var(--gt);
   }
@@ -353,7 +358,9 @@
     font-weight: 700;
     color: var(--m);
   }
-  .form-field input {
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
     margin-top: 5px;
     width: 100%;
     min-height: 44px;
@@ -366,10 +373,91 @@
     font-size: 15px;
     transition: 0.2s;
   }
-  .form-field input:focus {
+  .form-field textarea {
+    min-height: 88px;
+    resize: vertical;
+  }
+  .form-field input:focus,
+  .form-field select:focus,
+  .form-field textarea:focus {
     outline: 0;
     border-color: var(--gt);
     box-shadow: 0 0 0 3px rgba(217, 180, 91, 0.2);
+  }
+
+  /* status badges (style.css .bd) */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    background: rgba(160, 180, 170, 0.15);
+    color: var(--m);
+  }
+  .badge-green {
+    background: rgba(31, 166, 160, 0.15);
+    color: #0f766e;
+  }
+  .badge-orange {
+    background: rgba(240, 205, 120, 0.22);
+    color: #8a5f12;
+  }
+  .badge-red {
+    background: rgba(239, 68, 68, 0.13);
+    color: #b91c1c;
+  }
+  .badge-gold {
+    background: rgba(200, 150, 62, 0.18);
+    color: var(--gt);
+  }
+  .dark .badge-green {
+    color: #5eead4;
+  }
+  .dark .badge-red {
+    color: #ff8f8f;
+  }
+
+  /* designation limit cell (v7.css .lvl) */
+  .lvl {
+    min-width: 64px;
+    min-height: 32px;
+    border: 1px solid var(--b);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-weight: 800;
+    font-size: 11.5px;
+    background: var(--card2);
+    color: var(--m);
+    cursor: pointer;
+  }
+  .lvl:disabled {
+    cursor: not-allowed;
+  }
+  .lvl.l1 {
+    background: rgba(59, 130, 246, 0.12);
+    color: #1d4ed8;
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+  .lvl.l2 {
+    background: rgba(245, 158, 11, 0.14);
+    color: #92400e;
+    border-color: rgba(245, 158, 11, 0.45);
+  }
+  .lvl.l3 {
+    background: rgba(31, 163, 74, 0.14);
+    color: #166534;
+    border-color: rgba(31, 163, 74, 0.45);
+  }
+  .dark .lvl.l1 {
+    color: #93c5fd;
+  }
+  .dark .lvl.l2 {
+    color: #fcd34d;
+  }
+  .dark .lvl.l3 {
+    color: #86efac;
   }
 
   /* public hero (site.css .xhero / .xbg / .xov) */

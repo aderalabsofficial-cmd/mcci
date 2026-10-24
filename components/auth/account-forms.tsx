@@ -56,7 +56,10 @@ export function ForgotForm({
           </div>
         </>
       )}
-      <Link href="/login" className="text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline">
+      <Link
+        href="/login"
+        className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline"
+      >
         {text.back}
       </Link>
     </form>
@@ -151,7 +154,10 @@ export function RegisterForm({
           </div>
         </>
       )}
-      <Link href="/login" className="text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline">
+      <Link
+        href="/login"
+        className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline"
+      >
         {text.haveAccount}
       </Link>
     </form>

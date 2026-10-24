@@ -28,6 +28,12 @@ describe('app email configuration (lib/email/send.ts)', () => {
     expect(() =>
       emailConfig(env({ EMAIL_TRANSPORT: 'mailpit', MAILPIT_URL: 'http://x', NODE_ENV: 'production' })),
     ).toThrow(/local development only/);
+    // the e2e run of the production build may use a LOOPBACK catcher, never a remote one
+    const e2e = { EMAIL_TRANSPORT: 'mailpit', NODE_ENV: 'production', MCCI_E2E: '1' };
+    expect(emailConfig(env({ ...e2e, MAILPIT_URL: 'http://127.0.0.1:54324' })).transport).toBe('mailpit');
+    expect(() => emailConfig(env({ ...e2e, MAILPIT_URL: 'http://mail.example:54324' }))).toThrow(
+      /local development only/,
+    );
   });
 
   it('posts to the mail catcher API with the configured sender', async () => {

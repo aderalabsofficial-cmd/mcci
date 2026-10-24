@@ -4,13 +4,19 @@ import { join } from 'node:path';
 /** Synthetic e2e accounts written by auth.setup.ts (test-results/ is git-ignored; teardown deletes the file). */
 export const AUTH_DIR = join('test-results', '.auth');
 export const ACCOUNTS_FILE = join(AUTH_DIR, 'accounts.json');
-export const STATE = { member: join(AUTH_DIR, 'member.json'), staff: join(AUTH_DIR, 'staff.json') };
+export const STATE = {
+  member: join(AUTH_DIR, 'member.json'),
+  staff: join(AUTH_DIR, 'staff.json'),
+  sg: join(AUTH_DIR, 'sg.json'),
+};
 
 export interface E2eAccounts {
   backend: boolean;
   run?: string;
   member?: { id: string; email: string; password: string; memberNo: string };
   staff?: { id: string; email: string; password: string; totpSecret: string };
+  /** Secretary General (Staff & Roles: invitations, limits) */
+  sg?: { id: string; email: string; password: string; totpSecret: string };
   /** a confirmed account whose password the reset test changes (no other test uses it) */
   reset?: { id: string; email: string; password: string };
   companyId?: string;

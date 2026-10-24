@@ -19,7 +19,11 @@ describe('nav model', () => {
       href: null,
       reason: 'Being built — milestone M2',
     });
-    expect(loginModel('ur').reason).toBe('تیاری میں — مرحلہ M1');
+    expect(loginModel('ur')).toMatchObject({ href: '/login', reason: null }); // M1 is built
+    const events = sidebarModel('portal', 'ur')
+      .flatMap((s) => s.items)
+      .find((i) => i.id === 'events')!;
+    expect(events).toMatchObject({ href: null, reason: 'تیاری میں — مرحلہ M8' });
   });
 
   it('gives every item both languages', () => {
