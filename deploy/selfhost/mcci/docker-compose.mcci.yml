@@ -81,6 +81,9 @@ services:
       GOTRUE_MAILER_SUBJECTS_RECOVERY: 'Reset your MCCI password · پاس ورڈ دوبارہ ترتیب دیں'
       GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: 'Confirm your new email for MCCI · نئی ای میل کی تصدیق کریں'
       GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: 'Your MCCI confirmation code · تصدیقی کوڈ'
+      # Auth emails are sent as no-reply-mcci@aderalabs.tech (SMTP_ADMIN_EMAIL) through Resend; replies go to the MCCI
+      # mailbox. JSON map of extra headers (upstream CONFIG.md GOTRUE_SMTP_HEADERS).
+      GOTRUE_SMTP_HEADERS: '{"Reply-To":["mcci@aderalabs.tech"]}'
 
   rest:
     image: postgrest/postgrest:v14.18@sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf

@@ -13,6 +13,7 @@ import nodemailer from 'nodemailer';
  *                    API; refused when NODE_ENV=production, except for the Playwright run of the production build —
  *                    MCCI_E2E=1, set by playwright.config.ts — and only with a loopback MAILPIT_URL)
  *   EMAIL_FROM       sender address, default mcci@aderalabs.tech;  EMAIL_FROM_NAME, default "MCCI"
+ *   EMAIL_REPLY_TO   optional Reply-To (e.g. a no-reply sender with replies going to the MCCI mailbox)
  *   SMTP_HOST, SMTP_PORT (587), SMTP_SECURE (1 = implicit TLS, e.g. 465), SMTP_USER, SMTP_PASS
  *   MAILPIT_URL      e.g. http://127.0.0.1:54324 (from `supabase status`)
  */
@@ -26,6 +27,7 @@ export interface OutgoingEmail {
 export interface EmailConfig {
   transport: 'smtp' | 'mailpit';
   from: { address: string; name: string };
+  replyTo?: string;
   smtp?: { host: string; port: number; secure: boolean; user?: string; pass?: string };
   mailpitUrl?: string;
 }
@@ -33,18 +35,20 @@ export interface EmailConfig {
 export function emailConfig(env: NodeJS.ProcessEnv = process.env): EmailConfig {
   const transport = (env.EMAIL_TRANSPORT || 'smtp') as EmailConfig['transport'];
   const from = { address: env.EMAIL_FROM || 'mcci@aderalabs.tech', name: env.EMAIL_FROM_NAME || 'MCCI' };
+  const replyTo = env.EMAIL_REPLY_TO || undefined;
   if (transport === 'mailpit') {
     if (!env.MAILPIT_URL) throw new Error('MAILPIT_URL is required with EMAIL_TRANSPORT=mailpit');
     const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(new URL(env.MAILPIT_URL).hostname);
     if (env.NODE_ENV === 'production' && !(env.MCCI_E2E === '1' && loopback))
       throw new Error('EMAIL_TRANSPORT=mailpit is for local development only');
-    return { transport, from, mailpitUrl: env.MAILPIT_URL };
+    return { transport, from, replyTo, mailpitUrl: env.MAILPIT_URL };
   }
   if (transport !== 'smtp') throw new Error(`unknown EMAIL_TRANSPORT ${transport}`);
   if (!env.SMTP_HOST) throw new Error('SMTP_HOST is not set: app email cannot be delivered');
   return {
     transport,
     from,
+    replyTo,
     smtp: {
       host: env.SMTP_HOST,
       port: Number(env.SMTP_PORT || 587),
@@ -64,6 +68,7 @@ export async function sendEmail(mail: OutgoingEmail, config: EmailConfig = email
       body: JSON.stringify({
         From: { Email: config.from.address, Name: config.from.name },
         To: [{ Email: mail.to }],
+        ...(config.replyTo ? { ReplyTo: [{ Email: config.replyTo }] } : {}),
         Subject: mail.subject,
         Text: mail.text,
         HTML: mail.html,
@@ -83,6 +88,7 @@ export async function sendEmail(mail: OutgoingEmail, config: EmailConfig = email
   const info = await transporter.sendMail({
     from: { address: config.from.address, name: config.from.name },
     to: mail.to,
+    ...(config.replyTo ? { replyTo: config.replyTo } : {}),
     subject: mail.subject,
     text: mail.text,
     html: mail.html,

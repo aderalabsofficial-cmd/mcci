@@ -14,6 +14,25 @@ describe('app email configuration (lib/email/send.ts)', () => {
     );
     expect(official.from.address).toBe('no-reply@mcci.org.pk');
     expect(official.smtp).toMatchObject({ port: 465, secure: true });
+    expect(official.replyTo).toBeUndefined();
+  });
+
+  it('adds a Reply-To only when configured (no-reply sender, replies to the MCCI mailbox)', async () => {
+    const c = emailConfig(env({ SMTP_HOST: 'smtp.resend.com', EMAIL_REPLY_TO: 'mcci@aderalabs.tech' }));
+    expect(c.replyTo).toBe('mcci@aderalabs.tech');
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ID: 'r1' }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await sendEmail(
+      { to: 'a@test.local', subject: 'S', text: 'T', html: '<p>T</p>' },
+      emailConfig(
+        env({
+          EMAIL_TRANSPORT: 'mailpit',
+          MAILPIT_URL: 'http://127.0.0.1:54324',
+          EMAIL_REPLY_TO: 'mcci@aderalabs.tech',
+        }),
+      ),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).ReplyTo).toEqual([{ Email: 'mcci@aderalabs.tech' }]);
   });
 
   it('refuses to pretend mail can be delivered without a relay', () => {
