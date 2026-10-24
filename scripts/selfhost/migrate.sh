@@ -6,6 +6,7 @@
 #
 #   MCCI_SELFHOST_RUNTIME=<dir> scripts/selfhost/migrate.sh --dry-run    list what is applied and what is pending
 #   MCCI_SELFHOST_RUNTIME=<dir> scripts/selfhost/migrate.sh --apply      apply the pending ones, oldest first
+#   MCCI_SELFHOST_RUNTIME=<dir> scripts/selfhost/migrate.sh --apply-next only the oldest pending one (check, then repeat)
 #
 # Take and verify a backup first (deploy/selfhost/README.md §7). Migrations are forward-only; never "undo" one by
 # hand — restore the backup instead. Temporary wrapper files live in supabase/.migrate-tmp/ (git-ignored, removed).
@@ -13,7 +14,7 @@ set -euo pipefail
 . "$(dirname "$0")/lib.sh"
 
 mode=${1:-}
-case "$mode" in --dry-run | --apply) ;; *) die "usage: migrate.sh --dry-run | --apply" ;; esac
+case "$mode" in --dry-run | --apply | --apply-next) ;; *) die "usage: migrate.sh --dry-run | --apply | --apply-next" ;; esac
 
 compose="$SELFHOST_ROOT/scripts/selfhost/compose.sh"
 tmp="$SELFHOST_ROOT/supabase/.migrate-tmp"
@@ -52,6 +53,7 @@ if [ "$mode" = --dry-run ] || [ "${#pending[@]}" = 0 ]; then
   echo "${#pending[@]} pending"
   exit 0
 fi
+[ "$mode" = --apply-next ] && pending=("${pending[0]}")
 
 for f in "${pending[@]}"; do
   name=$(basename "$f" .sql)
