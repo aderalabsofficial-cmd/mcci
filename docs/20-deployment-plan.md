@@ -207,6 +207,26 @@ middleware re-bases same-origin redirects on `APP_URL` when `X-Forwarded-Host` i
 (`install -m 0644 deploy/web/mcci-web.service /etc/systemd/system/` + `daemon-reload`), `release.sh <commit>`, check
 on loopback with the proxy headers, then Gate 5 again with a new backup.
 
+**Attempt 2, 24 Oct 2026 — applied, smoke tests passed.** Release `6b47981` via `release.sh` (health OK), then the
+new unit from that release (old unit kept in `/root/mcci-web.service.bak-20261024T105529Z`), `daemon-reload`,
+restart: health `{"ok":true,"release":"6b47981"}`, listener `127.0.0.1:3200` only, `NODE_OPTIONS` in the process.
+Loopback with the proxy headers: EN/UR pages 200 (`lang`/`dir` right), redirects to `https://app.mcci.aderalabs.tech/…`,
+no errors in the journal. Gate 5: backup `/root/nginx-backup-gate5b-20261024T105636Z` (`diff -r` clean, 33 files),
+the reviewed stage-2 file (sha256 `3c0b1f726030ce90…`) installed, `nginx -t` OK, reload 10:56:37Z; fingerprint
+`39965382` → `d856d27a`, `diff -rq` against the backup: only this file. External HTTPS checks (from outside):
+
+| Check | Result |
+|---|---|
+| App | `/`, `/login`, `/register`, `/login/forgot`, `/ur`, `/ur/login`, `/ur/register`, `/invite/<bad>` 200; `/api/health` 200 release `6b47981`; `/` `lang="en" dir="ltr"`, `/ur` `lang="ur" dir="rtl"` |
+| Redirects | `/portal`, `/ur/portal`, `/admin`, `/en`, `/en/login`, `/auth/confirm` (bad token) → `https://app.mcci.aderalabs.tech/…`; `http://` → 301 `https://` |
+| TLS / headers | Let's Encrypt `CN=app.mcci.aderalabs.tech` to 2027-01-22; TLS 1.2 + 1.3, TLS 1.1 refused; HTTP/2; HSTS `max-age=31536000`, nosniff, Referrer-Policy, `X-Frame-Options DENY`, `X-Robots-Tag noindex, nofollow` |
+| Supabase API | `/auth/v1/health` 200 with the publishable key, 401 without; settings: signup on, autoconfirm off, phone off; `/rest/v1/companies` as anon → 401 (42501, no grant); `/storage/v1/bucket` anon → `[]`; `/storage/v1/s3` 404; Realtime websocket → 101 |
+| Blocked | `/pg/`, `/pg/tables`, `/mcp`, `/api/mcp`, `/functions/v1/x`, `/graphql/v1/`, `/graphql/v1`, `/realtime/v1/api/tenants`, `/project/default` → 404 |
+| Auth rate limit | 40 wrong sign-ins from one outside address, each with a different spoofed `X-Real-IP`/`X-Forwarded-For`: 39 × 400 then 429 (30 per 5 min + refill) — the proxy overwrites the header |
+| Email templates | 5 × 200 `text/html` |
+| Unchanged | other site files same sha256 prefixes (`fe55b2ab 159e9bdb 5581210d 029d1920 5a222ab2 ba25b003 5d64f463`); aderalabs.tech 200, www 301, fintax 200, tax 307, api.tax 404, iqpigeon.com 200, whatsappapi.iqpigeon.com 200; demo 401 realm "MCCI demonstration", 86 files; stack 9/9 healthy |
+| SMTP | app transport `verify()` from the server: connected, implicit TLS (465), AUTH accepted; the Auth container uses the same host, port, user and password (compared, not printed), sender `mcci@aderalabs.tech`, `SITE_URL` and the confirmation template on the live name. **Delivery of a real confirmation email: not yet confirmed** (needs the owner's inbox) |
+
 ### Then — first Secretary General and smoke tests (no infra change)
 
 1. The Secretary General registers at `https://app.mcci.aderalabs.tech/register` and opens the confirmation email.
