@@ -1,5 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
+import { publicSupabaseEnv } from '@/lib/supabase/env';
 import { createClient } from '@/lib/supabase/server';
 import {
   accessSchema,
@@ -32,6 +33,8 @@ export interface Session {
  * alone); the assurance level comes from the same session; access comes from api.my_access(). Cached per request.
  */
 export const getSession = cache(async (): Promise<Session | null> => {
+  // No Supabase configured (CI without a backend): nobody is signed in, so protected areas redirect to /login.
+  if (!publicSupabaseEnv()) return null;
   const supabase = await createClient();
   const { data: userData, error } = await supabase.auth.getUser();
   if (error || !userData.user) return null;

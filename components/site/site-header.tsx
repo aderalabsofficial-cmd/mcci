@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { LangToggle } from '@/components/shared/lang-toggle';
 import { NavEntry } from '@/components/shared/nav-entry';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import type { NavItem } from '@/lib/nav/model';
 import { cn } from '@/lib/utils';
@@ -34,8 +34,12 @@ export function SiteHeader({
     mainMenu: string;
   };
 }) {
-  const [solid, setSolid] = useState(false);
+  const [scrolled, setSolid] = useState(false);
   const [open, setOpen] = useState(false);
+  // Sign-in pages have no dark hero behind the header (the form column is light): use the solid header from the
+  // start so its white controls stay readable.
+  const pathname = usePathname();
+  const solid = scrolled || /^\/(login|register)(\/|$)/.test(pathname);
 
   useEffect(() => {
     const onScroll = () => setSolid(window.scrollY > 40);

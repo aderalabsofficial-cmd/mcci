@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SignOutButton } from '@/components/auth/sign-out-button';
 import { LangToggle } from '@/components/shared/lang-toggle';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import type { Locale } from '@/i18n/routing';
@@ -17,10 +18,13 @@ import { TopBar } from './top-bar';
 export function AreaShell({
   area,
   locale,
+  account,
   children,
 }: {
   area: 'portal' | 'admin';
   locale: Locale;
+  /** the signed-in person (name + company role or staff designation), shown with Sign out */
+  account?: { name: string; role: string | null };
   children: ReactNode;
 }) {
   const bilingual = area === 'portal';
@@ -36,6 +40,8 @@ export function AreaShell({
     <>
       {area === 'portal' && <LangToggle />}
       <ThemeToggle />
+      {account && <AccountChip name={account.name} role={account.role} />}
+      {account && <SignOutButton locale={locale} label={msg(locale, 'auth.signOut')} />}
     </>
   );
 
@@ -77,6 +83,31 @@ export function AreaShell({
         closeLabel={msg(locale, 'common.close')}
         className="sm:hidden"
       />
+    </div>
+  );
+}
+
+/** Initials, name and role of the signed-in person (prototype top bar: "KR Kamran Raza · Secretary General"). */
+function AccountChip({ name, role }: { name: string; role: string | null }) {
+  const initials =
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]!.toUpperCase())
+      .join('') || '•';
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      <span
+        aria-hidden
+        className="grid size-9 shrink-0 place-items-center rounded-full bg-navy-700 text-[13px] font-extrabold text-white"
+      >
+        {initials}
+      </span>
+      <span className="min-w-0 leading-tight">
+        <b className="block truncate text-[14px]">{name}</b>
+        {role && <small className="block truncate text-[12px] text-muted">{role}</small>}
+      </span>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3100;
+// E2E_HOST / E2E_PORT: run on Auth's site_url origin (local: 127.0.0.1:3000) so emailed links may redirect back here
+const PORT = Number(process.env.E2E_PORT ?? 3100);
+const HOST = process.env.E2E_HOST ?? 'localhost';
 export const APP_UA_SUFFIX = ' MCCIApp/1.0';
 
 /**
@@ -19,17 +21,22 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
   timeout: 45_000,
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    baseURL: `http://${HOST}:${PORT}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   projects: [
+    // synthetic member + staff accounts, signed in through the login page (auth.setup.ts); removed afterwards
+    { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'cleanup', use: { ...devices['Desktop Chrome'] } },
+    { name: 'cleanup', testMatch: /auth\.teardown\.ts/ },
     {
       name: 'desktop',
+      dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
       name: 'mobile-360',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 360, height: 640 },
@@ -40,6 +47,7 @@ export default defineConfig({
     },
     {
       name: 'app-shell',
+      dependencies: ['setup'],
       use: {
         ...devices['Pixel 7'],
         userAgent: devices['Pixel 7'].userAgent + APP_UA_SUFFIX,
@@ -48,7 +56,7 @@ export default defineConfig({
   ],
   webServer: {
     command: `pnpm build && pnpm start --port ${PORT}`,
-    url: `http://localhost:${PORT}`,
+    url: `http://${HOST}:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
     stdout: 'ignore',

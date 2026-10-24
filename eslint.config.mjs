@@ -44,7 +44,9 @@ const ENDORSEMENTS_EVIDENCE = [
   ...columnsMatch(PATTERN.evidence, `:has(${FROM_ENDORSEMENTS})`, EVIDENCE_MESSAGE),
   ...columnsMatch(PATTERN.embeddedEvidence, '', EVIDENCE_MESSAGE),
 ];
-const SERVICE_ROLE_PATHS = ['app/api/**', 'lib/pdf/**', 'lib/supabase/admin.ts'];
+// lib/auth/admin: privileged Auth operations that run before or around a user's own session (login identifier
+// lookup, invitations, staff 2-step reset), each after its own server-side checks.
+const SERVICE_ROLE_PATHS = ['app/api/**', 'lib/pdf/**', 'lib/supabase/admin.ts', 'lib/auth/admin/**'];
 
 const config = [
   {
@@ -73,7 +75,7 @@ const config = [
             {
               name: '@/lib/supabase/admin',
               message:
-                'Service-role client: only cron handlers, PDF generation and /api/verify (docs/01-architecture.md).',
+                'Secret-key client: only cron handlers, PDF generation, /api/verify and lib/auth/admin (docs/01-architecture.md).',
             },
           ],
         },

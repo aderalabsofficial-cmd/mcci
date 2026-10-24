@@ -54,6 +54,17 @@ test.describe('desktop shells', () => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   });
 
+  test('public site: language switch moves to Urdu (RTL) and back (no sign-in needed)', async ({ page }) => {
+    await open(page, '/');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+    await page.locator('[data-action="lang.toggle"]:visible').first().click();
+    await expect(page).toHaveURL(/\/ur$/);
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
+    await page.locator('[data-action="lang.toggle"]:visible').first().click();
+    await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+  });
+
   test('theme switch is remembered after reload', async ({ page }) => {
     await open(page, '/portal');
     const html = page.locator('html');

@@ -1,5 +1,7 @@
-import { expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { isBuilt, SCREENS } from '../../lib/nav/registry';
+import { NO_BACKEND, readAccounts, STATE } from './accounts';
 
 export const LOCALES = ['en', 'ur'] as const;
 
@@ -10,8 +12,29 @@ export const BUILT_ROUTES = SCREENS.filter((s) => isBuilt(s.milestone)).map((s) 
 export const localized = (route: string, locale: (typeof LOCALES)[number]) =>
   locale === 'en' ? route : `/ur${route === '/' ? '' : route}`;
 
+const PROTECTED = /^\/(?:ur\/)?(portal|admin)(?:\/|$)/;
+
+/**
+ * Gives the page the session auth.setup.ts saved for a synthetic member or (TOTP-verified) staff member — a real
+ * session from the login page, not a bypass. Without a backend the test is skipped and says why.
+ */
+export async function signInAs(page: Page, who: 'member' | 'staff') {
+  test.skip(!readAccounts().backend, NO_BACKEND);
+  const state = JSON.parse(readFileSync(STATE[who], 'utf8')) as {
+    cookies: Parameters<BrowserContext['addCookies']>[0];
+  };
+  await page.context().addCookies(state.cookies);
+}
+
+/** Signs in as the right person for protected routes (/portal → member, /admin → staff). */
+export async function authFor(page: Page, url: string) {
+  const area = PROTECTED.exec(url)?.[1];
+  if (area) await signInAs(page, area === 'admin' ? 'staff' : 'member');
+}
+
 /** Go to a page and wait until web fonts (incl. Jameel Noori) are in, so text widths are final. */
 export async function open(page: Page, url: string) {
+  await authFor(page, url);
   await page.goto(url);
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }

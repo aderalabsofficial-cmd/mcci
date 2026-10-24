@@ -246,5 +246,87 @@
   "admin": {
     "glanceTitle": "Today at a glance",
     "glanceBody": "Queues, figures and live activity will appear here once staff sign-in and data are connected."
+  },
+  "auth": {
+    "title": "Login",
+    "welcome": "Welcome to the digital Chamber.",
+    "tagline": "One login for membership, services, documents and payments.",
+    "tabs": {
+      "member": "Member login",
+      "applicant": "New applicant",
+      "staff": "Staff"
+    },
+    "identifier": "Mobile, email or member ID",
+    "password": "Password",
+    "signIn": "Sign in",
+    "emailCode": "Sign in with email code",
+    "forgot": "Forgot password?",
+    "applicantIntro": "New to MCCI? Apply on the official form in six simple steps.",
+    "startApplication": "Start membership application",
+    "staffEmail": "Staff email",
+    "openAdmin": "Open admin panel",
+    "working": "Please wait…",
+    "signOut": "Sign out",
+    "errors": {
+      "required": "Please fill in both fields.",
+      "invalid": "These details do not match an account. Check them and try again.",
+      "unconfirmed": "Please confirm your email address first — open the link we emailed to you.",
+      "rateLimited": "Too many attempts. Please wait a few minutes and try again.",
+      "emailForCode": "To receive a code, type your email address.",
+      "notStaff": "This is not a staff account. Please use the Member login tab.",
+      "unavailable": "Sign-in is not available right now. Please try again shortly.",
+      "codeInvalid": "That code is not valid or has expired. Request a new one."
+    },
+    "code": {
+      "title": "Enter the 6-digit code",
+      "sent": "If {email} belongs to an account, we have emailed a 6-digit code to it.",
+      "label": "Code",
+      "verify": "Verify and sign in",
+      "other": "Use a different email"
+    },
+    "mfa": {
+      "enrollTitle": "Set up 2-step login",
+      "enrollHelp": "Staff sign in with a second step. Scan this QR code with an authenticator app (for example Google Authenticator or Microsoft Authenticator), then type the 6-digit code it shows.",
+      "secret": "Or enter this key in the app",
+      "challengeTitle": "2-step login",
+      "challengeHelp": "Enter the 6-digit code from your authenticator app.",
+      "code": "6-digit code",
+      "verify": "Verify",
+      "invalid": "That code is not correct. Check that the time on your phone is right and try again."
+    },
+    "forgotPage": {
+      "title": "Reset your password",
+      "help": "Type the email address of your account. We will email you a link to choose a new password.",
+      "email": "Email",
+      "send": "Email me a reset link",
+      "sent": "If {email} belongs to an account, we have emailed a link to reset the password. The link works once.",
+      "back": "Back to login"
+    },
+    "resetPage": {
+      "title": "Choose a new password",
+      "help": "Use at least 10 characters. You will be signed out on your other devices.",
+      "password": "New password",
+      "confirm": "Repeat the new password",
+      "save": "Save password",
+      "mismatch": "The two passwords are not the same.",
+      "tooShort": "The password must have at least 10 characters.",
+      "noSession": "This reset link has expired or was already used. Request a new one.",
+      "same": "Choose a password you have not used before for this account."
+    },
+    "registerPage": {
+      "title": "Create your MCCI account",
+      "help": "You will use this account to fill in the membership form, track your application and pay the fee.",
+      "name": "Your full name",
+      "email": "Email",
+      "password": "Password (at least 10 characters)",
+      "confirm": "Repeat the password",
+      "create": "Create account",
+      "sent": "We have emailed a confirmation link to {email}. Open it to activate your account, then continue with the membership form.",
+      "haveAccount": "Already have an account? Sign in",
+      "weak": "Choose a stronger password: at least 10 characters."
+    },
+    "link": {
+      "invalid": "This link has expired or was already used. Please sign in, or request a new link."
+    }
   }
 }

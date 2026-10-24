@@ -39,7 +39,7 @@ screen (mock data in the browser) — or static content where noted. "DB" = what
 | News & Events | `/news` | N | U | `posts`, `events` | M2/M8 |
 | Resources | `/resources` | N | U (static files) | Storage `cms` bucket | M2 |
 | Contact | `/contact` | N | U | `tickets` (+ rate limit) | M2/M8 |
-| Login | `/login` | N | U (no real auth) | Supabase Auth verified on staging (A1–A12) | **M1** |
+| Login | `/login` | **P** (24 Oct) — verified by e2e on the local stack (§5): member password (email or member ID), staff password + TOTP, guards, sign-out, registration with the confirmation link from Mailpit, password reset with the link from Mailpit, email-code request. Not yet verified: signing in with the emailed 6-digit code (the local stack still sends Supabase's default email, link only, until the MCCI templates are loaded); mobile-number sign-in (logic unit-tested only) | U (no real auth) | Supabase Auth verified on staging (A1–A12) | **M1** |
 
 ### Member portal (17)
 
@@ -126,3 +126,29 @@ screen (mock data in the browser) — or static content where noted. "DB" = what
 - Tests: Playwright projects + orphan/axe/overflow/tap-target audits; integration harness (`tests/integration/*`).
 - Prototype: the visual and behavioural specification for every screen, plus `assets/js/actions.js` metadata (planned
   endpoint, tables, roles per action) that maps one to one onto `docs/catalogue/actions.md`.
+
+## 5. Progress log
+
+### M1 · authentication (24 Oct 2026, branch `db/schema-proposal`)
+
+| Piece | Where | Evidence |
+|---|---|---|
+| Publishable/secret keys, trusted client address for Auth limits, app email sender (SMTP or local Mailpit; sender `mcci@aderalabs.tech` from `EMAIL_FROM`) | `lib/supabase/*`, `lib/net/client-ip.ts`, `lib/email/send.ts` (commit `8fba6e0`) | unit tests |
+| `api.my_access()`: the caller's own staff levels per module, company roles with levels per area, TOTP status — from the same helpers the RLS policies use | migration `20261024000270`, pgTAP `100_api_my_access` (20) | local pgTAP 296/296; dry run clean; integration `access.test.ts` 3/3 incl. real TOTP enrolment (commit `1381e8a`) |
+| `requirePermission(module, level)` (staff: AAL2 required), `requireCompanyPermission`, `requireUser` | `lib/permissions/*` | unit `permissions.test.ts` |
+| `/login` (prototype `site/login`: Member login · New applicant · Staff), `/login/verify` (staff TOTP enrol/challenge), `/login/forgot`, `/login/reset`, `/register`, `/auth/confirm` (token_hash and PKCE links), sign-out, account chip | `app/[locale]/(site)/login/*`, `register`, `app/[locale]/auth/confirm`, `components/auth/*`, `lib/auth/*` | e2e `auth.spec.ts` on the local stack |
+| Guards: middleware (no session → `/login?next=…`), portal layout (session), admin layout (active staff + AAL2, else `/login/verify` or `/portal`) | `middleware.ts`, `app/[locale]/{portal,admin}/layout.tsx` | e2e |
+| Bilingual Auth email templates with the 6-digit code and any-device `token_hash` links | `supabase/templates/*`, `supabase/config.toml` | **not loaded yet**: needs a restart of the local stack's services; staging needs `GOTRUE_MAILER_TEMPLATES_*` URLs |
+| E2E evidence (local stack, 24 Oct) | `tests/e2e/auth.spec.ts`, setup/teardown projects | on Auth's site_url origin: **12 passed, 1 skipped** (emailed code: no code in the default email); full suite on all three projects: **93 passed, 0 failed** (every protected-route audit — axe, orphans, overflow, tap targets, shells, slow 3G — signed in); CI mode without a backend: **30 passed, 0 failed**, protected-area tests skipped with the reason |
+
+Behaviour decided (security): password sign-in accepts email, member ID (→ the company's single active Owner) or
+mobile (→ the single profile with that number), resolved on the server only (`lib/auth/admin/resolve-login.ts`,
+throttled with `api.rate_limit_take`); all misses get one generic message. Email-code sign-in takes an email address
+only (a member ID would reveal the owner's address). A failed email delivery (Auth 5xx) is reported as "not available
+now" — never as "code sent". Staff must pass TOTP before any admin page or staff permission.
+
+CI gap: the GitHub workflow has no Supabase stack, so in CI every portal/admin test is skipped (M0 tested the empty shells without sign-in). Follow-up: start the local stack in CI (docs/17 T-V3 note in ci.yml).
+
+Blocked or open: terms/privacy consent at registration (E5) needs MCCI's published documents; `/admin/staff`
+(invitations, M1 screen) and company-user invitations, account & security (C1 change email, sign out everywhere,
+C2 delete-account request) are next; the `BUILT` flag for M1 stays off until `/admin/staff` works.

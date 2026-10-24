@@ -276,6 +276,102 @@
     animation: var(--animate-shine);
   }
 
+  /* buttons (style.css .btn, .btn.p, .btn.big) — used with .btn-gold for the gold variant */
+  .btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border: 1px solid var(--b);
+    background: var(--card);
+    border-radius: 11px;
+    padding: 9px 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--em), #143c7a);
+    color: #fff;
+    border: 0;
+    box-shadow: 0 8px 20px rgba(27, 79, 156, 0.35);
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -80%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: skewX(-20deg);
+    animation: var(--animate-shine);
+  }
+  .btn-big {
+    padding: 13px 22px;
+    font-size: 15.5px;
+    border-radius: 14px;
+  }
+
+  /* pill tabs (style.css .tabs) */
+  .pill-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .pill-tabs button {
+    min-height: 40px;
+    border: 1px solid var(--b);
+    background: var(--card2);
+    border-radius: 30px;
+    padding: 8px 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .pill-tabs button:hover {
+    border-color: var(--gt);
+  }
+  .pill-tabs button[aria-selected='true'] {
+    background: var(--gold);
+    color: #2a1d05;
+    border-color: var(--gt);
+  }
+
+  /* form fields (style.css .fg label / .fg input, input:focus) */
+  .form-field {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--m);
+  }
+  .form-field input {
+    margin-top: 5px;
+    width: 100%;
+    min-height: 44px;
+    background: var(--card2);
+    border: 1px solid var(--b);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--t);
+    font-weight: 500;
+    font-size: 15px;
+    transition: 0.2s;
+  }
+  .form-field input:focus {
+    outline: 0;
+    border-color: var(--gt);
+    box-shadow: 0 0 0 3px rgba(217, 180, 91, 0.2);
+  }
+
   /* public hero (site.css .xhero / .xbg / .xov) */
   .hero-bg {
     position: absolute;
@@ -362,7 +458,8 @@
   }
 }
 [data-shell='app'] .hero-bg,
-[data-shell='app'] .btn-gold::after {
+[data-shell='app'] .btn-gold::after,
+[data-shell='app'] .btn-primary::after {
   animation: none;
 }
 @media (prefers-reduced-motion: reduce) {

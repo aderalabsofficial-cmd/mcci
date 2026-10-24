@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { authFor } from './helpers';
 
 /**
  * mobile-360 on slow 3G (docs/15-mobile-app.md §8): the shell must be usable before the large Urdu font arrives
@@ -18,6 +19,7 @@ test.describe('slow 3G', () => {
         downloadThroughput: (500 * 1024) / 8,
         uploadThroughput: (500 * 1024) / 8,
       });
+      await authFor(page, route);
       const start = Date.now();
       await page.goto(route, { waitUntil: 'commit' });
       const nav =
