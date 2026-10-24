@@ -155,3 +155,29 @@ Still open — each blocks production:
 `nginx -t`, reload; (d) set `API_EXTERNAL_URL` / `SUPABASE_PUBLIC_URL` to `https://mcci.aderalabs.tech` in the runtime
 `.env` and recreate `auth`, `storage`, `studio`; (e) install the backup schedule (README §7 proposal); (f) firewall
 rules for the host's other services — owner's decision; no change is needed for the stack.
+
+## 8. Demonstration site `https://mcci.aderalabs.tech` (static prototype)
+
+Approved by the owner on 23 Oct 2026 for a presentation, not as a launch. Deployed 23 Oct (17:16 UTC), commits
+`7121eff` (configuration, build script) and `407e9ab` (global-search fix); verified again 24 Oct 05:25 UTC.
+
+| Item | State |
+|---|---|
+| What is served | the presentation build of the v10 prototype (`scripts/demo/build-prototype-demo.mjs`): 64 static pages from `/var/www/mcci-demo` (root-owned, `httpd_sys_content_t`). Every rendered page carries "Demonstration prototype · sample data only · not connected to MCCI systems" (EN + UR) and `noindex`. |
+| Left out | `/admin/psid/`, `/admin/integrations/`, `/plan/`: not shipped, blocked by nginx (404), and no menu entry, tile, link or global-search result points to them (12 counted patches; the build fails if one stops matching) |
+| Not exposed | nothing is proxied: `/rest/v1/`, `/auth/v1/…` (so no sign-up), `/storage/v1/`, `/realtime/v1/` (incl. WebSocket), `/pg/`, `/graphql/v1`, `/functions/v1/`, `/mcp`, Studio → 404 |
+| Access | HTTP basic auth, user `mcci-demo`; `/etc/nginx/mcci-demo.htpasswd` holds one SHA-512-crypt hash (`640 root:nginx`, `httpd_config_t`). The password was generated on the operator's workstation, sent to the host only on stdin, and is kept only in the owner-only file `C:\Users\DELL\.mcci-secrets\mcci-demo-credentials.txt` (excluded from the home-folder git repository). |
+| TLS | Let's Encrypt (ECDSA) for `mcci.aderalabs.tech`, expires 2027-01-21, renewed by the host's `certbot-renew.timer` (webroot `/var/www/letsencrypt`, reload hook). No HSTS, so the demo can be withdrawn cleanly. DNS is Cloudflare DNS-only (grey cloud). |
+| Verified | certificate valid (curl verify 0); HTTP → 301 HTTPS; no / wrong credentials → 401 with `WWW-Authenticate: Basic realm="MCCI demonstration"` (HTTP/1.1 and HTTP/2); valid credentials → 200 for `/`, `/site/home/`, `/site/login/`, `/member/dashboard/`, `/admin/dashboard/`, `/admin/payments/`; hidden and backend paths → 404; headers `X-Robots-Tag noindex, nofollow`, nosniff, `X-Frame-Options DENY`, no-referrer; 38/38 checks. The five other sites answer exactly as before; the nine `mcci-selfhost` containers kept their ids (0 restarts); runtime `.env` untouched. |
+| Rollback | `/root/nginx-backup-20261023T171501Z/ROLLBACK.txt` (backup of `/etc/nginx` before any change; rehearsed: removing the site file restores the original configuration fingerprint `39b2d943`). Previous build kept at `/var/www/mcci-demo.prev-7121eff`. |
+
+**Static, not functional** (everything below is the prototype's in-browser demo data; nothing reaches MCCI or the
+database): sign-in and accounts (any "login" just opens the demo), membership applications, the join wizard and
+endorsements, document upload and AI extraction, payments and receipt verification, service requests, certificates and
+QR verification, notifications and email, search, reports, staff and permission changes, settings. Changes made while
+clicking around are stored only in that browser (`localStorage`) and are not shared with anyone else.
+
+**Browsers that do not show a sign-in dialog.** The 401 page ("401 Authorization Required") is what a browser displays
+when it does not show the basic-auth dialog or the dialog was cancelled — e.g. in-app browsers of messaging apps, link
+previews, some embedded viewers, or after pressing Cancel. Open the URL in a normal Chrome, Edge, Firefox or Safari
+window (a private window if a cancelled prompt is remembered).
