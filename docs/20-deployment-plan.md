@@ -163,7 +163,25 @@ restart loop). Port 3200 free; nginx and the stack unchanged (9/9 healthy). Next
 `/etc/mcci-web/env` (publishable and secret key from the stack `.env`, SMTP values with `SMTP_PORT=465` and
 `SMTP_SECURE=1`); then `scripts/deploy/release.sh <commit>` and `systemctl enable mcci-web`.
 
+**Part 2 verified 24 Oct 2026 (10:24 UTC, read-only re-check):** release `e20dcc2` is `/opt/mcci-web/current`;
+`mcci-web` **enabled and active** since 12:11:08 CEST, 0 restarts, running as `mcci-web`; `/api/health` → 200
+`{"ok":true,"release":"e20dcc2"}`; listens on `127.0.0.1:3200` only; `/etc/mcci-web/env` root 600 with exactly one
+`SMTP_SECURE=1`, also present in the running process; secret scan of the deployed release
+(`scripts/security/scan-client-bundle.mjs` as `mcci-web`): 0 findings in 46 client files and 415 tracked files.
+Nginx (`nginx -t` OK, fingerprint `39965382`), the demo (401 basic auth, site file unchanged, 86 files), the five
+other sites (same answers as every baseline) and the stack (9/9 healthy, 20 migrations recorded up to 0290) unchanged.
+**Not yet verified:** an SMTP login and an actual email delivered through the app (needs Gate 5 and a real address).
+
 ### Gate 5 — go public on the new name
+
+**Preview 24 Oct 2026 (read-only, nothing changed):** DNS `app.mcci.aderalabs.tech` A → 169.58.124.24 (no AAAA);
+certificate issued (Let's Encrypt, valid to 2027-01-22); installed stage-1 file identical to the repository's; the
+email-templates directory holds the 5 templates (`httpd_sys_content_t`); a full temporary copy of `/etc/nginx` with
+the stage-2 file swapped in passes `nginx -t`; only this one file differs, every other site file is identical;
+upstreams `127.0.0.1:3200` and `127.0.0.1:18000` are loopback-only. Backup before applying:
+`cp -a /etc/nginx /root/nginx-backup-<UTC stamp>` + `diff -r`. Note: once applied, the Supabase Auth API is public on
+this name, so anyone who finds the URL can register (email confirmation still required; staff access still needs an
+invitation + TOTP); and HSTS tells browsers to use HTTPS for this host for one year.
 
 ```bash
 cp deploy/web/nginx/app.mcci.aderalabs.tech.conf /etc/nginx/conf.d/app.mcci.aderalabs.tech.conf
