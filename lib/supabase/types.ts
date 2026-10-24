@@ -19,8 +19,37 @@ export type Database = {
               "id": string,"token": string
             }[]
                            },
+"company_user_update":
+{ Args: { "p_active": boolean,"p_company": string,"p_role": Database["public"]['Enums']["company_role"],"p_user": string }; Returns: undefined
+                           },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
+                           },
+"invite_accept":
+{ Args: { "p_token": string,"p_user": string }; Returns: {
+              "company_id": string,"kind": string
+            }[]
+                           },
+"invite_company_user":
+{ Args: { "p_company": string,"p_email": string,"p_full_name": string,"p_role": Database["public"]['Enums']["company_role"] }; Returns: {
+              "id": string,"token": string
+            }[]
+                           },
+"invite_lookup":
+{ Args: { "p_token": string }; Returns: {
+              "company_name": string,"company_role": Database["public"]['Enums']["company_role"],"designation": string,"email": string,"expires_at": string,"full_name": string,"id": string,"kind": string,"status": Database["public"]['Enums']["invite_status"]
+            }[]
+                           },
+"invite_resend":
+{ Args: { "p_id": string }; Returns: string
+                           },
+"invite_revoke":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"invite_staff":
+{ Args: { "p_designation": string,"p_email": string,"p_full_name": string }; Returns: {
+              "id": string,"token": string
+            }[]
                            },
 "my_access":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -30,6 +59,9 @@ export type Database = {
                            },
 "settings_for_server":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"staff_update":
+{ Args: { "p_active": boolean,"p_designation": string,"p_user": string }; Returns: undefined
                            }
           }
           Enums: {
