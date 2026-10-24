@@ -72,7 +72,8 @@ test.describe('Staff & Roles', () => {
     await dialog.getByLabel('Official email').fill(email);
     await dialog.getByLabel('Designation').selectOption('Accounts Officer');
     await dialog.locator('[data-action="staff.invite.send"]').click();
-    await expect(page.getByRole('status')).toContainText(`Invitation emailed to ${email}`);
+    // sending goes through SMTP (the local mail catcher): allow for a loaded machine
+    await expect(page.getByRole('status')).toContainText(`Invitation emailed to ${email}`, { timeout: 15_000 });
     await expect(page.getByRole('row', { name: new RegExp(email) })).toContainText('Invited');
 
     // a second invitation to the same address is refused with a clear message
@@ -103,7 +104,7 @@ test.describe('Staff & Roles', () => {
     await invite.getByLabel('Full name').fill(`E2E Third ${run}`);
     await invite.getByLabel('Official email').fill(email);
     await invite.locator('[data-action="staff.invite.send"]').click();
-    await expect(page.getByRole('status')).toContainText('Invitation emailed');
+    await expect(page.getByRole('status')).toContainText('Invitation emailed', { timeout: 15_000 });
     const first = await invitationPath(email);
 
     await page.getByRole('button', { name: `E2E Third ${run}` }).click();
@@ -159,7 +160,8 @@ test.describe('Company Profile', () => {
     await dialog.getByLabel('Email').fill(email);
     await dialog.getByLabel('Role').selectOption('Accounts');
     await dialog.locator('[data-action="user.invite.send"]').click();
-    await expect(page.getByRole('status')).toContainText(`Invitation emailed to ${email}`);
+    // sending goes through SMTP (the local mail catcher): allow for a loaded machine
+    await expect(page.getByRole('status')).toContainText(`Invitation emailed to ${email}`, { timeout: 15_000 });
 
     const ctx = await browser.newContext();
     const colleague = await ctx.newPage();

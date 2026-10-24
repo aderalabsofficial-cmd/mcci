@@ -190,6 +190,23 @@ nginx -t && systemctl reload nginx
 Impact: `https://app.mcci.aderalabs.tech` serves the app and the four client APIs. Rollback: stage-1 file back,
 `nginx -t`, reload.
 
+**Attempt 1, 24 Oct 2026 (approved by the owner) — failed smoke tests, rolled back.** Backup
+`/root/nginx-backup-20261024T102837Z` (`diff -r` clean), stage-2 file installed, `nginx -t` OK, reload. TLS, HSTS,
+the blocked endpoints, Supabase routing and `/ur` were fine, but every English page answered **500** and `/portal`
+redirected to `https://localhost:3200/login`. Rolled back as instructed: stage-1 file back, `nginx -t`, reload;
+fingerprint `39965382` again, `diff -r` against the backup clean, demo 401, other sites unchanged (notes in
+`ROLLBACK-gate5.txt` inside the backup). **Cause (app, not nginx):** the unit ran `next start -H 127.0.0.1`. Inside
+middleware Next.js renames 127.0.0.1 to `localhost`, so next-intl's rewrite `/` → `/en` became
+`https://localhost:3200/en`, which Next treats as a different origin and proxies as an external URL (TLS to a plain
+HTTP port → 500). Redirects were also built from that loopback origin. **Fix (commit after `43b4231`):** the unit binds
+`-H localhost` with `NODE_OPTIONS=--dns-result-order=ipv4first` (still 127.0.0.1 only, which nginx proxies to), and
+middleware re-bases same-origin redirects on `APP_URL` when `X-Forwarded-Host` is APP_URL's host
+(`lib/net/public-url.ts`). Verified locally against a production build with the proxy's headers: `/`, `/login`,
+`/register`, `/ur`, `/ur/login` 200; `/portal`, `/ur/portal`, `/admin`, `/en/login`, `/auth/confirm` redirect to
+`https://app.mcci.aderalabs.tech/…`; listener `127.0.0.1` only. To apply: install the new unit
+(`install -m 0644 deploy/web/mcci-web.service /etc/systemd/system/` + `daemon-reload`), `release.sh <commit>`, check
+on loopback with the proxy headers, then Gate 5 again with a new backup.
+
 ### Then — first Secretary General and smoke tests (no infra change)
 
 1. The Secretary General registers at `https://app.mcci.aderalabs.tech/register` and opens the confirmation email.

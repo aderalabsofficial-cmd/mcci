@@ -47,7 +47,9 @@ describe('nginx for app.mcci.aderalabs.tech', () => {
 describe('systemd unit and release script', () => {
   it('runs as an unprivileged user on loopback, with secrets only from the root-owned env file', () => {
     expect(unit).toContain('User=mcci-web');
-    expect(unit).toContain('-H 127.0.0.1 -p 3200');
+    // localhost (not 127.0.0.1) keeps next-intl rewrites internal; ipv4first binds it to 127.0.0.1, where nginx proxies
+    expect(unit).toContain('-H localhost -p 3200');
+    expect(unit).toContain('Environment=NODE_OPTIONS=--dns-result-order=ipv4first');
     expect(unit).toContain('EnvironmentFile=/etc/mcci-web/env');
     expect(unit).toContain('NoNewPrivileges=true');
     expect(unit).toContain('ProtectSystem=strict');

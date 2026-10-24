@@ -13,9 +13,13 @@ User=mcci-web
 Group=mcci-web
 WorkingDirectory=/opt/mcci-web/current
 Environment=NODE_ENV=production
+# "localhost", not 127.0.0.1: Next.js renames 127.0.0.1 to localhost inside middleware, so with -H 127.0.0.1 every
+# next-intl rewrite (/ → /en) looks like a different origin and is proxied as an external URL (500 behind nginx).
+# ipv4first makes "localhost" bind 127.0.0.1 (nginx proxies to 127.0.0.1:3200), never ::1.
+Environment=NODE_OPTIONS=--dns-result-order=ipv4first
 EnvironmentFile=/etc/mcci-web/env
 EnvironmentFile=-/etc/mcci-web/release.env
-ExecStart=/usr/bin/node /opt/mcci-web/current/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3200
+ExecStart=/usr/bin/node /opt/mcci-web/current/node_modules/next/dist/bin/next start -H localhost -p 3200
 Restart=always
 RestartSec=5
 KillSignal=SIGTERM
