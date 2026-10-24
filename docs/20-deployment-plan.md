@@ -123,6 +123,21 @@ Impact: Auth, Storage and Studio restart (seconds; no users yet). The JWT issuer
 existing session ends (there are none). Rollback: copy the saved `.env` back and run the same `up` line.
 Templates are served only after gate 4; until then Auth uses its built-in English emails.
 
+**Done 24 Oct 2026 (approved by the owner), evidence:** SMTP values entered by the owner (host set, port 465 =
+implicit TLS, user and password set, `SMTP_ADMIN_EMAIL=mcci@aderalabs.tech`; checked without printing them). Copy
+`/root/mcci-stack-env.before-gate3` (600). The owner had also already set `SITE_URL`, `API_EXTERNAL_URL`,
+`SUPABASE_PUBLIC_URL`, `ADDITIONAL_REDIRECT_URLS` to the documented values; the gate added the five
+`MAILER_TEMPLATES_*` keys and verified that all nine hold exactly the documented values and no other key changed.
+`compose.sh config --quiet` OK; `up -d --no-deps --wait auth storage studio`: those three recreated and healthy, the
+other six containers kept their start times (db, rest, realtime, pooler, meta, envoy). Auth runs with the public URLs,
+the template URLs, the bilingual subjects, SMTP set, `X-Real-IP` rate-limit header; Storage with the public URL and
+`S3_PROTOCOL_ENABLED=false`. `/auth/v1/settings` 200 (email on, phone off, autoconfirm off, sign-up on),
+`/auth/v1/health` 200, `/storage/v1/version` 200, REST table read 200. SMTP server: TLS handshake OK (no login, no mail
+sent). nginx fingerprint and the demo unchanged. The gateway was not recreated: it uses `SUPABASE_PUBLIC_URL` only as a
+CORS origin for `/pg/`, which nginx blocks publicly. Not yet verified: an actual email delivery (after gate 5, in the
+smoke tests) — until gate 5 the templates are not reachable and Auth is not reachable from outside.
+Note for gate 4: with port 465 the app needs `SMTP_SECURE=1` in `/etc/mcci-web/env`.
+
 ### Gate 4 — the app service and first release
 
 ```bash
