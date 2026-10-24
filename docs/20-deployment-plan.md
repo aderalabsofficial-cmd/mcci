@@ -154,6 +154,15 @@ curl -fsS http://127.0.0.1:3200/api/health
 Impact: a new process on 127.0.0.1:3200 (≈ 200–300 MB RAM; 7.7 GB available). Not reachable from outside yet.
 Rollback: `systemctl disable --now mcci-web`.
 
+**Part 1 done 24 Oct 2026 (approved by the owner):** system user `mcci-web` (uid 990, shell `/sbin/nologin`, password
+locked, no sudo rights, not in wheel); `/opt/mcci-web` and `/opt/mcci-web/releases` (root, 755),
+`/opt/mcci-web/home` (mcci-web, 700), `/etc/mcci-web` (root, 700); `/etc/mcci-web/env` from `deploy/web/env.example`
+(root, 600); `/etc/systemd/system/mcci-web.service` (644, SELinux `systemd_unit_file_t`), `daemon-reload` only — the
+unit is **disabled and inactive** until the first release (enable after it, so a reboot before then does not start a
+restart loop). Port 3200 free; nginx and the stack unchanged (9/9 healthy). Next: the owner fills in
+`/etc/mcci-web/env` (publishable and secret key from the stack `.env`, SMTP values with `SMTP_PORT=465` and
+`SMTP_SECURE=1`); then `scripts/deploy/release.sh <commit>` and `systemctl enable mcci-web`.
+
 ### Gate 5 — go public on the new name
 
 ```bash
