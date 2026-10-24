@@ -96,6 +96,14 @@ certbot certonly --webroot -w /var/www/letsencrypt -d app.mcci.aderalabs.tech   
 ```
 Impact: a new name on port 80 that answers only the ACME challenge. Rollback: remove the file, `nginx -t`, reload.
 
+**Done 24 Oct 2026 (approved by the owner), evidence:** DNS at both authoritative Cloudflare nameservers
+(`robert`, `zariyah`): `A app.mcci.aderalabs.tech → 169.58.124.24`, no AAAA. Stage-1 file installed (did not exist
+before), `nginx -t` OK, reload; nginx fingerprint `9ebe5743f2a9` → `29439f6c1dcd` (the new file only). Challenge path
+served over the public address; every other path 404. `certbot --dry-run` (staging) OK, then the real certificate:
+`CN=app.mcci.aderalabs.tech`, issuer Let's Encrypt YE2, ECDSA, expires 22 Jan 2027, webroot renewal; `certbot renew
+--dry-run` for it OK; `certbot-renew.timer` active. Unchanged: demo (401 without its password), aderalabs.tech 404,
+tax.aderalabs.tech 307, iqpigeon.com 200 — same as before. Port 443 for the new name is not configured until gate 5.
+
 ### Gate 3 — Auth settings and email (owner enters the SMTP values)
 
 Owner, on the server, edits the stack's runtime `.env` (`/var/lib/mcci-selfhost/recovery-new/.env`, never printed):
