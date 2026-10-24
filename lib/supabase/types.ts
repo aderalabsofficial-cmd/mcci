@@ -22,6 +22,9 @@ export type Database = {
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
                            },
+"my_access":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "rate_limit_take":
 { Args: { "p_bucket": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },

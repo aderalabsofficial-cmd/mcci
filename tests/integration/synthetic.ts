@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
@@ -88,6 +88,11 @@ export class Synthetic {
       );
     }
     return id;
+  }
+
+  /** Makes `user` an active staff member with `designation` (teardown removes staff rows of tracked users). */
+  async staff(user: User, designation: string) {
+    must(await this.service.from('staff').insert({ user_id: user.id, designation }), 'staff');
   }
 
   async application(companyId: string, createdBy: User, stage: Database['public']['Enums']['app_stage']) {
@@ -225,4 +230,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export function uuidParam(v: string) {
   if (!UUID.test(v)) throw new Error('not a uuid');
   return `'${v}'::uuid`;
+}
+
+// RFC 6238 TOTP (SHA-1, 30 s, 6 digits), as used by GoTrue's TOTP factor
+export function totp(secretBase32: string, at = Date.now()) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = '';
+  for (const ch of secretBase32.replace(/=+$/, '').toUpperCase())
+    bits += alphabet.indexOf(ch).toString(2).padStart(5, '0');
+  const key = Buffer.from(bits.match(/.{8}/g)!.map((b) => parseInt(b, 2)));
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(at / 1000 / 30)));
+  const h = createHmac('sha1', key).update(counter).digest();
+  const offset = h[h.length - 1]! & 0xf;
+  return String((h.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, '0');
 }

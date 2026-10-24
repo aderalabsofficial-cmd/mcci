@@ -1,7 +1,7 @@
-import { createHmac, randomInt } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readLocalEnv } from './local-env';
-import { jwtClaims, readSqlHook, Synthetic, uuidParam } from './synthetic';
+import { jwtClaims, readSqlHook, Synthetic, totp, uuidParam } from './synthetic';
 
 /**
  * Auth API A1–A12 (docs/17 §11) against the running stack: the pinned GoTrue with the settings fixed in
@@ -31,20 +31,6 @@ const authHeaders = (extra: Record<string, string> = {}) => ({
   'content-type': 'application/json',
   ...extra,
 });
-
-// RFC 6238 TOTP (SHA-1, 30 s, 6 digits), as used by GoTrue's TOTP factor
-function totp(secretBase32: string, at = Date.now()) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = '';
-  for (const ch of secretBase32.replace(/=+$/, '').toUpperCase())
-    bits += alphabet.indexOf(ch).toString(2).padStart(5, '0');
-  const key = Buffer.from(bits.match(/.{8}/g)!.map((b) => parseInt(b, 2)));
-  const counter = Buffer.alloc(8);
-  counter.writeBigUInt64BE(BigInt(Math.floor(at / 1000 / 30)));
-  const h = createHmac('sha1', key).update(counter).digest();
-  const offset = h[h.length - 1]! & 0xf;
-  return String((h.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, '0');
-}
 
 /** Sends `n` requests and returns the 1-based index of the first 429, or 0 if none. */
 async function firstLimited(n: number, send: (i: number) => Promise<Response>) {
