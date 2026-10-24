@@ -1,0 +1,37 @@
+# MCCI Digital Platform — Next.js app (docs/20-deployment-plan.md). Install: /etc/systemd/system/mcci-web.service
+# Runs the release that /opt/mcci-web/current points to, as the unprivileged user mcci-web, on loopback only; nginx
+# (deploy/web/nginx/app.mcci.aderalabs.tech.conf) is the only way in. systemd reads the 0600 root env files before it
+# drops privileges, so the app user cannot read them back from disk.
+[Unit]
+Description=MCCI Digital Platform (Next.js)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mcci-web
+Group=mcci-web
+WorkingDirectory=/opt/mcci-web/current
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/mcci-web/env
+EnvironmentFile=-/etc/mcci-web/release.env
+ExecStart=/usr/bin/node /opt/mcci-web/current/node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3200
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+# Next.js writes its image/fetch cache inside the release's .next directory
+ReadWritePaths=/opt/mcci-web/releases
+
+[Install]
+WantedBy=multi-user.target

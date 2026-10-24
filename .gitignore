@@ -31,3 +31,6 @@ supabase/.temp/
 
 # duplicate of reference/prototype (docs/16-gap-review.md A7) — keep out of the repo
 mcci-digital-prototypes/
+
+# scripts/selfhost/migrate.sh working files
+supabase/.migrate-tmp/

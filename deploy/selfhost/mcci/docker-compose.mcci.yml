@@ -68,6 +68,19 @@ services:
       # defaults apply (upstream CONFIG.md): GOTRUE_RATE_LIMIT_EMAIL_SENT 30 per hour (whole instance) and
       # GOTRUE_SMTP_MAX_FREQUENCY 1m per address. config.toml's local values (2/hour, 1s) are CLI conveniences: 1s
       # would be 60x weaker per recipient. TODO(MCCI): agree both values before production.
+      # MCCI bilingual Auth emails (supabase/templates: 6-digit code + token_hash links to SITE_URL/auth/confirm). Auth
+      # fetches each template from a URL; deploy/web serves them at https://<app host>/email-templates/<file>.html.
+      # Empty (the default) = Auth's built-in English templates. Subjects as in supabase/config.toml.
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${MAILER_TEMPLATES_CONFIRMATION:-}
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${MAILER_TEMPLATES_MAGIC_LINK:-}
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: ${MAILER_TEMPLATES_RECOVERY:-}
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${MAILER_TEMPLATES_EMAIL_CHANGE:-}
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: ${MAILER_TEMPLATES_REAUTHENTICATION:-}
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: 'Confirm your MCCI account · اپنا ایم سی سی آئی اکاؤنٹ تصدیق کریں'
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: 'Your MCCI sign-in code · آپ کا سائن اِن کوڈ'
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: 'Reset your MCCI password · پاس ورڈ دوبارہ ترتیب دیں'
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: 'Confirm your new email for MCCI · نئی ای میل کی تصدیق کریں'
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: 'Your MCCI confirmation code · تصدیقی کوڈ'
 
   rest:
     image: postgrest/postgrest:v14.18@sha256:c7cd7e265a85b05248abf53f4473fcec7e327c282d0bd0cf60f1551996d09fcf
