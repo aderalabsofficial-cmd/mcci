@@ -73,8 +73,15 @@ case "${1:-}" in
     switch_to "$prev"
     publish_templates "$prev"
     systemctl restart "$SERVICE"
-    healthy "$prev" && log "rolled back to $prev" || die "previous release $prev is not healthy either — check journalctl -u $SERVICE"
-    exit 0
+    if healthy "$prev"; then
+      log "rolled back to $prev"
+      exit 0
+    fi
+    # the older release does not start: go back to the one that was running
+    switch_to "$cur"
+    publish_templates "$cur"
+    systemctl restart "$SERVICE"
+    die "release $prev is not healthy; stayed on $cur — check journalctl -u $SERVICE"
     ;;
   '' | -*) die "usage: release.sh <commit> | --rollback | --status" ;;
 esac
@@ -116,17 +123,20 @@ if healthy "$short"; then
   log "release $short is live"
 else
   log "release $short failed its health check"
+  # set it aside (hidden from --status/--rollback, kept for diagnosis)
+  failed="$ROOT/releases/.failed-$short-$(date -u +%Y%m%dT%H%M%SZ)"
   if [ -n "$prev" ]; then
     switch_to "$prev"
     publish_templates "$prev"
     systemctl restart "$SERVICE"
-    healthy "$prev" && die "rolled back to $prev; see journalctl -u $SERVICE for why $short failed"
+    mv "$ROOT/releases/$short" "$failed"
+    healthy "$prev" && die "rolled back to $prev; $short kept in $failed — see journalctl -u $SERVICE"
   fi
   die "no healthy release — see journalctl -u $SERVICE"
 fi
 
 # keep the newest $KEEP releases (never the current one)
-ls -1t "$ROOT/releases" | grep -vx "$short" | tail -n +"$KEEP" | while read -r old; do
+ls -1t "$ROOT/releases" | { grep -vx "$short" || true; } | tail -n +"$KEEP" | while read -r old; do
   log "removing old release $old"
   rm -rf "${ROOT:?}/releases/$old"
 done
