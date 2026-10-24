@@ -33,12 +33,14 @@ async function staffForm(page: Page, email: string, password: string) {
   await page.locator('[data-action="login.staff"]').click();
 }
 
-async function mailTo(address: string) {
+/** The newest email to `address`, once at least `count` have arrived (Mailpit lists newest first). */
+async function mailTo(address: string, count = 1) {
   for (let i = 0; i < 20; i++) {
     const res = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${address}"`)}`);
     const found = (await res.json()) as { messages?: { ID: string; Subject: string }[] };
-    if (found.messages?.length) {
-      const msg = await (await fetch(`${MAILPIT}/api/v1/message/${found.messages[0]!.ID}`)).json();
+    const list = found.messages ?? [];
+    if (list.length >= count) {
+      const msg = await (await fetch(`${MAILPIT}/api/v1/message/${list[0]!.ID}`)).json();
       return msg as { Subject: string; Text: string; HTML: string };
     }
     await new Promise((r) => setTimeout(r, 500));
@@ -162,13 +164,22 @@ test.describe('with the local stack', () => {
     await expect(page.getByRole('main').getByRole('status')).toContainText(
       `We have emailed a confirmation link to ${email}`,
     );
+    // a lost email can be sent again (Auth limits emails per address and per hour, so it may answer "too many")
+    await page.locator('[data-action="register.resend"]').click();
+    const answer = page.getByRole('main').getByText(/sent the confirmation link to .+ again|Too many attempts/);
+    await expect(answer).toBeVisible();
+    // a second email replaces the first link, so only the newest one works
+    const emails = /sent the confirmation link/.test(await answer.innerText()) ? 2 : 1;
     await memberForm(page, email, 'E2e-password-123');
     await expect(page.getByRole('main').getByRole('alert')).toHaveText(
       'Please confirm your email address first — open the link we emailed to you.',
     );
     test.skip(!ON_SITE_URL || !MAILPIT, LINKS_REASON);
-    const mail = await mailTo(email);
+    const mail = await mailTo(email, emails);
     expect(mail.Subject).toBeTruthy();
+    // a re-sent link only works on its own with the MCCI templates (token_hash); the default ones need the browser's
+    // PKCE verifier, which the cookie-less resend does not set
+    test.skip(emails === 2 && !/token_hash=/.test(mail.HTML), 'resent link needs the MCCI templates (token_hash)');
     await page.goto(emailedLink(mail.HTML));
     await expect(page).toHaveURL(/\/portal$/);
     await expect(page.getByText('E2E Applicant').first()).toBeVisible();

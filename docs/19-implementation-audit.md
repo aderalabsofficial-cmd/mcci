@@ -183,3 +183,7 @@ to `https://localhost:3200`, so nginx was rolled back (`docs/20-deployment-plan.
 |---|---|---|
 | Bind `-H localhost` + `NODE_OPTIONS=--dns-result-order=ipv4first`: Next.js renames 127.0.0.1 to localhost inside middleware, so with `-H 127.0.0.1` next-intl's `/` → `/en` rewrite looked external and was proxied (500); ipv4first keeps the listener on 127.0.0.1 (the server resolves localhost to ::1 first) | `deploy/web/mcci-web.service` | unit `deploy-web.test.ts`; local production build: listener `127.0.0.1` only |
 | Same-origin redirects re-based on `APP_URL` when `X-Forwarded-Host` is APP_URL's host (others untouched) | `lib/net/public-url.ts`, `middleware.ts` | unit `public-url.test.ts`; local build with the proxy headers: `/`, `/login`, `/register`, `/ur`, `/ur/login` 200, `/portal`, `/ur/portal`, `/admin`, `/en/login`, `/auth/confirm` → `https://app.mcci.aderalabs.tech/…` |
+| "Didn't get the email? Send it again" after registering (EN + UR); cookie-less Auth call, so a refused resend no longer breaks the first link (PKCE verifier) | `lib/auth/account-actions.ts` (`resendConfirmation`), `lib/supabase/server.ts` (`createStatelessClient`), `components/auth/account-forms.tsx` | e2e `auth.spec.ts` registration; local run 108 passed |
+
+**Email delivery on the live name is not working yet:** the hosting relay (MailChannels) blocks the confirmation email
+(`docs/20-deployment-plan.md` Gate 5, SMTP row). Registration works but cannot be completed until that is fixed.

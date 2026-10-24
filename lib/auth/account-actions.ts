@@ -5,7 +5,7 @@ import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createStatelessClient } from '@/lib/supabase/server';
 import { classifyIdentifier } from './identifier';
 
 /**
@@ -16,6 +16,7 @@ import { classifyIdentifier } from './identifier';
 export interface AccountFormState {
   error?: string;
   sentTo?: string;
+  resent?: boolean;
 }
 
 function appUrl(): string {
@@ -112,4 +113,28 @@ export async function registerAccount(_: AccountFormState, form: FormData): Prom
   }
   // An existing address gets the same answer (Auth does not reveal it either).
   return { sentTo: parsed.data.email };
+}
+
+/**
+ * "Didn't get the email? Send it again" after registering: a new confirmation link for an account that is not
+ * confirmed yet. Auth allows one email per address per minute (429 → "too many attempts") and answers the same for
+ * unknown or already-confirmed addresses, so nothing about other accounts is revealed. Cookie-less, so the first
+ * link keeps working when the resend is refused; the new link is the MCCI template's token_hash link (any device).
+ */
+export async function resendConfirmation(_: AccountFormState, form: FormData): Promise<AccountFormState> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  const parsed = registerSchema.shape.email.safeParse(form.get('email'));
+  if (!parsed.success) return { error: msg(locale, 'auth.errors.required') };
+  const supabase = await createStatelessClient();
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: parsed.data,
+    options: { emailRedirectTo: confirmLink(locale, '/portal') },
+  });
+  const text = mailError(locale, error);
+  if (text) {
+    if ((error?.status ?? 500) >= 500) console.error('auth: confirmation email not re-sent', error?.status);
+    return { sentTo: parsed.data, error: text };
+  }
+  return { sentTo: parsed.data, resent: true };
 }

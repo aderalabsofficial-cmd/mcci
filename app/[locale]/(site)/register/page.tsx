@@ -34,6 +34,8 @@ export default async function RegisterPage({ params }: Props) {
           confirm: t('confirm'),
           create: t('create'),
           sent: t('sent'),
+          resend: t('resend'),
+          resent: t('resent'),
           haveAccount: t('haveAccount'),
           working: msg(locale, 'auth.working'),
         }}

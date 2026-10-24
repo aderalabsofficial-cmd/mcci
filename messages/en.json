@@ -321,7 +321,9 @@
       "password": "Password (at least 10 characters)",
       "confirm": "Repeat the password",
       "create": "Create account",
-      "sent": "We have emailed a confirmation link to {email}. Open it to activate your account, then continue with the membership form.",
+      "sent": "We have emailed a confirmation link to {email}. Open it to activate your account, then continue with the membership form. If it is not in your inbox, check your Spam or Junk folder.",
+      "resend": "Didn’t get the email? Send it again",
+      "resent": "We have sent the confirmation link to {email} again. It can take a few minutes — please also check your Spam or Junk folder.",
       "haveAccount": "Already have an account? Sign in",
       "weak": "Choose a stronger password: at least 10 characters."
     },
