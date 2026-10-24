@@ -69,6 +69,23 @@ Rollback: not needed for additive functions; if anything is wrong, restore the s
 Check: pgTAP cannot run on staging (test seed removed, docs/18 §6); the same migrations passed 355/355 locally and in
 the dry run.
 
+**Done 24 Oct 2026 (approved by the owner), evidence:**
+
+| Check | Result |
+|---|---|
+| Target | container `supabase-db` (Compose project `mcci-selfhost`, image `supabase/postgres:17.6.1.136@sha256:f371b5f3…`, data `/var/lib/mcci-selfhost/recovery-new/data/db/data`), cluster id `7699865745449013283`; `compose.sh psql-file` and `docker exec` reach the same cluster; the host's own PostgreSQL (another app, id `7695695179632187426`) is not reachable this way |
+| Backup before | `mcci-20261024T085935Z`: 7 parts decrypt, checksums OK; restore drill 13/13 PASS (WAL replay, row counts in 102 tables, Vault decrypts, negative control) |
+| Review | top-level statements of 0270/0280/0290: only `create function`, `revoke`/`grant` on those new functions, and `create table private.role_permission_defaults as select …` + its primary key, RLS and revoke. No `drop`, `truncate`, `delete`, `update`, `alter` of existing objects, no `create or replace`. DML exists only inside function bodies (runs when an authorised user calls them). No name clashes; all dependencies present |
+| Applied | one at a time with `migrate.sh --apply-next` (each file + its history row in one transaction), checked after each: definer + pinned `search_path` on every function; `invite_lookup`/`invite_accept` service role only; the rest `authenticated` only; no `anon` execute on any `api` function |
+| History | 20 rows, newest `20261024000290`; `migrate.sh --dry-run`: 0 pending |
+| Data | before/after row counts of 93 tables: identical except the new `private.role_permission_defaults` (108 rows, equal to `role_permissions`, RLS on, no client select); `audit_log` unchanged (743) |
+| pgTAP | not runnable on staging (seed removed). Ran on an isolated copy: backup `mcci-20261024T090339Z` → restore drill PASS → test container (`--network none`, no ports) + seed → **13 files, 355/355** → container, volumes and directory removed |
+| Out of scope, unchanged | nginx fingerprint `9ebe5743f2a9` before and after; stack `.env` last modified 23 Oct; Auth container not restarted; demo still answers 401 without its password; no `app.mcci` nginx file, no `mcci-web` unit |
+| Backup sets added | `mcci-20261024T085935Z` (before), `…T090249Z` and `…T090339Z` (after; both drilled PASS) |
+
+Observation (unchanged design, not a defect): `private.normal_email(text)` keeps PostgreSQL's default `EXECUTE` for
+PUBLIC; it is a pure validator, and `anon` has no `USAGE` on schema `private`.
+
 ### Gate 2 — DNS (owner) and certificate
 
 Owner: Cloudflare `A app.mcci → 169.58.124.24`, **DNS only** (grey cloud). Then:
