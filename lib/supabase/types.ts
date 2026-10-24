@@ -14,10 +14,33 @@ export type Database = {
             "ai_extraction_begin":
 { Args: { "p_application": string,"p_doc_key": string }; Returns: string
                            },
+"ai_extraction_finish":
+{ Args: { "p_extraction": string,"p_fields": Json,"p_model": string,"p_ok": boolean }; Returns: undefined
+                           },
 "app_create":
 { Args: { "p_company": string }; Returns: {
               "id": string,"token": string
             }[]
+                           },
+"app_doc_remove":
+{ Args: { "p_document": string }; Returns: undefined
+                           },
+"app_missing":
+{ Args: { "p_app": string }; Returns: (string)[]
+                           },
+"app_resubmit":
+{ Args: { "p_app": string }; Returns: undefined
+                           },
+"app_start":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "company_id": string,"id": string,"token": string
+            }[]
+                           },
+"app_submit":
+{ Args: { "p_app": string }; Returns: string
+                           },
+"app_withdraw":
+{ Args: { "p_app": string,"p_reason"?: string }; Returns: undefined
                            },
 "company_people":
 { Args: { "p_company": string }; Returns: {

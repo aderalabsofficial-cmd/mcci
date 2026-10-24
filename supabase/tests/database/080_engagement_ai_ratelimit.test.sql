@@ -18,7 +18,7 @@ select is(tests.num_as(null, 'select count(*) from public.public_settings'), 4::
 select is(tests.num_as(null, 'select count(*) from public.public_settings where key in (''bank'', ''endorse'', ''temp'')'), 0::bigint, 'NT-48 internal settings are not public');
 select throws_ok($$ select tests.exec_as(null, 'select count(*) from private.settings') $$, '42501', null, 'private settings closed to anonymous');
 select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.settings_for_server()') $$, '42501', null, 'server settings function is service-role only');
-select is(tests.num_as(null, 'select count(*) from jsonb_object_keys(api.settings_for_server())', 'service_role'), 12::bigint, 'service role reads all 12 settings for PDFs and jobs');
+select is(tests.num_as(null, 'select count(*) from jsonb_object_keys(api.settings_for_server())', 'service_role'), 13::bigint, 'service role reads all 13 settings for PDFs and jobs (0300 adds membership)');
 select is((select value ->> 'dueDays' from private.settings where key = 'voucher'), '7', 'voucher.dueDays mapped from prototype psidDays');
 
 -- tickets
