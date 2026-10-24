@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import type { NextRequest, NextResponse } from 'next/server';
+import { forwardedAuthHeaders } from '@/lib/net/client-ip';
 import { publicSupabaseEnv } from './env';
 
 /** Refreshes the Supabase auth cookie on every request. Skipped until the env vars exist. */
@@ -7,7 +8,8 @@ export async function updateSession(request: NextRequest, response: NextResponse
   const env = publicSupabaseEnv();
   if (!env) return response;
 
-  const supabase = createServerClient(env.url, env.anonKey, {
+  const supabase = createServerClient(process.env.SUPABASE_INTERNAL_URL || env.url, env.publishableKey, {
+    global: { headers: forwardedAuthHeaders(request.headers) },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(list) {

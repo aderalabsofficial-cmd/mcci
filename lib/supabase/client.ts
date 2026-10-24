@@ -8,6 +8,6 @@ import type { ClientDatabase } from './client-types';
  * with the user's privileges, so columns clients cannot read (e.g. `endorsements.ip`) are not in its types.
  */
 export function createClient() {
-  const { url, anonKey } = requirePublicSupabaseEnv();
-  return createBrowserClient<ClientDatabase>(url, anonKey);
+  const { url, publishableKey } = requirePublicSupabaseEnv();
+  return createBrowserClient<ClientDatabase>(url, publishableKey);
 }

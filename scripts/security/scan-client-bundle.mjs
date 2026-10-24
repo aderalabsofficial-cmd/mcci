@@ -11,6 +11,7 @@ import { join } from 'node:path';
 
 const SECRET_ENV_NAMES = [
   'SUPABASE_SERVICE_ROLE_KEY',
+  'SMTP_USER',
   'SUPABASE_SECRET_KEY',
   'SERVICE_ROLE_KEY',
   'JWT_SECRET',

@@ -51,14 +51,17 @@ Path convention: `{company_id}/{entity}/{entity_id}/{uuid}.{ext}`. Max 10 MB, ty
 ## Environment variables
 ```
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=      # planned rename → publishable key (sb_publishable_…), decision 2, with M1
-SUPABASE_SERVICE_ROLE_KEY=          # server only; planned rename → secret key (sb_secret_…), never in a client
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=  # sb_publishable_… (renamed from the anon key in M1)
+SUPABASE_SECRET_KEY=                # sb_secret_…, server only, never in a client (lib/supabase/admin.ts)
+SUPABASE_INTERNAL_URL=              # optional: server-to-Supabase URL behind the proxy (e.g. loopback gateway)
+TRUST_PROXY_CLIENT_IP=1             # only behind a proxy that OVERWRITES X-Real-IP (Auth per-IP limits, docs/18 F1)
+CLIENT_IP_HEADER=x-real-ip
 OPENAI_API_KEY=                     # server only
 OPENAI_MODEL_EXTRACT=gpt-4.1-mini   # or current structured-output capable model
-EMAIL_FROM="MCCI <no-reply@mcci.org.pk>"
-EMAIL_PROVIDER=smtp|resend
-SMTP_HOST= SMTP_PORT= SMTP_USER= SMTP_PASS=
-RESEND_API_KEY=
+EMAIL_TRANSPORT=smtp                # mailpit = local mail catcher (development only)
+EMAIL_FROM=mcci@aderalabs.tech      # initial sender; switch to the official MCCI domain by configuration only
+EMAIL_FROM_NAME=MCCI
+SMTP_HOST= SMTP_PORT=587 SMTP_SECURE= SMTP_USER= SMTP_PASS=   # a relay allowed to send for EMAIL_FROM's domain
 CRON_SECRET=                        # shared with pg_cron http calls
 APP_URL=https://digital.mcci.org.pk
 VERIFY_BASE_URL=https://mcci.org.pk/verify   # printed in QR codes
