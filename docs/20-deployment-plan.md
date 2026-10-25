@@ -309,3 +309,15 @@ functions, policy, columns, unchanged counts → `release.sh <commit>` → smoke
 the Secretary General registers, `scripts/selfhost/first-secretary-general.sh <email>`, sets up 2-step login and
 invites officers from `/admin/staff`. Rollback: `release.sh --rollback` (the Release 1 app works on the new schema;
 staff could not use it anyway); full undo of 0310 = restore the backup taken first.
+
+**Gate 7 done 25 Oct 2026 (approved by the owner: "make live … membership application process"), evidence:**
+backup `mcci-20261025T061903Z` verified, restore drill 13/13 PASS; migration file sha256 `ec7303bf…` = reviewed; dry
+run exactly 1 pending → `--apply-next` → ledger 22, 0 pending; 8 `api` functions definer + `search_path=""`,
+`authenticated` only; `private.app_email/app_notify/staff_name` no client execute; `private.staff_level` requires
+aal2; `email_log` + 3 columns + policy `email_log_select_mem`; `membership.checklist` added; 94 tables before/after:
+only `audit_log` +1 and the ledger +1. Release `156aa3e` live (health OK; `4dd464c` kept for rollback).
+
+**AI document reading switched on 25 Oct 2026 (owner: "it should be enabled"):** `/etc/mcci-web/env` copied to
+`/root/mcci-web-env.before-ai-on-<UTC>`, `AI_EXTRACTION=on` added (the key was already there); the running process has
+it. Live check with a synthetic NTN certificate (no real data): `gpt-4.1-mini-2025-04-14`, strict JSON schema, 2.6 s,
+all four fields read correctly. Switch off again: remove the line (or set `off`) and `systemctl restart mcci-web`.
