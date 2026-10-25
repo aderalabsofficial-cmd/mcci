@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { approveAll, type CommitteeResult, decide } from '@/lib/committee/actions';
 import { msg } from '@/lib/nav/model';
+import { callAction } from '@/lib/client/call-action';
 
 export interface DeskItem {
   appId: string;
@@ -63,8 +64,8 @@ export function CommitteeAgenda({
     setInner(null);
     const r =
       dialog.kind === 'all'
-        ? await approveAll(locale, meeting)
-        : await decide(locale, dialog.item.appId, meeting, dialog.kind, text);
+        ? await callAction(locale, () => approveAll(locale, meeting))
+        : await callAction(locale, () => decide(locale, dialog.item.appId, meeting, dialog.kind, text));
     setBusy(false);
     if (!r.ok) return setInner(r);
     setDialog(null);

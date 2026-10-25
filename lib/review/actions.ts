@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { Locale } from '@/i18n/routing';
 import { sendEmail } from '@/lib/email/send';
@@ -25,10 +24,9 @@ export interface ReviewResult {
 
 const uuid = z.string().uuid();
 const reason = z.string().trim().min(1).max(1000);
-const refresh = () => {
-  revalidatePath('/[locale]/admin/requests', 'page');
-  revalidatePath('/[locale]/admin/mreview', 'page');
-};
+// No revalidatePath: the review pages are force-dynamic (always rendered fresh) and the screen shows the confirmed
+// result itself, then refreshes. Revalidating made every action answer carry a whole re-rendered page.
+const refresh = () => {};
 
 function fail(locale: Locale, error: unknown, what: string): ReviewResult {
   if (error instanceof PermissionError) return { ok: false, message: msg(locale, 'review.errors.notAllowed') };

@@ -13,6 +13,7 @@ import {
   withdrawEndorsement,
 } from '@/lib/endorse/actions';
 import { msg } from '@/lib/nav/model';
+import { callAction } from '@/lib/client/call-action';
 
 /**
  * Proposer & seconder slots for the applicant (prototype M.endorseSlots; wizard step 4 and the application page),
@@ -85,7 +86,7 @@ export function EndorseSlots({
 
   const run = async (key: string, fn: () => Promise<{ ok: boolean; message: string }>) => {
     setBusy(key);
-    const r = await fn();
+    const r = await callAction(locale, fn);
     setBusy(null);
     setNote(r);
     if (r.ok) startTransition(() => router.refresh());

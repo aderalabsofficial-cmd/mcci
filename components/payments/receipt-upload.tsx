@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 import { type PayResult, uploadReceipt } from '@/lib/payments/actions';
+import { callAction } from '@/lib/client/call-action';
 
 /** pay.upload: photo or PDF of the paid bank slip (and the bank's transaction reference, if any) */
 export function ReceiptUpload({ locale, voucher, again }: { locale: Locale; voucher: string; again: boolean }) {
@@ -25,7 +26,7 @@ export function ReceiptUpload({ locale, voucher, again }: { locale: Locale; vouc
         fd.set('voucher', voucher);
         setBusy(true);
         setNote(null);
-        const r = await uploadReceipt(fd);
+        const r = await callAction(locale, () => uploadReceipt(fd));
         setBusy(false);
         setNote(r);
         if (r.ok) startTransition(() => router.refresh());

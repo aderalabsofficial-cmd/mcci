@@ -497,3 +497,37 @@ the call throws, they are dropped and "Saving…" stays — no error is shown. N
 does this to an open form. Fix (next): keep the pending changes when a save throws, show "MCCI Digital was updated —
 reload the page" (with the values still on screen), and add Next.js version-skew handling (deploymentId) so stale tabs
 reload; until then, announce releases and ask members to reload open forms.
+
+### Phase A — reliability fixes (after Release 5; local, not yet deployed)
+
+Findings (evidence in the session log, 26 Oct 2026):
+- **Form edits lost across a release** — confirmed: the wizard cleared its pending changes before `saveDraft`, a call
+  from a tab of the older build throws `UnrecognizedActionError`, nothing caught it, "Saving…" stayed.
+- **Review actions under load** — the browser cut off action and page-data requests (net::ERR_ABORTED) only when 3–4
+  browsers loaded the one laptop server; always at the moment a page-data fetch (router refresh / navigation) started.
+  Ruled out with evidence: test timing, stale build, database locks/errors, Auth token refresh, realtime, app navigation
+  code, page reloads, Node keep-alive (70 s → no change), `revalidatePath` (removed → no change). In one browser with a
+  slow network (400 ms, 60 KB/s) and 4× slower CPU every run passes, with harmless cut-offs of response tails after the
+  result arrived. Some cut-off actions never settled on the client (no success, no failure). The exact trigger inside
+  Next.js's client under that load is not identified.
+
+Fixes:
+- `lib/client/call-action.ts`: every browser call of a server action goes through `callAction` / `guardForm` /
+  `ActionForm`; the server's own answer is passed through; a thrown call becomes "stale" (older/newer release: reload,
+  nothing saved by this click) or "unconfirmed" (cut off: reload to check), and an action with no answer in 45 s is
+  "unconfirmed" — never silent, never shown as done. Next.js redirects are re-thrown (`unstable_rethrow`).
+- Application form: unsaved edits kept in this browser before each save and removed only after the server confirms; on
+  failure they are merged back; "Not saved — Retry" or "MCCI Digital was updated — Reload"; after a reload they are
+  restored and saved.
+- Review screen: decisions the server confirmed are shown at once (not dependent on the refresh); one action at a time,
+  buttons locked until the action and its refresh finish; no `revalidatePath` (pages are force-dynamic).
+- Sign-in, 2-step and invitation forms, Staff & Roles, company people, committee, payments, temporary membership,
+  endorsement and document actions all use the same handling (the nginx 502 at sign-in would now show an error, not a
+  crash).
+
+Tests: unit 237/237 (new `call-action.test.ts`: stale vs unconfirmed, server answers passed through, form state kept,
+redirects re-thrown, no-answer timeout); e2e `reliability.spec.ts` 3/3 (form across a release: kept, said, restored and
+saved after reload; connection cut: Retry saves; staff action cut off: "not confirmed", database unchanged, retry works);
+full suite 482 passed, 0 failed, 240 skipped. Under the artificial 4-browser stress on the laptop the review test still
+fails 3–4 of 10 runs (slow/cut-off navigations and actions) — now always with an explicit outcome; to be re-measured
+against the Linux server build before calling the cause closed.

@@ -7,6 +7,7 @@ import type { Locale } from '@/i18n/routing';
 import { removeDocument, savePhoto, uploadDocument } from '@/lib/membership/actions';
 import { msg } from '@/lib/nav/model';
 import { type CropText, PhotoCrop } from './photo-crop';
+import { callAction } from '@/lib/client/call-action';
 
 /**
  * Document slots of the application (prototype slot(): one row per required document, in the form's order) with
@@ -93,7 +94,7 @@ export function DocSlots({
       fd.set('app', appId);
       fd.set('key', key);
       fd.set('file', file);
-      const r = await uploadDocument(fd);
+      const r = await callAction(locale, () => uploadDocument(fd));
       onMessage({ ok: r.ok, text: r.message ?? '' });
       if (r.ok) start(() => router.refresh());
     } catch {
@@ -109,7 +110,7 @@ export function DocSlots({
     fd.set('locale', locale);
     fd.set('app', appId);
     fd.set('file', new File([jpeg], 'photo.jpg', { type: 'image/jpeg' }));
-    const r = await savePhoto(fd).finally(() => setSaving(false));
+    const r = await callAction(locale, () => savePhoto(fd)).finally(() => setSaving(false));
     onMessage({ ok: r.ok, text: r.message ?? '' });
     if (r.ok) {
       setCrop(null);
@@ -120,7 +121,7 @@ export function DocSlots({
 
   const remove = async (doc: SlotDoc) => {
     setBusy(doc.key);
-    const r = await removeDocument(locale, doc.id);
+    const r = await callAction(locale, () => removeDocument(locale, doc.id));
     setBusy(null);
     if (!r.ok) onMessage({ ok: false, text: r.message ?? '' });
     else start(() => router.refresh());

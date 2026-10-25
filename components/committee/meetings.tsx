@@ -7,6 +7,7 @@ import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { type CommitteeResult, createMeeting, recordMinutes } from '@/lib/committee/actions';
 import { msg } from '@/lib/nav/model';
+import { callAction } from '@/lib/client/call-action';
 
 const COMMITTEES = ['Membership Committee', 'Executive Committee', 'General Body'] as const;
 
@@ -145,7 +146,8 @@ export function MeetingsTable({
             e.preventDefault();
             setBusy(true);
             setInner(null);
-            done(await createMeeting(locale, new FormData(e.currentTarget)));
+            const fd = new FormData(e.currentTarget);
+            done(await callAction(locale, () => createMeeting(locale, fd)));
           }}
         >
           <label className="form-field">
@@ -203,7 +205,8 @@ export function MeetingsTable({
                 if (dialog?.kind !== 'minutes') return;
                 setBusy(true);
                 setInner(null);
-                done(await recordMinutes(locale, dialog.row.id, minutes));
+                const id = dialog.row.id;
+                done(await callAction(locale, () => recordMinutes(locale, id, minutes)));
               }}
             >
               {busy ? msg(locale, 'membership.wiz.working') : m('saveMinutes')}

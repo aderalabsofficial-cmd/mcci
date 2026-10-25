@@ -8,6 +8,7 @@ import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 import { saveBank } from '@/lib/payments/actions';
 import type { BankSettings } from '@/lib/payments/load';
+import { callAction } from '@/lib/client/call-action';
 
 /**
  * MCCI's bank account on payment vouchers (settings.save, plat ≥ 2). Until it is confirmed, vouchers say "to be
@@ -67,7 +68,7 @@ export function BankCard({ locale, bank, canEdit }: { locale: Locale; bank: Bank
             fd.set('locale', locale);
             setBusy(true);
             setError(null);
-            const r = await saveBank(fd);
+            const r = await callAction(locale, () => saveBank(fd));
             setBusy(false);
             if (!r.ok) return setError(r.message);
             setEditing(false);

@@ -27,7 +27,10 @@
     "memberLogin": "Member Login",
     "notYet": "Being built — milestone {milestone}",
     "bottomNav": "Quick navigation",
-    "pageTabs": "Sections of this page"
+    "pageTabs": "Sections of this page",
+    "actionStale": "MCCI Digital was updated while this page was open. Nothing was saved by this click — please reload the page and try again.",
+    "actionUnconfirmed": "The server did not confirm this. It may not have been saved — please reload the page to check, then try again.",
+    "reload": "Reload page"
   },
   "nav": {
     "site": {
@@ -1084,7 +1087,10 @@
         "reason": "Reason (optional)",
         "confirm": "Yes, withdraw",
         "cancel": "Keep it"
-      }
+      },
+      "restored": "Your changes that were not saved before are back and are being saved now.",
+      "saveStale": "Not saved — MCCI Digital was updated. Reload the page; your changes are kept in this browser.",
+      "retry": "Retry"
     },
     "track": {
       "title": "Track my application",

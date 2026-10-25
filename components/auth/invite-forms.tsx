@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { guardForm } from '@/lib/client/call-action';
 import { acceptAsSignedIn, activateInvitedAccount, type InviteFormState } from '@/lib/invitations/actions';
 import type { Locale } from '@/i18n/routing';
 
@@ -28,7 +29,7 @@ export function ActivateForm({
   email: string;
   text: { password: string; confirm: string; rule: string; activate: string; working: string };
 }) {
-  const [state, action, pending] = useActionState<InviteFormState, FormData>(activateInvitedAccount, {});
+  const [state, action, pending] = useActionState<InviteFormState, FormData>(guardForm(locale, activateInvitedAccount), {});
   return (
     <form action={action} className="grid gap-[14px]">
       <input type="hidden" name="locale" value={locale} />
@@ -74,7 +75,7 @@ export function AcceptForm({
   token: string;
   text: { accept: string; working: string };
 }) {
-  const [state, action, pending] = useActionState<InviteFormState, FormData>(acceptAsSignedIn, {});
+  const [state, action, pending] = useActionState<InviteFormState, FormData>(guardForm(locale, acceptAsSignedIn), {});
   return (
     <form action={action} className="grid gap-[14px]">
       <input type="hidden" name="locale" value={locale} />

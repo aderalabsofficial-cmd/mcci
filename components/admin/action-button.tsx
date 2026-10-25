@@ -8,6 +8,7 @@ import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 import { cancelVoucher, counterPayment, reissueVoucher, rejectPayment, verifyPayment } from '@/lib/payments/actions';
 import { extendTemp, issueTemp, revokeDocument, revokeTemp } from '@/lib/temp/actions';
+import { callAction } from '@/lib/client/call-action';
 
 /** staff actions of Release 5 (docs/catalogue/actions.md), each re-checked on the server and in the database */
 export type StaffAction =
@@ -66,24 +67,25 @@ export function ActionButton({
     setBusy(true);
     setError(null);
     const v = values;
-    const r =
+    const r = await callAction(locale, () =>
       action === 'pay.verify'
-        ? await verifyPayment(locale, target)
+        ? verifyPayment(locale, target)
         : action === 'pay.reject'
-          ? await rejectPayment(locale, target, v.reason)
+          ? rejectPayment(locale, target, v.reason)
           : action === 'psid.markpaid'
-            ? await counterPayment(locale, target, v.ref, v.note)
+            ? counterPayment(locale, target, v.ref, v.note)
             : action === 'psid.cancel'
-              ? await cancelVoucher(locale, target, v.reason)
+              ? cancelVoucher(locale, target, v.reason)
               : action === 'psid.gen'
-                ? await reissueVoucher(locale, target)
+                ? reissueVoucher(locale, target)
                 : action === 'temp.issue'
-                  ? await issueTemp(locale, target)
+                  ? issueTemp(locale, target)
                   : action === 'temp.extend'
-                    ? await extendTemp(locale, target, v.reason)
+                    ? extendTemp(locale, target, v.reason)
                     : action === 'temp.revoke'
-                      ? await revokeTemp(locale, target, v.reason)
-                      : await revokeDocument(locale, target, v.reason);
+                      ? revokeTemp(locale, target, v.reason)
+                      : revokeDocument(locale, target, v.reason),
+    );
     setBusy(false);
     if (!r.ok) return setError(r.message);
     setOpen(false);

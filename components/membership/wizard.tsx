@@ -54,6 +54,7 @@ import {
   SECTORS,
   WIZARD_STEPS,
 } from '@/lib/membership/reference';
+import { ACTION_TIMEOUT_MS, type ActionFailure, classifyActionError, failureMessage } from '@/lib/client/call-action';
 import { msg } from '@/lib/nav/model';
 import type { SlotEndorsement } from '@/components/endorse/slots';
 import { DocSlots, type SlotDoc } from './doc-slots';
@@ -112,6 +113,42 @@ const fromApp = (a: WizardApp): State => ({
 
 const LOW = 85; // docs/05 M3: fields under 85 % are highlighted "please check"
 
+/** later edits win; checked-field lists are joined */
+function mergePatch(a: DraftPatch, b: DraftPatch): DraftPatch {
+  const out: DraftPatch = { ...a, ...b, form: { ...(a.form ?? {}), ...(b.form ?? {}) } };
+  const checked = [...new Set([...(a.checked ?? []), ...(b.checked ?? [])])];
+  if (checked.length) out.checked = checked;
+  else delete out.checked;
+  if (!out.form || !Object.keys(out.form).length) delete out.form;
+  return out;
+}
+
+// unsaved edits kept in this browser only (per application); storage may be unavailable — then nothing is kept
+const localKey = (appId: string) => `mcci.wizard.unsaved.${appId}`;
+function keepLocal(appId: string, p: DraftPatch) {
+  try {
+    window.localStorage.setItem(localKey(appId), JSON.stringify(p));
+  } catch {
+    // private window / storage blocked
+  }
+}
+function dropLocal(appId: string) {
+  try {
+    window.localStorage.removeItem(localKey(appId));
+  } catch {
+    // ignore
+  }
+}
+function readLocal(appId: string): DraftPatch | null {
+  try {
+    const raw = window.localStorage.getItem(localKey(appId));
+    const p = raw ? (JSON.parse(raw) as DraftPatch) : null;
+    return p && typeof p === 'object' && Object.keys(p).length ? p : null;
+  } catch {
+    return null;
+  }
+}
+
 export function Wizard({
   locale,
   app,
@@ -139,8 +176,8 @@ export function Wizard({
   const [, startTransition] = useTransition();
   const [s, setS] = useState<State>(() => fromApp(app));
   const [step, setStep] = useState(Math.min(5, Math.max(0, app.form.step ?? 0)));
-  const [save, setSave] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const [save, setSave] = useState<'idle' | 'saving' | 'saved' | 'error' | 'stale'>('idle');
+  const [note, setNote] = useState<{ ok: boolean; text: string; failure?: ActionFailure } | null>(null);
   const [missingCodes, setMissingCodes] = useState<string[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pad, setPad] = useState(false);
@@ -174,23 +211,40 @@ export function Wizard({
     if (!Object.keys(p).length) return true;
     pending.current = {};
     setSave('saving');
-    const r = await saveDraft(locale, app.id, p);
-    setSave(r.ok ? 'saved' : 'error');
-    if (!r.ok && r.message) setNote({ ok: false, text: r.message });
-    return r.ok;
+    // a local copy until the server confirms: a save that is cut off or never answers cannot lose the edits
+    keepLocal(app.id, p);
+    let r: { ok: boolean; message?: string; failure?: ActionFailure };
+    let noAnswer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      r = await Promise.race([
+        saveDraft(locale, app.id, p),
+        new Promise<never>((_, reject) => {
+          noAnswer = setTimeout(() => reject(new Error('no answer')), ACTION_TIMEOUT_MS);
+        }),
+      ]);
+    } catch (error) {
+      // the call itself failed (older release, connection cut): nothing is known to be saved
+      r = { ok: false, failure: classifyActionError(error) };
+    } finally {
+      if (noAnswer) clearTimeout(noAnswer);
+    }
+    if (!r.ok) {
+      // never drop edits: put them back under anything typed since, and keep a copy in this browser
+      pending.current = mergePatch(p, pending.current);
+      keepLocal(app.id, pending.current);
+      setSave(r.failure === 'stale' ? 'stale' : 'error');
+      const text = r.failure ? failureMessage(locale, r.failure) : r.message;
+      if (text) setNote({ ok: false, text, failure: r.failure });
+      return false;
+    }
+    if (!Object.keys(pending.current).length) dropLocal(app.id);
+    setSave('saved');
+    return true;
   }, [app.id, locale]);
 
   const queue = useCallback(
     (patch: DraftPatch) => {
-      const p = pending.current;
-      pending.current = {
-        ...p,
-        ...patch,
-        form: { ...(p.form ?? {}), ...(patch.form ?? {}) },
-        checked: [...new Set([...(p.checked ?? []), ...(patch.checked ?? [])])],
-      };
-      if (!pending.current.form || !Object.keys(pending.current.form).length) delete pending.current.form;
-      if (!pending.current.checked?.length) delete pending.current.checked;
+      pending.current = mergePatch(pending.current, patch);
       setSave('saving');
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => void flush(), 600);
@@ -206,6 +260,16 @@ export function Wizard({
     });
     queue({ form: patch as DraftPatch['form'], ...(checked.length ? { checked } : {}) });
   };
+
+  // edits an earlier page could not save (release in between, connection lost) come back and are saved now
+  useEffect(() => {
+    const kept = readLocal(app.id);
+    if (!kept) return;
+    if (kept.form) setS((prev) => ({ ...prev, form: { ...prev.form, ...kept.form } }));
+    queue(kept);
+    setNote({ ok: true, text: m('wiz.restored') });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, for this application
+  }, [app.id]);
 
   // flush before leaving the page
   useEffect(() => {
@@ -422,6 +486,10 @@ export function Wizard({
       if (r.message) setNote({ ok: r.ok, text: r.message });
       if (r.ok && refresh) startTransition(() => router.refresh());
       return r;
+    } catch (error) {
+      const failure = classifyActionError(error);
+      setNote({ ok: false, text: failureMessage(locale, failure), failure });
+      return { ok: false } as T;
     } finally {
       setBusy(null);
     }
@@ -964,9 +1032,14 @@ export function Wizard({
           <div
             className={`banner ${note.ok ? 'green' : 'red'}`}
             role={note.ok ? 'status' : 'alert'}
-            style={{ marginBottom: 12 }}
+            style={{ marginBottom: 12, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}
           >
-            <span>{note.text}</span>
+            <span style={{ flex: 1 }}>{note.text}</span>
+            {note.failure && (
+              <button type="button" className="btn btn-w" data-action="page.reload" onClick={() => window.location.reload()}>
+                {msg(locale, 'common.reload')}
+              </button>
+            )}
           </div>
         )}
         {body}
@@ -978,7 +1051,19 @@ export function Wizard({
             ? m('wiz.saved')
             : save === 'error'
               ? m('wiz.saveFailed')
-              : ''}
+              : save === 'stale'
+                ? m('wiz.saveStale')
+                : ''}
+        {save === 'error' && (
+          <button type="button" className="btn btn-w" data-action="wiz.retry" style={{ marginInlineStart: 10 }} onClick={() => void flush()}>
+            {m('wiz.retry')}
+          </button>
+        )}
+        {save === 'stale' && (
+          <button type="button" className="btn btn-w" data-action="page.reload" style={{ marginInlineStart: 10 }} onClick={() => window.location.reload()}>
+            {msg(locale, 'common.reload')}
+          </button>
+        )}
       </p>
       <div className="wz-nav">
         {step > 0 ? (
@@ -1017,7 +1102,14 @@ export function Wizard({
             onClick={async () => {
               await flush();
               setBusy('submit');
-              const r = await submitApplication(locale, app.id);
+              let r: Awaited<ReturnType<typeof submitApplication>> | { ok: false; message: string; missing?: undefined };
+              try {
+                r = await submitApplication(locale, app.id);
+              } catch (error) {
+                const failure = classifyActionError(error);
+                setBusy(null);
+                return setNote({ ok: false, text: failureMessage(locale, failure), failure });
+              }
               setBusy(null);
               if (r && !r.ok) {
                 setNote({ ok: false, text: r.message ?? '' });

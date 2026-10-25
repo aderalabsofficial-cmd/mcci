@@ -6,6 +6,7 @@ import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { withdrawApplication } from '@/lib/membership/actions';
 import { msg } from '@/lib/nav/model';
+import { callAction } from '@/lib/client/call-action';
 
 /** "Withdraw application" (docs/03 §1 withdraw): asks first, with an optional reason (api.app_withdraw). */
 export function WithdrawButton({ locale, appId }: { locale: Locale; appId: string }) {
@@ -38,7 +39,7 @@ export function WithdrawButton({ locale, appId }: { locale: Locale; appId: strin
               data-action="app.withdraw.confirm"
               onClick={async () => {
                 setBusy(true);
-                const r = await withdrawApplication(locale, appId, reason);
+                const r = await callAction(locale, () => withdrawApplication(locale, appId, reason));
                 setBusy(false);
                 if (!r.ok) return setError(r.message ?? '');
                 setOpen(false);

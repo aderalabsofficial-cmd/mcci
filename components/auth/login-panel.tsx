@@ -2,6 +2,7 @@
 
 import { Mail } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
+import { guardForm } from '@/lib/client/call-action';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { requestEmailCode, signInMember, signInStaff, verifyEmailCode, type AuthFormState } from '@/lib/auth/actions';
@@ -51,13 +52,13 @@ export function LoginPanel({
   notice?: string;
 }) {
   const [tab, setTab] = useState<Tab>('member');
-  const [member, memberAction, memberPending] = useActionState<AuthFormState, FormData>(signInMember, {});
-  const [codeReq, codeReqAction, codeReqPending] = useActionState<AuthFormState, FormData>(requestEmailCode, {});
+  const [member, memberAction, memberPending] = useActionState<AuthFormState, FormData>(guardForm(locale, signInMember), {});
+  const [codeReq, codeReqAction, codeReqPending] = useActionState<AuthFormState, FormData>(guardForm(locale, requestEmailCode), {});
   const [codeVerify, codeVerifyAction, codeVerifyPending] = useActionState<AuthFormState, FormData>(
-    verifyEmailCode,
+    guardForm(locale, verifyEmailCode),
     {},
   );
-  const [staff, staffAction, staffPending] = useActionState<AuthFormState, FormData>(signInStaff, {});
+  const [staff, staffAction, staffPending] = useActionState<AuthFormState, FormData>(guardForm(locale, signInStaff), {});
   const [showCode, setShowCode] = useState(true);
   const ids = { tabs: useId(), panel: useId() };
 

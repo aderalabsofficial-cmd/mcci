@@ -8,6 +8,7 @@ import { missingLabel } from '@/lib/flow/application';
 import { msg } from '@/lib/nav/model';
 import { DocSlots } from './doc-slots';
 import type { WizardApp } from './wizard';
+import { callAction } from '@/lib/client/call-action';
 
 /**
  * Correction screen (prototype join, stage 'returned'; actions app.fix.upload, app.resubmit): the officer's note and
@@ -81,11 +82,11 @@ export function Correction({ locale, app, note }: { locale: Locale; app: WizardA
             disabled={busy}
             onClick={async () => {
               setBusy(true);
-              const r = await resubmitApplication(locale, app.id);
+              const r = await callAction(locale, () => resubmitApplication(locale, app.id));
               setBusy(false);
               if (r && !r.ok) {
                 setMsg({ ok: false, text: r.message ?? '' });
-                setMissing(r.missing ?? []);
+                setMissing('missing' in r ? (r.missing ?? []) : []);
               }
             }}
           >

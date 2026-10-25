@@ -2,11 +2,13 @@
 
 import { Check, Clock, Pencil, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { type ReactNode, useState, useTransition } from 'react';
+import { type ReactNode, useEffect, useState, useTransition } from 'react';
 import { Ic } from '@/components/membership/ui';
+import { ActionNotice } from '@/components/shared/action-notice';
 import { Modal } from '@/components/shared/modal';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
+import { callAction, type Outcome } from '@/lib/client/call-action';
 import type { FormField } from '@/lib/membership/reference';
 import { msg } from '@/lib/nav/model';
 import {
@@ -88,9 +90,9 @@ export function ReviewScreen({
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `review.desk.${k}`, v);
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [refreshing, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
-  const [note, setNote] = useState<ReviewResult | null>(null);
+  const [note, setNote] = useState<Outcome | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [text, setText] = useState('');
   const [value, setValue] = useState('');
@@ -100,21 +102,36 @@ export function ReviewScreen({
   const inReview = data.stage === 'review';
   const canWork = level >= 2;
   const canDecide = level >= 3;
-  const allOk = data.docs.every((d) => !d.file || d.status === 'ok') && data.docs.some((d) => d.file);
+  // Decisions the server confirmed, shown at once — the page refresh that follows can be slow or cut off under load
+  // (incident 25 Oct 2026); the refreshed data replaces them as soon as it arrives.
+  const [confirmed, setConfirmed] = useState<{ docs: Record<string, 'ok' | 'rejected'>; checks: Record<string, boolean> }>({
+    docs: {},
+    checks: {},
+  });
+  useEffect(() => setConfirmed({ docs: {}, checks: {} }), [data]);
+  const docs = data.docs.map((d) => (confirmed.docs[d.id] ? { ...d, status: confirmed.docs[d.id]! } : d));
+  const checks = data.checks.map((c) => (c.key in confirmed.checks ? { ...c, on: confirmed.checks[c.key]! } : c));
+  const allOk = docs.every((d) => !d.file || d.status === 'ok') && docs.some((d) => d.file);
 
-  const run = async (key: string, fn: () => Promise<ReviewResult>) => {
+  // one action at a time; the answer is the server's (callAction turns a failed call into an explicit message)
+  const run = async (key: string, fn: () => Promise<ReviewResult>, onConfirmed?: () => void) => {
+    if (busy) return null;
     setBusy(key);
     setNote(null);
-    const r = await fn();
+    const r = await callAction(locale, fn);
     setBusy(null);
     setNote(r);
     if (r.ok) {
+      onConfirmed?.();
       setDialog(null);
       setText('');
       startTransition(() => router.refresh());
     }
     return r;
   };
+  // also locked while the page refresh after a confirmed action is loading: an action started during that refresh
+  // was the one cut off under load
+  const locked = busy !== null || refreshing;
 
   const open = (d: Dialog) => {
     setText('');
@@ -141,7 +158,8 @@ export function ReviewScreen({
         type="button"
         className="btn btn-primary"
         data-action="adm.app.open"
-        disabled={busy === 'start'}
+        disabled={locked}
+        title={locked ? m('working') : undefined}
         onClick={() => void run('start', () => startReview(locale, data.id))}
       >
         <Ic name="shield" size={16} /> {busy === 'start' ? m('working') : m('start')}
@@ -328,15 +346,7 @@ export function ReviewScreen({
           {actions}
         </div>
       </div>
-      {note && (
-        <div
-          className={`banner ${note.ok ? 'green' : 'red'}`}
-          role={note.ok ? 'status' : 'alert'}
-          style={{ marginBottom: 14 }}
-        >
-          <span>{note.message}</span>
-        </div>
-      )}
+      <ActionNotice locale={locale} note={note} />
       {showForm && (
         <div className="formv embed" style={{ marginBottom: 18 }}>
           {form}
@@ -461,7 +471,7 @@ export function ReviewScreen({
           <div className="ch">
             <h3>{m('documents', { biz: data.bizLabel })}</h3>
           </div>
-          {data.docs.map((x) => (
+          {docs.map((x) => (
             <div className="drow" key={x.key} data-doc={x.key}>
               <span>{docIcon(x)}</span>
               <div>
@@ -489,9 +499,13 @@ export function ReviewScreen({
                         className="btn btn-w"
                         data-action="adm.doc.ok"
                         aria-label={m('accept', { doc: x.short })}
-                        disabled={busy === `ok-${x.id}` || x.status === 'ok'}
-                        title={x.status === 'ok' ? m('accepted') : undefined}
-                        onClick={() => void run(`ok-${x.id}`, () => reviewDocument(locale, x.id, true))}
+                        disabled={locked || x.status === 'ok'}
+                        title={x.status === 'ok' ? m('accepted') : locked ? m('working') : undefined}
+                        onClick={() =>
+                          void run(`ok-${x.id}`, () => reviewDocument(locale, x.id, true), () =>
+                            setConfirmed((s) => ({ ...s, docs: { ...s.docs, [x.id]: 'ok' } })),
+                          )
+                        }
                       >
                         ✓
                       </button>
@@ -552,7 +566,7 @@ export function ReviewScreen({
           <div className="ch">
             <h3>{m('checklist')}</h3>
           </div>
-          {data.checks.map((c) => (
+          {checks.map((c) => (
             <div className="tg" key={c.key}>
               <div>
                 <b>{c.label}</b>
@@ -564,9 +578,13 @@ export function ReviewScreen({
                 className={`sw ${c.on ? 'on' : ''}`}
                 aria-label={c.label}
                 data-action="adm.check"
-                disabled={!inReview || !canWork || busy === `chk-${c.key}`}
-                title={!inReview || !canWork ? m('checklist') : undefined}
-                onClick={() => void run(`chk-${c.key}`, () => setCheck(locale, data.id, c.key, !c.on))}
+                disabled={!inReview || !canWork || locked}
+                title={!inReview || !canWork ? m('checklist') : locked ? m('working') : undefined}
+                onClick={() =>
+                  void run(`chk-${c.key}`, () => setCheck(locale, data.id, c.key, !c.on), () =>
+                    setConfirmed((s) => ({ ...s, checks: { ...s.checks, [c.key]: !c.on } })),
+                  )
+                }
               />
             </div>
           ))}
@@ -628,7 +646,8 @@ export function ReviewScreen({
                 type="button"
                 className={`btn ${d.danger ? 'btn-danger' : 'btn-primary'}`}
                 data-action={d.action}
-                disabled={busy === 'dialog'}
+                disabled={locked}
+                title={locked ? m('working') : undefined}
                 onClick={() => void run('dialog', d.ok)}
               >
                 {busy === 'dialog' ? m('working') : d.okLabel}
@@ -638,11 +657,7 @@ export function ReviewScreen({
         }
       >
         {d?.body}
-        {note && !note.ok && dialog && (
-          <p role="alert" style={{ color: '#b91c1c', fontWeight: 700 }}>
-            {note.message}
-          </p>
-        )}
+        {note && !note.ok && dialog && <ActionNotice locale={locale} note={note} />}
         {dialog?.kind === 'verify' && !allOk && <p className="muted">{m('verifyBlockedDocs')}</p>}
       </Modal>
     </>

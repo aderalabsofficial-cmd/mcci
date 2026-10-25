@@ -8,6 +8,7 @@ import type { Locale } from '@/i18n/routing';
 import { addMember } from '@/lib/members/actions';
 import { SECTORS } from '@/lib/membership/reference';
 import { msg } from '@/lib/nav/model';
+import { callAction } from '@/lib/client/call-action';
 
 /** "Add member" (action mem.add): an existing MCCI member and its owner's invitation */
 export function AddMember({ locale, validTo }: { locale: Locale; validTo: string }) {
@@ -36,7 +37,7 @@ export function AddMember({ locale, validTo }: { locale: Locale; validTo: string
             const fd = new FormData(e.currentTarget);
             setBusy(true);
             fd.set('locale', locale);
-            const r = await addMember(fd);
+            const r = await callAction(locale, () => addMember(fd));
             setBusy(false);
             setNote(r);
             if (r.ok) {

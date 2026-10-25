@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { guardForm } from '@/lib/client/call-action';
 import type { Locale } from '@/i18n/routing';
 import { verifyTotp, type MfaFormState } from '@/lib/auth/actions';
 
@@ -27,7 +28,7 @@ export function MfaForm({
   secret?: string;
   text: MfaText;
 }) {
-  const [state, action, pending] = useActionState<MfaFormState, FormData>(verifyTotp, {});
+  const [state, action, pending] = useActionState<MfaFormState, FormData>(guardForm(locale, verifyTotp), {});
   return (
     <form action={action} className="grid gap-[14px]">
       <input type="hidden" name="locale" value={locale} />

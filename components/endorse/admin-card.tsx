@@ -7,6 +7,7 @@ import type { Locale } from '@/i18n/routing';
 import { remindEndorser } from '@/lib/endorse/actions';
 import { msg } from '@/lib/nav/model';
 import type { SlotEndorsement } from './slots';
+import { callAction } from '@/lib/client/call-action';
 
 /** Proposer & seconder on the review desk (prototype M.endAdmin): status, dates, reference, remind. Never sign. */
 export function EndorseAdminCard({
@@ -84,7 +85,7 @@ export function EndorseAdminCard({
             className="btn btn-w"
             data-action="adm.prop.remind"
             onClick={async () => {
-              const results = await Promise.all(pending.map((p) => remindEndorser(locale, p.id)));
+              const results = await Promise.all(pending.map((p) => callAction(locale, () => remindEndorser(locale, p.id))));
               setNote(results.map((r) => r.message).join(' '));
               startTransition(() => router.refresh());
             }}

@@ -7,6 +7,7 @@ import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { declineEndorsement, sendSignCode, signEndorsement } from '@/lib/endorse/actions';
 import { msg } from '@/lib/nav/model';
+import { callAction } from '@/lib/client/call-action';
 
 /**
  * Endorsement requests for a member (prototype member/endorse): waiting requests and history; Review (applicant summary,
@@ -254,7 +255,7 @@ export function EndorseInbox({
                   fd.set('code', code);
                   fd.set('declaration', declaration(d.row));
                   if (blob) fd.set('signature', new File([blob], 'signature.png', { type: 'image/png' }));
-                  const r = await signEndorsement(fd);
+                  const r = await callAction(locale, () => signEndorsement(fd));
                   setBusy(null);
                   if (!r.ok) return setInner(r);
                   setDialog(null);
@@ -350,7 +351,7 @@ export function EndorseInbox({
                     disabled={busy === 'code'}
                     onClick={async () => {
                       setBusy('code');
-                      setInner(await sendSignCode(locale, d.row.id));
+                      setInner(await callAction(locale, () => sendSignCode(locale, d.row.id)));
                       setBusy(null);
                     }}
                   >
@@ -390,10 +391,8 @@ export function EndorseInbox({
                 disabled={busy === 'decline'}
                 onClick={async () => {
                   setBusy('decline');
-                  const r = await declineEndorsement(
-                    locale,
-                    d.row.id,
-                    `${reason}${extra.trim() ? ` — ${extra.trim()}` : ''}`,
+                  const r = await callAction(locale, () =>
+                    declineEndorsement(locale, d.row.id, `${reason}${extra.trim() ? ` — ${extra.trim()}` : ''}`),
                   );
                   setBusy(null);
                   if (!r.ok) return setInner(r);

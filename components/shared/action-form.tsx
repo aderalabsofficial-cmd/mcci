@@ -1,7 +1,9 @@
 'use client';
 
 import { useActionState, useEffect, useRef, type ReactNode } from 'react';
+import { asLocale } from '@/i18n/locale';
 import type { ActionResult } from '@/lib/access/result';
+import { classifyActionError, failureMessage } from '@/lib/client/call-action';
 
 export type ServerAction = (state: ActionResult | null, form: FormData) => Promise<ActionResult>;
 
@@ -20,7 +22,14 @@ export function ActionForm({
   children: (pending: boolean) => ReactNode;
   className?: string;
 }) {
-  const [result, run, pending] = useActionState<ActionResult | null, FormData>(action, null);
+  // a call that fails outright (older release, connection cut) is reported as such — never silent
+  const [result, run, pending] = useActionState<ActionResult | null, FormData>(async (state, form) => {
+    try {
+      return await action(state, form);
+    } catch (error) {
+      return { ok: false, message: failureMessage(asLocale(String(form.get('locale') ?? 'en')), classifyActionError(error)) };
+    }
+  }, null);
   // callers pass inline callbacks: keep the latest one without making it an effect dependency
   const report = useRef(onDone);
   useEffect(() => {
