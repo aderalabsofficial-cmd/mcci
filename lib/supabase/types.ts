@@ -74,6 +74,11 @@ export type Database = {
 "app_withdraw":
 { Args: { "p_app": string,"p_reason"?: string }; Returns: undefined
                            },
+"cert_view":
+{ Args: { "p_code": string }; Returns: {
+              "class": string,"code": string,"company": string,"expires_at": string,"extended": boolean,"issued_at": string,"kind": string,"member_no": string,"status": string,"temp_status": string,"title": string,"valid_to": string,"voucher_no": string,"women": boolean
+            }[]
+                           },
 "cmt_approve_all":
 { Args: { "p_meeting": string }; Returns: {
               "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"next_meeting": string,"to_email": string,"token": string,"voucher_no": string
@@ -102,6 +107,11 @@ export type Database = {
                            },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
+                           },
+"doc_verify":
+{ Args: { "p_code": string }; Returns: {
+              "code": string,"company": string,"issued": string,"kind": string,"member_no": string,"status": string,"superseded_by": string,"title": string,"valid_to": string
+            }[]
                            },
 "email_mark":
 { Args: { "p_email": number,"p_error"?: string,"p_ok": boolean,"p_provider_id"?: string }; Returns: undefined
@@ -179,6 +189,29 @@ export type Database = {
 "my_access":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"pay_counter":
+{ Args: { "p_note"?: string,"p_ref": string,"p_voucher": string }; Returns: {
+              "amount": number,"app_id": string,"email_id": number,"expires_at": string,"lang": string,"member_no": string,"name": string,"ref_type": string,"temp_code": string,"to_email": string,"voucher_no": string
+            }[]
+                           },
+"pay_reject":
+{ Args: { "p_reason": string,"p_voucher": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"to_email": string,"voucher_no": string
+            }[]
+                           },
+"pay_upload":
+{ Args: { "p_bank_ref"?: string,"p_path": string,"p_sha256"?: string,"p_voucher": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"to_email": string,"voucher_no": string
+            }[]
+                           },
+"pay_verify":
+{ Args: { "p_voucher": string }; Returns: {
+              "amount": number,"app_id": string,"email_id": number,"expires_at": string,"lang": string,"member_no": string,"name": string,"ref_type": string,"temp_code": string,"to_email": string,"voucher_no": string
+            }[]
+                           },
+"qr_revoke":
+{ Args: { "p_code": string,"p_reason": string }; Returns: undefined
+                           },
 "rate_limit_take":
 { Args: { "p_bucket": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },
@@ -187,6 +220,12 @@ export type Database = {
                            },
 "role_permissions_reset":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"settings_bank":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"settings_bank_save":
+{ Args: { "p_bank": string,"p_branch": string,"p_confirmed": boolean,"p_iban": string,"p_title": string }; Returns: undefined
                            },
 "settings_for_server":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -201,6 +240,36 @@ export type Database = {
                            },
 "staff_update":
 { Args: { "p_active": boolean,"p_designation": string,"p_user": string }; Returns: undefined
+                           },
+"temp_extend":
+{ Args: { "p_reason": string,"p_temp": string }; Returns: {
+              "email_id": number,"expires_at": string,"lang": string,"name": string,"to_email": string
+            }[]
+                           },
+"temp_issue":
+{ Args: { "p_app": string }; Returns: {
+              "code": string,"email_id": number,"expires_at": string,"lang": string,"member_id": string,"member_no": string,"name": string,"to_email": string
+            }[]
+                           },
+"temp_jobs":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "company_id": string,"email": string,"expires_at": string,"full_name": string,"kind": string,"lang": string,"member_no": string
+            }[]
+                           },
+"temp_policy":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"temp_revoke":
+{ Args: { "p_reason": string,"p_temp": string }; Returns: undefined
+                           },
+"voucher_cancel":
+{ Args: { "p_reason": string,"p_voucher": string }; Returns: undefined
+                           },
+"voucher_jobs":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"voucher_reissue":
+{ Args: { "p_voucher": string }; Returns: string
                            },
 "voucher_view":
 { Args: { "p_voucher": string }; Returns: {
@@ -1034,14 +1103,14 @@ isOneToOne: false
                   ]
                 },"payment_receipts": {
                   Row: {
-                    "bank_ref": string | null,"company_id": string,"decided_at": string | null,"decided_by": string | null,"id": string,"path": string,"reason": string | null,"sha256": string | null,"status": Database["public"]['Enums']["receipt_status"],"uploaded_at": string,"uploaded_by": string | null,"voucher_id": string
+                    "bank_ref": string | null,"company_id": string,"decided_at": string | null,"decided_by": string | null,"id": string,"method": string,"path": string | null,"reason": string | null,"sha256": string | null,"status": Database["public"]['Enums']["receipt_status"],"uploaded_at": string,"uploaded_by": string | null,"voucher_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "bank_ref"?: string | null,"company_id": string,"decided_at"?: string | null,"decided_by"?: string | null,"id"?: string,"path": string,"reason"?: string | null,"sha256"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"uploaded_at"?: string,"uploaded_by"?: string | null,"voucher_id": string
+                    "bank_ref"?: string | null,"company_id": string,"decided_at"?: string | null,"decided_by"?: string | null,"id"?: string,"method"?: string,"path"?: string | null,"reason"?: string | null,"sha256"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"uploaded_at"?: string,"uploaded_by"?: string | null,"voucher_id": string
                   }
                   Update: {
-                    "bank_ref"?: string | null,"company_id"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"id"?: string,"path"?: string,"reason"?: string | null,"sha256"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"uploaded_at"?: string,"uploaded_by"?: string | null,"voucher_id"?: string
+                    "bank_ref"?: string | null,"company_id"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"id"?: string,"method"?: string,"path"?: string | null,"reason"?: string | null,"sha256"?: string | null,"status"?: Database["public"]['Enums']["receipt_status"],"uploaded_at"?: string,"uploaded_by"?: string | null,"voucher_id"?: string
                   }
                   Relationships: [
                     {

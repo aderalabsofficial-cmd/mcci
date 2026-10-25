@@ -85,7 +85,23 @@ Decisions can be recorded on or after the meeting date:
 The voucher shows the bank account only after MCCI confirms it in the settings; until then it says "to be confirmed
 by MCCI" and asks the applicant not to pay yet.
 
-## 7. Not yet in the system (next releases)
+## 7. Payments and temporary membership (Release 5)
 
-Receipt upload and verification by Accounts, temporary membership and certificates with QR, printing and permanent
-certificates. Until then those steps are handled outside the system.
+**Bank account first** (`/admin/payments`, Secretary General): **Enter the bank account** that MCCI's Accounts provide
+(bank, account title, IBAN, branch), tick "MCCI Accounts confirmed this account" and save. Until then vouchers say
+"to be confirmed by MCCI — please do not pay yet" and members cannot upload receipts.
+
+**Payments** (`/admin/payments`, Accounts): receipts waiting for verification — **View receipt**, then **Verify**
+(the money is in the bank statement) or **Reject** with a reason the member reads. **Vouchers & Receipts**
+(`/admin/psid`): every voucher; **Paid at counter** records a payment received at the MCCI counter (receipt or bank
+reference required); **Cancel voucher**; **Issue new voucher** for an expired or cancelled one.
+
+A verified membership fee issues the **temporary membership** at once: member with the committee's number, temporary
+certificate with QR (member's My Documents), 60 days, queued for printing. **Temporary Memberships** (`/admin/temp`):
+days left; the SG can **Extend** or **Revoke** (reason required). **Documents & QR** (`/admin/documents`): every issued
+document, open / print it, the SG can revoke it. Anyone can check a certificate at `/verify` or by scanning its QR.
+
+## 8. Not yet in the system (next releases)
+
+Print batches, certificate serials, receiving printed certificates and conversion to permanent, delivery. Until then
+those steps are handled outside the system.

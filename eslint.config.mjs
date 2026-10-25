@@ -54,6 +54,8 @@ const SERVICE_ROLE_PATHS = [
   'lib/supabase/admin.ts',
   'lib/auth/admin/**',
   'lib/endorse/admin/**',
+  'lib/verify/admin/**',
+  'lib/temp/admin/**',
 ];
 
 const config = [

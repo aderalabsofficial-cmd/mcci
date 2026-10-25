@@ -897,7 +897,20 @@
         "b": "Start a new application"
       },
       "progress": "See progress",
-      "myMembership": "My membership"
+      "myMembership": "My membership",
+      "paymentReceived": {
+        "t": "Receipt received — MCCI Accounts are verifying",
+        "d": "Your receipt for voucher {voucher} is with MCCI Accounts (usually one working day).",
+        "b": "View voucher"
+      },
+      "paymentRejected": {
+        "t": "Receipt not accepted — please upload again",
+        "d": "MCCI Accounts could not accept your receipt:",
+        "b": "Upload a clear receipt"
+      },
+      "tempUntil": "Membership No. {no} is active until {until}. Your temporary certificate is ready.",
+      "tempExpired": "Your temporary membership {no} expired on {until}. MCCI can extend it — please contact MCCI.",
+      "certificate": "View certificate"
     },
     "wiz": {
       "pageTitle": "Application form",
@@ -1108,7 +1121,11 @@
         "proposer declined": "Proposer declined",
         "seconder declined": "Seconder declined",
         "proposer expired": "Proposer request expired",
-        "seconder expired": "Seconder request expired"
+        "seconder expired": "Seconder request expired",
+        "receipt uploaded": "Paid receipt uploaded",
+        "receipt rejected": "Receipt not accepted",
+        "payment verified": "Payment verified by Accounts",
+        "temp issued": "Temporary membership issued"
       }
     },
     "page": {
@@ -1674,7 +1691,9 @@
         "for": "For",
         "amount": "Amount",
         "paidOn": "Verified on"
-      }
+      },
+      "rejectedNote": "Receipt not accepted:",
+      "uploadedNote": "Receipt uploaded {when} — MCCI Accounts are verifying it."
     },
     "done": {
       "scheduled": "Meeting {id} scheduled; {n} waiting file(s) put on its agenda.",
@@ -1722,6 +1741,448 @@
         "t": "Application not approved",
         "b": "The Membership Committee did not approve your application: {reason}"
       }
+    },
+    "payment": {
+      "received": {
+        "t": "Receipt received",
+        "b": "MCCI Accounts will verify your receipt for voucher {voucher}."
+      },
+      "verified": {
+        "t": "Payment verified",
+        "b": "MCCI Accounts verified your payment for voucher {voucher}."
+      },
+      "rejected": {
+        "t": "Receipt not accepted",
+        "b": "Voucher {voucher}: {reason}"
+      },
+      "reissued": {
+        "t": "New payment voucher",
+        "b": "Payment voucher {voucher} is in Payments."
+      }
+    },
+    "temp": {
+      "issued": {
+        "t": "Temporary membership issued",
+        "b": "Membership {no} is active until {until}. Your certificate ({code}) is in My Documents."
+      },
+      "extended": {
+        "t": "Temporary membership extended",
+        "b": "Membership {no} is valid until {until}."
+      },
+      "alert": {
+        "t": "Temporary membership ends soon",
+        "b": "Membership {no} ends on {until} ({days} days)."
+      },
+      "expired": {
+        "t": "Temporary membership expired",
+        "b": "Membership {no} has expired. MCCI can extend it."
+      },
+      "revoked": {
+        "t": "Temporary membership revoked",
+        "b": "Membership {no}: {reason}"
+      }
     }
+  },
+  "pay": {
+    "admin": {
+      "title": "Payments",
+      "sub": "Members pay at the bank with a voucher and upload the receipt; Accounts verify it.",
+      "vouchersLink": "Vouchers & receipts",
+      "kReceipts": "Receipts to verify",
+      "kReceiptsSub": "Uploaded by members",
+      "kCollected": "Collected",
+      "kCollectedSub": "{n} payments",
+      "kUnpaid": "Unpaid vouchers",
+      "kMembership": "Membership fees",
+      "queue": "Receipts waiting for verification",
+      "queueEmpty": "No receipts to verify.",
+      "uploaded": "uploaded {when}",
+      "bankRef": "bank ref. {ref}",
+      "viewReceipt": "View receipt",
+      "all": "All vouchers"
+    },
+    "psid": {
+      "title": "Vouchers & Receipts",
+      "sub": "Payment is confirmed by Accounts today. Automatic bank confirmation is added when MCCI’s bank provides the integration — members’ steps stay the same.",
+      "how": "How payment works now",
+      "manual": "Verified by Accounts",
+      "table": "Vouchers",
+      "steps": {
+        "issued": {
+          "t": "Voucher issued",
+          "d": "On committee approval"
+        },
+        "pays": {
+          "t": "Member pays",
+          "d": "Bank deposit or transfer — or at the MCCI counter"
+        },
+        "uploaded": {
+          "t": "Receipt uploaded",
+          "d": "Photo in the member portal"
+        },
+        "verify": {
+          "t": "Accounts verify",
+          "d": "Against the bank statement"
+        },
+        "temp": {
+          "t": "Temporary membership",
+          "d": "Issued automatically"
+        }
+      }
+    },
+    "bank": {
+      "title": "MCCI bank account on vouchers",
+      "confirmed": "Confirmed",
+      "pending": "To be confirmed by MCCI",
+      "pendingHelp": "Vouchers show \"to be confirmed by MCCI — please do not pay yet\" and receipts cannot be uploaded until MCCI’s Accounts provide the account and it is confirmed here. Payments received at the MCCI counter can be recorded now.",
+      "bank": "Bank",
+      "accountTitle": "Account title",
+      "iban": "IBAN",
+      "branch": "Branch",
+      "enter": "Enter the bank account",
+      "change": "Change",
+      "confirmBox": "MCCI Accounts confirmed this account — show it on vouchers and open receipt uploads",
+      "save": "Save"
+    },
+    "upload": {
+      "file": "Photo or PDF of the paid bank slip",
+      "bankRef": "Bank transaction reference (if any)",
+      "button": "Upload paid receipt",
+      "again": "Upload again"
+    },
+    "cols": {
+      "voucher": "Voucher",
+      "member": "Member",
+      "purpose": "Purpose",
+      "amount": "Amount",
+      "verified": "Verified",
+      "due": "Due",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "noVouchers": "No vouchers yet. Vouchers are issued when the Membership Committee approves an application.",
+    "done": {
+      "uploaded": "Receipt received for {voucher}. MCCI Accounts will verify it.",
+      "verified": "Payment verified for {voucher}.",
+      "verifiedTemp": "Payment verified for {voucher}; temporary membership {no} issued.",
+      "rejected": "Receipt for {voucher} not accepted; the member has been told.",
+      "cancelled": "Voucher {voucher} cancelled.",
+      "reissued": "New voucher {voucher} issued.",
+      "bankSaved": "Bank account saved (not confirmed — vouchers still say \"to be confirmed\").",
+      "bankConfirmed": "Bank account confirmed: it now shows on vouchers and members can upload receipts.",
+      "emailFailed": "The email could not be sent; the member sees it in the portal."
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "fields": "Please check the fields.",
+      "bank_pending": "MCCI has not confirmed the bank account yet. Please do not pay yet — MCCI will tell you.",
+      "wrong_status": "This voucher cannot do that now. Refresh the page.",
+      "file": "Please choose the photo or PDF of the paid receipt.",
+      "reason_required": "Please write the reason (at least 3 characters).",
+      "reference": "Please enter the bank or counter receipt reference.",
+      "not_found": "Voucher not found.",
+      "live_exists": "A live voucher already exists for this membership.",
+      "iban": "Enter a Pakistani IBAN like PK36 SCBL 0000 0011 2345 6702.",
+      "required": "Please fill in the bank and the account title.",
+      "wrong_stage": "This application is not waiting for payment.",
+      "not_paid": "The membership fee is not verified yet.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "email": {
+      "receivedSubject": "Receipt received — {voucher}",
+      "receivedBody": "We received your paid receipt for payment voucher {voucher}. MCCI Accounts will check it against the bank statement, usually within one working day.",
+      "rejectedSubject": "Receipt not accepted — {voucher}",
+      "rejectedBody": "MCCI Accounts could not accept the receipt for payment voucher {voucher}. Please upload a clear, correct receipt in Payments. The reason:",
+      "verifiedSubject": "Payment verified — {voucher}",
+      "verifiedBody": "MCCI Accounts verified your payment of {amount} for voucher {voucher}. Thank you.",
+      "tempSubject": "Temporary membership issued — {no}",
+      "tempBody": "Your temporary membership {no} is active until {until}. Your temporary certificate ({code}) is in My Documents and can be verified by its QR code. MCCI will issue your permanent certificate after printing.",
+      "openPayments": "Open Payments",
+      "openDocuments": "Open My Documents"
+    }
+  },
+  "temp": {
+    "admin": {
+      "title": "Temporary Memberships",
+      "sub": "Issued automatically when the fee payment is verified · valid {days} days · converted to permanent when the printed certificate arrives.",
+      "registry": "Documents & QR",
+      "kActive": "Active temporary",
+      "kActiveSub": "Members until the certificate is printed",
+      "kExpiring": "Expiring ≤ {n} days",
+      "kExpired": "Expired",
+      "kExpiredSub": "Extend or convert",
+      "kWaiting": "Paid — not yet issued",
+      "kWaitingSub": "Issue the temporary membership",
+      "how": "How temporary membership works",
+      "steps": {
+        "paid": {
+          "t": "Fee verified",
+          "d": "Receipt checked by Accounts"
+        },
+        "issued": {
+          "t": "Temporary issued",
+          "d": "{days} days · QR certificate"
+        },
+        "printing": {
+          "t": "Security printing",
+          "d": "Batch · serial · courier"
+        },
+        "received": {
+          "t": "Certificate received",
+          "d": "Staff upload scan + serial"
+        },
+        "permanent": {
+          "t": "Permanent",
+          "d": "Temporary QR superseded"
+        }
+      },
+      "table": "Temporary members",
+      "cols": {
+        "no": "Membership No.",
+        "company": "Company",
+        "issued": "Issued",
+        "expires": "Expires",
+        "left": "Time left",
+        "print": "Printed certificate",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "extended": "(ext.)",
+      "daysLeft": "{n} days",
+      "print": {
+        "none": "Not queued",
+        "queued": "Queued for printing",
+        "sent": "Sent to printer",
+        "printing": "Printing",
+        "received": "Received",
+        "converted": "Converted"
+      },
+      "status": {
+        "active": "Temporary",
+        "expired": "Temporary expired",
+        "converted": "Permanent",
+        "revoked": "Revoked"
+      },
+      "certificate": "Certificate",
+      "none": "No temporary memberships yet. They are issued when Accounts verify a membership fee.",
+      "waiting": "Paid — temporary not yet issued",
+      "paidOn": "paid {date}",
+      "waitingAuto": "Auto-issue on payment is on: temporary membership starts as soon as Accounts verify the fee.",
+      "waitingNone": "Nothing waiting."
+    },
+    "done": {
+      "issued": "Temporary membership {no} issued.",
+      "extended": "Extended until {until}.",
+      "revoked": "Temporary membership revoked; the QR shows \"Revoked\".",
+      "docRevoked": "{code} revoked; public verification shows \"Revoked\"."
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "reason_required": "Please write the reason (at least 3 characters).",
+      "wrong_status": "This membership cannot do that now. Refresh the page.",
+      "max_extensions": "The maximum number of extensions is reached.",
+      "wrong_stage": "This application is not waiting for its temporary membership.",
+      "not_paid": "The membership fee is not verified yet.",
+      "not_found": "Document not found or already revoked.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "email": {
+      "extendedSubject": "Temporary membership extended",
+      "extendedBody": "MCCI extended your temporary membership until {until}.",
+      "alertSubject": "Your temporary membership ends on {until}",
+      "alertBody": "Your temporary membership {no} ends on {until}. MCCI will issue your permanent certificate; contact MCCI if you need help.",
+      "expiredSubject": "Your temporary membership has expired",
+      "expiredBody": "Your temporary membership {no} expired on {until}. MCCI can extend it while your permanent certificate is being printed.",
+      "openMembership": "Open My Membership"
+    }
+  },
+  "docs": {
+    "admin": {
+      "title": "Documents & QR Registry",
+      "sub": "Every document MCCI issues, verifiable by QR. Temporary certificates show \"Superseded\" once the permanent certificate is issued.",
+      "kDocs": "Documents",
+      "kDocsSub": "All time",
+      "kTemp": "Temporary valid",
+      "kSuperseded": "Superseded",
+      "kSupersededSub": "Temp → permanent",
+      "kScans": "Public scans",
+      "table": "Registry",
+      "cols": {
+        "code": "Code",
+        "type": "Type",
+        "to": "Issued to",
+        "issued": "Issued",
+        "scans": "Scans",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "kinds": {
+        "temp_certificate": "Temporary Membership Certificate",
+        "certificate": "Membership Certificate",
+        "letter": "Letter",
+        "voucher": "Payment voucher",
+        "form": "Membership form",
+        "receipt": "Receipt"
+      },
+      "open": "Open",
+      "print": "Print / save PDF",
+      "close": "Close",
+      "none": "No documents issued yet."
+    },
+    "member": {
+      "title": "My Documents",
+      "sub": "Everything MCCI issued to your business, with view, print and a link anyone can use to verify it.",
+      "issued": "Issued by MCCI",
+      "issuedOn": "issued {date}",
+      "validTo": "valid until {date}",
+      "view": "View",
+      "share": "Share",
+      "copied": "Link copied",
+      "print": "Print / save PDF",
+      "close": "Close",
+      "none": "Nothing issued yet. Your temporary certificate appears here as soon as MCCI verifies your fee."
+    }
+  },
+  "staffActions": {
+    "cancel": "Cancel",
+    "fields": {
+      "reason": "Reason (the member will see it)",
+      "ref": "Bank / counter receipt reference",
+      "note": "Note (optional)"
+    },
+    "pay_verify": {
+      "button": "Verify",
+      "title": "Verify payment: {subject}",
+      "help": "Confirm that the money is in MCCI’s bank statement. A membership fee then issues the temporary membership at once.",
+      "ok": "Verify payment"
+    },
+    "pay_reject": {
+      "button": "Reject",
+      "title": "Reject receipt: {subject}",
+      "help": "The member is asked to upload a clear, correct receipt.",
+      "ok": "Reject receipt"
+    },
+    "psid_markpaid": {
+      "button": "Paid at counter",
+      "title": "Record payment: {subject}",
+      "help": "For payments received at the MCCI counter or confirmed in the bank statement without an upload. Enter the receipt or bank reference.",
+      "ok": "Record as paid"
+    },
+    "psid_cancel": {
+      "button": "Cancel voucher",
+      "title": "Cancel voucher: {subject}",
+      "help": "The voucher can no longer be paid. A new one can be issued afterwards.",
+      "ok": "Cancel voucher"
+    },
+    "psid_gen": {
+      "button": "Issue new voucher",
+      "title": "New voucher for {subject}",
+      "help": "A new voucher with the same lines and amount, due after the usual days.",
+      "ok": "Issue voucher"
+    },
+    "temp_issue": {
+      "button": "Issue temporary",
+      "title": "Issue temporary membership: {subject}",
+      "help": "Creates the member with the committee’s number, the temporary certificate with QR and the print-queue item.",
+      "ok": "Issue"
+    },
+    "temp_extend": {
+      "button": "Extend",
+      "title": "Extend: {subject}",
+      "help": "Adds the configured days (maximum extensions from the policy). The member is told.",
+      "ok": "Extend"
+    },
+    "temp_revoke": {
+      "button": "Revoke",
+      "title": "Revoke: {subject}",
+      "help": "Ends the membership now; the certificate’s QR shows \"Revoked\".",
+      "ok": "Revoke"
+    },
+    "qr_revoke": {
+      "button": "Revoke",
+      "title": "Revoke document: {subject}",
+      "help": "Public verification shows \"Revoked\" from now on.",
+      "ok": "Revoke document"
+    }
+  },
+  "verify": {
+    "title": "Verify a Document",
+    "sub": "Genuine MCCI documents carry a QR code and a unique code. Scan the QR or type the code to check it.",
+    "check": "Check authenticity",
+    "codeLabel": "Code under the QR",
+    "go": "Verify",
+    "help": "Results show Valid, Temporary, Superseded, Expired or Revoked — every check is counted.",
+    "doc": "Document",
+    "holder": "Issued to",
+    "memberNo": "Membership No.",
+    "validTo": "Valid until",
+    "issued": "Issued",
+    "code": "Code",
+    "status": {
+      "Valid": "Valid",
+      "Temporary": "Valid — temporary membership",
+      "Superseded": "Superseded",
+      "Expired": "Expired",
+      "Revoked": "Revoked"
+    },
+    "statusHelp": {
+      "Valid": "This is a genuine MCCI document.",
+      "Temporary": "A genuine MCCI temporary certificate, valid until the date below.",
+      "Superseded": "Replaced by the permanent certificate {serial}.",
+      "Expired": "This document is no longer valid.",
+      "Revoked": "MCCI has revoked this document."
+    },
+    "result": {
+      "none": "No MCCI document has this code. Check the code, or contact MCCI.",
+      "invalid": "That is not an MCCI code. Codes look like MCCI-QR-ABCDE-23456.",
+      "limited": "Too many checks from this connection. Please wait a minute."
+    }
+  },
+  "certificate": {
+    "tempTitle": "Temporary Membership Certificate",
+    "certify": "This is to certify that",
+    "tempLine1": "is a",
+    "tempLine2": "Member of the Chamber on a temporary basis while the permanent certificate is being printed.",
+    "memberNo": "Membership No.",
+    "validFrom": "Valid from",
+    "validUntil": "Valid until",
+    "extended": "(extended)",
+    "receipt": "Payment voucher",
+    "scan": "Scan to verify",
+    "esigned": "e-signed",
+    "sg": "Secretary General",
+    "tempFoot": "Valid until the date above, or until the permanent certificate is issued, whichever is earlier. Verify at {url}.",
+    "ribbon": {
+      "valid": "VALID FOR {n} MORE DAYS",
+      "expired": "EXPIRED",
+      "revoked": "REVOKED",
+      "superseded": "SUPERSEDED BY PERMANENT CERTIFICATE"
+    }
+  },
+  "dashboard": {
+    "hello": "Good day, {name}",
+    "kMembers": "Members",
+    "kMembersSub": "Permanent and temporary",
+    "kTemp": "Temporary active",
+    "kTempSub": "Until certificates arrive",
+    "kCollected": "Collected this month",
+    "kCollectedSub": "Verified payments",
+    "kCommittee": "With the committee",
+    "kCommitteeSub": "Waiting for a decision",
+    "attention": "Needs your attention",
+    "att": {
+      "review": "{n} application(s) to review",
+      "reviewSub": "Membership Pipeline",
+      "committee": "{n} file(s) with the committee",
+      "committeeSub": "Committee Desk",
+      "receipts": "{n} receipt(s) to verify",
+      "receiptsSub": "Payments",
+      "expiring": "{n} temporary membership(s) ending within 15 days",
+      "expiringSub": "Temporary Memberships"
+    },
+    "allClear": "Nothing waiting for you right now.",
+    "activity": "Latest on membership files",
+    "noActivity": "No activity yet.",
+    "system": "System"
   }
 }

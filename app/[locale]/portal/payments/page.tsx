@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { PrintButton } from '@/components/membership/print-button';
+import { ReceiptUpload } from '@/components/payments/receipt-upload';
 import { both, Ic, KV, L } from '@/components/membership/ui';
 import { asLocale } from '@/i18n/locale';
 import { bankDetails, lineKey, pkr, type VoucherLine, voucherDate } from '@/lib/committee/voucher';
@@ -25,12 +26,12 @@ export const dynamic = 'force-dynamic';
 export default async function PaymentsPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  await requireUser();
+  const session = await requireUser();
   const m = (k: string, v?: Record<string, string>) => msg(locale, `committee.pay.${k}`, v);
   const supabase = await createClient();
   const { data: vouchers } = await supabase
     .from('payment_vouchers')
-    .select('voucher_no, ref_type, amount, lines, status, due_at, paid_at, created_at')
+    .select('id, voucher_no, company_id, ref_type, amount, lines, status, due_at, paid_at, created_at, reject_reason')
     .order('created_at', { ascending: false });
   const all = vouchers ?? [];
   const due = all.filter((v) => v.status === 'Unpaid' || v.status === 'Receipt uploaded' || v.status === 'Rejected');
@@ -39,6 +40,12 @@ export default async function PaymentsPage({ params }: Props) {
     ? await supabase.schema('api').rpc('voucher_view', { p_voucher: due[0].voucher_no })
     : { data: null };
   const bank = bankDetails((view?.[0]?.bank ?? null) as Record<string, unknown> | null);
+  const { data: receipts } = due.length
+    ? await supabase.from('payment_receipts').select('voucher_id, uploaded_at, status').in('voucher_id', due.map((v) => v.id)).order('uploaded_at', { ascending: false })
+    : { data: [] as { voucher_id: string; uploaded_at: string; status: string }[] };
+  // Owner, Manager and Accounts users (company area pay ≥ 2) upload receipts
+  const canPay = (company: string) => (session.access.companies.find((c) => c.id === company)?.levels.pay ?? 0) >= 2;
+  const stepsDone = (status: string) => (status === 'Receipt uploaded' ? 3 : 1);
   const steps: [string, string][] = [
     ['file', 'committee.pay.steps.voucher'],
     ['landmark', 'committee.pay.steps.bank'],
@@ -106,6 +113,19 @@ export default async function PaymentsPage({ params }: Props) {
                   </tbody>
                 </table>
               </div>
+              {v.status === 'Rejected' && (
+                <p className="note-i" role="alert" style={{ marginTop: 12, color: '#b91c1c' }}>
+                  <b>{m('rejectedNote')}</b> {v.reject_reason}
+                </p>
+              )}
+              {v.status === 'Receipt uploaded' && (
+                <p className="note-i" role="status" style={{ marginTop: 12 }}>
+                  <Ic name="clock" size={14} color="#f59e0b" />{' '}
+                  {m('uploadedNote', {
+                    when: voucherDate(receipts?.find((r) => r.voucher_id === v.id)?.uploaded_at ?? v.created_at, locale),
+                  })}
+                </p>
+              )}
               {!bank && (
                 <p className="note-i" role="note" style={{ marginTop: 12 }}>
                   <Ic name="clock" size={14} color="#f59e0b" /> {m('bankPendingHelp')}
@@ -113,7 +133,7 @@ export default async function PaymentsPage({ params }: Props) {
               )}
               <div className="paysteps">
                 {steps.map(([icon, key], i) => (
-                  <div key={key} className={i < 1 ? 'd' : ''}>
+                  <div key={key} className={i < stepsDone(v.status) ? 'd' : ''}>
                     <i>
                       <Ic name={icon} />
                     </i>
@@ -125,6 +145,11 @@ export default async function PaymentsPage({ params }: Props) {
               <p className="muted" style={{ marginTop: 12 }}>
                 {m('after')}
               </p>
+              {bank && (v.status === 'Unpaid' || v.status === 'Rejected') && canPay(v.company_id) && (
+                <div className="no-print">
+                  <ReceiptUpload locale={locale} voucher={v.voucher_no} again={v.status === 'Rejected'} />
+                </div>
+              )}
               <div className="pb no-print" style={{ marginTop: 14 }}>
                 <PrintButton label={m('print')} />
               </div>

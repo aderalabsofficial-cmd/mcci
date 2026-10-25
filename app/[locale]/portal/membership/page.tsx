@@ -9,6 +9,7 @@ import { classOf, fee } from '@/lib/flow/application';
 import { JOURNEY, journeyIndex } from '@/lib/membership/reference';
 import { loadMyApplication, loadPublicSettings } from '@/lib/membership/load';
 import { msg } from '@/lib/nav/model';
+import { createClient } from '@/lib/supabase/server';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -23,7 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MembershipPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  const [app, settings] = await Promise.all([loadMyApplication(), loadPublicSettings()]);
+  const supabase = await createClient();
+  const [app, settings, { data: docs }] = await Promise.all([
+    loadMyApplication(),
+    loadPublicSettings(),
+    supabase.from('documents').select('code, kind, status, valid_to').order('created_at', { ascending: false }),
+  ]);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `membership.${k}`, v);
   const open = app && app.stage !== 'withdrawn';
   const due =
@@ -92,7 +98,23 @@ export default async function MembershipPage({ params }: Props) {
         panels={[
           status,
           <Card key="c" title={<L {...both('membership.page.tabs.certs')} />}>
-            <p className="muted">{m('page.certsLater')}</p>
+            {docs?.length ? (
+              docs.map((d) => (
+                <div className="tg" key={d.code}>
+                  <span>
+                    <b>{msg(locale, `docs.admin.kinds.${d.kind}`)}</b>
+                    <small style={{ display: 'block' }}>
+                      {d.code} · {msg(locale, `verify.status.${d.status}`)}
+                    </small>
+                  </span>
+                  <Link className="btn btn-w" href={`/portal/documents?code=${d.code}`} data-action="doc.view">
+                    {msg(locale, 'docs.member.view')}
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <p className="muted">{m('page.certsLater')}</p>
+            )}
             <p className="muted">{m('page.cardsLater')}</p>
           </Card>,
           <Card key="r" title={<L {...both('membership.page.tabs.renew')} />}>

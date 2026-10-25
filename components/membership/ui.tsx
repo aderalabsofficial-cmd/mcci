@@ -1,6 +1,7 @@
 import {
   Award,
   BadgeCheck,
+  Ban,
   Building2,
   Check,
   Clock,
@@ -18,6 +19,8 @@ import {
   type LucideIcon,
   Map,
   Mic,
+  QrCode,
+  RefreshCw,
   Phone,
   Plug,
   Plus,
@@ -48,6 +51,9 @@ import { msg } from '@/lib/nav/model';
 
 const ICONS: Record<string, LucideIcon> = {
   award: Award,
+  ban: Ban,
+  qr: QrCode,
+  refresh: RefreshCw,
   badge: BadgeCheck,
   building: Building2,
   calendar: CalendarDays,

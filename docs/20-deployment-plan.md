@@ -426,3 +426,51 @@ Verify: `nginx -t` OK; app health 200; aderalabs.tech, iqpigeon.com and the othe
 signs in (staff tab) and completes the 2-step set-up; `grep -c "too big header" /var/log/nginx/error.log` does not grow.
 No app release and no migration: production stays on `784d9b1` (`057713d` kept). Rollback: copy the saved file back,
 `nginx -t && systemctl reload nginx`.
+
+### Gate 10 — Release 5: payments and temporary membership (migration 0340 + release; awaiting the owner's approval)
+
+Review of `supabase/migrations/20261026000340_payments_temporary.sql` (sha256 `0d90160d806e8edf`) against production
+(read-only, 25 Oct 2026: 0 vouchers, 0 receipts, 0 documents, 0 temporary memberships, 0 print items, 0 members,
+2 draft applications; `settings.bank.confirmed = false`; none of the new names exist):
+
+| Change | Effect on what exists |
+|---|---|
+| `payment_receipts.path` nullable + `method` (upload / counter) + check that uploads have a path | table is empty |
+| `private.voucher_accepts_receipt` replaced: also requires `settings.bank.confirmed` | the storage policy for receipts now refuses uploads until MCCI confirms the bank account (matches the "do not pay yet" notice) |
+| new `api` functions: `pay_upload`, `pay_verify`, `pay_counter`, `pay_reject`, `voucher_cancel`, `voucher_reissue`, `temp_issue`, `temp_extend`, `temp_revoke`, `qr_revoke`, `cert_view`, `settings_bank_save`, `settings_bank`, `temp_policy` (definer, `search_path=""`, `authenticated` only); `doc_verify`, `temp_jobs`, `voucher_jobs` (service role only) | none exist |
+| new `private` helpers: `bank_confirmed`, `membership_year_end`, `company_notify_t`, `company_email`, `temp_issue`, `voucher_paid`, `pay_settle` (no API role) | none exist |
+| no drop / delete / truncate; no settings changed | — |
+
+Rules enforced in the database: receipts only for an Unpaid / Rejected voucher of the uploader's company (area pay ≥ 2),
+only after the bank account is confirmed, with the file stored under that voucher; verify / reject / counter payment /
+cancel / reissue pay ≥ 2 with a 2-step session; a Paid membership voucher issues the temporary membership in the same
+transaction (settings.temp.autoIssue): member with the committee's number (Temporary, valid to 31 March), temporary
+certificate with an unguessable QR code, 60-day temporary membership, print-queue item, company particulars from the
+approved form; extend / revoke temp ≥ 3 with a reason (max extensions from settings); QR revoke docs ≥ 3; the bank
+account (settings.save) plat ≥ 2, Pakistani IBAN format, the placeholder can never be saved. Public verification
+(`/verify`, `/verify/<code>`, `/api/verify/<code>`) goes through the server with a per-address rate limit (30/min) and
+shows only title, holder, number, status, validity; every lookup is counted.
+
+New screens: admin Payments, Vouchers & Receipts, Temporary Memberships, Documents & QR, the staff Dashboard (queues
+and figures per designation); member Payments (receipt upload once the bank is confirmed), My Documents (certificate
+with QR, print, share), My Membership certificates; public Verify. Jobs: `POST /api/cron/daily` (temporary alerts /
+expiry, past-due vouchers) — not scheduled; the timer stays a separate approval.
+
+Tests: pgTAP `170_payments_temporary` 55 checks, all files 565/565 locally; unit 231/231; e2e `payments.spec.ts`
+(counter payment → temporary membership → certificate → public verify → extend → revoke; bank confirm → upload →
+reject → upload → verify, emails sent) 4/4; full suite (all projects, 713): 478 passed, 1 failed, 234 skipped
+(project-specific), 0 timed out. The failure is the Release 2 review test (not changed by this release); see below.
+
+**Open issue (pre-existing, under investigation): officer actions cancelled by the browser under heavy load.** The
+review test failed once in 713. Investigated with evidence: run one at a time, 11/11 repeats pass; with 4 copies in
+parallel on the development laptop, about a quarter of the officer's server-action requests end in net::ERR_ABORTED in
+the browser — no page reload (document loads counted), no console error, no server error, no database lock or error,
+no Auth error; the decision is then not shown (or, if the server had committed it, shown only after a reload). Ruled
+out: test wait times (15 s), stale build, token refresh, realtime, app navigation code, a second refresh after the
+action, a second click during the update (both experiments changed nothing and were reverted). The review screen is
+unchanged since Release 2 (live). Next step: reproduce outside the test runner with network/CPU throttling and, if it
+is Next.js's client action handling, report a fix upstream or retry the action safely (decisions are idempotent).
+
+Plan: as gates 6–9 (backup + restore drill → isolated dry run → production dry run exactly 1 pending → `--apply-next`
+→ verify → `release.sh <commit>` → smoke). Rollback: `release.sh --rollback` (the Release 4 app does not call the new
+functions; the receipt storage rule only adds a condition); full undo = restore the backup taken first.

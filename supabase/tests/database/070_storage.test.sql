@@ -36,7 +36,8 @@ select throws_ok($$ select tests.exec_as(tests.id('viewer_a'), 'insert into stor
 -- NT-73 / NT-80: endorsers never read applicant files
 select is(tests.num_as(tests.id('owner_e'), 'select count(*) from storage.objects where bucket_id in (''application-docs'', ''form-snapshots'')'), 0::bigint, 'NT-73 endorser reads no applicant files');
 
--- NT-74: receipts
+-- NT-74: receipts (only once MCCI has confirmed the bank account, migration 0340)
+update private.settings set value = value || '{"confirmed": true}' where key = 'bank';
 select throws_ok($$ select tests.exec_as(tests.id('viewer_a'), 'insert into storage.objects (bucket_id, name) values (''receipts'', ''a0000000-0000-0000-0000-00000000000a/vouchers/f1000000-0000-0000-0000-000000000001/r.jpg'')') $$, '42501', null, 'NT-74 Viewer (pay 1) cannot upload a receipt');
 select throws_ok($$ select tests.exec_as(tests.id('services_a'), 'insert into storage.objects (bucket_id, name) values (''receipts'', ''a0000000-0000-0000-0000-00000000000a/vouchers/f1000000-0000-0000-0000-000000000001/r.jpg'')') $$, '42501', null, 'NT-74 Services user (pay 0) cannot upload a receipt');
 select lives_ok($$ select tests.exec_as(tests.id('accounts_a'), 'insert into storage.objects (bucket_id, name) values (''receipts'', ''a0000000-0000-0000-0000-00000000000a/vouchers/f1000000-0000-0000-0000-000000000001/r.jpg'')') $$, 'Accounts user uploads against an Unpaid voucher');

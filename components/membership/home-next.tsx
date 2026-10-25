@@ -88,7 +88,24 @@ export function HomeNext({ app, locale }: { app: MyApplication | null; locale: L
           {progress}
         </NextCard>
       );
-    case 'payment':
+    case 'payment': {
+      // receipt with Accounts → blue; receipt not accepted → the reason (prototype member.js next())
+      const v = app.voucher;
+      if (v?.status === 'Receipt uploaded' || v?.status === 'Rejected') {
+        const k = v.status === 'Rejected' ? 'paymentRejected' : 'paymentReceived';
+        return (
+          <NextCard
+            tone={k === 'paymentRejected' ? 'red' : 'blue'}
+            icon="card"
+            title={both(`membership.next.${k}.t`)}
+            body={k === 'paymentRejected' ? `${t(`${k}.d`)} ${v.reject_reason ?? ''}` : t(`${k}.d`, { voucher: v.no })}
+          >
+            <Link className="btn btn-gold btn-big" href="/portal/payments" data-action="psid.show">
+              <Ic name="card" /> <L {...both(`membership.next.${k}.b`)} />
+            </Link>
+          </NextCard>
+        );
+      }
       return (
         <NextCard
           tone="gold"
@@ -111,6 +128,7 @@ export function HomeNext({ app, locale }: { app: MyApplication | null; locale: L
           {progress}
         </NextCard>
       );
+    }
     case 'temp':
     case 'permanent': {
       const k = app.stage;
@@ -119,9 +137,21 @@ export function HomeNext({ app, locale }: { app: MyApplication | null; locale: L
           tone={k === 'temp' ? 'teal' : 'green'}
           icon={k === 'temp' ? 'hourglass' : 'check'}
           title={both(`membership.next.${k}.t`)}
-          body={t(`${k}.d`)}
+          body={
+            k === 'temp' && app.temp
+              ? t(app.temp.status === 'expired' ? 'tempExpired' : 'tempUntil', {
+                  no: app.member_no ?? '',
+                  until: voucherDate(app.temp.expires_at, locale),
+                })
+              : t(`${k}.d`)
+          }
         >
-          <Link className="btn btn-gold btn-big" href="/portal/membership" data-action="nav">
+          {app.temp?.code && (
+            <Link className="btn btn-gold btn-big" href={`/portal/documents?code=${app.temp.code}`} data-action="doc.view">
+              <Ic name="file" /> <L {...both('membership.next.certificate')} />
+            </Link>
+          )}
+          <Link className="btn btn-big" href="/portal/membership" data-action="nav">
             <Ic name="award" /> <L {...both('membership.next.myMembership')} />
           </Link>
         </NextCard>
