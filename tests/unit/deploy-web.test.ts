@@ -42,6 +42,18 @@ describe('nginx for app.mcci.aderalabs.tech', () => {
     expect(nginx).toContain('Strict-Transport-Security "max-age=31536000"');
     expect(nginx).not.toMatch(/add_header Strict-Transport-Security[^;]*includeSubDomains/);
   });
+
+  it('gives the app room for session-cookie headers (25 Oct 2026: 502 "upstream sent too big header" at sign-in)', () => {
+    const app = nginx.slice(nginx.indexOf('location / {\n        proxy_pass http://127.0.0.1:3200'));
+    const kb = (name: string) => Number(new RegExp(`${name} (\\d+)k;`).exec(app)?.[1] ?? 0);
+    expect(kb('proxy_buffer_size')).toBeGreaterThanOrEqual(16);
+    const buffers = /proxy_buffers (\d+) (\d+)k;/.exec(app);
+    expect(buffers).not.toBeNull();
+    const [count, size] = [Number(buffers![1]), Number(buffers![2])];
+    // nginx refuses to start unless busy ≥ the larger buffer and busy < all buffers minus one
+    expect(kb('proxy_busy_buffers_size')).toBeGreaterThanOrEqual(Math.max(kb('proxy_buffer_size'), size));
+    expect(kb('proxy_busy_buffers_size')).toBeLessThan((count - 1) * size);
+  });
 });
 
 describe('systemd unit and release script', () => {

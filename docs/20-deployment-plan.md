@@ -392,3 +392,37 @@ unchanged; member-number sequences untouched (1134 / 2205); row counts in 93 tab
 no errors in the journal. Process: `AI_EXTRACTION=on` and the OpenAI key present (unchanged); no `CRON_SECRET`, no
 jobs unit or timer (condition 8). Stack 9/9 healthy; `nginx -t` OK, nothing changed; aderalabs.tech, iqpigeon.com 200.
 Signed-in smoke of the committee screens is done by the Secretary General with their own account.
+
+### Incident 25 Oct 2026 — staff sign-in 502 ("Application error: a client-side exception"); nginx fix awaiting approval
+
+**Root cause.** nginx answered the sign-in server action (`POST /login`) with 502 "upstream sent too big header"
+(3 entries in `/var/log/nginx/error.log`, 11:41 server time); the app itself logged no error. nginx keeps a proxied
+response's headers in one buffer, `proxy_buffer_size`, which defaults to one memory page (4096 B on this server) and
+was not set for the app. Sign-in responses carry the Supabase session cookie, which grows with the account's metadata
+(copied into the JWT, the user and the identity) and its 2-step factors: the Secretary General's account (186 B of
+metadata, one unfinished 2-step set-up) needs about 4.46 KB of headers for the sign-in and 4.41 KB for the 2-step
+confirmation. The browser's server-action client cannot read nginx's 502 page and shows "Application error". Not
+caused by Release 4's code (`784d9b1` and `057713d` send the same headers); it appeared with the first staff sign-in.
+Session refreshes on ordinary page loads write the same cookie, so they could fail the same way.
+
+**Reproduced locally** with the production build behind nginx 1.20.1 (the production version) and a production-shaped
+staff account: the old app block gives exactly "Application error: a client-side exception" and "upstream sent too big
+header … POST /login"; with the fix, sign-in → 2-step set-up → `/admin` → `/admin/committee` → `/admin/meetings` work,
+and the committee, review and endorsement flows (9 tests) pass through nginx with no 5xx.
+
+**Fix** (`deploy/web/nginx/app.mcci.aderalabs.tech.conf`, app `location /` only — no other location, site or server
+setting): `proxy_buffer_size 16k; proxy_buffers 8 16k; proxy_busy_buffers_size 32k;`. Guarded by
+`tests/unit/deploy-web.test.ts` and `tests/e2e/login-headers.spec.ts` (fails while the config leaves the 4 KiB default).
+
+**Plan (needs the owner's approval: nginx change):**
+```bash
+cp -a /etc/nginx/conf.d/app.mcci.aderalabs.tech.conf /root/nginx-app.mcci.before-headerfix-$(date -u +%Y%m%dT%H%M%SZ).conf
+diff /etc/nginx/conf.d/app.mcci.aderalabs.tech.conf /opt/mcci-deploy-<fix>/deploy/web/nginx/app.mcci.aderalabs.tech.conf
+#   expect only the comment and the three proxy_buffer lines in the app location
+install -m 0644 /opt/mcci-deploy-<fix>/deploy/web/nginx/app.mcci.aderalabs.tech.conf /etc/nginx/conf.d/
+nginx -t && systemctl reload nginx        # reload only when the test passes (graceful, no restart)
+```
+Verify: `nginx -t` OK; app health 200; aderalabs.tech, iqpigeon.com and the other sites unchanged; the Secretary General
+signs in (staff tab) and completes the 2-step set-up; `grep -c "too big header" /var/log/nginx/error.log` does not grow.
+No app release and no migration: production stays on `784d9b1` (`057713d` kept). Rollback: copy the saved file back,
+`nginx -t && systemctl reload nginx`.
