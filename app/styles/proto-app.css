@@ -83,3 +83,17 @@
 .proto .bd.green {
   color: color-mix(in srgb, var(--mt) 80%, var(--t));
 }
+
+/* Payments: "Print voucher" prints the voucher card(s) only, without the portal shell */
+@media print {
+  body:has(.proto .psid) :is(aside, header, nav, footer) {
+    display: none !important;
+  }
+  body:has(.proto .psid) .proto > :not(.psid) {
+    display: none !important;
+  }
+  .proto .psid {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+}

@@ -56,8 +56,36 @@ submitted application (search by token, company or stage). Click a token or a ca
 
 **Official form** shows the filled 4-page MCCI form with photo, signature and stamp.
 
-## 5. Not yet in the system (next releases)
+## 5. Proposer & seconder, Members Register (Release 3)
 
-Proposer & seconder requests and signatures, the committee agenda and decision with membership numbers, payment
-vouchers and receipt verification, temporary membership and certificates with QR, printing and permanent
+**Members Register** (`/admin/members`): **Add member** for existing MCCI members (company, class, membership number —
+empty takes the next — representative, validity, owner's name and email). The owner gets an email invitation, signs
+in and can then propose or second applicants. A verified file waits until its proposer and seconder have both signed;
+then it goes to the Membership Committee by itself.
+
+## 6. Membership Committee (Release 4)
+
+Who: the **Committee Secretary** and the **Secretary General** record decisions (others with committee access can
+only read). Every decision needs the 2-step login.
+
+**Meetings & Minutes** (`/admin/meetings`): **Schedule meeting** — name, committee, date. A Membership Committee
+meeting takes every file waiting for the committee onto its agenda (oldest first); files that reach the committee
+later join the next open meeting by themselves. After the meeting, **Record minutes**.
+
+**Committee Desk** (`/admin/committee`): the agenda of a meeting (choose the meeting at the top when there are several).
+Decisions can be recorded on or after the meeting date:
+- **Approve** — allocates the next membership number of the class (MCCI-C-… / MCCI-A-…), creates the payment voucher
+  with the fee for the class (Women rates and extra cards included) and emails it; the applicant sees the number and
+  the voucher under **Payments**. This cannot be undone.
+- **Defer** — write the committee's reason; the file goes on the next Membership Committee meeting (or waits until
+  one is scheduled). The applicant sees the reason in the portal.
+- **Reject** — write the committee's reason; final; the applicant gets an email and a portal message.
+- **Approve all on agenda** — approves every open file of that meeting (deferred files are no longer on it).
+
+The voucher shows the bank account only after MCCI confirms it in the settings; until then it says "to be confirmed
+by MCCI" and asks the applicant not to pay yet.
+
+## 7. Not yet in the system (next releases)
+
+Receipt upload and verification by Accounts, temporary membership and certificates with QR, printing and permanent
 certificates. Until then those steps are handled outside the system.

@@ -74,6 +74,24 @@ export type Database = {
 "app_withdraw":
 { Args: { "p_app": string,"p_reason"?: string }; Returns: undefined
                            },
+"cmt_approve_all":
+{ Args: { "p_meeting": string }; Returns: {
+              "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"next_meeting": string,"to_email": string,"token": string,"voucher_no": string
+            }[]
+                           },
+"cmt_decide":
+{ Args: { "p_app": string,"p_decision": string,"p_meeting": string,"p_note"?: string }; Returns: {
+              "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"next_meeting": string,"to_email": string,"token": string,"voucher_no": string
+            }[]
+                           },
+"cmt_meeting_create":
+{ Args: { "p_committee": string,"p_held_on": string,"p_name": string }; Returns: {
+              "meeting_id": string,"placed": number
+            }[]
+                           },
+"cmt_minutes":
+{ Args: { "p_meeting": string,"p_minutes": string }; Returns: undefined
+                           },
 "company_people":
 { Args: { "p_company": string }; Returns: {
               "created_at": string,"email": string,"full_name": string,"role": Database["public"]['Enums']["company_role"],"user_id": string
@@ -183,6 +201,11 @@ export type Database = {
                            },
 "staff_update":
 { Args: { "p_active": boolean,"p_designation": string,"p_user": string }; Returns: undefined
+                           },
+"voucher_view":
+{ Args: { "p_voucher": string }; Returns: {
+              "amount": number,"bank": Json,"company": string,"created_at": string,"due_at": string,"lines": Json,"member_no": string,"ref_type": string,"status": string,"token": string,"voucher_no": string
+            }[]
                            }
           }
           Enums: {
@@ -409,14 +432,14 @@ isOneToOne: false
                   ]
                 },"applications": {
                   Row: {
-                    "address_matches_ntn": boolean | null,"class": Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at": string,"created_by": string,"decided_at": string | null,"decl1": boolean,"decl2": boolean,"field_confidence": NonNullable<Json>,"form": NonNullable<Json>,"id": string,"jurisdiction_ok": boolean | null,"kind": string,"member_id": string | null,"photo_path": string | null,"reject_note": string | null,"return_note": string | null,"review": NonNullable<Json>,"sign_path": string | null,"stage": Database["public"]['Enums']["app_stage"],"stamp_path": string | null,"submitted_at": string | null,"token": string,"updated_at": string,"women": boolean
+                    "address_matches_ntn": boolean | null,"class": Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at": string,"created_by": string,"decided_at": string | null,"decl1": boolean,"decl2": boolean,"field_confidence": NonNullable<Json>,"form": NonNullable<Json>,"id": string,"jurisdiction_ok": boolean | null,"kind": string,"member_id": string | null,"member_no": string | null,"photo_path": string | null,"reject_note": string | null,"return_note": string | null,"review": NonNullable<Json>,"sign_path": string | null,"stage": Database["public"]['Enums']["app_stage"],"stamp_path": string | null,"submitted_at": string | null,"token": string,"updated_at": string,"women": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address_matches_ntn"?: boolean | null,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at"?: string,"created_by": string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
+                    "address_matches_ntn"?: boolean | null,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at"?: string,"created_by": string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"member_no"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
                   }
                   Update: {
-                    "address_matches_ntn"?: boolean | null,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id"?: string,"created_at"?: string,"created_by"?: string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
+                    "address_matches_ntn"?: boolean | null,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id"?: string,"created_at"?: string,"created_by"?: string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"member_no"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
                   }
                   Relationships: [
                     {
@@ -855,17 +878,23 @@ isOneToOne: false
                   ]
                 },"meetings": {
                   Row: {
-                    "committee": string,"created_at": string,"held_on": string | null,"id": string,"minutes_path": string | null,"status": string
+                    "committee": string,"created_at": string,"created_by": string | null,"held_on": string | null,"id": string,"minutes": string | null,"minutes_path": string | null,"name": string | null,"status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "committee": string,"created_at"?: string,"held_on"?: string | null,"id": string,"minutes_path"?: string | null,"status"?: string
+                    "committee": string,"created_at"?: string,"created_by"?: string | null,"held_on"?: string | null,"id": string,"minutes"?: string | null,"minutes_path"?: string | null,"name"?: string | null,"status"?: string
                   }
                   Update: {
-                    "committee"?: string,"created_at"?: string,"held_on"?: string | null,"id"?: string,"minutes_path"?: string | null,"status"?: string
+                    "committee"?: string,"created_at"?: string,"created_by"?: string | null,"held_on"?: string | null,"id"?: string,"minutes"?: string | null,"minutes_path"?: string | null,"name"?: string | null,"status"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "meetings_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"member_cards": {
                   Row: {
@@ -921,14 +950,14 @@ isOneToOne: false
                   ]
                 },"notifications": {
                   Row: {
-                    "area": string | null,"body": string,"channel": string,"company_id": string | null,"created_at": string,"id": string,"link": string | null,"read_at": string | null,"title": string,"user_id": string | null
+                    "area": string | null,"body": string,"channel": string,"company_id": string | null,"created_at": string,"id": string,"link": string | null,"read_at": string | null,"template": string | null,"title": string,"user_id": string | null,"vars": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "area"?: string | null,"body": string,"channel"?: string,"company_id"?: string | null,"created_at"?: string,"id"?: string,"link"?: string | null,"read_at"?: string | null,"title": string,"user_id"?: string | null
+                    "area"?: string | null,"body": string,"channel"?: string,"company_id"?: string | null,"created_at"?: string,"id"?: string,"link"?: string | null,"read_at"?: string | null,"template"?: string | null,"title": string,"user_id"?: string | null,"vars"?: NonNullable<Json>
                   }
                   Update: {
-                    "area"?: string | null,"body"?: string,"channel"?: string,"company_id"?: string | null,"created_at"?: string,"id"?: string,"link"?: string | null,"read_at"?: string | null,"title"?: string,"user_id"?: string | null
+                    "area"?: string | null,"body"?: string,"channel"?: string,"company_id"?: string | null,"created_at"?: string,"id"?: string,"link"?: string | null,"read_at"?: string | null,"template"?: string | null,"title"?: string,"user_id"?: string | null,"vars"?: NonNullable<Json>
                   }
                   Relationships: [
                     {

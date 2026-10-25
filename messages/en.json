@@ -870,11 +870,14 @@
       },
       "committee": {
         "t": "With the Membership Committee",
-        "d": "You will be informed right after the meeting."
+        "d": "You will be informed right after the meeting.",
+        "agenda": "On the agenda of {meeting} (item {item})."
       },
       "payment": {
         "t": "Approved — pay your membership fee",
-        "d": "Pay at the bank with your payment voucher, then upload a photo of the paid receipt."
+        "d": "Pay at the bank with your payment voucher, then upload a photo of the paid receipt.",
+        "voucher": "Membership No. {no}. Pay {amount} with payment voucher {voucher} before {due} — see Payments for how to pay.",
+        "b": "View voucher"
       },
       "temp": {
         "t": "You are a temporary member",
@@ -1090,7 +1093,22 @@
         "verified": "Documents verified",
         "field corrected": "Details corrected by MCCI",
         "class set": "Membership class set",
-        "rejected": "Not approved"
+        "rejected": "Not approved",
+        "to committee": "Proposer and seconder signed — with the committee",
+        "agenda": "Placed on the committee agenda",
+        "approved": "Approved by the Membership Committee",
+        "deferred": "Deferred by the committee",
+        "committee rejected": "Not approved by the committee",
+        "proposer requested": "Proposer asked",
+        "seconder requested": "Seconder asked",
+        "proposer request withdrawn": "Proposer request withdrawn",
+        "seconder request withdrawn": "Seconder request withdrawn",
+        "proposer signed": "Proposer signed",
+        "seconder signed": "Seconder signed",
+        "proposer declined": "Proposer declined",
+        "seconder declined": "Seconder declined",
+        "proposer expired": "Proposer request expired",
+        "seconder expired": "Seconder request expired"
       }
     },
     "page": {
@@ -1182,7 +1200,8 @@
         "committee": "Committee",
         "payment": "Payment",
         "temp": "Temporary"
-      }
+      },
+      "committeeDesk": "Committee desk"
     },
     "stages": {
       "submitted": "New",
@@ -1509,6 +1528,200 @@
       "member_no": "Membership number like MCCI-C-1134 or MCCI-A-2205.",
       "member_no_taken": "This membership number is already used.",
       "generic": "Something went wrong. Please try again."
+    }
+  },
+  "committee": {
+    "names": {
+      "0": "Membership Committee",
+      "1": "Executive Committee",
+      "2": "General Body"
+    },
+    "desk": {
+      "title": "Membership Committee",
+      "sub": "Approval allocates the membership number and emails the payment voucher.",
+      "meetings": "Meetings & minutes",
+      "kAgenda": "On agenda",
+      "kAgendaNone": "No meeting scheduled",
+      "kApproved": "Approved",
+      "kApprovedSub": "Payment, temporary or permanent",
+      "kDeferred": "Deferred",
+      "kDeferredSub": "Need clarification",
+      "kPayment": "Awaiting fee payment",
+      "kPaymentSub": "Voucher issued",
+      "pickMeeting": "Choose a meeting",
+      "agenda": "Agenda",
+      "agendaOf": "Agenda · {meeting} ({id}) · {date}",
+      "emptyAgenda": "Agenda is empty. Applications appear here once both proposer and seconder confirm.",
+      "noMeeting": "No Membership Committee meeting is scheduled.",
+      "scheduleLink": "Schedule a meeting",
+      "waiting": "Waiting for a meeting",
+      "waitingHelp": "These files are with the committee but no meeting is scheduled yet. Scheduling a Membership Committee meeting puts them on its agenda.",
+      "women": "Women",
+      "endorsedBy": "proposed by {proposer}, seconded by {seconder}",
+      "deferredBadge": "Deferred",
+      "deferredFrom": "at {meeting}: {note}",
+      "file": "File",
+      "defer": "Defer",
+      "reject": "Reject",
+      "approve": "Approve",
+      "approveAll": "Approve all on agenda",
+      "approveAllTitle": "Approve all {n} applications on this agenda?",
+      "approveHelp": "Each approval allocates the next membership number of its class, creates the payment voucher with the fee for its class and emails it to the applicant. This cannot be undone.",
+      "ApprovedTitle": "Approve: {name}",
+      "DeferredTitle": "Defer: {name}",
+      "RejectedTitle": "Reject: {name}",
+      "ApprovedOk": "Approve and send voucher",
+      "DeferredOk": "Defer to the next meeting",
+      "RejectedOk": "Reject application",
+      "note": "Committee note (the applicant will see it)",
+      "cancel": "Cancel",
+      "notHeld": "Decisions are recorded on or after the meeting date."
+    },
+    "meetings": {
+      "title": "Meetings & Minutes",
+      "sub": "Committee meetings, minutes and decisions.",
+      "schedule": "Schedule meeting",
+      "scheduleHelp": "A Membership Committee meeting takes every file waiting for the committee onto its agenda.",
+      "scheduleOk": "Schedule",
+      "name": "Meeting",
+      "committee": "Committee",
+      "date": "Date",
+      "table": "Meetings",
+      "cols": {
+        "meeting": "Meeting",
+        "committee": "Committee",
+        "date": "Date",
+        "agenda": "Agenda / minutes",
+        "status": "Status",
+        "minutes": "Minutes"
+      },
+      "agendaCount": "{open} on agenda · {decided} decided",
+      "status": {
+        "Pending": "Scheduled",
+        "Approved": "Minutes recorded"
+      },
+      "recordMinutes": "Record minutes",
+      "editMinutes": "Edit minutes",
+      "minutesTitle": "Minutes: {name}",
+      "minutes": "Minutes / decisions",
+      "saveMinutes": "Save minutes",
+      "cancel": "Cancel",
+      "none": "No meetings yet. Schedule the first Membership Committee meeting."
+    },
+    "card": {
+      "title": "Membership Committee",
+      "none": "Not on an agenda yet.",
+      "item": "item {n}",
+      "decision": {
+        "open": "On agenda",
+        "Approved": "Approved",
+        "Deferred": "Deferred",
+        "Rejected": "Rejected"
+      },
+      "number": "Membership No.",
+      "voucher": "Voucher {no} · {amount} · due {due} · {status}",
+      "openDesk": "Open Committee Desk"
+    },
+    "pay": {
+      "title": "Payments",
+      "sub": "Your payment voucher from MCCI: amount, due date and how to pay.",
+      "purpose": {
+        "membership": "Membership fee",
+        "renewal": "Renewal",
+        "service": "Service fee",
+        "extra_card": "Extra card"
+      },
+      "status": {
+        "Unpaid": "Unpaid",
+        "Receipt uploaded": "Receipt uploaded",
+        "Paid": "Paid",
+        "Rejected": "Receipt not accepted",
+        "Cancelled": "Cancelled",
+        "Expired": "Expired",
+        "Refund due": "Refund due",
+        "Refunded": "Refunded"
+      },
+      "amount": "Amount",
+      "payBefore": "Pay before",
+      "bank": "Bank",
+      "accountTitle": "Account title",
+      "iban": "IBAN",
+      "branch": "Branch",
+      "bankPending": "To be confirmed by MCCI",
+      "bankPendingHelp": "MCCI has not yet confirmed the bank account for vouchers. Please do not pay until the bank details appear here — MCCI will tell you.",
+      "item": "Item",
+      "total": "Total",
+      "linesCaption": "What the voucher is for",
+      "lines": {
+        "admission": "Admission fee",
+        "subscription": "Annual subscription",
+        "card": "Membership card",
+        "extraCards": "Extra cards × {n}"
+      },
+      "steps": {
+        "voucher": "Get voucher",
+        "bank": "Pay at bank",
+        "upload": "Upload receipt",
+        "verify": "MCCI verifies"
+      },
+      "after": "After paying, keep the paid bank receipt — MCCI Accounts will ask for it to verify your payment.",
+      "print": "Print voucher",
+      "nothing": "Nothing to pay. All your fees are paid.",
+      "history": "Payment history",
+      "noHistory": "No payments yet.",
+      "cols": {
+        "voucher": "Voucher",
+        "for": "For",
+        "amount": "Amount",
+        "paidOn": "Verified on"
+      }
+    },
+    "done": {
+      "scheduled": "Meeting {id} scheduled; {n} waiting file(s) put on its agenda.",
+      "minutes": "Minutes saved.",
+      "approved": "Approved · {no} · payment voucher {voucher} sent.",
+      "approvedAll": "{n} approved — payment vouchers sent.",
+      "deferred": "Deferred — placed on {meeting}.",
+      "deferredWaiting": "Deferred — it goes on the next Membership Committee meeting once one is scheduled.",
+      "rejected": "Rejected — the applicant has been told.",
+      "emailFailed": "The email could not be sent; the applicant sees it in the portal."
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "fields": "Please check the fields.",
+      "reason_required": "Please write the committee’s reason (at least 3 characters).",
+      "wrong_stage": "This application is no longer with the committee. Refresh the page.",
+      "not_held": "Decisions are recorded on or after the meeting date.",
+      "not_on_agenda": "This file is not open on that meeting’s agenda (already decided?). Refresh the page.",
+      "not_found": "Meeting not found.",
+      "required": "Please fill in every field.",
+      "no_class": "The application has no membership class. Set the class on Application Review first.",
+      "fees": "The membership fees are not configured. Ask the administrator.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "email": {
+      "approvedSubject": "MCCI membership approved — {no}",
+      "approvedBody": "Congratulations! The Membership Committee has approved your application {token}. Your membership number is {no}.",
+      "voucherBody": "Payment voucher {voucher}: {amount}, to be paid by {due}.",
+      "bankBody": "Pay at {bank}, account title {title}, IBAN {iban} ({branch}). Keep the paid bank receipt — MCCI Accounts will ask for it to verify your payment.",
+      "bankPending": "MCCI will confirm the bank account for this voucher. Please do not pay until the bank details appear in your portal under Payments.",
+      "open": "Open Payments"
+    }
+  },
+  "notify": {
+    "committee": {
+      "approved": {
+        "t": "Approved — membership No. {no}",
+        "b": "The Membership Committee approved your application. Payment voucher {voucher} for Rs. {amount} is in Payments."
+      },
+      "deferred": {
+        "t": "Deferred to the next meeting",
+        "b": "The Membership Committee deferred your application: {reason}"
+      },
+      "rejected": {
+        "t": "Application not approved",
+        "b": "The Membership Committee did not approve your application: {reason}"
+      }
     }
   }
 }

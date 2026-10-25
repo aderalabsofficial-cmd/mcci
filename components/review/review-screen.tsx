@@ -75,6 +75,7 @@ export function ReviewScreen({
   level,
   form,
   endorse,
+  committee,
 }: {
   locale: Locale;
   data: ReviewData;
@@ -82,6 +83,8 @@ export function ReviewScreen({
   form: ReactNode;
   /** proposer & seconder card body (components/endorse/admin-card.tsx) */
   endorse: ReactNode;
+  /** the Membership Committee record (components/committee/admin-card.tsx), for staff who may see it */
+  committee?: ReactNode;
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `review.desk.${k}`, v);
   const router = useRouter();
@@ -537,6 +540,14 @@ export function ReviewScreen({
           </div>
           {endorse}
         </div>
+        {committee && (
+          <div className="card">
+            <div className="ch">
+              <h3>{msg(locale, 'committee.card.title')}</h3>
+            </div>
+            {committee}
+          </div>
+        )}
         <div className="card">
           <div className="ch">
             <h3>{m('checklist')}</h3>

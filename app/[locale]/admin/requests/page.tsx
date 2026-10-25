@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { Clock } from 'lucide-react';
+import { Award, Clock } from 'lucide-react';
 import { NoAccess } from '@/components/admin/no-access';
 import { PageHeader } from '@/components/shared/page-header';
 import { Kpi, STAGE_TONE } from '@/components/review/kpi';
@@ -84,6 +84,13 @@ export default async function PipelinePage({ params }: Props) {
           <h1>{m('title')}</h1>
           <p>{m('sub')}</p>
         </div>
+        {staffLevel(session.access, 'cmt') >= 1 && (
+          <div className="pb">
+            <Link className="btn" href="/admin/committee" data-action="nav">
+              <Award size={16} aria-hidden /> {m('committeeDesk')}
+            </Link>
+          </div>
+        )}
       </div>
       <div className="kg">
         <Kpi

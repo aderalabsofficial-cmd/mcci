@@ -2,6 +2,7 @@ import 'server-only';
 import type { SlotEndorsement } from '@/components/endorse/slots';
 import type { Endorser, OfficialFormProps } from '@/components/membership/official-form';
 import type { WizardApp } from '@/components/membership/wizard';
+import { pkr } from '@/lib/committee/voucher';
 import type { BizType } from '@/lib/membership/reference';
 import { createClient } from '@/lib/supabase/server';
 import { type MyApplication, type PublicSettings, publicStorageUrl } from './load';
@@ -102,7 +103,13 @@ export function officialFormProps(
     photo: w?.photoUrl ?? null,
     sign: w?.signUrl ?? null,
     stamp: w?.stampUrl ?? null,
-    official: app?.class ? { cls: `${app.class}${app.women ? ' (Women Entrepreneur)' : ''}` } : {},
+    official: app?.class
+      ? {
+          cls: `${app.class}${app.women ? ' (Women Entrepreneur)' : ''}`,
+          ...(app.member_no ? { status: 'Approved', no: app.member_no } : {}),
+          ...(app.voucher ? { fee: pkr(app.voucher.amount) } : {}),
+        }
+      : {},
     proposer: w ? formEndorser(w.endorsements, 'proposer') : {},
     seconder: w ? formEndorser(w.endorsements, 'seconder') : {},
     chamber: settings.chamber,

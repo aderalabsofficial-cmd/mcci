@@ -30,7 +30,10 @@ export function AddMember({ locale, validTo }: { locale: Locale; validTo: string
       <Modal open={open} onOpenChange={setOpen} title={m('addTitle')} intro={m('addHelp')} closeLabel={msg(locale, 'common.close')} wide>
         <form
           className="grid gap-3"
-          action={async (fd) => {
+          onSubmit={async (e) => {
+            // a submit handler, not a form action: React would clear the fields when the server refuses
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
             setBusy(true);
             fd.set('locale', locale);
             const r = await addMember(fd);

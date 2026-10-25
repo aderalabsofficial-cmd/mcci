@@ -4,6 +4,7 @@ import { HomeNext } from '@/components/membership/home-next';
 import { both, Card, Journey, L, Timeline } from '@/components/membership/ui';
 import { asLocale } from '@/i18n/locale';
 import { loadMyApplication } from '@/lib/membership/load';
+import { noteText } from '@/lib/membership/notes';
 import { msg } from '@/lib/nav/model';
 import { createClient } from '@/lib/supabase/server';
 
@@ -32,7 +33,7 @@ export default async function TrackPage({ params, searchParams }: Props) {
   const supabase = await createClient();
   const { data: notes } = await supabase
     .from('notifications')
-    .select('id, title, body, created_at')
+    .select('id, title, body, template, vars, created_at')
     .order('created_at', { ascending: false })
     .limit(20);
   // steps written by later milestones may not have a label yet: show them as recorded
@@ -89,8 +90,8 @@ export default async function TrackPage({ params, searchParams }: Props) {
             notes.map((n) => (
               <div className="li st" key={n.id}>
                 <div>
-                  <b>{n.title}</b>
-                  <small>{n.body}</small>
+                  <b>{noteText(locale, n).title}</b>
+                  <small>{noteText(locale, n).body}</small>
                 </div>
                 <span>{when(n.created_at, locale)}</span>
               </div>

@@ -89,6 +89,12 @@ export interface MyApplication {
   requirements: DocRequirement[];
   history: AppHistory[];
   endorsements: AppEndorsement[];
+  /** the membership number the committee allocated (from approval on) */
+  member_no: string | null;
+  /** the open agenda item while with the committee (members cannot read meeting dates) */
+  agenda: { meeting: string; item: number | null } | null;
+  /** the live membership payment voucher after approval */
+  voucher: { no: string; amount: number; due_at: string; status: string } | null;
   /** this person may change the draft (company area mship ≥ 2, stage draft or returned) */
   canEdit: boolean;
   /** this person may act on the application at all (Owner / Manager: company area mship ≥ 2) */
@@ -170,7 +176,7 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
   const { data: apps, error } = await supabase
     .from('applications')
     .select(
-      'id, token, company_id, stage, form, field_confidence, jurisdiction_ok, women, decl1, decl2, photo_path, sign_path, stamp_path, class, return_note, reject_note, submitted_at, created_at',
+      'id, token, company_id, stage, form, field_confidence, jurisdiction_ok, women, decl1, decl2, photo_path, sign_path, stamp_path, class, return_note, reject_note, submitted_at, created_at, member_no',
     )
     .in('company_id', companyIds)
     .order('created_at', { ascending: false });
@@ -178,7 +184,7 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
   const row = (apps ?? []).find((a) => !FINAL.includes(a.stage as AppStage)) ?? apps?.[0];
   if (!row) return null;
 
-  const [docs, partners, history, requirements, endorsements] = await Promise.all([
+  const [docs, partners, history, requirements, endorsements, items, vouchers] = await Promise.all([
     supabase
       .from('application_documents')
       .select('id, key, path, file_name, mime, size_bytes, status, reject_reason, created_at')
@@ -195,13 +201,22 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
       .order('at', { ascending: false }),
     loadRequirements((row.form as AppForm | null)?.biz),
     loadEndorsements(row.id),
+    supabase.from('committee_items').select('meeting_id, item_no').eq('application_id', row.id).is('decision', null),
+    supabase
+      .from('payment_vouchers')
+      .select('voucher_no, amount, due_at, status')
+      .eq('ref_type', 'membership')
+      .eq('ref_id', row.id)
+      .not('status', 'in', '(Cancelled,Expired)')
+      .order('created_at', { ascending: false })
+      .limit(1),
   ]);
   for (const r of [docs, partners, history]) if (r.error) throw new Error(r.error.message);
   const level = session.access.companies.find((c) => c.id === row.company_id)?.levels.mship ?? 0;
   return {
     ...(row as Omit<
       MyApplication,
-      'docs' | 'partners' | 'requirements' | 'history' | 'endorsements' | 'canEdit' | 'canManage'
+      'docs' | 'partners' | 'requirements' | 'history' | 'endorsements' | 'canEdit' | 'canManage' | 'agenda' | 'voucher'
     >),
     form: (row.form ?? {}) as AppForm,
     field_confidence: (row.field_confidence ?? {}) as Record<string, number>,
@@ -210,6 +225,15 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
     history: (history.data ?? []) as AppHistory[],
     requirements,
     endorsements,
+    agenda: items.data?.[0] ? { meeting: items.data[0].meeting_id, item: items.data[0].item_no } : null,
+    voucher: vouchers.data?.[0]
+      ? {
+          no: vouchers.data[0].voucher_no,
+          amount: vouchers.data[0].amount,
+          due_at: vouchers.data[0].due_at,
+          status: vouchers.data[0].status,
+        }
+      : null,
     canEdit: level >= 2 && (row.stage === 'draft' || row.stage === 'returned'),
     canManage: level >= 2,
   };

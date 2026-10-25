@@ -336,3 +336,42 @@ First Secretary General: `secretary-mcci@aderalabs.tech` (demo address, to be re
 `first-secretary-general.sh`.
 **Not yet on:** the hourly endorsement job (reminder on day N, expiry). It needs `CRON_SECRET` in `/etc/mcci-web/env` and a
 timer; until then requests stay open past 7 days and reminders are sent by hand (Send reminder).
+
+### Gate 9 — Release 4: Membership Committee decisions (migration 0330 + release; awaiting the owner's approval)
+
+Review of `supabase/migrations/20261026000330_committee_decisions.sql` against production (read-only, 25 Oct 2026:
+0 meetings, 0 agenda items, 0 vouchers, 0 members, 1 application not yet with the committee; sequences
+`member_no_c/_a` unused at 1134 / 2205; none of the new names exist):
+
+| Change | Effect on what exists |
+|---|---|
+| `applications.member_no` (unique, format `MCCI-[CA]-n`) | new nullable column; no client grant (column grants are explicit) |
+| `meetings` + `name`, `minutes`, `created_by` (on delete set null); checks on `status` (Pending/Approved) and `committee` | table is empty |
+| unique partial indexes on `committee_items`: one open item per application, one final decision per application | table is empty |
+| `meeting_seq` (MC-2026-01 …), revoked from every API role | new |
+| `notifications` + `template`, `vars` (portal messages rendered in the reader's language) | nullable / default `{}`; older rows keep their English text |
+| `settings.bank` gains `"confirmed": false` (only when absent) | vouchers show "to be confirmed by MCCI" instead of the placeholder account (docs/14 item 4) |
+| trigger `applications_to_committee` (after update of stage → committee) | places the file on the earliest open Membership Committee meeting; nothing in production is in committee |
+| new functions: `api.cmt_meeting_create`, `cmt_minutes`, `cmt_decide`, `cmt_approve_all`, `voucher_view` (definer, `search_path=""`, `authenticated` only); `private.alloc_member_no`, `app_fee`, `app_notify_t`, `cmt_place`, `cmt_decide_one`, `app_to_committee` (no API role) | none exist |
+| `api.member_add` replaced (same signature/grants): typed or allocated numbers also checked against committee allocations | behaviour otherwise unchanged |
+| no drop / delete / truncate | — |
+
+Rules enforced in the database: decisions `cmt ≥ 3` (Committee Secretary, SG) with a 2-step session, meetings and
+minutes `cmt ≥ 2`; only a file in `committee` with an open item on that meeting; on or after the meeting date; defer
+and reject need the committee's reason; one final decision per file (row lock + unique index); approval allocates the
+next unused number of the class, creates one Unpaid membership voucher from `settings.fees` (Women rates, extra cards)
+due after `settings.voucher.dueDays`, moves the file to `payment`, writes history, audit reason, portal message and the
+queued email. Tests: pgTAP 510/510 locally (new `160_committee`, 47 checks); unit 226/226; e2e see below.
+
+Plan: same steps as gates 6–8 (backup + restore drill → dry run expects exactly 1 pending → `--apply-next` → verify
+functions/grants, columns, indexes, trigger, settings, unchanged counts → `release.sh <commit>` → smoke).
+Rollback: `release.sh --rollback` (the Release 3 app ignores the new columns and functions); full undo = restore the
+backup taken first.
+
+E2E: full suite 365 passed, 2 failed, 1 not run (192 skipped by project). The 2 failures were fixed: a real bug (the
+success message vanished when the last file left the agenda: the agenda now stays mounted) and a stale shell test
+(Endorsement Requests is built since Release 3); the affected 69 tests (committee, shells, a11y/orphans/overflow of the
+new pages, all projects) then passed. Dry run (`pnpm db:dry-run`): all migrations + seed + pgTAP, 0 failures.
+Also fixed during testing: two meetings scheduled at the same moment could both try to place the same waiting file
+(the unique index refused the second; `cmt_place` now locks the application first), and forms no longer clear their
+fields when the server refuses (meetings, Members Register).

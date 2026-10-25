@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/admin/no-access';
+import { CommitteeAdminCard } from '@/components/committee/admin-card';
 import { EndorseAdminCard } from '@/components/endorse/admin-card';
 import type { SlotEndorsement } from '@/components/endorse/slots';
 import { OfficialForm } from '@/components/membership/official-form';
@@ -9,6 +10,8 @@ import { type ReviewData, ReviewScreen } from '@/components/review/review-screen
 import { PageHeader } from '@/components/shared/page-header';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
+import { loadAppCommittee } from '@/lib/committee/load';
+import { pkr } from '@/lib/committee/voucher';
 import { classOf, fee } from '@/lib/flow/application';
 import { loadDocLists, loadEndorsements, loadPublicSettings } from '@/lib/membership/load';
 import { FORM_FIELDS } from '@/lib/membership/reference';
@@ -170,6 +173,12 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     photoUrl: file.photo_path ? (urls.get(file.photo_path) ?? null) : null,
   };
 
+  const cmtLevel = staffLevel(session.access, 'cmt');
+  const committee =
+    cmtLevel >= 1 && ['committee', 'payment', 'temp', 'permanent', 'rejected'].includes(file.stage)
+      ? await loadAppCommittee(file.id)
+      : null;
+
   const form = (
     <OfficialForm
       form={f}
@@ -177,7 +186,11 @@ export default async function ReviewPage({ params, searchParams }: Props) {
       photo={data.photoUrl}
       sign={file.sign_path ? (urls.get(file.sign_path) ?? null) : null}
       stamp={file.stamp_path ? (urls.get(file.stamp_path) ?? null) : null}
-      official={{ cls: `${cls}${file.women ? ' (Women Entrepreneur)' : ''}` }}
+      official={{
+        cls: `${cls}${file.women ? ' (Women Entrepreneur)' : ''}`,
+        ...(committee?.member_no ? { status: 'Approved', no: committee.member_no } : {}),
+        ...(committee?.voucher ? { fee: pkr(committee.voucher.amount) } : {}),
+      }}
       proposer={formEndorser(endorsements, 'proposer')}
       seconder={formEndorser(endorsements, 'seconder')}
       chamber={settings.chamber}
@@ -195,6 +208,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         level={level}
         form={form}
         endorse={<EndorseAdminCard locale={locale} items={endorsements} canRemind={level >= 2} />}
+        committee={
+          committee ? <CommitteeAdminCard locale={locale} data={committee} canOpenDesk={cmtLevel >= 1} /> : undefined
+        }
       />
     </div>
   );

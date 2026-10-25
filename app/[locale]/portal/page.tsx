@@ -6,6 +6,7 @@ import { both, Card, Ic, Journey, L, Tile } from '@/components/membership/ui';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { loadMyApplication, loadPublicSettings } from '@/lib/membership/load';
+import { noteText } from '@/lib/membership/notes';
 import { msg, screenLink } from '@/lib/nav/model';
 import { getSession } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
@@ -41,7 +42,7 @@ export default async function PortalHomePage({ params }: Props) {
   const supabase = await createClient();
   const { data: notes } = await supabase
     .from('notifications')
-    .select('id, title, body, created_at, read_at')
+    .select('id, title, body, template, vars, created_at, read_at')
     .order('created_at', { ascending: false })
     .limit(4);
   const tel = settings.chamber.tel.split(',')[0]!.replace(/[^\d]/g, '');
@@ -150,8 +151,8 @@ export default async function PortalHomePage({ params }: Props) {
                   <Ic name={n.read_at ? 'file' : 'flag'} size={20} />
                 </i>
                 <div>
-                  <b>{n.title}</b>
-                  <small>{n.body}</small>
+                  <b>{noteText(locale, n).title}</b>
+                  <small>{noteText(locale, n).body}</small>
                 </div>
                 <span>
                   {new Date(n.created_at).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', {

@@ -12,7 +12,7 @@ export type Area = 'site' | 'portal' | 'admin';
 export type Milestone = 'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M7' | 'M8' | 'M9' | 'MA';
 
 /** Milestones whose screens exist. Add a milestone here when its pages ship. */
-export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>(['M0', 'M1', 'M3', 'M4', 'M5']);
+export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>(['M0', 'M1', 'M3', 'M4', 'M5', 'M5c']);
 
 export type IconName =
   | 'home'
@@ -104,7 +104,7 @@ export const SCREENS: readonly Screen[] = [
   s('portal', 'applications', '/portal/applications', 'M7', 'list'),
   s('portal', 'application', '/portal/application', 'M7', 'file'),
   s('portal', 'documents', '/portal/documents', 'M6', 'folder'),
-  s('portal', 'payments', '/portal/payments', 'M6', 'card'),
+  s('portal', 'payments', '/portal/payments', 'M5c', 'card'),
   s('portal', 'support', '/portal/support', 'M8', 'help'),
   s('portal', 'assistant', '/portal/assistant', 'M8', 'sparkles'),
   s('portal', 'notifications', '/portal/notifications', 'M8', 'bell'),

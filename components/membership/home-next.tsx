@@ -2,6 +2,7 @@ import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { startApplication } from '@/lib/membership/actions';
 import type { MyApplication } from '@/lib/membership/load';
+import { pkr, voucherDate } from '@/lib/committee/voucher';
 import { msg } from '@/lib/nav/model';
 import { both, Ic, L, NextCard } from './ui';
 
@@ -74,13 +75,39 @@ export function HomeNext({ app, locale }: { app: MyApplication | null; locale: L
       );
     case 'committee':
       return (
-        <NextCard tone="blue" icon="award" title={both('membership.next.committee.t')} body={t('committee.d')}>
+        <NextCard
+          tone="blue"
+          icon="award"
+          title={both('membership.next.committee.t')}
+          body={
+            app.agenda
+              ? `${t('committee.agenda', { meeting: app.agenda.meeting, item: String(app.agenda.item ?? '') })} ${t('committee.d')}`
+              : t('committee.d')
+          }
+        >
           {progress}
         </NextCard>
       );
     case 'payment':
       return (
-        <NextCard tone="gold" icon="card" title={both('membership.next.payment.t')} body={t('payment.d')}>
+        <NextCard
+          tone="gold"
+          icon="card"
+          title={both('membership.next.payment.t')}
+          body={
+            app.voucher
+              ? t('payment.voucher', {
+                  no: app.member_no ?? '',
+                  voucher: app.voucher.no,
+                  amount: pkr(app.voucher.amount),
+                  due: voucherDate(app.voucher.due_at, locale),
+                })
+              : t('payment.d')
+          }
+        >
+          <Link className="btn btn-gold btn-big" href="/portal/payments" data-action="psid.show">
+            <Ic name="card" /> <L {...both('membership.next.payment.b')} />
+          </Link>
           {progress}
         </NextCard>
       );
