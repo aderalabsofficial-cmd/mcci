@@ -375,3 +375,20 @@ new pages, all projects) then passed. Dry run (`pnpm db:dry-run`): all migration
 Also fixed during testing: two meetings scheduled at the same moment could both try to place the same waiting file
 (the unique index refused the second; `cmt_place` now locks the application first), and forms no longer clear their
 fields when the server refuses (meetings, Members Register).
+
+**Gate 9 done 25 Oct 2026 (approved by the owner with conditions 1–8), evidence:** tooling `/opt/mcci-deploy-784d9b1`;
+migration sha256 `3e540980a9c9c767` on the server = committed = reviewed. Backup `mcci-20261025T103257Z`: 7 parts
+decrypt, checksums OK; restore drill 13/13 PASS (92 functions, 103 tables / 1,962 rows, Vault + negative control),
+drill removed. Isolated dry run at `784d9b1`: all migrations + seed + pgTAP, 17 files, 0 failures, no rows left behind.
+Production dry run: exactly 1 pending (0330) → `--apply-next` (one transaction) → 0 pending. Verified: 5 `api`
+functions definer + `search_path=""`, `authenticated` only (no anon, no service role); 6 `private` helpers and
+`next_member_no` no client execute; no client INSERT/UPDATE on the new columns; `meeting_seq` unusable by clients;
+4 indexes and trigger `applications_to_committee` present; `settings.bank.confirmed = false`; `public_settings` keys
+unchanged; member-number sequences untouched (1134 / 2205); row counts in 93 tables unchanged except `audit_log`
+790 → 791 (the audited bank flag). Release `784d9b1` live (`057713d` and `156aa3e` kept; health
+`{"ok":true,"release":"784d9b1"}`). Smoke: `/`, `/ur`, `/login`, `/register`, `/ur/login` 200; `/portal`,
+`/portal/payments`, `/ur/portal/payments` (→ `/ur/login`), `/portal/mtrack`, `/admin`, `/admin/committee`,
+`/admin/meetings`, `/admin/mreview`, `/admin/members` → login with `next`; cron without secret 401; anonymous RPC 401;
+no errors in the journal. Process: `AI_EXTRACTION=on` and the OpenAI key present (unchanged); no `CRON_SECRET`, no
+jobs unit or timer (condition 8). Stack 9/9 healthy; `nginx -t` OK, nothing changed; aderalabs.tech, iqpigeon.com 200.
+Signed-in smoke of the committee screens is done by the Secretary General with their own account.
