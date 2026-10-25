@@ -288,3 +288,24 @@ the new functions or the new view keys). The migration is additive; to undo it f
 Member smoke (sign-in, application, upload, submit, receipt email) is done by the owner with their own account; the
 server-side results are checked afterwards. Until the staff review desk (Release 2), submitted applications are listed
 for MCCI by a read-only query on request.
+
+### Gate 7 — Release 2: staff review (migration 0310 + release; awaiting the owner's approval)
+
+Review of `supabase/migrations/20261025000310_staff_review.sql` against production (read-only, 25 Oct 2026):
+
+| Change | Effect on what exists |
+|---|---|
+| `create or replace function private.staff_level` — returns 0 unless the JWT says `aal = aal2` | the only change to existing behaviour: 10 functions and 52 policies use it, so every staff right now also needs a 2-step session (docs/09). Production has 0 staff rows and 0 verified authenticators, so nobody is affected today; members are not affected (they never had staff levels) |
+| `update private.settings` (`membership` gains `checklist: docs, identity, ntn, address`) | only when the key is absent; existing keys kept |
+| `alter table public.email_log add column created_by, application_id, error` + index + policy `email_log_select_mem` | nullable columns on an empty table (0 rows); the existing `email_log_select` policy unchanged |
+| new functions `private.staff_name`, `private.app_email`, `private.app_notify` (no client execute), `api.app_open`, `app_check`, `app_edit_field`, `app_set_class`, `app_return`, `app_verify`, `app_reject`, `email_mark` | none of the 11 names exist; `api` ones definer + `search_path=""`, `authenticated` only |
+| no drop / delete / truncate | 0 applications in production |
+
+Tests: pgTAP dry run 427/427 (new `140_staff_review`, 41 checks; every existing staff test passes with 2-step sessions);
+unit 216/216; e2e 277 passed, 0 failed (new `review.spec.ts`: return → correct → resubmit → verify).
+
+Plan: same steps as gate 6 (backup + restore drill → dry run expects exactly 1 pending → `--apply-next` → verify
+functions, policy, columns, unchanged counts → `release.sh <commit>` → smoke). Then, for the review desk to have users:
+the Secretary General registers, `scripts/selfhost/first-secretary-general.sh <email>`, sets up 2-step login and
+invites officers from `/admin/staff`. Rollback: `release.sh --rollback` (the Release 1 app works on the new schema;
+staff could not use it anyway); full undo of 0310 = restore the backup taken first.
