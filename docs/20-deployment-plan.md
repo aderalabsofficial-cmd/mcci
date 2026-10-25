@@ -474,3 +474,26 @@ is Next.js's client action handling, report a fix upstream or retry the action s
 Plan: as gates 6–9 (backup + restore drill → isolated dry run → production dry run exactly 1 pending → `--apply-next`
 → verify → `release.sh <commit>` → smoke). Rollback: `release.sh --rollback` (the Release 4 app does not call the new
 functions; the receipt storage rule only adds a condition); full undo = restore the backup taken first.
+
+**Gate 10 done 25 Oct 2026 (approved by the owner with conditions), evidence:** pre-check of the Release 2 review issue
+in production: no application ever submitted, no document reviewed, no email sent, history only "created" — no staff
+decision can have been lost; the only staff entries are the SG's own draft (as an applicant) and four audited changes of
+one designation limit (Services Officer / dash 1→2→3→0→1, matching the table). Tooling `/opt/mcci-deploy-fbdeba0`;
+migration sha256 `c94ad94cfcdb318e` = reviewed; backup `mcci-20261025T151058Z` verified, restore drill 13/13 PASS, drill
+removed; production dry run exactly 1 pending → `--apply-next` → 0 pending. Grants and receipt storage policies
+identical to the tested local database (27 lines); `payment_receipts.path` nullable + `method`; bank still not
+confirmed; `public_settings` keys unchanged; row counts in 93 tables identical to the baseline. Release `fbdeba0` live
+(`784d9b1`, `057713d` kept); health OK. Smoke: `/`, `/ur`, `/login`, `/verify`, `/ur/verify`, `/verify/<code>` 200
+(unknown code → "no document", bad code → "invalid"); `/api/verify` 404 / 400; `/admin`, `/admin/payments|psid|temp|
+documents|committee`, `/portal/payments|documents|membership` (and `/ur`) → login; `POST /api/cron/daily|endorsements`
+without the secret 401; with the public key, every new `api` function → 42501 permission denied, receipts upload
+refused by RLS, receipts listing empty. AI extraction on; no CRON_SECRET, timer or jobs unit; 1 staff with verified
+2-step; nginx unchanged (app `7cbb0f72…`, others `9ebe5743…`), `nginx -t` OK; all 10 hosted sites as before (demo 401).
+
+**Found after the switch (open, user-facing): edits lost in an application form left open across a release.** A member
+had `/portal/join` open from before 17:21; since the switch its autosave calls the old build's action ids → 404
+"Failed to find Server Action" (14 log lines). The wizard clears its pending changes before calling `saveDraft`; when
+the call throws, they are dropped and "Saving…" stays — no error is shown. Not caused by Release 5's code: any release
+does this to an open form. Fix (next): keep the pending changes when a save throws, show "MCCI Digital was updated —
+reload the page" (with the values still on screen), and add Next.js version-skew handling (deploymentId) so stale tabs
+reload; until then, announce releases and ask members to reload open forms.
