@@ -9,6 +9,10 @@
 -- The one-time code is generated in the database, stored only as sha256(salt || code) in private.endorsement_otps
 -- (never readable by any client), valid 10 minutes, 5 attempts, a new one after 60 s (docs/04 "One-time code").
 
+-- the picker shows how long a request stays open and the yearly limit (nothing secret in these rules, F-16)
+create or replace view public.public_settings with (security_invoker = false) as
+  select key, value from private.settings where key in ('chamber', 'fees', 'lang', 'app', 'membership', 'sla', 'endorse');
+
 -- ───────── helpers ─────────
 create function private.endorse_rules() returns jsonb
   language sql stable security definer set search_path = ''

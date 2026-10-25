@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/admin/no-access';
+import { EndorseAdminCard } from '@/components/endorse/admin-card';
+import type { SlotEndorsement } from '@/components/endorse/slots';
 import { OfficialForm } from '@/components/membership/official-form';
 import { STAGE_TONE } from '@/components/review/kpi';
 import { type ReviewData, ReviewScreen } from '@/components/review/review-screen';
@@ -8,9 +10,9 @@ import { PageHeader } from '@/components/shared/page-header';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { classOf, fee } from '@/lib/flow/application';
-import { loadDocLists, loadPublicSettings } from '@/lib/membership/load';
+import { loadDocLists, loadEndorsements, loadPublicSettings } from '@/lib/membership/load';
 import { FORM_FIELDS } from '@/lib/membership/reference';
-import { signedUrls } from '@/lib/membership/view';
+import { formEndorser, signedUrls } from '@/lib/membership/view';
 import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
@@ -57,11 +59,33 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     );
   }
 
-  const [settings, docLists, urls] = await Promise.all([
+  const [settings, docLists, ends] = await Promise.all([
     loadPublicSettings(),
     loadDocLists(),
-    signedUrls([...file.docs.map((d) => d.path), file.photo_path, file.sign_path, file.stamp_path]),
+    loadEndorsements(file.id),
   ]);
+  const urls = await signedUrls([
+    ...file.docs.map((d) => d.path),
+    file.photo_path,
+    file.sign_path,
+    file.stamp_path,
+    ...ends.map((e) => e.signature_path),
+  ]);
+  const endorsements: SlotEndorsement[] = ends.map((e) => ({
+    id: e.id,
+    role: e.role,
+    status: e.status,
+    member_no: e.member_no,
+    company: e.company,
+    rep: e.rep,
+    requested_at: e.requested_at,
+    expires_at: e.expires_at,
+    decided_at: e.decided_at,
+    decline_reason: e.decline_reason,
+    ref: e.ref,
+    reminders: e.reminders,
+    signatureUrl: e.signature_path ? (urls.get(e.signature_path) ?? null) : null,
+  }));
   const f = file.form;
   const byKey = new Map(file.docs.map((d) => [d.key, d]));
   const cls = file.class ?? classOf(f);
@@ -154,6 +178,8 @@ export default async function ReviewPage({ params, searchParams }: Props) {
       sign={file.sign_path ? (urls.get(file.sign_path) ?? null) : null}
       stamp={file.stamp_path ? (urls.get(file.stamp_path) ?? null) : null}
       official={{ cls: `${cls}${file.women ? ' (Women Entrepreneur)' : ''}` }}
+      proposer={formEndorser(endorsements, 'proposer')}
+      seconder={formEndorser(endorsements, 'seconder')}
       chamber={settings.chamber}
       fees={settings.fees}
       processDays={settings.processDays}
@@ -163,7 +189,13 @@ export default async function ReviewPage({ params, searchParams }: Props) {
 
   return (
     <div className="proto">
-      <ReviewScreen locale={locale} data={data} level={level} form={form} />
+      <ReviewScreen
+        locale={locale}
+        data={data}
+        level={level}
+        form={form}
+        endorse={<EndorseAdminCard locale={locale} items={endorsements} canRemind={level >= 2} />}
+      />
     </div>
   );
 }

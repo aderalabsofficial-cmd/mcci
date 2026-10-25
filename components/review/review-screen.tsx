@@ -74,11 +74,14 @@ export function ReviewScreen({
   data,
   level,
   form,
+  endorse,
 }: {
   locale: Locale;
   data: ReviewData;
   level: number;
   form: ReactNode;
+  /** proposer & seconder card body (components/endorse/admin-card.tsx) */
+  endorse: ReactNode;
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `review.desk.${k}`, v);
   const router = useRouter();
@@ -532,7 +535,7 @@ export function ReviewScreen({
           <div className="ch">
             <h3>{m('endorse')}</h3>
           </div>
-          <p className="muted">{m('endorseLater')}</p>
+          {endorse}
         </div>
         <div className="card">
           <div className="ch">

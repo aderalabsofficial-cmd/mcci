@@ -77,3 +77,9 @@
   color: inherit;
   font-weight: 700;
 }
+
+/* prototype .bd.green (--mt on a 15 % mint wash) is just under AA for 12 px text; mixing in the text colour darkens it
+   in light mode and lightens it in dark mode */
+.proto .bd.green {
+  color: color-mix(in srgb, var(--mt) 80%, var(--t));
+}

@@ -39,6 +39,32 @@ export interface AppHistory {
   by_name: string | null;
 }
 
+export interface AppEndorsement {
+  id: string;
+  role: 'proposer' | 'seconder';
+  status: 'Pending' | 'Approved' | 'Declined' | 'Expired' | 'Withdrawn';
+  member_no: string;
+  company: string;
+  rep: string;
+  message: string | null;
+  requested_at: string;
+  expires_at: string;
+  decided_at: string | null;
+  decline_reason: string | null;
+  ref: string | null;
+  reminders: number;
+  last_reminded_at: string | null;
+  signature_path: string | null;
+}
+
+/** endorsements of one application with the endorsers' public details (api.app_endorsements, migration 0320) */
+export async function loadEndorsements(appId: string): Promise<AppEndorsement[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.schema('api').rpc('app_endorsements', { p_app: appId });
+  if (error) throw new Error(`app_endorsements: ${error.message}`);
+  return (data ?? []) as AppEndorsement[];
+}
+
 export interface MyApplication {
   id: string;
   token: string;
@@ -62,6 +88,7 @@ export interface MyApplication {
   partners: AppPartner[];
   requirements: DocRequirement[];
   history: AppHistory[];
+  endorsements: AppEndorsement[];
   /** this person may change the draft (company area mship ≥ 2, stage draft or returned) */
   canEdit: boolean;
   /** this person may act on the application at all (Owner / Manager: company area mship ≥ 2) */
@@ -77,8 +104,15 @@ export interface Chamber {
   web: string;
 }
 
+export interface EndorseRules {
+  days: number;
+  maxPerYear: number;
+  needCode: boolean;
+}
+
 export interface PublicSettings {
   fees: FeeSchedule;
+  endorse: EndorseRules;
   membership: MembershipRules;
   chamber: Chamber;
   /** normal membership process time printed on the form (settings.sla.processDays) */
@@ -94,6 +128,11 @@ export const loadPublicSettings = cache(async (): Promise<PublicSettings> => {
   const s = Object.fromEntries((data ?? []).map((r) => [r.key, r.value])) as Record<string, unknown>;
   return {
     fees: s.fees as FeeSchedule,
+    endorse: {
+      days: Number((s.endorse as Partial<EndorseRules> | undefined)?.days ?? 7),
+      maxPerYear: Number((s.endorse as Partial<EndorseRules> | undefined)?.maxPerYear ?? 12),
+      needCode: (s.endorse as Partial<EndorseRules> | undefined)?.needCode !== false,
+    },
     membership: (s.membership ?? {}) as MembershipRules,
     chamber: s.chamber as Chamber,
     processDays: Number((s.sla as { processDays?: number } | undefined)?.processDays ?? 15),
@@ -139,7 +178,7 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
   const row = (apps ?? []).find((a) => !FINAL.includes(a.stage as AppStage)) ?? apps?.[0];
   if (!row) return null;
 
-  const [docs, partners, history, requirements] = await Promise.all([
+  const [docs, partners, history, requirements, endorsements] = await Promise.all([
     supabase
       .from('application_documents')
       .select('id, key, path, file_name, mime, size_bytes, status, reject_reason, created_at')
@@ -155,17 +194,22 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
       .eq('application_id', row.id)
       .order('at', { ascending: false }),
     loadRequirements((row.form as AppForm | null)?.biz),
+    loadEndorsements(row.id),
   ]);
   for (const r of [docs, partners, history]) if (r.error) throw new Error(r.error.message);
   const level = session.access.companies.find((c) => c.id === row.company_id)?.levels.mship ?? 0;
   return {
-    ...(row as Omit<MyApplication, 'docs' | 'partners' | 'requirements' | 'history' | 'canEdit' | 'canManage'>),
+    ...(row as Omit<
+      MyApplication,
+      'docs' | 'partners' | 'requirements' | 'history' | 'endorsements' | 'canEdit' | 'canManage'
+    >),
     form: (row.form ?? {}) as AppForm,
     field_confidence: (row.field_confidence ?? {}) as Record<string, number>,
     docs: (docs.data ?? []) as AppDocument[],
     partners: (partners.data ?? []) as AppPartner[],
     history: (history.data ?? []) as AppHistory[],
     requirements,
+    endorsements,
     canEdit: level >= 2 && (row.stage === 'draft' || row.stage === 'returned'),
     canManage: level >= 2,
   };

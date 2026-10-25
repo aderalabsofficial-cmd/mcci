@@ -46,7 +46,15 @@ const ENDORSEMENTS_EVIDENCE = [
 ];
 // lib/auth/admin: privileged Auth operations that run before or around a user's own session (login identifier
 // lookup, invitations, staff 2-step reset), each after its own server-side checks.
-const SERVICE_ROLE_PATHS = ['app/api/**', 'lib/pdf/**', 'lib/supabase/admin.ts', 'lib/auth/admin/**'];
+// lib/endorse/admin: the endorser's one-time code (issued to the server only) and storing the signature image in the
+// applicant's file area, each after the endorser's own session has shown the request belongs to them.
+const SERVICE_ROLE_PATHS = [
+  'app/api/**',
+  'lib/pdf/**',
+  'lib/supabase/admin.ts',
+  'lib/auth/admin/**',
+  'lib/endorse/admin/**',
+];
 
 const config = [
   {

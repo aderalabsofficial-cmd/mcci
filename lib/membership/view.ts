@@ -1,5 +1,6 @@
 import 'server-only';
-import type { OfficialFormProps } from '@/components/membership/official-form';
+import type { SlotEndorsement } from '@/components/endorse/slots';
+import type { Endorser, OfficialFormProps } from '@/components/membership/official-form';
 import type { WizardApp } from '@/components/membership/wizard';
 import type { BizType } from '@/lib/membership/reference';
 import { createClient } from '@/lib/supabase/server';
@@ -17,7 +18,13 @@ export async function signedUrls(paths: (string | null | undefined)[]): Promise<
 }
 
 export async function wizardApp(app: MyApplication): Promise<WizardApp> {
-  const urls = await signedUrls([...app.docs.map((d) => d.path), app.photo_path, app.sign_path, app.stamp_path]);
+  const urls = await signedUrls([
+    ...app.docs.map((d) => d.path),
+    app.photo_path,
+    app.sign_path,
+    app.stamp_path,
+    ...app.endorsements.map((e) => e.signature_path),
+  ]);
   return {
     id: app.id,
     token: app.token,
@@ -42,6 +49,43 @@ export async function wizardApp(app: MyApplication): Promise<WizardApp> {
     })),
     partners: app.partners,
     requirements: app.requirements,
+    endorsements: app.endorsements.map((e): SlotEndorsement => ({
+      id: e.id,
+      role: e.role,
+      status: e.status,
+      member_no: e.member_no,
+      company: e.company,
+      rep: e.rep,
+      requested_at: e.requested_at,
+      expires_at: e.expires_at,
+      decided_at: e.decided_at,
+      decline_reason: e.decline_reason,
+      ref: e.ref,
+      reminders: e.reminders,
+      signatureUrl: e.signature_path ? (urls.get(e.signature_path) ?? null) : null,
+    })),
+  };
+}
+
+/** the proposer / seconder rows of the official form (page 2) */
+export function formEndorser(items: SlotEndorsement[], role: 'proposer' | 'seconder'): Endorser {
+  const x = items.find((e) => e.role === role && (e.status === 'Approved' || e.status === 'Pending'));
+  if (!x) return {};
+  const when = x.decided_at
+    ? new Date(x.decided_at).toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Karachi',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '';
+  return {
+    name: x.rep,
+    biz: x.company,
+    no: x.member_no,
+    signed: x.status === 'Approved' ? `Signed digitally ${when}${x.ref ? ` · ${x.ref}` : ''}` : null,
+    signature: x.status === 'Approved' ? x.signatureUrl : null,
+    pending: x.status === 'Pending',
   };
 }
 
@@ -59,6 +103,8 @@ export function officialFormProps(
     sign: w?.signUrl ?? null,
     stamp: w?.stampUrl ?? null,
     official: app?.class ? { cls: `${app.class}${app.women ? ' (Women Entrepreneur)' : ''}` } : {},
+    proposer: w ? formEndorser(w.endorsements, 'proposer') : {},
+    seconder: w ? formEndorser(w.endorsements, 'seconder') : {},
     chamber: settings.chamber,
     fees: settings.fees,
     processDays: settings.processDays,

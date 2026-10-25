@@ -66,8 +66,10 @@ export function HomeNext({ app, locale }: { app: MyApplication | null; locale: L
       );
     case 'proposer':
       return (
-        <NextCard tone="blue" icon="users" title={both('membership.next.proposer.t')} body={t('proposer.d')}>
-          {progress}
+        <NextCard tone="gold" icon="users" title={both('membership.next.proposer.t')} body={t('proposer.d')}>
+          <Link className="btn btn-gold btn-big" href="/portal/join#endorse" data-action="nav">
+            <Ic name="users" /> <L {...both('membership.next.proposer.b')} />
+          </Link>
         </NextCard>
       );
     case 'committee':

@@ -169,7 +169,7 @@ test('officer returns a file, the applicant corrects it, the officer verifies it
   expect(await stage()).toBe('proposer');
 
   await ap.goto('/portal');
-  await expect(ap.getByRole('heading', { name: 'Documents verified — proposer and seconder next' })).toBeVisible();
+  await expect(ap.getByRole('heading', { name: 'Documents verified — choose your proposer and seconder' })).toBeVisible();
   await ctx.close();
 });
 

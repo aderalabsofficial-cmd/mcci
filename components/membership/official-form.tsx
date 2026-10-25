@@ -24,6 +24,7 @@ export interface Endorser {
   biz?: string;
   no?: string;
   signed?: string | null;
+  signature?: string | null;
   pending?: boolean;
 }
 
@@ -106,7 +107,17 @@ function EndorserTable({ who, x }: { who: string; x: Endorser }) {
           <td>{v(x.no)}</td>
           <td className="of-dsig">
             {x.signed ? (
-              <small>{x.signed}</small>
+              <>
+                {x.signature && (
+                  // eslint-disable-next-line @next/next/no-img-element -- signed URL of a private file
+                  <img
+                    src={x.signature}
+                    alt=""
+                    style={{ maxHeight: 34, maxWidth: 120, display: 'block', margin: '0 auto' }}
+                  />
+                )}
+                <small>{x.signed}</small>
+              </>
             ) : x.pending ? (
               <small style={{ color: '#b45309' }}>Awaiting signature</small>
             ) : (

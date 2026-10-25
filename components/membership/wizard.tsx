@@ -55,6 +55,7 @@ import {
   WIZARD_STEPS,
 } from '@/lib/membership/reference';
 import { msg } from '@/lib/nav/model';
+import type { SlotEndorsement } from '@/components/endorse/slots';
 import { DocSlots, type SlotDoc } from './doc-slots';
 import { type PadText, SignaturePad } from './signature-pad';
 import { Ic } from './ui';
@@ -88,6 +89,7 @@ export interface WizardApp {
     extra_card: boolean;
   }[];
   requirements: DocRequirement[];
+  endorsements: SlotEndorsement[];
 }
 
 type State = {
@@ -117,6 +119,7 @@ export function Wizard({
   rules,
   aiOn,
   preview,
+  endorse,
 }: {
   locale: Locale;
   app: WizardApp;
@@ -124,6 +127,8 @@ export function Wizard({
   rules: MembershipRules;
   aiOn: boolean;
   preview: ReactNode;
+  /** proposer & seconder slots (components/endorse/slots.tsx), rendered by the page */
+  endorse: ReactNode;
 }) {
   const m = useCallback((k: string, v?: Record<string, string>) => msg(locale, `membership.${k}`, v), [locale]);
   const both = (k: string, v?: Record<string, string>) => ({
@@ -757,12 +762,10 @@ export function Wizard({
           <Bi {...both('wiz.endorse.title')} />
         </h2>
         <div className="m1" style={{ margin: '10px 0 16px' }}>
-          <Users size={18} color="#1f6feb" aria-hidden /> {m('wiz.endorse.help', { cls: m(`classes.${cls}`) })}
+          <Users size={18} color="#1f6feb" aria-hidden />{' '}
+          {msg(locale, 'endorse.slots.help', { cls: m(`classes.${cls}`) })}
         </div>
-        <div className="banner blue" role="status">
-          <Ic name="clock" size={18} color="#fff" />
-          <span>{m('wiz.endorse.later')}</span>
-        </div>
+        {endorse}
       </>
     );
   }
