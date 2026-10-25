@@ -321,3 +321,18 @@ only `audit_log` +1 and the ledger +1. Release `156aa3e` live (health OK; `4dd46
 `/root/mcci-web-env.before-ai-on-<UTC>`, `AI_EXTRACTION=on` added (the key was already there); the running process has
 it. Live check with a synthetic NTN certificate (no real data): `gpt-4.1-mini-2025-04-14`, strict JSON schema, 2.6 s,
 all four fields read correctly. Switch off again: remove the line (or set `off`) and `systemctl restart mcci-web`.
+
+### Gate 8 — Release 3: proposer & seconder + Members Register (migration 0320 + release)
+
+**Done 25 Oct 2026 (owner: "commit and push to live what we have built"), evidence:** tooling `/opt/mcci-deploy-057713d`,
+migration file sha256 `881376fd…` = tested file; backup `mcci-20261025T093603Z` verified, restore drill 13/13 PASS;
+dry run exactly 1 pending → `--apply-next` → 0 pending; 11 `api` functions definer + `search_path=""`, no `anon`;
+`end_code_issue` and `end_jobs` service role only; new `private` helpers no client execute; `public_settings` =
+`app, chamber, endorse, fees, lang, membership, sla`; data unchanged (1 application, 0 members, 0 endorsements).
+Release `057713d` live (health OK; `156aa3e` kept for rollback); `/portal/endorse`, `/admin/members` → login;
+`POST /api/cron/endorsements` without the secret → 401. Tests before release: pgTAP 480/480 in the dry run, unit
+216/216, e2e endorse + review + application + a11y/orphans/overflow/access green.
+First Secretary General: `secretary-mcci@aderalabs.tech` (demo address, to be replaced on the MCCI domain), via
+`first-secretary-general.sh`.
+**Not yet on:** the hourly endorsement job (reminder on day N, expiry). It needs `CRON_SECRET` in `/etc/mcci-web/env` and a
+timer; until then requests stay open past 7 days and reminders are sent by hand (Send reminder).
