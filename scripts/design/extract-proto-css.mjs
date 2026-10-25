@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const [, , root, out] = process.argv;
-const js = ['member.js', 'docs.js', 'core.js', 'endorse.js', 'ui.js'].map((f) => fs.readFileSync(`${root}/js/${f}`, 'utf8')).join('\n');
+const js = ['member.js', 'docs.js', 'core.js', 'endorse.js', 'ui.js', 'admin.js', 'access.js'].map((f) => fs.readFileSync(`${root}/js/${f}`, 'utf8')).join('\n');
 const used = new Set();
 for (const m of js.matchAll(/class="([^"$]*)/g)) m[1].split(/\s+/).forEach((c) => /^[a-z][a-z0-9-]*$/.test(c) && used.add(c));
 for (const m of js.matchAll(/class=\?"([^"]*)"/g)) m[1].split(/[\s${}]+/).forEach((c) => /^[a-z][a-z0-9-]*$/.test(c) && used.add(c));

@@ -864,8 +864,8 @@
         "b": "Fix and resubmit"
       },
       "proposer": {
-        "t": "Waiting for your proposer and seconder",
-        "d": "They received a request in their MCCI portal and an email. Your file moves to the Membership Committee as soon as both sign."
+        "t": "Documents verified — proposer and seconder next",
+        "d": "MCCI has accepted your documents. Next, two MCCI members propose and second your application. We will email you when you can choose them here."
       },
       "committee": {
         "t": "With the Membership Committee",
@@ -1084,7 +1084,12 @@
         "withdrawn": "Withdrawn",
         "document accepted": "Document accepted",
         "document rejected": "Document needs correction",
-        "returned": "Returned for correction"
+        "returned": "Returned for correction",
+        "review started": "MCCI started checking",
+        "verified": "Documents verified",
+        "field corrected": "Details corrected by MCCI",
+        "class set": "Membership class set",
+        "rejected": "Not approved"
       }
     },
     "page": {
@@ -1140,6 +1145,160 @@
       "submittedBody": "We have received your MCCI membership application {token}.",
       "submittedNext": "The Membership Desk will check your documents. You will get an email and a portal message if anything is needed.",
       "track": "Track my application"
+    }
+  },
+  "review": {
+    "pipeline": {
+      "title": "Membership Pipeline",
+      "sub": "Every application from the MCCI New Membership form, by stage.",
+      "kInReview": "In review",
+      "kInReviewSub": "{n} new — not opened yet",
+      "kReturned": "Returned to applicant",
+      "kReturnedSub": "Waiting for corrections",
+      "kProposer": "Waiting on members",
+      "kProposerSub": "Proposer / seconder",
+      "kCommittee": "With committee",
+      "kCommitteeSub": "Next meeting",
+      "board": "Stage board",
+      "table": "All membership applications",
+      "search": "Search applications…",
+      "allStages": "All stages",
+      "showing": "Showing {n} of {total} records",
+      "none": "No applications yet.",
+      "noMatch": "No records match your search.",
+      "cols": {
+        "token": "Token",
+        "company": "Company",
+        "type": "Type",
+        "cls": "Class",
+        "submitted": "Submitted",
+        "stage": "Stage"
+      },
+      "columns": {
+        "review": "Review",
+        "returned": "Returned",
+        "proposer": "Proposer / Seconder",
+        "committee": "Committee",
+        "payment": "Payment",
+        "temp": "Temporary"
+      }
+    },
+    "stages": {
+      "submitted": "New",
+      "review": "In review",
+      "returned": "Returned",
+      "proposer": "Proposer / seconder",
+      "committee": "Committee",
+      "payment": "Payment",
+      "temp": "Temporary member",
+      "permanent": "Permanent member",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn",
+      "draft": "Draft"
+    },
+    "desk": {
+      "title": "Application Review",
+      "choose": "Choose an application in the Membership Pipeline.",
+      "notFound": "This application was not found.",
+      "back": "Membership Pipeline",
+      "officialForm": "Official form",
+      "start": "Start review",
+      "return": "Return for correction",
+      "reject": "Reject",
+      "verify": "Verify documents",
+      "kTime": "Time in process",
+      "kTimeSub": "Process target {n} working days",
+      "days": "{n} days",
+      "kDocs": "Documents",
+      "kDocsSub": "accepted",
+      "kClass": "Class",
+      "kClassRule": "by form rule",
+      "kClassWomen": "Women fee",
+      "kFee": "Fee",
+      "kFeeSub": "after approval",
+      "particulars": "Particulars of member",
+      "check": "Check",
+      "edit": "Correct {field}",
+      "documents": "Documents — {biz}",
+      "notProvided": "Not provided",
+      "reuploaded": "re-uploaded",
+      "view": "View",
+      "accept": "Accept {doc}",
+      "rejectDoc": "Reject {doc}",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "pending": "To check",
+      "partners": "Partners / directors",
+      "partnersNone": "None (proprietorship)",
+      "endorse": "Proposer & seconder · chosen by applicant, signed digitally",
+      "endorseLater": "The applicant chooses them after verification. This part of MCCI Digital opens with the next release.",
+      "checklist": "Officer checklist",
+      "checks": {
+        "docs": "All documents present and legible",
+        "identity": "CNIC matches authorized representative",
+        "ntn": "NTN active & address matches NTN certificate",
+        "address": "Business within MCCI jurisdiction (TOR 11 b)",
+        "proposers": "Proposer & seconder are valid members"
+      },
+      "history": "History",
+      "emails": "Emails to the applicant",
+      "emailNone": "No emails yet.",
+      "emailStatus": {
+        "queued": "Sending",
+        "sent": "Sent",
+        "failed": "Not sent"
+      },
+      "returnTitle": "Return for correction",
+      "returnHelp": "The applicant sees this note, the rejected documents and their reasons, by email and in the portal.",
+      "note": "Note for the applicant",
+      "reason": "Reason",
+      "rejectTitle": "Reject this application?",
+      "rejectHelp": "This is final. The applicant is told the reason by email and in the portal.",
+      "rejectDocTitle": "Reject {doc}",
+      "rejectDocHelp": "Say what is wrong so the applicant can fix it.",
+      "editTitle": "Correct {field}",
+      "editHelp": "The old and the new value and your reason are kept in the audit log.",
+      "value": "New value",
+      "classTitle": "Set membership class",
+      "classHelp": "Only the Secretary General overrides the class. The fee follows the class.",
+      "verifyTitle": "Verify documents?",
+      "verifyHelp": "Every document is accepted and the checklist is complete. The applicant is told by email and in the portal.",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "save": "Save",
+      "working": "Please wait…",
+      "verifyBlockedDocs": "Accept every document first.",
+      "verifyBlockedChecks": "Tick the officer checklist first.",
+      "sgOnly": "Secretary General only"
+    },
+    "done": {
+      "opened": "Review started.",
+      "docOk": "Document accepted.",
+      "docRejected": "Document rejected.",
+      "saved": "Saved.",
+      "returned": "Returned to the applicant.",
+      "verified": "Documents verified.",
+      "rejected": "Application rejected.",
+      "emailFailed": "Saved, but the email could not be sent. The applicant still sees the portal message."
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "wrongStage": "The application has moved on — reload the page.",
+      "reason": "Please write a reason.",
+      "incomplete": "The application is still missing items — return it for correction.",
+      "field": "This value is not accepted.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "email": {
+      "returnedSubject": "Correction needed — {token}",
+      "returnedBody": "MCCI has checked your membership application {token} and needs a correction:",
+      "returnedAction": "Fix and resubmit",
+      "verifiedSubject": "Documents verified — {token}",
+      "verifiedBody": "MCCI has checked and accepted the documents of your membership application {token}.",
+      "verifiedNext": "Next, your application needs a proposer and a seconder who are MCCI members. We will tell you when you can choose them in MCCI Digital.",
+      "rejectedSubject": "Membership application {token}",
+      "rejectedBody": "We are sorry: MCCI could not approve your membership application {token}. Reason:",
+      "track": "Open my application"
     }
   }
 }

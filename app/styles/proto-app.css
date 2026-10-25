@@ -46,3 +46,34 @@
   background: #fff;
   color: #b91c1c;
 }
+/* prototype style.css element rules for data tables (the generator copies class rules only) */
+.proto .tw table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.proto .tw th {
+  text-align: left;
+  color: var(--m);
+  font-size: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--b);
+  white-space: nowrap;
+  background: var(--card2);
+  letter-spacing: 0.04em;
+}
+.proto .tw td {
+  padding: 12px;
+  border-bottom: 1px solid var(--b);
+}
+.proto .tw tbody tr:hover {
+  background: var(--hov);
+  box-shadow: inset 3px 0 var(--gold);
+}
+.proto .tw tbody tr.st:hover {
+  background: none;
+  box-shadow: none;
+}
+.proto .tw a.rowlink {
+  color: inherit;
+  font-weight: 700;
+}

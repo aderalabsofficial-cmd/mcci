@@ -4,6 +4,8 @@ import { AreaShell } from '@/components/shell/area-shell';
 import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { getSession } from '@/lib/permissions/server';
+import '@/app/styles/proto.css';
+import '@/app/styles/proto-app.css';
 
 /**
  * Admin panel: active staff only, with a TOTP-verified session (docs/09). Members are sent to their portal, staff

@@ -8,10 +8,11 @@
  */
 
 export type Area = 'site' | 'portal' | 'admin';
-export type Milestone = 'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M6' | 'M7' | 'M8' | 'M9' | 'MA';
+// M5 = staff review (Release 2), M5c = committee desk and meetings (Release 4)
+export type Milestone = 'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M7' | 'M8' | 'M9' | 'MA';
 
 /** Milestones whose screens exist. Add a milestone here when its pages ship. */
-export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>(['M0', 'M1', 'M3']);
+export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>(['M0', 'M1', 'M3', 'M5']);
 
 export type IconName =
   | 'home'
@@ -116,7 +117,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'dashboard', '/admin', 'M0', 'home'),
   s('admin', 'requests', '/admin/requests', 'M5', 'userPlus'),
   s('admin', 'mreview', '/admin/mreview', 'M5', 'shield'),
-  s('admin', 'committee', '/admin/committee', 'M5', 'award'),
+  s('admin', 'committee', '/admin/committee', 'M5c', 'award'),
   s('admin', 'temp', '/admin/temp', 'M6', 'hourglass'),
   s('admin', 'certs', '/admin/certs', 'M6', 'printer'),
   s('admin', 'serials', '/admin/serials', 'M6', 'database'),
@@ -131,7 +132,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'payments', '/admin/payments', 'M6', 'card'),
   s('admin', 'psid', '/admin/psid', 'M6', 'receipt'),
   s('admin', 'events', '/admin/events', 'M8', 'calendar'),
-  s('admin', 'meetings', '/admin/meetings', 'M5', 'mic'),
+  s('admin', 'meetings', '/admin/meetings', 'M5c', 'mic'),
   s('admin', 'complaints', '/admin/complaints', 'M8', 'help'),
   s('admin', 'content', '/admin/content', 'M8', 'globe'),
   s('admin', 'notify', '/admin/notify', 'M8', 'mail'),
