@@ -17,6 +17,9 @@ export type Database = {
 "ai_extraction_finish":
 { Args: { "p_extraction": string,"p_fields": Json,"p_model": string,"p_ok": boolean }; Returns: undefined
                            },
+"app_check":
+{ Args: { "p_app": string,"p_item": string,"p_on": boolean }; Returns: undefined
+                           },
 "app_create":
 { Args: { "p_company": string }; Returns: {
               "id": string,"token": string
@@ -25,11 +28,30 @@ export type Database = {
 "app_doc_remove":
 { Args: { "p_document": string }; Returns: undefined
                            },
+"app_edit_field":
+{ Args: { "p_app": string,"p_field": string,"p_reason": string,"p_value": string }; Returns: undefined
+                           },
 "app_missing":
 { Args: { "p_app": string }; Returns: (string)[]
                            },
+"app_open":
+{ Args: { "p_app": string }; Returns: string
+                           },
+"app_reject":
+{ Args: { "p_app": string,"p_reason": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"to_email": string,"token": string
+            }[]
+                           },
 "app_resubmit":
 { Args: { "p_app": string }; Returns: undefined
+                           },
+"app_return":
+{ Args: { "p_app": string,"p_note": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"to_email": string,"token": string
+            }[]
+                           },
+"app_set_class":
+{ Args: { "p_app": string,"p_class": Database["public"]['Enums']["member_class"],"p_reason": string }; Returns: undefined
                            },
 "app_start":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -38,6 +60,11 @@ export type Database = {
                            },
 "app_submit":
 { Args: { "p_app": string }; Returns: string
+                           },
+"app_verify":
+{ Args: { "p_app": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"stage": string,"to_email": string,"token": string
+            }[]
                            },
 "app_withdraw":
 { Args: { "p_app": string,"p_reason"?: string }; Returns: undefined
@@ -52,6 +79,9 @@ export type Database = {
                            },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
+                           },
+"email_mark":
+{ Args: { "p_email": number,"p_error"?: string,"p_ok": boolean,"p_provider_id"?: string }; Returns: undefined
                            },
 "invite_accept":
 { Args: { "p_token": string,"p_user": string }; Returns: {
@@ -580,17 +610,29 @@ isOneToOne: false
                   ]
                 },"email_log": {
                   Row: {
-                    "at": string,"id": number,"provider_id": string | null,"status": string | null,"template_key": string | null,"to_email": string | null
+                    "application_id": string | null,"at": string,"created_by": string | null,"error": string | null,"id": number,"provider_id": string | null,"status": string | null,"template_key": string | null,"to_email": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "at"?: string,"id"?: never,"provider_id"?: string | null,"status"?: string | null,"template_key"?: string | null,"to_email"?: string | null
+                    "application_id"?: string | null,"at"?: string,"created_by"?: string | null,"error"?: string | null,"id"?: never,"provider_id"?: string | null,"status"?: string | null,"template_key"?: string | null,"to_email"?: string | null
                   }
                   Update: {
-                    "at"?: string,"id"?: never,"provider_id"?: string | null,"status"?: string | null,"template_key"?: string | null,"to_email"?: string | null
+                    "application_id"?: string | null,"at"?: string,"created_by"?: string | null,"error"?: string | null,"id"?: never,"provider_id"?: string | null,"status"?: string | null,"template_key"?: string | null,"to_email"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "email_log_application_id_fkey"
+      columns: ["application_id"]
+isOneToOne: false
+      referencedRelation: "applications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "email_log_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"email_templates": {
                   Row: {

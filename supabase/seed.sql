@@ -5,13 +5,14 @@
 -- ───────── test helpers: run one statement as a given user (role switch + JWT claims, both GUC styles) ─────────
 create schema if not exists tests;
 
-create function tests._become(p_uid uuid, p_role text) returns void
+-- Sessions are 2-step verified (aal2) unless p_aal says otherwise: staff levels need aal2 (migration 0310).
+create function tests._become(p_uid uuid, p_role text, p_aal text default 'aal2') returns void
   language plpgsql
   as $$
 begin
   perform set_config('request.jwt.claim.sub', coalesce(p_uid::text, ''), true);
   perform set_config('request.jwt.claim.role', p_role, true);
-  perform set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', p_role)::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', p_role, 'aal', p_aal)::text, true);
   perform set_config('role', p_role, true);
 end $$;
 
@@ -41,6 +42,37 @@ begin
 end $$;
 
 -- run a query returning one number as the user, e.g. 'select count(*) from public.members'
+-- the same, with a password-only session (no 2-step verification)
+create function tests.num_as_aal1(p_uid uuid, p_sql text) returns bigint
+  language plpgsql
+  as $$
+declare n bigint;
+begin
+  perform tests._become(p_uid, 'authenticated', 'aal1');
+  begin
+    execute p_sql into n;
+  exception when others then
+    perform tests._restore();
+    raise;
+  end;
+  perform tests._restore();
+  return n;
+end $$;
+
+create function tests.exec_as_aal1(p_uid uuid, p_sql text) returns void
+  language plpgsql
+  as $$
+begin
+  perform tests._become(p_uid, 'authenticated', 'aal1');
+  begin
+    execute p_sql;
+  exception when others then
+    perform tests._restore();
+    raise;
+  end;
+  perform tests._restore();
+end $$;
+
 create function tests.num_as(p_uid uuid, p_sql text, p_role text default null) returns bigint
   language plpgsql
   as $$
