@@ -165,6 +165,27 @@ export type Database = {
 "end_withdraw":
 { Args: { "p_endorsement": string }; Returns: undefined
                            },
+"import_commit":
+{ Args: { "p_confirm": string,"p_import": string }; Returns: {
+              "created": number,"failed": number,"skipped": number,"updated": number
+            }[]
+                           },
+"import_decide":
+{ Args: { "p_decision": string,"p_import": string,"p_row": number }; Returns: undefined
+                           },
+"import_discard":
+{ Args: { "p_import": string }; Returns: undefined
+                           },
+"import_rollback":
+{ Args: { "p_import": string }; Returns: {
+              "kept": number,"removed": number
+            }[]
+                           },
+"import_stage":
+{ Args: { "p_ai": boolean,"p_file_name": string,"p_file_path": string,"p_rows": Json,"p_source": string }; Returns: {
+              "import_id": string,"rows_error": number,"rows_exists": number,"rows_new": number,"rows_possible": number,"rows_total": number
+            }[]
+                           },
 "invite_accept":
 { Args: { "p_token": string,"p_user": string }; Returns: {
               "company_id": string,"kind": string
@@ -883,21 +904,59 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"imports": {
+                },"import_rows": {
                   Row: {
-                    "at": string,"by_user": string | null,"file_path": string | null,"id": string,"report": Json | null,"rows_error": number | null,"rows_ok": number | null,"rows_total": number | null
+                    "confidence": number | null,"created_member": string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"issues": NonNullable<Json>,"match": string,"match_member": string | null,"raw": Json | null,"result": string | null,"row_no": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "at"?: string,"by_user"?: string | null,"file_path"?: string | null,"id"?: string,"report"?: Json | null,"rows_error"?: number | null,"rows_ok"?: number | null,"rows_total"?: number | null
+                    "confidence"?: number | null,"created_member"?: string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"issues"?: NonNullable<Json>,"match": string,"match_member"?: string | null,"raw"?: Json | null,"result"?: string | null,"row_no": number
                   }
                   Update: {
-                    "at"?: string,"by_user"?: string | null,"file_path"?: string | null,"id"?: string,"report"?: Json | null,"rows_error"?: number | null,"rows_ok"?: number | null,"rows_total"?: number | null
+                    "confidence"?: number | null,"created_member"?: string | null,"data"?: NonNullable<Json>,"decision"?: string,"import_id"?: string,"issues"?: NonNullable<Json>,"match"?: string,"match_member"?: string | null,"raw"?: Json | null,"result"?: string | null,"row_no"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "import_rows_created_member_fkey"
+      columns: ["created_member"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "import_rows_import_id_fkey"
+      columns: ["import_id"]
+isOneToOne: false
+      referencedRelation: "imports"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "import_rows_match_member_fkey"
+      columns: ["match_member"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"imports": {
+                  Row: {
+                    "ai": boolean,"at": string,"by_user": string | null,"committed_at": string | null,"committed_by": string | null,"file_name": string | null,"file_path": string | null,"id": string,"report": Json | null,"rows_error": number | null,"rows_ok": number | null,"rows_total": number | null,"source": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "ai"?: boolean,"at"?: string,"by_user"?: string | null,"committed_at"?: string | null,"committed_by"?: string | null,"file_name"?: string | null,"file_path"?: string | null,"id"?: string,"report"?: Json | null,"rows_error"?: number | null,"rows_ok"?: number | null,"rows_total"?: number | null,"source"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "ai"?: boolean,"at"?: string,"by_user"?: string | null,"committed_at"?: string | null,"committed_by"?: string | null,"file_name"?: string | null,"file_path"?: string | null,"id"?: string,"report"?: Json | null,"rows_error"?: number | null,"rows_ok"?: number | null,"rows_total"?: number | null,"source"?: string | null,"status"?: string
                   }
                   Relationships: [
                     {
       foreignKeyName: "imports_by_user_fkey"
       columns: ["by_user"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "imports_committed_by_fkey"
+      columns: ["committed_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]

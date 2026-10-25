@@ -5,7 +5,30 @@ import { createServer } from 'node:http';
 
 const PORT = Number(process.env.FAKE_OPENAI_PORT ?? 3998);
 const f = (value, confidence) => ({ value, confidence });
+const member = (no, company, rep, validTo, status, c = 95) => ({
+  membership_no: f(no, 97),
+  class: f('Associate', 96),
+  women: f(null, 0),
+  company_name: f(company, 95),
+  business_type: f('Proprietorship', 90),
+  sector: f(null, 0),
+  address: f(null, 0),
+  ntn: f(null, 0),
+  gst: f(null, 0),
+  representative_name: f(rep, 94),
+  mobile: f(null, 0),
+  email: f(null, 0),
+  member_since: f(null, 0),
+  valid_to: f(validTo, c),
+  status: f(status, 93),
+  certificate_serial: f(null, 0),
+});
 const ANSWERS = {
+  // a PDF member directory (lib/import/ai.ts): one clear row, one the "AI" was unsure of
+  member_directory: {
+    members: [member('MCCI-A-0050', 'Scanned Traders', 'Rep Scan', '31 March 2027', 'Permanent'), member('MCCI-A-0051', 'Blurry & Co', 'Rep Blur', '31-03-2027', 'Active', 55)],
+    more_than_limit: false,
+  },
   ntn: {
     name: f('Fresh Traders (AI)', 96),
     ntn: f('7654321-0', 97),

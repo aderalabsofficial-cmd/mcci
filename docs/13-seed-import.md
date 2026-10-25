@@ -27,3 +27,10 @@ Process: upload → server parses (SheetJS) → validation report (duplicates, b
 class) shown as a table with row numbers → staff fix or skip rows → **Commit** creates companies, members and an
 `Owner` invitation per email (sent later in a controlled batch). Import is idempotent on `membership_no`
 (update instead of duplicate). Each run stored in `imports` with the report.
+
+As built (migration 0360, `lib/import/*`, `docs/20` Phase C): CSV, `.xlsx`, `.xls` and PDF (PDF read by AI only with
+per-file consent). A row with the same `membership_no` is never duplicated and **not updated unless the admin chooses
+"Update"** for that row, and only for a member that was itself imported (never one issued or managed on the platform).
+Representative CNIC is accepted in files but not stored. Header spellings found in chamber registers are recognised
+(e.g. "Name of Firm", "Valid Upto", "Authorised Representative"); dates may be day-first (31/03/2027, 31 Mar 2027).
+Owner invitations for imported members are not sent by the import (a later, controlled step).

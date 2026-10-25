@@ -552,3 +552,38 @@ script that asserts each insertion point); adds `companies.demo`, `demo_expires_
 server-side, never on agenda nor decided, one-step removal, official counts unchanged, grants); e2e `demo.spec.ts`
 (SG adds 2 demo members + 1 applicant → invitations → own passwords → requests → both sign with emailed codes →
 removal deletes rows and sign-in accounts).
+
+Production (26 Oct 2026, release 5f1a812): backup `mcci-20261025T180402Z` + restore drill PASS before 0350; 0350 applied
+in one transaction, 0 pending; row counts identical before and after; grants checked (`api.demo_add` / `demo_clear`
+`authenticated` only, private helpers without client access, the four replaced functions keep their grants);
+anonymous RPC to the demo functions → 401; health OK. No demo accounts were created by the deployment (the SG creates
+them in the app).
+
+### Phase C — existing-member directory import (migration 0360; local, awaiting approval to deploy)
+
+Admin → **Data Import** (`/admin/import`, staff reg ≥ 2; roll back reg ≥ 3). CSV, Excel `.xlsx` / `.xls` (SheetJS
+0.20.3, pinned from the SheetJS CDN with its integrity hash — the npm `xlsx` package is outdated) and PDF (typed or
+scanned). The file type comes from its bytes; 10 MB, 5,000 rows, 500 characters per cell; password-protected files are
+refused; formulas are not evaluated. A PDF is read by AI only when AI reading is on **and** the admin ticks, for that
+file, that it may be sent to OpenAI (`store: false`); about 40 members per PDF, because nginx gives an app request 60 s
+(raising that needs an nginx change and the owner's approval). The file goes to the private `imports` bucket (now also
+`.xls` and PDF); the representative's CNIC is not kept.
+
+1. **Upload** → every row normalised and checked (`lib/import/normalize.ts`) and checked again in the database
+   (`private.import_row_errors`); stored as a preview (`import_rows`); **nothing in the register changes**.
+2. **Preview** → per row: the checks (errors block the row; warnings are shown, e.g. class taken from the number,
+   status worked out from the date, no email, AI unsure), what it matches (same membership number = already in the
+   register, with the differences shown; same NTN or company name = possible duplicate) and the decision. Preselected
+   is only a clean, clearly new row; existing members and possible duplicates are skipped unless the admin decides
+   otherwise; a member the platform issued or manages is never updated by a file; low-certainty AI rows are skipped.
+3. **Import** → the admin types IMPORT; one transaction; members keep the file's numbers and statuses (never allocated,
+   digits never changed), are marked `imported`, are not applicants and are **not listed publicly** (TODO(MCCI):
+   listing imported members in the directory is MCCI's decision); the official number sequences move past the highest
+   imported number. Each created / updated row and each decision is in the audit log with the reason.
+4. **Roll back** (reg ≥ 3) → members this import created are removed unless something refers to them (sign-in,
+   application, payment, endorsement, document, temporary membership); updates stay (old values in the audit log); the
+   sequences do not go back.
+
+Not done here: owner invitations for imported members (docs/13 "sent later in a controlled batch"); editing a row in
+the preview (fix the file and upload it again). **No real directory data is imported until an authorised admin reviews
+and confirms the preview on production.**
