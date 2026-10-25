@@ -268,3 +268,23 @@ scripts/deploy/release.sh <commit>            # app build + atomic switch + heal
 Rollback: the app with `release.sh --rollback` (the previous release still runs on the old schema: it never calls
 the new functions or the new view keys). The migration is additive; to undo it fully, restore the backup taken first
 (downtime of the restore; only applications created after the migration would be lost).
+
+**Gate 6 done 25 Oct 2026 (approved by the owner), evidence:**
+
+| Check | Result |
+|---|---|
+| Tooling | `/opt/mcci-deploy-4dd464c` (detached at `4dd464c`); migration file sha256 `5f1277f52015010e…` = reviewed file; stack compose files and selfhost scripts identical to `1b29934` |
+| Backup before | `mcci-20261025T045402Z`: 7 parts decrypt, checksums OK; restore drill 13/13 PASS (WAL replay, roles/schemas/policies/55 functions, row counts in 103 tables, Vault decrypts, negative control); drill removed |
+| Ledger | dry run: 20 applied, exactly 1 pending (`20261024000300_app_wizard`); `--apply-next` → 21 rows, 0 pending |
+| Permissions | the 7 new `api` functions: definer, `search_path=""`, execute for `authenticated` only (no `anon`, no PUBLIC); `private.app_missing`: no client execute; `private.class_of`: pure invoker function with default execute, unreachable to clients (no `private` schema usage), same as `private.normal_email` |
+| View | `public_settings` = `chamber, fees, lang, app, membership, sla`; `security_invoker=false`, owner and grants unchanged; anon sees 6 keys |
+| Data | 94 tables before/after: only `private.settings` 12→13, `audit_log` 745→746 (the audited insert), ledger 20→21 |
+| Backup after | `mcci-20261025T045933Z`: restore drill 13/13 PASS (64 functions). pgTAP on that copy did not run (the drill had already removed its container; nothing left behind) — covered by the dry run 386/386 on the same image |
+| Release | `release.sh 4dd464c`: built as `mcci-web`, switched `1b29934 → 4dd464c`, health `{"ok":true,"release":"4dd464c"}`; `1b29934` kept for `--rollback`; `sharp` loads as `mcci-web` |
+| Smoke (no account) | `/`, `/login`, `/register`, `/ur`, `/ur/login`, `/ur/register`, `/api/health` 200; `/portal`, `/portal/join`, `/ur/portal/mtrack`, `/portal/form` → login with `next`; no errors in the journal |
+| AI | process has `OPENAI_API_KEY` (167 chars) and no `AI_EXTRACTION` → document reading off (unit test: the key alone never enables it) |
+| Unchanged | nginx fingerprint `d856d27a`; aderalabs.tech, fintax, iqpigeon.com, whatsappapi 200; demo 401; stack 9/9 healthy |
+
+Member smoke (sign-in, application, upload, submit, receipt email) is done by the owner with their own account; the
+server-side results are checked afterwards. Until the staff review desk (Release 2), submitted applications are listed
+for MCCI by a read-only query on request.
