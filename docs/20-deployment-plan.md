@@ -559,7 +559,7 @@ in one transaction, 0 pending; row counts identical before and after; grants che
 anonymous RPC to the demo functions → 401; health OK. No demo accounts were created by the deployment (the SG creates
 them in the app).
 
-### Phase C — existing-member directory import (migration 0360; local, awaiting approval to deploy)
+### Phase C — existing-member directory import (migration 0360; deployed 26 Oct 2026, release f6beb75)
 
 Admin → **Data Import** (`/admin/import`, staff reg ≥ 2; roll back reg ≥ 3). CSV, Excel `.xlsx` / `.xls` (SheetJS
 0.20.3, pinned from the SheetJS CDN with its integrity hash — the npm `xlsx` package is outdated) and PDF (typed or
@@ -587,3 +587,22 @@ file, that it may be sent to OpenAI (`store: false`); about 40 members per PDF, 
 Not done here: owner invitations for imported members (docs/13 "sent later in a controlled batch"); editing a row in
 the preview (fix the file and upload it again). **No real directory data is imported until an authorised admin reviews
 and confirms the preview on production.**
+
+Tests (local, not production): unit 272/272 ( 35: numbers kept digit for digit, day-first dates,
+checks, header spellings, CNIC dropped, CSV / xlsx / xls from bytes, refusals); pgTAP  34 checks;
+isolated dry run 624 ok, 0 not ok, 20/20 files leave no rows; e2e  3/3 (CSV preview → IMPORT →
+register → roll back; non-spreadsheet refused; PDF via the fake AI with consent → low-certainty row not selected →
+discarded). Full suite: 499 passed, 3 failed, 254 skipped. Two failures were on the new page (red badge contrast, a
+38 px history link) and are fixed (the red badge was also below AA on the Members Register); the third
+( member sign-in redirect) passed on rerun. Page checks rerun 56/56.
+
+**Production (26 Oct 2026), evidence:** tooling ; migration sha256  =
+tested file; backup  verified, restore drill PASS (89 policies, 130 functions, 103 tables /
+2065 rows identical; Vault check), drill directory removed; production dry run exactly 1 pending →  → 0
+pending. Exact row counts identical in all 93 existing tables (only the new, empty ); execute for  only (no anon, no service role);  no client access;  RLS on,
+policy reg ≥ 2, decision audit trigger;  on delete set null; bucket  xlsx / csv / xls /
+pdf, still private; sequences unchanged (C 1134, A 2205); 0 imports, 0 members. Release  live (,
+ kept), health OK. Smoke: , , ,  200;  (and ), ,
+,  → login; with the public key  → 42501,  → 42501, storage listing empty. AI extraction on; no CRON_SECRET, timer or jobs unit; 1 staff with verified 2-step; nginx
+unchanged (app ),  OK. **No directory data was imported**: the first real import waits for an
+authorised admin to upload MCCI's file and review the preview.
