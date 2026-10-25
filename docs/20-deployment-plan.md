@@ -429,14 +429,14 @@ No app release and no migration: production stays on `784d9b1` (`057713d` kept).
 
 ### Gate 10 — Release 5: payments and temporary membership (migration 0340 + release; awaiting the owner's approval)
 
-Review of `supabase/migrations/20261026000340_payments_temporary.sql` (sha256 `0d90160d806e8edf`) against production
+Review of `supabase/migrations/20261026000340_payments_temporary.sql` (sha256 `c94ad94cfcdb318e`) against production
 (read-only, 25 Oct 2026: 0 vouchers, 0 receipts, 0 documents, 0 temporary memberships, 0 print items, 0 members,
 2 draft applications; `settings.bank.confirmed = false`; none of the new names exist):
 
 | Change | Effect on what exists |
 |---|---|
 | `payment_receipts.path` nullable + `method` (upload / counter) + check that uploads have a path | table is empty |
-| `private.voucher_accepts_receipt` replaced: also requires `settings.bank.confirmed` | the storage policy for receipts now refuses uploads until MCCI confirms the bank account (matches the "do not pay yet" notice) |
+| `private.voucher_accepts_receipt` replaced: also requires `settings.bank.confirmed`; PUBLIC/anon execute revoked (left by 0230; anon has no usage on `private`, so it was unreachable) | the storage policy for receipts now refuses uploads until MCCI confirms the bank account (matches the "do not pay yet" notice) |
 | new `api` functions: `pay_upload`, `pay_verify`, `pay_counter`, `pay_reject`, `voucher_cancel`, `voucher_reissue`, `temp_issue`, `temp_extend`, `temp_revoke`, `qr_revoke`, `cert_view`, `settings_bank_save`, `settings_bank`, `temp_policy` (definer, `search_path=""`, `authenticated` only); `doc_verify`, `temp_jobs`, `voucher_jobs` (service role only) | none exist |
 | new `private` helpers: `bank_confirmed`, `membership_year_end`, `company_notify_t`, `company_email`, `temp_issue`, `voucher_paid`, `pay_settle` (no API role) | none exist |
 | no drop / delete / truncate; no settings changed | — |
@@ -456,7 +456,7 @@ and figures per designation); member Payments (receipt upload once the bank is c
 with QR, print, share), My Membership certificates; public Verify. Jobs: `POST /api/cron/daily` (temporary alerts /
 expiry, past-due vouchers) — not scheduled; the timer stays a separate approval.
 
-Tests: pgTAP `170_payments_temporary` 55 checks, all files 565/565 locally; unit 231/231; e2e `payments.spec.ts`
+Tests: pgTAP `170_payments_temporary` 56 checks, all files 566/566 locally; isolated dry run 0 failures, no rows or containers left; unit 231/231; e2e `payments.spec.ts`
 (counter payment → temporary membership → certificate → public verify → extend → revoke; bank confirm → upload →
 reject → upload → verify, emails sent) 4/4; full suite (all projects, 713): 478 passed, 1 failed, 234 skipped
 (project-specific), 0 timed out. The failure is the Release 2 review test (not changed by this release); see below.

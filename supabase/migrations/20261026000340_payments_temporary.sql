@@ -35,6 +35,9 @@ create or replace function private.voucher_accepts_receipt(p_voucher uuid, p_com
     select private.bank_confirmed() and exists (select 1 from public.payment_vouchers v
                    where v.id = p_voucher and v.company_id = p_company and v.status in ('Unpaid','Rejected'))
   $$;
+-- 0230 granted it to authenticated and service_role (the storage policy runs as the uploader) but left PostgreSQL's
+-- default PUBLIC execute; anon has no usage on schema private, so it was unreachable — closed here all the same
+revoke all on function private.voucher_accepts_receipt(uuid, uuid) from public, anon;
 
 -- 31 March that ends the current membership year (1 April – 31 March, docs/02), in Asia/Karachi
 create function private.membership_year_end() returns date

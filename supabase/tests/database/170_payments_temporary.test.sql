@@ -5,7 +5,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(55);
+select plan(56);
 
 -- an approved application of company A (through the committee functions of 0330)
 create temp table t_x on commit drop as select (now() at time zone 'Asia/Karachi')::date as d;
@@ -118,6 +118,9 @@ select ok(not has_function_privilege('anon', 'api.pay_upload(text,text,text,text
       and not has_function_privilege('authenticated', 'api.temp_jobs()', 'execute')
       and not has_function_privilege('authenticated', 'private.temp_issue(uuid)', 'execute')
       and has_function_privilege('service_role', 'api.doc_verify(text)', 'execute'), 'grants: browsers get the api functions only; jobs and verification are server-side');
+select ok(not has_function_privilege('anon', 'private.voucher_accepts_receipt(uuid,uuid)', 'execute')
+      and has_function_privilege('authenticated', 'private.voucher_accepts_receipt(uuid,uuid)', 'execute'),
+  'the receipt storage check: uploaders (authenticated) only, not anonymous or PUBLIC');
 
 select * from finish();
 rollback;
