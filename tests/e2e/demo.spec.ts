@@ -16,7 +16,8 @@ test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'deskto
 test.describe.configure({ mode: 'serial' });
 
 const MAILPIT = 'http://127.0.0.1:54324';
-const tag = randomUUID().slice(0, 6);
+// never all digits: emails are searched for the 6-digit signing code
+const tag = `t${randomUUID().slice(0, 5)}`;
 const password = randomBytes(18).toString('base64url');
 const people = {
   proposer: { email: `demo-p-${tag}@test.local`, company: `Alpha ${tag}`, rep: `Demo Proposer ${tag}`, kind: 'member' },

@@ -21,7 +21,8 @@ let admin: SupabaseClient;
 let applicant: Person;
 const endorsers: Person[] = [];
 let appId = '';
-const tag = randomUUID().slice(0, 6);
+// never all digits: emails are searched for the 6-digit signing code
+const tag = `t${randomUUID().slice(0, 5)}`;
 
 async function person(name: string): Promise<Person> {
   const email = `e2e-end-${randomUUID().slice(0, 8)}@test.local`;
