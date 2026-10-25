@@ -105,6 +105,16 @@ export type Database = {
 "company_user_update":
 { Args: { "p_active": boolean,"p_company": string,"p_role": Database["public"]['Enums']["company_role"],"p_user": string }; Returns: undefined
                            },
+"demo_add":
+{ Args: { "p_class": Database["public"]['Enums']["member_class"],"p_company": string,"p_days"?: number,"p_kind": string,"p_owner_email": string,"p_owner_name": string,"p_rep": string }; Returns: {
+              "company_id": string,"invitation_id": string,"member_no": string,"token": string
+            }[]
+                           },
+"demo_clear":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": string,"kind": string
+            }[]
+                           },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
                            },
@@ -611,14 +621,14 @@ isOneToOne: false
                   ]
                 },"companies": {
                   Row: {
-                    "address": string | null,"biz_type": Database["public"]['Enums']["biz_type"],"created_at": string,"email": string | null,"established": string | null,"fax": string | null,"gst": string | null,"id": string,"manufacturing": boolean,"name": string,"nature_items": (string)[] | null,"nature_sector": string | null,"ntn": string | null,"particulars": string | null,"sales_tax": boolean,"sector": string | null,"tel": string | null,"turnover_50m": boolean,"web": string | null
+                    "address": string | null,"biz_type": Database["public"]['Enums']["biz_type"],"created_at": string,"demo": boolean,"demo_expires_at": string | null,"email": string | null,"established": string | null,"fax": string | null,"gst": string | null,"id": string,"manufacturing": boolean,"name": string,"nature_items": (string)[] | null,"nature_sector": string | null,"ntn": string | null,"particulars": string | null,"sales_tax": boolean,"sector": string | null,"tel": string | null,"turnover_50m": boolean,"web": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"biz_type": Database["public"]['Enums']["biz_type"],"created_at"?: string,"email"?: string | null,"established"?: string | null,"fax"?: string | null,"gst"?: string | null,"id"?: string,"manufacturing"?: boolean,"name": string,"nature_items"?: (string)[] | null,"nature_sector"?: string | null,"ntn"?: string | null,"particulars"?: string | null,"sales_tax"?: boolean,"sector"?: string | null,"tel"?: string | null,"turnover_50m"?: boolean,"web"?: string | null
+                    "address"?: string | null,"biz_type": Database["public"]['Enums']["biz_type"],"created_at"?: string,"demo"?: boolean,"demo_expires_at"?: string | null,"email"?: string | null,"established"?: string | null,"fax"?: string | null,"gst"?: string | null,"id"?: string,"manufacturing"?: boolean,"name": string,"nature_items"?: (string)[] | null,"nature_sector"?: string | null,"ntn"?: string | null,"particulars"?: string | null,"sales_tax"?: boolean,"sector"?: string | null,"tel"?: string | null,"turnover_50m"?: boolean,"web"?: string | null
                   }
                   Update: {
-                    "address"?: string | null,"biz_type"?: Database["public"]['Enums']["biz_type"],"created_at"?: string,"email"?: string | null,"established"?: string | null,"fax"?: string | null,"gst"?: string | null,"id"?: string,"manufacturing"?: boolean,"name"?: string,"nature_items"?: (string)[] | null,"nature_sector"?: string | null,"ntn"?: string | null,"particulars"?: string | null,"sales_tax"?: boolean,"sector"?: string | null,"tel"?: string | null,"turnover_50m"?: boolean,"web"?: string | null
+                    "address"?: string | null,"biz_type"?: Database["public"]['Enums']["biz_type"],"created_at"?: string,"demo"?: boolean,"demo_expires_at"?: string | null,"email"?: string | null,"established"?: string | null,"fax"?: string | null,"gst"?: string | null,"id"?: string,"manufacturing"?: boolean,"name"?: string,"nature_items"?: (string)[] | null,"nature_sector"?: string | null,"ntn"?: string | null,"particulars"?: string | null,"sales_tax"?: boolean,"sector"?: string | null,"tel"?: string | null,"turnover_50m"?: boolean,"web"?: string | null
                   }
                   Relationships: [
                     

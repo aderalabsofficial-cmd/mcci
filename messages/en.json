@@ -2190,5 +2190,49 @@
     "activity": "Latest on membership files",
     "noActivity": "No activity yet.",
     "system": "System"
+  },
+  "demo": {
+    "title": "Demo members (for presentations)",
+    "badge": "DEMO — not official",
+    "help": "Synthetic accounts labelled DEMO that use the real sign-in and proposer & seconder signing. They are never counted as members, get DEMO numbers (not official ones), can only endorse demo applicants, and are removed in one step after the meeting.",
+    "none": "No demo accounts.",
+    "applicant": "Demo applicant",
+    "cols": {
+      "company": "Company",
+      "no": "Demo No. / role",
+      "owner": "Sign-in (invitation)",
+      "expires": "Remove by"
+    },
+    "add": "Add demo account",
+    "addTitle": "Add a demo account",
+    "addHelp": "Use a mailbox someone at the presentation can open: the invitation and the 6-digit signing codes go there.",
+    "kind": "Account",
+    "kinds": {
+      "member": "Demo member (can propose / second)",
+      "applicant": "Demo applicant"
+    },
+    "cls": "Class",
+    "company": "Company name (DEMO is added)",
+    "rep": "Representative",
+    "owner": "Name of the person signing in",
+    "email": "Mailbox for the invitation and codes",
+    "days": "Remove after (days)",
+    "addOk": "Add and invite",
+    "clear": "Remove all demo data",
+    "clearTitle": "Remove all demo data?",
+    "clearHelp": "Deletes every demo company, member, applicant, application, endorsement, file and demo sign-in account. Official data is not touched.",
+    "clearOk": "Remove demo data",
+    "done": {
+      "added": "Demo account added ({no}); the invitation went to {email}.",
+      "addedNoEmail": "Demo account added ({no}), but the invitation email to {email} could not be sent.",
+      "cleared": "Demo data removed: {companies} demo companies, {accounts} sign-in accounts, {files} files."
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "fields": "Please check the fields (names, email, days 1–30).",
+      "required": "Company, representative and email are required.",
+      "too_many": "At most 10 demo accounts at a time.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }

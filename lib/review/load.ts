@@ -20,13 +20,15 @@ export interface PipelineRow {
   cls: 'Corporate' | 'Associate' | null;
   women: boolean;
   submitted_at: string | null;
+  /** demo mode (0350): shown marked, never counted */
+  demo: boolean;
 }
 
 export async function loadPipeline(): Promise<PipelineRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('applications')
-    .select('id, token, stage, form, class, women, submitted_at')
+    .select('id, token, stage, form, class, women, submitted_at, companies(demo)')
     .neq('stage', 'draft')
     .order('submitted_at', { ascending: false, nullsFirst: false });
   if (error) throw new Error(`applications: ${error.message}`);
@@ -41,6 +43,7 @@ export async function loadPipeline(): Promise<PipelineRow[]> {
       cls: a.class,
       women: a.women,
       submitted_at: a.submitted_at,
+      demo: (a.companies as unknown as { demo: boolean } | null)?.demo === true,
     };
   });
 }

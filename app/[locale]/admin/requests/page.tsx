@@ -48,7 +48,8 @@ export default async function PipelinePage({ params }: Props) {
   }
   const rows = await loadPipeline();
   const m = (k: string, v?: Record<string, string>) => msg(locale, `review.pipeline.${k}`, v);
-  const at = (...s: string[]) => rows.filter((r) => s.includes(r.stage));
+  // counts and the board are official files only; demo files (0350) appear in the table, marked DEMO
+  const at = (...s: string[]) => rows.filter((r) => !r.demo && s.includes(r.stage));
   const cols: [string, string[], string][] = [
     ['review', ['submitted', 'review'], '#f59e0b'],
     ['returned', ['returned'], '#ef4444'],
@@ -68,7 +69,7 @@ export default async function PipelinePage({ params }: Props) {
       : '—';
   const tableRows: PipelineTableRow[] = rows.map((r) => ({
     token: r.token,
-    company: r.name,
+    company: r.demo ? `DEMO · ${r.name}` : r.name,
     type: r.biz ? msg(locale, `membership.biz.${r.biz}.name`) : '—',
     cls: r.cls ? `${msg(locale, `membership.classes.${r.cls}`)}${r.women ? ' · W' : ''}` : '—',
     submitted: date(r.submitted_at),

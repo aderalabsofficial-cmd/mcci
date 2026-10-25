@@ -531,3 +531,24 @@ saved after reload; connection cut: Retry saves; staff action cut off: "not conf
 full suite 482 passed, 0 failed, 240 skipped. Under the artificial 4-browser stress on the laptop the review test still
 fails 3–4 of 10 runs (slow/cut-off navigations and actions) — now always with an explicit outcome; to be re-measured
 against the Linux server build before calling the cause closed.
+
+### Phase B — demo mode for presentations (migration 0350)
+
+Five synthetic, labelled DEMO accounts for the meeting, without fabricating official records: `companies.demo` marks a
+demo company; demo members are Permanent with `DEMO-A-01` / `DEMO-C-01` numbers (never from the official sequences),
+not publicly listed; demo members endorse demo applicants only and real members real ones (`endorse_why`, candidate
+list); demo files are never placed on a committee agenda nor decided (no membership number, no voucher); official
+counts and lists (register, dashboard, pipeline counts, Committee Desk) leave demo out (the pipeline table shows demo
+files marked DEMO). The SG creates them in **Members Register → Demo members** with a mailbox per person (invitation and
+6-digit signing codes go there); each person sets their own password. **Reset after the meeting:** Members Register →
+Demo members → **Remove all demo data** (`api.demo_clear` + service-role cleanup of demo sign-in accounts and files);
+each demo company also carries `demo_expires_at`. Fallback (SQL, removes rows; accounts then via Auth admin):
+`select * from api.demo_clear();` as a reg ≥ 3 staff session.
+
+Migration 0350 replaces four functions with exact copies plus the marked demo checks (generated from 0320 / 0330 by a
+script that asserts each insertion point); adds `companies.demo`, `demo_expires_at`, `private.company_is_demo`,
+`api.demo_add`, `api.demo_clear` (reg ≥ 3, 2-step, `authenticated` only). Tests: pgTAP 590/590 (new `180_demo_mode`,
+24 checks: who may add, DEMO labels and numbers, official sequence untouched, demo/real separation both ways and
+server-side, never on agenda nor decided, one-step removal, official counts unchanged, grants); e2e `demo.spec.ts`
+(SG adds 2 demo members + 1 applicant → invitations → own passwords → requests → both sign with emailed codes →
+removal deletes rows and sign-in accounts).

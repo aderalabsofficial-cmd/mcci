@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/admin/no-access';
 import { AddMember } from '@/components/members/add-member';
+import { DemoCard, type DemoRow } from '@/components/members/demo-card';
 import { Kpi } from '@/components/review/kpi';
 import { PageHeader } from '@/components/shared/page-header';
 import { asLocale } from '@/i18n/locale';
@@ -40,15 +41,33 @@ export default async function MembersPage({ params }: Props) {
       </>
     );
   }
+  const date = (iso: string) => new Date(iso).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const supabase = await createClient();
   const { data: members } = await supabase
     .from('members')
-    .select('id, member_no, class, women, status, rep_name, valid_to, company_id, companies(name)')
+    .select('id, member_no, class, women, status, rep_name, valid_to, company_id, companies!inner(name, demo)')
+    .eq('companies.demo', false)
     .order('member_no');
-  const { data: invites } = await supabase.from('invitations').select('company_id, status').eq('kind', 'company_user');
+  const { data: invites } = await supabase.from('invitations').select('company_id, status, email').eq('kind', 'company_user');
+  // demo mode (0350): shown apart, never counted with the official members
+  const { data: demoCos } = await supabase
+    .from('companies')
+    .select('id, name, demo_expires_at, members(member_no, class)')
+    .eq('demo', true)
+    .order('created_at');
+  const demoRows: DemoRow[] = (demoCos ?? []).map((c) => {
+    const mem = (c.members as unknown as { member_no: string; class: string }[] | null)?.[0];
+    const inv = (invites ?? []).find((i) => i.company_id === c.id);
+    return {
+      company: c.name,
+      memberNo: mem?.member_no ?? null,
+      cls: mem?.class ?? null,
+      owner: inv ? `${inv.email} · ${m(`owner_${inv.status}`)}` : '—',
+      expires: c.demo_expires_at ? date(c.demo_expires_at) : '—',
+    };
+  });
   const invited = new Map((invites ?? []).map((i) => [i.company_id, i.status]));
   const rows = members ?? [];
-  const date = (iso: string) => new Date(iso).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
     <div className="proto">
@@ -109,6 +128,7 @@ export default async function MembersPage({ params }: Props) {
           </table>
         </div>
       </div>
+      <DemoCard locale={locale} rows={demoRows} canManage={level >= 3} />
     </div>
   );
 }

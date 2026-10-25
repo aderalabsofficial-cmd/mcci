@@ -83,8 +83,10 @@ export async function loadDesk(meetingId?: string): Promise<Desk> {
   const [{ data: apps, error }, { data: items }, { data: ends }] = await Promise.all([
     supabase
       .from('applications')
-      .select('id, token, stage, form, class, women, photo_path')
-      .in('stage', ['committee', 'payment', 'temp', 'permanent']),
+      .select('id, token, stage, form, class, women, photo_path, companies!inner(demo)')
+      .in('stage', ['committee', 'payment', 'temp', 'permanent'])
+      // demo files (0350) never reach the committee's agenda or counts
+      .eq('companies.demo', false),
     supabase.from('committee_items').select('application_id, meeting_id, item_no, decision, note, decided_at'),
     supabase
       .from('endorsements')

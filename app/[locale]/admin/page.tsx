@@ -45,8 +45,12 @@ export default async function AdminHomePage({ params }: Props) {
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
   const [review, committee, receipts, expiring, paidThisMonth, members, temps, history] = await Promise.all([
-    lv('mem') >= 1 ? count(supabase.from('applications').select('id', head).in('stage', ['submitted', 'review'])) : 0,
-    lv('cmt') >= 1 ? count(supabase.from('applications').select('id', head).eq('stage', 'committee')) : 0,
+    lv('mem') >= 1
+      ? count(supabase.from('applications').select('id, companies!inner(demo)', head).in('stage', ['submitted', 'review']).eq('companies.demo', false))
+      : 0,
+    lv('cmt') >= 1
+      ? count(supabase.from('applications').select('id, companies!inner(demo)', head).eq('stage', 'committee').eq('companies.demo', false))
+      : 0,
     lv('pay') >= 1 ? count(supabase.from('payment_vouchers').select('id', head).eq('status', 'Receipt uploaded')) : 0,
     lv('temp') >= 1
       ? count(supabase.from('temp_memberships').select('id', head).eq('status', 'active').lte('expires_at', soon))
@@ -54,7 +58,10 @@ export default async function AdminHomePage({ params }: Props) {
     lv('pay') >= 1
       ? supabase.from('payment_vouchers').select('amount').eq('status', 'Paid').gte('paid_at', monthStart)
       : Promise.resolve({ data: [] as { amount: number }[] }),
-    lv('reg') >= 1 ? count(supabase.from('members').select('id', head).in('status', ['Permanent', 'Temporary'])) : 0,
+    // official members only: demo members (0350) are never counted
+    lv('reg') >= 1
+      ? count(supabase.from('members').select('id, companies!inner(demo)', head).in('status', ['Permanent', 'Temporary']).eq('companies.demo', false))
+      : 0,
     lv('temp') >= 1 ? count(supabase.from('temp_memberships').select('id', head).eq('status', 'active')) : 0,
     lv('mem') >= 1
       ? supabase
