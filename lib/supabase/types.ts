@@ -31,6 +31,11 @@ export type Database = {
 "app_edit_field":
 { Args: { "p_app": string,"p_field": string,"p_reason": string,"p_value": string }; Returns: undefined
                            },
+"app_endorsements":
+{ Args: { "p_app": string }; Returns: {
+              "company": string,"decided_at": string,"decline_reason": string,"expires_at": string,"id": string,"last_reminded_at": string,"member_no": string,"message": string,"ref": string,"reminders": number,"rep": string,"requested_at": string,"role": string,"signature_path": string,"status": string
+            }[]
+                           },
 "app_missing":
 { Args: { "p_app": string }; Returns: (string)[]
                            },
@@ -83,6 +88,45 @@ export type Database = {
 "email_mark":
 { Args: { "p_email": number,"p_error"?: string,"p_ok": boolean,"p_provider_id"?: string }; Returns: undefined
                            },
+"end_candidates":
+{ Args: { "p_app": string,"p_query"?: string,"p_role": Database["public"]['Enums']["endorse_role"] }; Returns: {
+              "class": string,"company": string,"member_id": string,"member_no": string,"rep": string,"same_sector": boolean,"sector": string,"why": string,"year_count": number
+            }[]
+                           },
+"end_code_issue":
+{ Args: { "p_endorsement": string,"p_user": string }; Returns: {
+              "code": string,"email": string
+            }[]
+                           },
+"end_decline":
+{ Args: { "p_endorsement": string,"p_reason": string }; Returns: undefined
+                           },
+"end_inbox":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "address": string,"applicant": string,"biz": string,"business": string,"class": string,"decided_at": string,"decline_reason": string,"est": string,"expires_at": string,"id": string,"manufacturing": boolean,"member_no": string,"message": string,"my_company": string,"nature": string,"partners": (string)[],"ref": string,"requested_at": string,"role": string,"status": string,"token": string
+            }[]
+                           },
+"end_jobs":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "business": string,"email": string,"full_name": string,"kind": string,"lang": string,"role": string,"token": string
+            }[]
+                           },
+"end_remind":
+{ Args: { "p_endorsement": string }; Returns: {
+              "applicant": string,"business": string,"email": string,"full_name": string,"lang": string,"role": string,"token": string
+            }[]
+                           },
+"end_request":
+{ Args: { "p_app": string,"p_member": string,"p_message": string,"p_role": Database["public"]['Enums']["endorse_role"] }; Returns: {
+              "applicant": string,"business": string,"email": string,"endorsement_id": string,"full_name": string,"lang": string,"token": string
+            }[]
+                           },
+"end_sign":
+{ Args: { "p_code": string,"p_declaration": string,"p_doc_hash": string,"p_endorsement": string,"p_ip": string,"p_signature_path": string,"p_user_agent": string }; Returns: string
+                           },
+"end_withdraw":
+{ Args: { "p_endorsement": string }; Returns: undefined
+                           },
 "invite_accept":
 { Args: { "p_token": string,"p_user": string }; Returns: {
               "company_id": string,"kind": string
@@ -107,6 +151,11 @@ export type Database = {
 "invite_staff":
 { Args: { "p_designation": string,"p_email": string,"p_full_name": string }; Returns: {
               "id": string,"token": string
+            }[]
+                           },
+"member_add":
+{ Args: { "p_biz": Database["public"]['Enums']["biz_type"],"p_class": Database["public"]['Enums']["member_class"],"p_company": string,"p_member_no": string,"p_owner_email": string,"p_owner_name": string,"p_rep": string,"p_sector": string,"p_since": string,"p_valid_to": string,"p_women": boolean }; Returns: {
+              "company_id": string,"invitation_id": string,"member_id": string,"member_no": string,"token": string
             }[]
                            },
 "my_access":
