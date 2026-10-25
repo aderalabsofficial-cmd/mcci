@@ -24,6 +24,8 @@ export interface AppForm {
   nature?: NatureChoice;
   addrMatch?: boolean;
   step?: number;
+  /** which document the AI read each field from (written by the server only) */
+  src?: Record<string, string>;
   name?: string;
   address?: string;
   ntn?: string;
@@ -62,6 +64,9 @@ export interface AppState {
 export interface MembershipRules {
   stampRequiredForProprietor?: boolean;
 }
+
+/** partners / directors rows on the form (page 2 table) */
+export const MAX_PARTNERS = 6;
 
 export const isBiz = (v: unknown): v is BizType =>
   typeof v === 'string' && (BIZ_TYPES as readonly string[]).includes(v);

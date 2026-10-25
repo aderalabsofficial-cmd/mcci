@@ -68,6 +68,16 @@ function screenItem(locale: Locale, area: Area, key: string, labelPath: string, 
   };
 }
 
+/** where a screen lives, or why it is not open yet (tiles and buttons that lead to another screen) */
+export function screenLink(area: Area, key: string, locale: Locale): { href: string | null; reason: string | null } {
+  const sc = screen(area, key);
+  const built = isBuilt(sc.milestone);
+  return {
+    href: built ? sc.href : null,
+    reason: built ? null : msg(locale, 'common.notYet', { milestone: sc.milestone }),
+  };
+}
+
 function groupHrefs(area: 'portal' | 'admin', key: string): string[] {
   const group = PAGE_TABS[area].find((g) => g.includes(key)) ?? [key];
   return group.map((k) => screen(area, k).href);

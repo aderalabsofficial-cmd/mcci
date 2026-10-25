@@ -267,6 +267,7 @@
   }
 
   /* gold primary button (style.css .btn.gold) */
+  .btn.btn-gold,
   .btn-gold {
     position: relative;
     overflow: hidden;
@@ -274,6 +275,7 @@
     color: #2a1d05;
     box-shadow: 0 10px 24px rgba(217, 180, 91, 0.35);
   }
+  .btn.btn-gold::after,
   .btn-gold::after {
     content: '';
     position: absolute;

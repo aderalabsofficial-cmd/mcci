@@ -238,3 +238,33 @@ the reviewed stage-2 file (sha256 `3c0b1f726030ce90…`) installed, `nginx -t` O
 
 Updating later: `scripts/deploy/release.sh <new commit>` (gate 1 first when the commit adds migrations).
 Rolling back the app: `scripts/deploy/release.sh --rollback`.
+
+### Gate 6 — membership application (M3): migration 0300 + release (awaiting the owner's approval)
+
+Review of `supabase/migrations/20261024000300_app_wizard.sql` against production (read-only checks, 25 Oct 2026):
+
+| Change | Effect on what exists |
+|---|---|
+| `insert into private.settings ('membership', {"stampRequiredForProprietor":false,"requireEndorsersAtSubmit":false}) on conflict do nothing` | new row only (production has 12 keys, no `membership`); no existing setting changes |
+| `create or replace view public.public_settings` — key list `chamber, fees, lang, app` → `+ membership, sla` | same columns (`key text, value jsonb`), same `security_invoker=false`; PostgreSQL keeps owner and grants on replace (now `anon=r`, `authenticated=r`, `service_role`); 0 dependent views. Newly public: the two rules above and `sla` (`{"hours":24,"processDays":15}`), nothing secret |
+| `grant update (field_confidence) on public.applications to authenticated` | applicants may write the AI confidence of their own draft (RLS `app_editable`: own company, draft/returned, Owner/Manager) |
+| new functions `private.class_of`, `private.app_missing`, `api.app_start`, `api.app_missing`, `api.app_doc_remove`, `api.app_submit`, `api.app_resubmit`, `api.app_withdraw`, `api.ai_extraction_finish` | none of the 9 names exist in production; all `security definer` with `search_path = ''`, revoked from `public`/`anon`, granted to `authenticated` only |
+| no `drop`, `alter`, `update`, `delete`, `truncate` of existing objects or data | production has 0 applications, 0 companies, 0 members, 2 profiles — no data is touched |
+
+Tests: pgTAP 386/386 in the dry run (includes `130_app_wizard`, 31 checks); unit 216/216; e2e 239 passed, 0 failed.
+
+Plan (each step stops on the first error):
+```bash
+export MCCI_BACKUP_DIR=/var/lib/mcci-selfhost/backups MCCI_BACKUP_PASSPHRASE_FILE=/root/.config/mcci-backup/passphrase
+scripts/selfhost/backup.sh                    # encrypted set + verify; then restore drill on it (README §7)
+scripts/selfhost/migrate.sh --dry-run         # expect: 20 applied, 1 PENDING (0300)
+scripts/selfhost/migrate.sh --apply-next      # 0300 + its history row in one transaction
+scripts/selfhost/migrate.sh --dry-run         # expect: 0 pending
+# verify: 9 functions definer + pinned search_path, no anon execute; public_settings 6 keys and same grants;
+# row counts unchanged; then pgTAP 386/386 on an isolated restored copy (as for gate 1)
+scripts/deploy/release.sh <commit>            # app build + atomic switch + health check (auto-rollback)
+```
+`/etc/mcci-web/env` keeps `AI_EXTRACTION` unset/off: the OpenAI key alone does not enable document reading.
+Rollback: the app with `release.sh --rollback` (the previous release still runs on the old schema: it never calls
+the new functions or the new view keys). The migration is additive; to undo it fully, restore the backup taken first
+(downtime of the restore; only applications created after the migration would be lost).

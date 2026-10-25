@@ -1,0 +1,48 @@
+/*
+ * Button variants of the prototype that the generated proto.css leaves out (it skips every .btn rule because the
+ * shells already style .btn): prototype .btn.w (small white) and .btn.danger. Plus the few states the prototype
+ * renders with inline styles or JavaScript (busy, disabled with a reason, the drop zone highlight).
+ */
+.proto .btn-w {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.proto .btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: 0;
+}
+.proto .btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.proto .slot.drag {
+  outline: 2px dashed var(--gold);
+  outline-offset: 2px;
+}
+.proto .wz-save {
+  font-size: 13px;
+  color: var(--m);
+  min-height: 20px;
+}
+.proto .wz-save[data-state='error'] {
+  color: #b91c1c;
+  font-weight: 700;
+}
+@media print {
+  .proto .no-print {
+    display: none !important;
+  }
+}
+/* prototype v7.css: buttons inside the "what to do now" card */
+.proto .next .btn {
+  color: #2a1d05;
+}
+.proto .next .btn:not(.btn-gold):not(.btn-danger) {
+  background: #fff;
+  border: 0;
+}
+.proto .next .btn.btn-danger {
+  background: #fff;
+  color: #b91c1c;
+}

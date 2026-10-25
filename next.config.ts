@@ -6,6 +6,10 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // document uploads go through server actions: 10 MB files (docs/08) + form overhead; nginx allows 11m
+  experimental: { serverActions: { bodySizeLimit: '11mb' } },
+  // native image processing (passport photo, signature, stamp) stays a Node dependency, not bundled
+  serverExternalPackages: ['sharp'],
   async headers() {
     return [
       {

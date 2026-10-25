@@ -11,7 +11,7 @@ test.describe('desktop shells', () => {
     const menu = page.getByRole('complementary', { name: 'Main menu' });
     await expect(menu).toBeVisible();
     await expect(menu.getByRole('link', { name: /Home/ })).toHaveAttribute('aria-current', 'page');
-    await expect(menu.getByRole('button', { name: /My Membership/ })).toHaveAttribute('title', /milestone M3/);
+    await expect(menu.getByRole('button', { name: /Endorsement Requests/ })).toHaveAttribute('title', /milestone M4/);
     await expect(bottomNav(page)).toBeHidden();
   });
 

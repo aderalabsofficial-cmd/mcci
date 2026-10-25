@@ -18,6 +18,9 @@
 insert into private.settings (key, value) values
   ('membership', '{"stampRequiredForProprietor": false, "requireEndorsersAtSubmit": false}'::jsonb)
 on conflict (key) do nothing;
+-- the wizard shows these rules to applicants (nothing secret in them, F-16)
+create or replace view public.public_settings with (security_invoker = false) as
+  select key, value from private.settings where key in ('chamber', 'fees', 'lang', 'app', 'membership', 'sla');
 
 -- The applicant marks AI-filled fields as checked (confidence 100) when they edit them (prototype M.onBind).
 grant update (field_confidence) on public.applications to authenticated;

@@ -14,7 +14,7 @@ select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'update public.not
 select is(tests.num_as(tests.id('owner_a'), 'with u as (update public.notifications set read_at = now() returning 1) select count(*) from u'), 0::bigint, 'company-wide notices are not marked read by one user (per-user read state: gap in docs/17)');
 
 -- NT-48 (F-16): settings
-select is(tests.num_as(null, 'select count(*) from public.public_settings'), 4::bigint, 'NT-48 anonymous sees the 4 whitelisted keys');
+select is(tests.num_as(null, 'select count(*) from public.public_settings'), 6::bigint, 'NT-48 anonymous sees the 6 whitelisted keys (0300 adds membership, sla)');
 select is(tests.num_as(null, 'select count(*) from public.public_settings where key in (''bank'', ''endorse'', ''temp'')'), 0::bigint, 'NT-48 internal settings are not public');
 select throws_ok($$ select tests.exec_as(null, 'select count(*) from private.settings') $$, '42501', null, 'private settings closed to anonymous');
 select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.settings_for_server()') $$, '42501', null, 'server settings function is service-role only');

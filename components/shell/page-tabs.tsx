@@ -36,7 +36,7 @@ export function PageTabs({
           <li key={item.id}>
             <NavEntry
               item={item}
-              className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-card px-3.5 text-[13px] font-bold text-muted transition sm:-mb-px sm:rounded-none sm:rounded-t-[10px] sm:border-0 sm:border-b-[3px] sm:border-transparent sm:bg-transparent sm:px-4 sm:py-2.5 sm:text-[15px] max-sm:[&_.bi-ur]:hidden"
+              className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-card px-3.5 text-[13px] font-bold text-muted transition sm:-mb-px sm:rounded-none sm:rounded-t-[10px] sm:border-0 sm:border-b-[3px] sm:border-transparent sm:bg-transparent sm:px-4 sm:py-2.5 sm:text-[15px] max-sm:[&_.bi-ur]:hidden [&_.bi-ur]:opacity-100 [&_.opacity-75]:opacity-100"
               enabledClassName="hover:bg-hover hover:text-ink"
               currentClassName="border-gold-600 text-gold-text max-sm:bg-[color-mix(in_srgb,var(--gold)_14%,var(--card))] sm:bg-card"
               disabledClassName="opacity-55"

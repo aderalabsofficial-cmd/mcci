@@ -814,6 +814,332 @@
       "whyMfg": "A sales-tax-registered manufacturing concern is a Corporate Member.",
       "whyTurnover": "A sales-tax-registered business with turnover of Rs. 50 million or more is a Corporate Member.",
       "whyAssociate": "Not a body corporate, not a sales-tax-registered manufacturer and turnover below Rs. 50 million, so Associate Member."
+    },
+    "home": {
+      "whatNow": "What to do now",
+      "hello": "Assalam o Alaikum, {name}",
+      "welcome": "Welcome to MCCI Digital",
+      "newApplicant": "New applicant",
+      "applicant": "Applicant · {token}",
+      "callHelpdesk": "Call helpdesk",
+      "journey": "My membership journey",
+      "details": "Details",
+      "whatToDo": "What would you like to do?",
+      "latest": "Latest messages",
+      "requests": "My service requests",
+      "viewAll": "View all",
+      "nothing": "Nothing here yet.",
+      "tiles": {
+        "membership": "My Membership",
+        "service": "Request a Service",
+        "serviceSub": "7 services · 24-hour reply",
+        "documents": "My Documents",
+        "documentsSub": "Certificates & letters",
+        "pay": "Pay Fees",
+        "paySub": "Nothing due",
+        "help": "Help",
+        "helpSub": "Call · Email · Ask AI",
+        "events": "Events",
+        "eventsSub": "Trade events & meetings"
+      }
+    },
+    "next": {
+      "start": {
+        "t": "Apply for MCCI membership",
+        "d": "Six simple steps. Upload your documents — AI fills the form for you.",
+        "b": "Start my application"
+      },
+      "draft": {
+        "t": "Apply for MCCI membership",
+        "d": "You are on step {step} of 6. Your answers are saved automatically.",
+        "b": "Continue my application"
+      },
+      "review": {
+        "t": "MCCI is checking your documents",
+        "d": "Nothing to do now. We will email you and post a message here if anything is needed."
+      },
+      "returned": {
+        "t": "Correction needed",
+        "d": "Please correct the items marked in red.",
+        "b": "Fix and resubmit"
+      },
+      "proposer": {
+        "t": "Waiting for your proposer and seconder",
+        "d": "They received a request in their MCCI portal and an email. Your file moves to the Membership Committee as soon as both sign."
+      },
+      "committee": {
+        "t": "With the Membership Committee",
+        "d": "You will be informed right after the meeting."
+      },
+      "payment": {
+        "t": "Approved — pay your membership fee",
+        "d": "Pay at the bank with your payment voucher, then upload a photo of the paid receipt."
+      },
+      "temp": {
+        "t": "You are a temporary member",
+        "d": "All services are open for you. Your membership becomes permanent when your printed certificate reaches MCCI."
+      },
+      "permanent": {
+        "t": "You are a permanent member",
+        "d": "Thank you for being part of the Multan Chamber."
+      },
+      "rejected": {
+        "t": "Application not approved",
+        "d": "Please contact MCCI for details."
+      },
+      "withdrawn": {
+        "t": "Application withdrawn",
+        "d": "You can start a new application at any time.",
+        "b": "Start a new application"
+      },
+      "progress": "See progress",
+      "myMembership": "My membership"
+    },
+    "wiz": {
+      "pageTitle": "Application form",
+      "steps": {
+        "type": "Type of business",
+        "docs": "Required documents",
+        "details": "Particulars of member",
+        "endorse": "Proposed & seconded",
+        "sign": "Declaration & signature",
+        "review": "Review & submit"
+      },
+      "back": "Back",
+      "save": "Save draft",
+      "next": "Next",
+      "submit": "Submit application",
+      "saved": "Saved",
+      "saving": "Saving…",
+      "saveFailed": "Not saved — check your connection",
+      "working": "Please wait…",
+      "type": {
+        "kicker": "Particulars of member · Tick relevant box",
+        "title": "What type of business do you have?",
+        "help": "Tick your legal form. If you also make goods (factory / production), tick Manufacturing Concern as well, the same as on the paper form."
+      },
+      "nature": {
+        "title": "Nature of business",
+        "help": "Choose your sector, then what your business does (up to 3). It fills “Particulars of Business” on the form for you.",
+        "search": "Search, e.g. distributor, software house, rice mill, exporter",
+        "searchLabel": "Search nature of business",
+        "none": "Nothing found. Choose a sector below and type it under “Not listed”.",
+        "pick": "What does your business do? Pick up to 3 · {n}/3",
+        "other": "Not listed? Type it",
+        "otherPh": "e.g. Cotton yarn trading",
+        "max": "You can pick up to 3"
+      },
+      "cls": {
+        "title": "For your membership class",
+        "help": "From the form's Corporate / Associate rules and the Women Entrepreneurs fee.",
+        "salesTax": "Is the business registered for sales tax?",
+        "turnover50": "Is annual turnover Rs. 50 million or more?",
+        "women": "Is it a women-owned business (Women Entrepreneur)?"
+      },
+      "yes": "Yes",
+      "no": "No",
+      "juris": {
+        "title": "Eligibility",
+        "q": "Is your business scope within the jurisdiction of the Multan Chamber (TOR 11 (b))?",
+        "blocked": "Membership is only granted to businesses within the Multan Chamber jurisdiction. Please contact the Membership Desk."
+      },
+      "docs": {
+        "kicker": "Instructions and requirements of membership",
+        "title": "Upload your documents",
+        "help": "The list below is exactly what the form requires for a {biz}, in the same order. Take a photo with your phone or choose a PDF.",
+        "mfg": "No extra documents are needed for a manufacturing concern.",
+        "chooseType": "Choose your type of business first (step 1).",
+        "progress": "{done} of {total} added",
+        "optional": "if applicable",
+        "upload": "Upload",
+        "addPhoto": "Add photo",
+        "view": "View",
+        "change": "Change",
+        "reupload": "Re-upload",
+        "remove": "Remove",
+        "uploading": "Uploading…",
+        "rejected": "rejected",
+        "photoName": "Passport photo (auto-cropped)",
+        "fileHint": "PDF, JPG or PNG · up to 10 MB"
+      },
+      "ai": {
+        "title": "Let AI fill the form for you",
+        "help": "AI reads your documents and fills the form. You only check it.",
+        "button": "Read with AI",
+        "working": "Reading your documents…",
+        "off": "AI reading is not switched on yet — type your details on the next step."
+      },
+      "photo": {
+        "title": "Passport photo — auto adjusted",
+        "help": "We centred and sized your photo to the 35 × 45 mm box on the form. Drag to move, use the slider to zoom.",
+        "zoom": "Zoom",
+        "retake": "Choose another photo",
+        "save": "Use cropped photo",
+        "cancel": "Cancel",
+        "brightness": "Brightness",
+        "resolutionOk": "Resolution is good ({size})",
+        "resolutionLow": "Low resolution — a clearer photo is better",
+        "brightFixed": "Brightness auto-corrected",
+        "brightOk": "Brightness looks good",
+        "face": "Face detected and centred"
+      },
+      "details": {
+        "kicker": "Particulars of member",
+        "title": "Check your details",
+        "aiFilled": "{n} fields filled by AI",
+        "aiCheck": "{n} need your check (highlighted)",
+        "typeHint": "Type your details, or go back and let AI read your documents.",
+        "business": "Business",
+        "rep": "Authorized representative",
+        "partners": "Partners / Directors",
+        "partnersOptional": "optional for proprietorship",
+        "addrMatch": "The business address above is the same as the address on our NTN certificate.",
+        "required": "(Required by the form)",
+        "checkedByYou": "Checked by you",
+        "pleaseEnter": "Please enter",
+        "conf": "{n}% · {src}",
+        "partnerName": "Name",
+        "partnerCnic": "CNIC",
+        "partnerMobile": "Mobile",
+        "card": "Card",
+        "cardTitle": "Optional membership card Rs. {fee}",
+        "addPartner": "Add partner / director",
+        "removePartner": "Remove partner {n}"
+      },
+      "endorse": {
+        "kicker": "Proposed and seconded by valid members",
+        "title": "Proposer & seconder",
+        "help": "You choose them yourself. Pick two valid MCCI members of your class ({cls}) who know your business. Each gets a request in their MCCI portal and an email, and approves by signing digitally.",
+        "later": "You can submit your application now. MCCI will ask you to choose your proposer and seconder after the document check, and they can sign afterwards."
+      },
+      "sign": {
+        "kicker": "Application letter and declaration",
+        "title": "Sign and declare",
+        "repName": "Name of Authorized Representative",
+        "firmName": "Name of Business Firm / Company",
+        "signTitle": "Signature of authorized representative",
+        "none": "No signature yet",
+        "onScreen": "Sign on screen",
+        "again": "Sign again",
+        "upload": "Upload signature photo",
+        "stampTitle": "Stamp / seal of firm",
+        "stampOptional": "Optional for proprietors · take a photo of your stamp on white paper",
+        "stampHelp": "Take a photo of your stamp on white paper",
+        "stampUpload": "Upload stamp photo",
+        "declTitle": "Declarations from the form",
+        "decl1": "I am desirous of becoming member of the Multan Chamber of Commerce & Industry, I have read and understand Memorandum and Articles of Association and By Laws of this Chamber and I agree to abide by the same. If at any stage I will not abide by or breach any Rules and Regulations as defined in the Memorandum and Articles of Association and By Laws of the Multan Chamber of Commerce & Industry so in that case the Multan Chamber of Commerce & Industry will have the right to cancel my membership. I will pay Admission Fee along with Annual Subscription Fee subject to approval of my application by the Membership Committee of the Multan Chamber of Commerce & Industry.",
+        "decl2": "I declare that the particulars given in this Application Form are true to the best of my knowledge and belief and that I have no criminal record/conviction and that nothing has been concealed.",
+        "pad": "Sign here",
+        "clear": "Clear",
+        "use": "Use this signature",
+        "empty": "Please draw your signature first",
+        "padIntro": "Sign with your finger or mouse, the same way you sign on paper.",
+        "uploadInstead": "Upload image instead"
+      },
+      "review": {
+        "kicker": "Application form for new membership · 4 pages",
+        "title": "Review your official form",
+        "help": "This is the MCCI New Membership form, filled from your answers, with your photo, signature and stamp placed. It is what the Membership Desk and Committee will see.",
+        "stillNeeded": "Still needed:",
+        "complete": "Everything is complete. You can submit now.",
+        "openFull": "Open full size",
+        "print": "Print / save PDF"
+      },
+      "returned": {
+        "title": "Correction needed",
+        "fromDesk": "Message from the Membership Desk",
+        "fixThese": "Fix these",
+        "nothing": "Update your details below if asked.",
+        "resubmit": "Resubmit to MCCI",
+        "editDetails": "Edit details"
+      },
+      "submitted": {
+        "title": "My application",
+        "on": "{token} · submitted {date}",
+        "viewForm": "View official form",
+        "business": "Business",
+        "type": "Type",
+        "cls": "Class",
+        "docs": "Documents submitted",
+        "withdraw": "Withdraw application",
+        "withdrawTitle": "Withdraw this application?",
+        "withdrawHelp": "MCCI stops working on it. You can start a new application later.",
+        "reason": "Reason (optional)",
+        "confirm": "Yes, withdraw",
+        "cancel": "Keep it"
+      }
+    },
+    "track": {
+      "title": "Track my application",
+      "progress": "Progress",
+      "history": "Full history",
+      "messages": "Messages from MCCI",
+      "none": "You have not applied yet.",
+      "submittedBanner": "Your application {token} has been submitted. A receipt has been emailed to you.",
+      "by": "by {name}",
+      "steps": {
+        "created": "Application started",
+        "submitted": "Submitted to MCCI",
+        "resubmitted": "Resubmitted after correction",
+        "withdrawn": "Withdrawn",
+        "document accepted": "Document accepted",
+        "document rejected": "Document needs correction",
+        "returned": "Returned for correction"
+      }
+    },
+    "page": {
+      "title": "My Membership",
+      "tabs": {
+        "status": "Status",
+        "certs": "Certificates & cards",
+        "renew": "Renewal & history"
+      },
+      "officialForm": "Official form",
+      "noApp": "You are not a member yet. Apply below — it takes six simple steps.",
+      "cardsLater": "Cards are issued with your membership number after approval.",
+      "certsLater": "Your temporary and permanent certificates appear here after approval and payment.",
+      "renewLater": "Renewal opens from 1 to 31 March each year once you are a member.",
+      "applicationKV": "Application",
+      "stage": "Stage",
+      "feeDue": "Fee after approval"
+    },
+    "form": {
+      "title": "Official form",
+      "blank": "Blank form",
+      "filled": "My filled form",
+      "print": "Print / save PDF",
+      "noApp": "Start your application to see your filled form. A blank copy is available below."
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "incomplete": "Some items are still missing — see the list.",
+      "wrongStage": "This application can no longer be changed.",
+      "maxPartners": "The form has room for 6 partners / directors.",
+      "aiOff": "AI reading is not switched on yet. Please type your details on the next step.",
+      "aiNoDocs": "Upload at least one document first (CNIC, NTN certificate, …).",
+      "aiFailed": "AI could not read your documents. Please type your details on the next step.",
+      "aiQuota": "The AI reading limit for today is reached. Please type your details, or try again tomorrow.",
+      "upload": {
+        "empty": "Choose a file first.",
+        "tooBig": "The file is larger than 10 MB.",
+        "type": "Use a PDF, JPG or PNG file.",
+        "encrypted": "This PDF is password-protected. Please upload an unlocked copy."
+      }
+    },
+    "done": {
+      "uploaded": "Document added",
+      "photo": "Passport photo saved",
+      "sign": "Signature saved",
+      "stamp": "Stamp saved",
+      "withdrawn": "Application withdrawn",
+      "ai": "{n} fields filled by AI — please check them"
+    },
+    "email": {
+      "greeting": "Dear {name},",
+      "submittedSubject": "Application {token} received",
+      "submittedBody": "We have received your MCCI membership application {token}.",
+      "submittedNext": "The Membership Desk will check your documents. You will get an email and a portal message if anything is needed.",
+      "track": "Track my application"
     }
   }
 }

@@ -54,14 +54,31 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: `pnpm build && pnpm start --port ${PORT}`,
-    url: `http://${HOST}:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 300_000,
-    stdout: 'ignore',
-    stderr: 'pipe',
-    // lets app email (invitations) reach the local mail catcher in this production build (lib/email/send.ts)
-    env: { MCCI_E2E: '1' },
-  },
+  webServer: [
+    {
+      // stand-in for the OpenAI Responses API ("Read with AI" without a key or cost)
+      command: 'node tests/e2e/fake-openai.mjs',
+      url: 'http://127.0.0.1:3998/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    {
+      command: `pnpm build && pnpm start --port ${PORT}`,
+      url: `http://${HOST}:${PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 300_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+      // MCCI_E2E: app email (invitations) may reach the local mail catcher in this production build
+      // (lib/email/send.ts); OPENAI_*: AI reading goes to tests/e2e/fake-openai.mjs
+      env: {
+        MCCI_E2E: '1',
+        AI_EXTRACTION: 'on',
+        OPENAI_API_KEY: 'sk-e2e-fake-key-not-a-real-one-000000000000',
+        OPENAI_BASE_URL: 'http://127.0.0.1:3998/v1',
+      },
+    },
+  ],
 });

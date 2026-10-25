@@ -5,6 +5,7 @@ import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { getSession } from '@/lib/permissions/server';
 import '@/app/styles/proto.css';
+import '@/app/styles/proto-app.css';
 
 /** Member portal: a signed-in person (middleware redirects earlier; this is the server-side check). */
 export default async function PortalLayout({
