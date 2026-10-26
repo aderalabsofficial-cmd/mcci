@@ -688,3 +688,13 @@ counted documents from page data instead of what the server confirmed, the uploa
 navigation was cut off. The app says "the server did not confirm this — reload" and nothing is shown as saved. A person
 would not normally do this, and the test now waits for the page to settle. The cause inside Next.js is still not
 identified; it stays on the list before Release 6 (printing).
+
+**Production (26 Oct 2026), evidence:** tooling `/opt/mcci-deploy-f308287`; migration sha256 `da219d32cc6a5481` =
+tested file; backup `mcci-20261026T040543Z` + restore drill PASS, drill directory removed; production dry run exactly 1
+pending → `--apply-next` → 0 pending; exact row counts identical in all 94 existing tables (plus the new, empty
+`service_history`); the 13 `api.svc_*` / `svcset_save` functions execute for `authenticated` only (anonymous calls with
+real arguments → 42501), `service_history` RLS on, 7 services offered (fees still MCCI's placeholders: 2,000 / 1,500 /
+3,000 / 1,500 / 1,000 / 1,000 / 500). Release `f308287` live (`56e2331`, `f6beb75` kept), health OK. Smoke: public pages
+200, the service page's "Apply now" links to the portal; every new portal and admin page (EN and UR) → login; no app
+errors; nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not exercised on production: a real request
+(it needs a member with an active membership — none yet — and would email them); verified locally end to end.
