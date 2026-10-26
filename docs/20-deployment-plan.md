@@ -729,3 +729,23 @@ response" in one run, and two tests failed from the load). The middleware now re
 action from a signed-out session reaches the action, whose own checks refuse it. Regression: `session.spec` (an action
 from a revoked session is not redirected); real-time check with `SESSION_IDLE_MINUTES=1` on a second server: signed
 out after 60 s, the reason shown, the session revoked, 0 forwarding errors.
+
+Tests (local, not production): full suite on `ddcbd24` 835 passed, 7 failed, 389 skipped, **0** action-forwarding
+errors (the loop is gone). The machine was at 100 % CPU and ~1.2 GB free memory during the run; the 7 failures were
+waits that ran out (a click or page not finished in time). Rerun one at a time: 6 of 7 pass; the seventh (the browser
+warning test) passes 3/3 on its own. It moved the test clock before the page had finished loading, so the page's timer
+had not started yet; the test now waits for the page to load first (test only, no app change).
+
+**Production (26 Oct 2026), evidence:** tooling `/opt/mcci-deploy-ddcbd24`; migration sha256 `15b7ec40543767d8` =
+tested file; backup `mcci-20261026T073302Z` + restore drill PASS (105 tables, 2,220 rows identical; Vault secrets
+decrypt; negative control holds), drill directory removed; production dry run exactly 1 pending → `--apply-next` →
+0 pending; exact row counts identical in every existing table (plus the new, empty `private.staff_reauth`). Grants:
+`api.role_permissions_save` and `api.role_permissions_reset` execute for `authenticated` only; `api.reauth_mark` for
+`service_role` only; `api.role_permission_set` (the old one-cell function) executable by nobody; RLS on
+`staff_reauth`. Release `ddcbd24` live (`f308287` kept, `f6beb75` removed by the release script). Smoke: public pages
+200 (EN, UR); `/portal`, `/portal/membership`, `/admin/staff`, `/ur/admin/staff` → sign-in; a server action POST from
+a signed-out browser is answered (404 for an unknown action), not redirected; `/login?expired=1` shows "signed out
+after 15 minutes without activity"; idle limit at its default 15 minutes (`SESSION_IDLE_MINUTES` not set); nginx
+unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not exercised on production (no sign-in by Claude on
+production): saving a designation with the Secretary General's password, the member view of a demo member, the
+15-minute sign-out of a real session — all verified locally end to end; the owner can check them with their accounts.

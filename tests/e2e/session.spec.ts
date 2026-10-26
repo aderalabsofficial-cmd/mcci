@@ -55,6 +55,8 @@ test('activity keeps the session; the browser warns in the last minute and signs
   await page.clock.install();
   await signIn(page);
   await page.goto('/portal');
+  // the page's timer starts once the page has loaded: under load, jumping the clock earlier skipped the warning
+  await page.waitForLoadState('networkidle');
   // 14 minutes 10 seconds without touching anything: the warning
   await page.clock.fastForward('14:10');
   const warning = page.getByRole('dialog');
