@@ -17,7 +17,12 @@ async function handle(request: NextRequest): Promise<NextResponse> {
   const { response, userId, configured, expired } = await updateSession(request, intl(request));
   // First line of defence only: layouts check the session and staff 2-step again on the server, and every data
   // access is enforced by RLS / api.* functions in the database.
-  if (configured && !userId && PROTECTED.test(request.nextUrl.pathname)) {
+  // Only page loads are redirected. A POST (server action) must never be: a 307 keeps the method, the browser re-sends
+  // the action to /login, which does not contain it, Next.js forwards it back to a portal page, the middleware redirects
+  // again — a loop that held server connections until they timed out (found 26 Oct 2026 with the idle sign-out). A
+  // signed-out action goes on to the action itself, whose own checks refuse it.
+  const pageLoad = request.method === 'GET' || request.method === 'HEAD';
+  if (configured && !userId && pageLoad && PROTECTED.test(request.nextUrl.pathname)) {
     const path = request.nextUrl.pathname;
     const ur = path === '/ur' || path.startsWith('/ur/');
     const login = new URL(ur ? '/ur/login' : '/login', request.url);

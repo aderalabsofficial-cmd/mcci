@@ -37,6 +37,14 @@ test('the server signs out a session idle for more than 15 minutes, and it canno
   // the old session cookies no longer work: the session was revoked, not just forgotten by this browser
   await context.clearCookies();
   await context.addCookies(session);
+  // a server action from a signed-out session is answered, never redirected (a redirected POST looped through Next.js's
+  // action forwarding until the server's connections timed out)
+  const action = await page.request.post('/portal', {
+    headers: { 'next-action': 'a'.repeat(42) },
+    maxRedirects: 0,
+    timeout: 15_000,
+  });
+  expect([301, 302, 303, 307, 308]).not.toContain(action.status());
   await page.goto('/portal');
   await expect(page).toHaveURL(/\/login/);
 });

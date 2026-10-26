@@ -720,3 +720,12 @@ errors; nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not exe
    person who deletes that cookie on their own device escapes the server check (the browser timer still applies);
    Supabase Auth's own inactivity timeout would close this, but it is an Auth container setting (needs the owner's
    approval for a stack reload).
+
+**Found in the full suite before release (fixed):** when a page's 15-minute timer and the server's limit expired
+together, the page's sign-out call (a server action, POST) was answered by the middleware with a 307 to `/login`; the
+browser re-sent the action there, Next.js forwarded it back to a portal page (the login page does not contain it), the
+middleware redirected again — a loop that held connections until they timed out (≈ 4,900 "failed to forward action
+response" in one run, and two tests failed from the load). The middleware now redirects page loads (GET) only; an
+action from a signed-out session reaches the action, whose own checks refuse it. Regression: `session.spec` (an action
+from a revoked session is not redirected); real-time check with `SESSION_IDLE_MINUTES=1` on a second server: signed
+out after 60 s, the reason shown, the session revoked, 0 forwarding errors.
