@@ -25,8 +25,8 @@ const HOW = [
 ] as const;
 
 /**
- * Service detail (prototype site/service?s=…): what to prepare and how it works. Online requests are milestone M7;
- * until then "Apply now" is shown disabled with the reason (orphan rule), and the Secretariat's contact is offered.
+ * Service detail (prototype site/service?s=…): what to prepare and how it works; "Apply now" opens the member
+ * portal (sign-in first), where the request is made.
  */
 export default async function ServicePage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
@@ -87,16 +87,13 @@ export default async function ServicePage({ params, searchParams }: Props) {
               {msg(locale, `site.svc.${s.key}.note`)} · {m('fee', { fee: s.fee.toLocaleString('en-US') })}
             </p>
             <div className="pb" style={{ marginTop: 14 }}>
-              <button type="button" className="btn btn-primary" disabled aria-disabled="true" title={m('applySoon')} data-action="svc.apply">
+              <Link className="btn btn-primary" href="/portal/apply" data-action="svc.new">
                 {m('applyNow')}
-              </button>
+              </Link>
               <Link className="btn" href="/track" data-action="nav">
                 {m('trackToken')}
               </Link>
             </div>
-            <p className="muted" style={{ marginTop: 8 }}>
-              {m('applySoon')}
-            </p>
           </div>
         </div>
       </Section>

@@ -24,6 +24,8 @@ const member = (no, company, rep, validTo, status, c = 95) => ({
   certificate_serial: f(null, 0),
 });
 const ANSWERS = {
+  // a service request's documents (lib/services/ai.ts): the first four details of the service, in order
+  service_request: { f0: f('ACME GmbH', 94), f1: f('Germany', 96), f2: f('6302.10', 88), f3: f('12000', 90) },
   // a PDF member directory (lib/import/ai.ts): one clear row, one the "AI" was unsure of
   member_directory: {
     members: [member('MCCI-A-0050', 'Scanned Traders', 'Rep Scan', '31 March 2027', 'Permanent'), member('MCCI-A-0051', 'Blurry & Co', 'Rep Blur', '31-03-2027', 'Active', 55)],

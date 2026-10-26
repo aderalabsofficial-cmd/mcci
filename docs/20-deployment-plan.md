@@ -647,3 +647,44 @@ pending → `--apply-next` → 0 pending; row counts identical in all 94 tables 
 membership content checked in the browser, `/track?t=<unknown>` → "No token found", `/portal`, `/admin`,
 `/admin/import` → login; no app errors in the log; nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not
 exercised on production: the contact form (it would create a real ticket and email; verified locally).
+
+### Release 6b — M7 services (migration 0380; local, then the usual gate)
+
+The seven chamber services, end to end. Member (`/portal/apply`, `/portal/applications`, `/portal/application`):
+choose a service (locked until the membership is active: Permanent, or Temporary while `settings.temp.servicesAllowed`;
+never demo companies) → upload documents (private `service-docs`, under the request) → "Read with AI" (only with AI
+reading on; the member checks every value) → details → submit: token, the SLA clock (`service_types.sla_hours`), and a
+fee voucher when the fee is above 0 (pay at the bank once MCCI confirms its account, or at the counter) → follow it;
+correct and send back after a return (the clock restarts); message MCCI; download the issued letter. Staff
+(`/admin/applications` board + table, `/admin/review`, `/admin/sla`, `/admin/approvals`, `/admin/services`): start →
+approve / return (note) / not approve (reason) with svc ≥ 2; sign & issue, one or all, with svc ≥ 3 (President,
+Secretary General) and only when the fee is paid; the letter is a QR document in the registry (public `/verify`);
+SLA monitor with real average response; service setup (fee, hours, documents, details, offered) for plat ≥ 2.
+Emails: received, returned, not approved, issued (each recorded in `email_log`). The public "Apply now" now opens the
+portal.
+
+Migration 0380: `service_requests` + `draft`, step times, signer, reason; `service_history` (RLS as the request);
+staff never see drafts; members may remove a file from a draft or a returned request (`service_documents` DELETE
+under that policy — listed in `001_platform_security`); `api.svc_*` (`svc_can`, `svc_new`, `svc_save`, `svc_submit`,
+`svc_cancel`, `svc_resubmit`, `svc_start`, `svc_return`, `svc_approve`, `svc_reject`, `svc_sign`, `svc_sign_all`,
+`svcset_save`) for `authenticated` only, each checking role, 2-step login and state; `private.voucher_paid` gains the
+service branch (history "fee paid"); the 0370 site functions leave drafts out. TODO(MCCI): service fees (placeholders),
+the wording of each letter.
+
+Tests (local, not production): unit 272/272; pgTAP `210_services` 33 checks (eligibility, drafts private, details
+limited to the service's own, documents required, voucher for the fee, who may start / return / approve / sign, 2-step,
+member cannot cancel once started, no letter before the fee, sign-all skips unpaid, counter payment → "fee paid",
+issued QR letter verifies, setup for platform staff only, grants); isolated dry run 672 ok, 0 not ok, 22/22 files leave
+no rows; e2e `services.spec.ts` (full flow with AI reading, return, correction, counter fee, signature, letter, public
+verification; each of the 7 services requested → approved → issued; another company's request not visible; a
+Membership Officer refused) 8/8 in two sequential repeats; page audits (orphans, axe, overflow, tap targets) on every
+service screen 185/185. Full suite: 838 passed, 1 failed, 386 skipped. The failure: the 7-services test submitted in
+more than 5 s under full load. That wait is now 15 s, as for the other steps, and the test passes. Found and fixed on
+the way: the signed request left the queue with its success message (the queue now keeps the outcome), the wizard
+counted documents from page data instead of what the server confirmed, the upload drop zone was squashed, and the
+"Reload" button in red banners was white on white (all screens).
+
+**Open, reproduced again (the "actions cut off" issue):** an upload started within milliseconds of a page
+navigation was cut off. The app says "the server did not confirm this — reload" and nothing is shown as saved. A person
+would not normally do this, and the test now waits for the page to settle. The cause inside Next.js is still not
+identified; it stays on the list before Release 6 (printing).

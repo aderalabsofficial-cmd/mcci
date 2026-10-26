@@ -292,6 +292,59 @@ export type Database = {
 "staff_update":
 { Args: { "p_active": boolean,"p_designation": string,"p_user": string }; Returns: undefined
                            },
+"svc_approve":
+{ Args: { "p_request": string }; Returns: undefined
+                           },
+"svc_can":
+{ Args: { "p_company": string }; Returns: boolean
+                           },
+"svc_cancel":
+{ Args: { "p_request": string }; Returns: undefined
+                           },
+"svc_new":
+{ Args: { "p_company": string,"p_service": string }; Returns: {
+              "id": string,"token": string
+            }[]
+                           },
+"svc_reject":
+{ Args: { "p_reason": string,"p_request": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"service": string,"to_email": string,"token": string
+            }[]
+                           },
+"svc_resubmit":
+{ Args: { "p_note"?: string,"p_request": string }; Returns: {
+              "token": string
+            }[]
+                           },
+"svc_return":
+{ Args: { "p_note": string,"p_request": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"service": string,"to_email": string,"token": string
+            }[]
+                           },
+"svc_save":
+{ Args: { "p_data": Json,"p_request": string }; Returns: undefined
+                           },
+"svc_sign":
+{ Args: { "p_request": string }; Returns: {
+              "code": string,"email_id": number,"lang": string,"name": string,"service": string,"to_email": string,"token": string
+            }[]
+                           },
+"svc_sign_all":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "code": string,"email_id": number,"lang": string,"name": string,"service": string,"to_email": string,"token": string
+            }[]
+                           },
+"svc_start":
+{ Args: { "p_request": string }; Returns: undefined
+                           },
+"svc_submit":
+{ Args: { "p_request": string }; Returns: {
+              "email_id": number,"lang": string,"name": string,"service": string,"to_email": string,"token": string,"voucher_no": string
+            }[]
+                           },
+"svcset_save":
+{ Args: { "p_active": boolean,"p_docs": Json,"p_fee": number,"p_fields": Json,"p_key": string,"p_sla_hours": number }; Returns: undefined
+                           },
 "temp_extend":
 { Args: { "p_reason": string,"p_temp": string }; Returns: {
               "email_id": number,"expires_at": string,"lang": string,"name": string,"to_email": string
@@ -1446,6 +1499,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"service_history": {
+                  Row: {
+                    "at": string,"by_name": string | null,"by_user": string | null,"id": number,"note": string | null,"request_id": string,"step": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"by_name"?: string | null,"by_user"?: string | null,"id"?: never,"note"?: string | null,"request_id": string,"step": string
+                  }
+                  Update: {
+                    "at"?: string,"by_name"?: string | null,"by_user"?: string | null,"id"?: never,"note"?: string | null,"request_id"?: string,"step"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "service_history_by_user_fkey"
+      columns: ["by_user"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "service_history_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "service_requests"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"service_messages": {
                   Row: {
                     "at": string,"body": string,"by_user": string,"id": number,"request_id": string
@@ -1474,14 +1553,14 @@ isOneToOne: false
                   ]
                 },"service_requests": {
                   Row: {
-                    "assigned_to": string | null,"company_id": string,"created_by": string | null,"data": NonNullable<Json>,"id": string,"issued_doc": string | null,"return_note": string | null,"service_key": string,"sla_due_at": string,"status": Database["public"]['Enums']["svc_status"],"submitted_at": string,"token": string
+                    "approved_at": string | null,"assigned_to": string | null,"company_id": string,"created_by": string | null,"data": NonNullable<Json>,"draft": boolean,"id": string,"issued_at": string | null,"issued_doc": string | null,"reject_reason": string | null,"return_note": string | null,"service_key": string,"signed_by": string | null,"sla_due_at": string,"started_at": string | null,"status": Database["public"]['Enums']["svc_status"],"submitted_at": string,"token": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "assigned_to"?: string | null,"company_id": string,"created_by"?: string | null,"data"?: NonNullable<Json>,"id"?: string,"issued_doc"?: string | null,"return_note"?: string | null,"service_key": string,"sla_due_at": string,"status"?: Database["public"]['Enums']["svc_status"],"submitted_at"?: string,"token"?: string
+                    "approved_at"?: string | null,"assigned_to"?: string | null,"company_id": string,"created_by"?: string | null,"data"?: NonNullable<Json>,"draft"?: boolean,"id"?: string,"issued_at"?: string | null,"issued_doc"?: string | null,"reject_reason"?: string | null,"return_note"?: string | null,"service_key": string,"signed_by"?: string | null,"sla_due_at": string,"started_at"?: string | null,"status"?: Database["public"]['Enums']["svc_status"],"submitted_at"?: string,"token"?: string
                   }
                   Update: {
-                    "assigned_to"?: string | null,"company_id"?: string,"created_by"?: string | null,"data"?: NonNullable<Json>,"id"?: string,"issued_doc"?: string | null,"return_note"?: string | null,"service_key"?: string,"sla_due_at"?: string,"status"?: Database["public"]['Enums']["svc_status"],"submitted_at"?: string,"token"?: string
+                    "approved_at"?: string | null,"assigned_to"?: string | null,"company_id"?: string,"created_by"?: string | null,"data"?: NonNullable<Json>,"draft"?: boolean,"id"?: string,"issued_at"?: string | null,"issued_doc"?: string | null,"reject_reason"?: string | null,"return_note"?: string | null,"service_key"?: string,"signed_by"?: string | null,"sla_due_at"?: string,"started_at"?: string | null,"status"?: Database["public"]['Enums']["svc_status"],"submitted_at"?: string,"token"?: string
                   }
                   Relationships: [
                     {
@@ -1514,6 +1593,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "service_types"
       referencedColumns: ["key"]
+    },{
+      foreignKeyName: "service_requests_signed_by_fkey"
+      columns: ["signed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
     }
                   ]
                 },"service_types": {

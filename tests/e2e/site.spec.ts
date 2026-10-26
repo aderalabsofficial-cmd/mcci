@@ -66,13 +66,11 @@ test('membership: fees add up, documents change with the business type, FAQ open
   await expect(q.locator('p')).toBeVisible();
 });
 
-test('service detail: documents and fields from the service list; online requests not open yet (said why)', async ({
-  page,
-}) => {
+test('service detail: documents and fields from the service list; Apply now leads to sign-in and the request', async ({ page }) => {
   await page.goto('/service?s=co');
   await expect(page.getByRole('main')).toContainText('Commercial invoice');
-  await expect(page.locator('[data-action="svc.apply"]')).toBeDisabled();
-  await expect(page.locator('[data-action="svc.apply"]')).toHaveAttribute('title', /next release/);
+  await page.locator('[data-action="svc.new"]').click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fportal%2Fapply/);
 });
 
 test('resources: the blank official form opens for anyone', async ({ page }) => {

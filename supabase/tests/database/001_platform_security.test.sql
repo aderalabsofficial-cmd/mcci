@@ -33,8 +33,8 @@ select results_eq($$
   select (table_name::text || ':' || privilege_type::text) collate "default" from information_schema.role_table_grants
   where grantee = 'authenticated' and table_schema = 'public' and privilege_type in ('UPDATE','DELETE','TRUNCATE','TRIGGER','REFERENCES')
   order by 1 $$,
-  $$ values ('application_partners:DELETE'), ('device_tokens:DELETE') $$,
-  'authenticated: table-wide UPDATE nowhere, DELETE only on partners (draft) and own device tokens');
+  $$ values ('application_partners:DELETE'), ('device_tokens:DELETE'), ('service_documents:DELETE') $$,
+  'authenticated: table-wide UPDATE nowhere, DELETE only on partners (draft), own device tokens and a draft service request''s files (0380)');
 
 -- authenticated may INSERT table-wide nowhere (inserts are column-scoped or go through api.*)
 select is_empty($$ select table_name from information_schema.role_table_grants
