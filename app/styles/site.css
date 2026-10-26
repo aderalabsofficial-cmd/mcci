@@ -223,3 +223,5 @@
 /* full-size tap targets (docs/15 §8): breadcrumb link, tabs */
 .site .xcrumb a {display:inline-flex;align-items:center;min-height:44px;min-width:44px}
 .site .tabs button {min-height:44px}
+/* on Urdu pages the English line under the title follows the Urdu text (right), away from the words in the photo */
+.site[lang=ur] .xurl[dir=ltr] {text-align:right}

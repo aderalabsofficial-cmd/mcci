@@ -626,3 +626,24 @@ App: track 30 lookups / min per address, contact 5 tickets / hour per address (n
 number. Not yet: online service requests (M7 — "Apply now" disabled with the reason), news / events content (written in
 the admin Content screen, M8; until then the empty states show), Ask MCCI AI (M8), office-bearers' names other than
 the President (TODO(MCCI)).
+
+Tests (local, not production): unit 272/272; pgTAP `200_public_site` 15 checks, isolated dry run 639 ok, 0 not ok,
+21/21 files leave no rows (the settings count in `080` is now 14: 0370 adds `site`); e2e `site.spec.ts` (every page EN
++ UR/RTL, home figures without names, fees, pub.biz, faq.toggle, service detail, blank form, directory search and
+dir.view with public fields only, track found / none / invalid without names, contact message + complaint → tickets
+and the emailed number, live board) and the orphan / axe / overflow / tap-target audits on every public page: all pass.
+Full suite: 691 passed, 2 failed, 332 skipped. The failures were `shells.spec` (language switch back to English),
+which passed on rerun, and `demo.spec` (invitation sign-in took over 5 s while the laptop ran the whole suite; 3/3
+alone, no Auth errors; the wait is now 20 s). Found and fixed on the way: the contact email's subject was not a message
+key (the email was never sent), a hidden bot field widened Urdu pages, 39 px breadcrumb links and tabs, the header
+unreadable on invitation pages.
+
+**Production (26 Oct 2026), evidence:** tooling `/opt/mcci-deploy-56e2331`; migration sha256 `16c308bdb9ea42e9` =
+tested file; backup `mcci-20261026T020348Z` + restore drill PASS, drill directory removed; production dry run exactly 1
+pending → `--apply-next` → 0 pending; row counts identical in all 94 tables except the expected `private.settings`
+13 → 14 (`site`) and its `audit_log` row; `api.site_*` execute for `service_role` only (anon and authenticated: no);
+`public_settings` now lists `site`; `public_directory` 0 rows (no listed members yet). Release `56e2331` live
+(`f6beb75`, `5f1a812` kept), health OK. Smoke: all 13 public pages 200 in English and Urdu (`dir="rtl"`), live home and
+membership content checked in the browser, `/track?t=<unknown>` → "No token found", `/portal`, `/admin`,
+`/admin/import` → login; no app errors in the log; nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not
+exercised on production: the contact form (it would create a real ticket and email; verified locally).
