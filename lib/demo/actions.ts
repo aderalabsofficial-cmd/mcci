@@ -105,3 +105,27 @@ export async function clearDemo(locale: Locale): Promise<DemoResult> {
     return fail(locale, error, 'demo.clear');
   }
 }
+
+/**
+ * demo.mark (migration 0405): a self-registered applicant becomes a demo applicant, so their application can choose
+ * the demo members as proposer and seconder. The database checks that nothing official hangs on it.
+ */
+export async function markDemo(form: FormData): Promise<DemoResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  try {
+    await requirePermission('reg', 3);
+    const company = z.string().uuid().parse(form.get('company'));
+    const supabase = await createClient();
+    const { data, error } = await supabase.schema('api').rpc('demo_mark', { p_company: company, p_days: 7 });
+    if (error) {
+      const known = ['not_found', 'already', 'member', 'no_application', 'too_far', 'endorsements', 'payments', 'services', 'too_many'];
+      if (error.code === 'P0001' && error.hint && known.includes(error.hint)) return { ok: false, message: msg(locale, `demo.markWhy.${error.hint}`) };
+      throw error;
+    }
+    revalidatePath('/[locale]/admin/members', 'page');
+    revalidatePath('/[locale]/portal', 'layout');
+    return { ok: true, message: msg(locale, 'demo.done.marked', { company: data ?? '' }) };
+  } catch (error) {
+    return fail(locale, error, 'demo.mark');
+  }
+}

@@ -115,6 +115,14 @@ export type Database = {
               "id": string,"kind": string
             }[]
                            },
+"demo_mark":
+{ Args: { "p_company": string,"p_days"?: number }; Returns: string
+                           },
+"demo_markable":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "company": string,"company_id": string,"created_at": string,"owner_email": string,"stage": Database["public"]['Enums']["app_stage"],"token": string
+            }[]
+                           },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
                            },

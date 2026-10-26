@@ -1,13 +1,13 @@
 'use client';
 
-import { FlaskConical, Plus, Trash2 } from 'lucide-react';
+import { FlaskConical, Plus, Trash2, UserCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { ActionNotice } from '@/components/shared/action-notice';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { callAction, type Outcome } from '@/lib/client/call-action';
-import { addDemo, clearDemo } from '@/lib/demo/actions';
+import { addDemo, clearDemo, markDemo } from '@/lib/demo/actions';
 import { msg } from '@/lib/nav/model';
 
 export interface DemoRow {
@@ -18,15 +18,31 @@ export interface DemoRow {
   expires: string;
 }
 
+/** a self-registered applicant that can be marked as demo (api.demo_markable, migration 0405) */
+export interface MarkableRow {
+  id: string;
+  label: string;
+}
+
 /**
  * Demo members (migration 0350) for presentations: clearly labelled DEMO accounts that use the real sign-in and
  * proposer & seconder signing, kept apart from official members, numbers and counts; removed in one step.
  */
-export function DemoCard({ locale, rows, canManage }: { locale: Locale; rows: DemoRow[]; canManage: boolean }) {
+export function DemoCard({
+  locale,
+  rows,
+  canManage,
+  markable = [],
+}: {
+  locale: Locale;
+  rows: DemoRow[];
+  canManage: boolean;
+  markable?: MarkableRow[];
+}) {
   const m = (k: string) => msg(locale, `demo.${k}`);
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [open, setOpen] = useState<'add' | 'clear' | null>(null);
+  const [open, setOpen] = useState<'add' | 'clear' | 'mark' | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<Outcome | null>(null);
   const [inner, setInner] = useState<Outcome | null>(null);
@@ -88,6 +104,16 @@ export function DemoCard({ locale, rows, canManage }: { locale: Locale; rows: De
         <div className="pb" style={{ marginTop: 12 }}>
           <button type="button" className="btn btn-primary" data-action="demo.add" onClick={() => (setInner(null), setOpen('add'))}>
             <Plus size={16} aria-hidden /> {m('add')}
+          </button>
+          <button
+            type="button"
+            className="btn"
+            data-action="demo.mark"
+            disabled={markable.length === 0}
+            title={markable.length === 0 ? m('markNoneTitle') : undefined}
+            onClick={() => (setInner(null), setOpen('mark'))}
+          >
+            <UserCheck size={16} aria-hidden /> {m('mark')}
           </button>
           {rows.length > 0 && (
             <button type="button" className="btn btn-danger" data-action="demo.clear" onClick={() => (setInner(null), setOpen('clear'))}>
@@ -151,6 +177,52 @@ export function DemoCard({ locale, rows, canManage }: { locale: Locale; rows: De
             </button>
             <button type="submit" className="btn btn-primary" data-action="demo.add.confirm" disabled={busy} title={busy ? msg(locale, 'membership.wiz.working') : undefined}>
               {busy ? msg(locale, 'membership.wiz.working') : m('addOk')}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      <Modal open={open === 'mark'} onOpenChange={(o) => !o && setOpen(null)} title={m('markTitle')} intro={m('markHelp')} closeLabel={msg(locale, 'common.close')} wide>
+        <form
+          className="grid gap-3"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            fd.set('locale', locale);
+            setBusy(true);
+            setInner(null);
+            done(await callAction(locale, () => markDemo(fd)));
+          }}
+        >
+          {markable.length ? (
+            <label className="form-field">
+              {m('markPick')}
+              <select name="company" required defaultValue="">
+                <option value="" disabled>
+                  —
+                </option>
+                {markable.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <p className="em">{m('markNone')}</p>
+          )}
+          <ActionNotice locale={locale} note={inner} />
+          <div className="flex flex-wrap justify-end gap-2.5">
+            <button type="button" className="btn" data-action="modal.close" onClick={() => setOpen(null)}>
+              {msg(locale, 'staffActions.cancel')}
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              data-action="demo.mark.confirm"
+              disabled={busy || markable.length === 0}
+              title={busy ? msg(locale, 'membership.wiz.working') : undefined}
+            >
+              {busy ? msg(locale, 'membership.wiz.working') : m('markOk')}
             </button>
           </div>
         </form>

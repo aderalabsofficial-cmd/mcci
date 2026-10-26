@@ -33,7 +33,7 @@ test.beforeAll(() => {
 test.afterAll(async () => {
   if (!admin) return;
   // safety net if the test stopped before "Remove all demo data"
-  const { data: cos } = await admin.from('companies').select('id').like('name', `DEMO — %${tag}`);
+  const { data: cos } = await admin.from('companies').select('id').like('name', `%${tag}`);
   for (const c of cos ?? []) {
     await admin.from('endorsements').delete().in('endorser_member_id', (await admin.from('members').select('id').eq('company_id', c.id)).data?.map((m) => m.id) ?? []);
     await admin.from('applications').delete().eq('company_id', c.id);
@@ -158,4 +158,68 @@ test('demo members: added by the SG, sign in on their own, propose and second wi
   expect((await admin.from('applications').select('id').eq('id', app!.id)).data).toEqual([]);
   const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
   expect((users?.users ?? []).filter((x) => x.email?.endsWith(`-${tag}@test.local`))).toEqual([]);
+});
+
+test('a self-registered applicant marked as demo by the SG can choose the demo members; removed with the demo data', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  // someone who signed up on their own (as on production): a real company, a draft application
+  const email = `demo-r-${tag}@test.local`;
+  const { data: u, error: ue } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: `Self ${tag}` } });
+  expect(ue).toBeNull();
+  const { data: co } = await admin.from('companies').insert({ name: `Delta ${tag}`, biz_type: 'prop' }).select('id').single();
+  await admin.from('company_users').insert({ company_id: co!.id, user_id: u.user!.id, role: 'Owner' });
+  await admin.from('applications').insert({ company_id: co!.id, created_by: u.user!.id, stage: 'draft', form: { biz: 'prop', step: 3, name: `Delta ${tag}`, rep: `Self ${tag}` } });
+
+  // a demo member to choose
+  await signInAs(page, 'sg');
+  await page.goto('/admin/members');
+  const card = page.locator('[data-demo-card]');
+  await card.locator('[data-action="demo.add"]').click();
+  const add = page.getByRole('dialog');
+  await add.getByLabel('Company name (DEMO is added)').fill(`Zeta ${tag}`);
+  await add.getByLabel('Representative').fill(`Demo Zeta ${tag}`);
+  await add.getByLabel('Name of the person signing in').fill(`Demo Zeta ${tag}`);
+  await add.getByLabel('Mailbox for the invitation and codes').fill(`demo-z-${tag}@test.local`);
+  await add.locator('[data-action="demo.add.confirm"]').click();
+  await expect(card.locator('[data-outcome="ok"]')).toContainText('Demo account added');
+
+  // before: the applicant finds no demo member (production had no real members either: "No members found")
+  const applicant = await (await browser.newContext()).newPage();
+  await applicant.goto('/login');
+  await applicant.getByLabel('Mobile, email or member ID').fill(email);
+  await applicant.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(password);
+  await applicant.locator('[data-action="login.member"]').click();
+  await expect(applicant).toHaveURL(/\/portal/, { timeout: 20_000 });
+  await applicant.goto('/portal/join');
+  await applicant.locator('[data-role="proposer"] [data-action="end.pick"]').click();
+  const pick = applicant.getByRole('dialog');
+  await expect(pick).not.toContainText('Searching', { timeout: 15_000 });
+  await expect(pick.locator('[data-member^="DEMO-"]')).toHaveCount(0);
+
+  // the SG marks the applicant as demo
+  await card.locator('[data-action="demo.mark"]').click();
+  const mark = page.getByRole('dialog');
+  await mark.getByLabel('Applicant').selectOption(co!.id);
+  await mark.locator('[data-action="demo.mark.confirm"]').click();
+  await expect(card.locator('[data-outcome="ok"]')).toContainText('is now a demo applicant');
+  await expect(card.locator('table')).toContainText(`DEMO — Delta ${tag}`);
+  // not in the official register
+  await expect(page.getByRole('main').locator('table').first()).not.toContainText(`Delta ${tag}`);
+
+  // after: the demo member is there to choose
+  await applicant.goto('/portal/join');
+  await applicant.locator('[data-role="proposer"] [data-action="end.pick"]').click();
+  await expect(applicant.getByRole('dialog').locator('[data-member^="DEMO-A-"]')).toHaveCount(1);
+
+  // removed with the demo data, sign-in included
+  await page.goto('/admin/members');
+  await card.locator('[data-action="demo.clear"]').click();
+  await page.locator('[data-action="demo.clear.confirm"]').click();
+  await expect(card.locator('[data-outcome="ok"]')).toContainText('Demo data removed');
+  expect((await admin.from('companies').select('id').eq('id', co!.id)).data).toEqual([]);
+  const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  expect((users?.users ?? []).filter((x) => x.email === email)).toEqual([]);
 });

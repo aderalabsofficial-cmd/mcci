@@ -2292,7 +2292,8 @@
     "done": {
       "added": "Demo account added ({no}); the invitation went to {email}.",
       "addedNoEmail": "Demo account added ({no}), but the invitation email to {email} could not be sent.",
-      "cleared": "Demo data removed: {companies} demo companies, {accounts} sign-in accounts, {files} files."
+      "cleared": "Demo data removed: {companies} demo companies, {accounts} sign-in accounts, {files} files.",
+      "marked": "{company} is now a demo applicant: they can choose the demo members as proposer and seconder."
     },
     "errors": {
       "notAllowed": "You are not allowed to do this.",
@@ -2300,6 +2301,24 @@
       "required": "Company, representative and email are required.",
       "too_many": "At most 10 demo accounts at a time.",
       "generic": "Something went wrong. Please try again."
+    },
+    "mark": "Mark an applicant as demo",
+    "markTitle": "Mark an applicant as demo?",
+    "markHelp": "For someone who signed up on their own and wants to try the proposer & seconder step with the demo members. Their company gets the DEMO label: the application can choose demo members, never goes to the committee, never gets an official number, and is removed — with their sign-in — by “Remove all demo data”. Only applicants with nothing official yet (no proposer requests, fees or services) are listed.",
+    "markPick": "Applicant",
+    "markNone": "No self-registered applicant can be marked now.",
+    "markNoneTitle": "Only applicants with an application before the committee step, without proposer requests, fees or services, can be marked.",
+    "markOk": "Mark as demo",
+    "markWhy": {
+      "not_found": "This applicant was not found.",
+      "already": "This applicant is already a demo account.",
+      "member": "This company is a member — members cannot be marked as demo.",
+      "no_application": "This company has no application.",
+      "too_far": "The application has gone past the proposer step.",
+      "endorsements": "Proposer / seconder requests were already sent for this application.",
+      "payments": "This company already has a fee voucher or receipt.",
+      "services": "This company already has a service request.",
+      "too_many": "At most 10 demo accounts at a time."
     }
   },
   "imp": {
@@ -3331,6 +3350,7 @@
         "sent": "Sent",
         "failed": "Not delivered"
       },
+      "channelsBoth": "Email · Portal",
       "test": "Send test",
       "testFor": "Send a test of “{event}” to your email",
       "wording": "Wording is in English and Urdu in every email; changes to it ship with a release.",

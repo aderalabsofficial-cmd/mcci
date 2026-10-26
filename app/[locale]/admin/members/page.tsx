@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/admin/no-access';
 import { AddMember } from '@/components/members/add-member';
-import { DemoCard, type DemoRow } from '@/components/members/demo-card';
+import { DemoCard, type DemoRow, type MarkableRow } from '@/components/members/demo-card';
 import { Kpi } from '@/components/review/kpi';
 import { PageHeader } from '@/components/shared/page-header';
 import { asLocale } from '@/i18n/locale';
@@ -66,6 +66,12 @@ export default async function MembersPage({ params }: Props) {
       expires: c.demo_expires_at ? date(c.demo_expires_at) : '—',
     };
   });
+  // self-registered applicants the Secretary General may turn into demo applicants (0405); the function checks reg ≥ 3
+  const { data: markRows } = level >= 3 ? await supabase.schema('api').rpc('demo_markable') : { data: null };
+  const markable: MarkableRow[] = (markRows ?? []).map((a) => ({
+    id: a.company_id,
+    label: [a.company, a.token, a.owner_email].filter(Boolean).join(' · '),
+  }));
   const invited = new Map((invites ?? []).map((i) => [i.company_id, i.status]));
   const rows = members ?? [];
 
@@ -128,7 +134,7 @@ export default async function MembersPage({ params }: Props) {
           </table>
         </div>
       </div>
-      <DemoCard locale={locale} rows={demoRows} canManage={level >= 3} />
+      <DemoCard locale={locale} rows={demoRows} canManage={level >= 3} markable={markable} />
     </div>
   );
 }
