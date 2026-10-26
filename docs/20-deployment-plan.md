@@ -749,3 +749,29 @@ after 15 minutes without activity"; idle limit at its default 15 minutes (`SESSI
 unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not exercised on production (no sign-in by Claude on
 production): saving a designation with the Secretary General's password, the member view of a demo member, the
 15-minute sign-out of a real session — all verified locally end to end; the owner can check them with their accounts.
+
+### Mark a self-registered applicant as demo (26 Oct 2026; migration 0405)
+
+Found by the owner on production: Amir khan signed up on his own and his proposer list said "No members found" — the
+only members on production are the two demo members, and demo members endorse demo applications only (0350). Owner's
+choice (of three offered): the Secretary General marks such an applicant as demo. Members Register → Demo card →
+"Mark an applicant as demo" → choose the applicant → the company gets the DEMO label and a removal date (7 days); its
+application then finds the demo members, never goes to the committee, never gets an official number, and "Remove all
+demo data" removes it, sign-in included. `api.demo_mark` / `api.demo_markable` (reg ≥ 3, 2-step) refuse a member
+company, an application past the proposer step, and a company with proposer requests, fees or service requests.
+
+Tests (local, not production): unit 272/272; pgTAP `182_demo_mark` 17 checks (who may, the list, refusals, marked,
+not twice, the demo member found afterwards, removal, grants) with `180_demo_mode` and `001_platform_security`;
+isolated dry run on a clean checkout of `f766054`: 718 ok, 0 not ok, 23/23 files leave no rows; e2e `demo.spec.ts`
+4/4 (before: no demo member in the proposer list; marked by the SG; after: the demo member is there; removed with the
+demo data); page audits on the Members Register (orphans, axe, overflow, tap targets) pass.
+
+**Production (26 Oct 2026), evidence:** tooling `/opt/mcci-deploy-f766054`; migration sha256 `fd47b7cbe585a91c` =
+tested file; backup `mcci-20261026T083231Z` + restore drill PASS (106 tables, 2,233 rows identical), drill directory
+removed; exactly 1 pending → applied → 0 pending; exact row counts identical in every table (the migration adds
+functions only). Grants: `api.demo_mark`, `api.demo_markable` for `authenticated` only (anonymous call → 42501);
+`private.demo_mark_why` executable by none of anon / authenticated / service_role. Release `f766054` live (`ddcbd24`
+kept, `56e2331` removed by the release script); public pages 200, Members Register and the portal form → sign-in;
+nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit, no app errors. Both self-registered applicants on
+production can be marked (checked read-only). Not done by Claude: the marking itself (it needs the Secretary
+General's signed-in session, and is the owner's decision per applicant).
