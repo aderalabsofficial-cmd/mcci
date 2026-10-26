@@ -64,7 +64,8 @@ export function LimitsCard({
   const table = (
     <>
       <p className="mb-3 text-[14px] text-muted">{t('limitsHelpSave')}</p>
-      <div className="-mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
+      {/* relative: the screen-reader-only header stays inside this scroll area (it widened the page on phones) */}
+      <div className="relative -mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
         <table className="w-full min-w-[1200px] border-collapse">
           <thead>
             <tr className="border-b border-line text-[12px] text-muted">
@@ -110,7 +111,7 @@ export function LimitsCard({
                       <td key={m} className="px-1.5 py-2 text-center">
                         <button
                           type="button"
-                          className={cn('lvl', `l${v}`, isChanged && 'outline outline-2 outline-offset-1 outline-[#c8963e]')}
+                          className={cn('lvl max-sm:min-h-11 max-sm:min-w-11', `l${v}`, isChanged && 'outline outline-2 outline-offset-1 outline-[#c8963e]')}
                           data-action="perm.cycle"
                           data-module={m}
                           disabled={fixed || !canManage}

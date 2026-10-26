@@ -28,7 +28,9 @@ test('the server signs out a session idle for more than 15 minutes, and it canno
   const seen = (await context.cookies()).find((c) => c.name === 'mcci_seen');
   expect(seen, 'the server records the last activity').toBeTruthy();
   // as if the last activity was 16 minutes ago
-  await context.addCookies([{ ...seen!, value: String(Date.now() - 16 * 60_000) }]);
+  // replace the cookie (not a second one beside it): delete, then set the old time
+  await context.clearCookies({ name: 'mcci_seen' });
+  await context.addCookies([{ name: 'mcci_seen', value: String(Date.now() - 16 * 60_000), url: page.url() }]);
   await page.goto('/portal/membership');
   await expect(page).toHaveURL(/\/login\?.*expired=1/);
   await expect(page.getByRole('main')).toContainText('You were signed out after 15 minutes without activity');

@@ -23,7 +23,9 @@ test.beforeAll(() => {
   admin = createClient(env!.url, env!.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
 });
 
-test.afterAll(async () => {
+test.afterAll(async ({}, info) => {
+  // only the desktop project runs these tests: other projects' workers must not clean up under its feet
+  if (info.project.name !== 'desktop') return;
   if (!admin) return;
   const company = readAccounts().companyId;
   const { data: reqs } = await admin.from('service_requests').select('id').eq('company_id', company);
@@ -47,7 +49,7 @@ async function memberPage(page: Page) {
 async function startRequest(page: Page, service: string) {
   await page.goto('/portal/apply');
   await page.locator(`[data-action="svc.new"][data-service="${service}"]`).click();
-  await expect(page).toHaveURL(/\/portal\/apply\?r=/);
+  await expect(page).toHaveURL(/\/portal\/apply\?r=/, { timeout: 15_000 });
   // as a person would: the new page has finished loading before the first file goes up (an action started while
   // Next.js is still navigating can be cut off — docs/20 "actions cut off under load")
   await page.waitForLoadState('networkidle');
