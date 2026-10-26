@@ -57,6 +57,7 @@ const SERVICE_ROLE_PATHS = [
   'lib/verify/admin/**',
   'lib/temp/admin/**',
   'lib/demo/admin/**',
+  'lib/site/admin/**',
 ];
 
 const config = [

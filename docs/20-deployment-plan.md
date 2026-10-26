@@ -608,3 +608,21 @@ pdf, still private; sequences unchanged (C 1134, A 2205); 0 imports, 0 members. 
 storage listing empty. AI extraction on; no CRON_SECRET, timer or jobs unit; 1 staff with verified 2-step; nginx
 unchanged (app `7cbb0f72…`), `nginx -t` OK. **No directory data was imported**: the first real import waits for an
 authorised admin to upload MCCI's file and review the preview.
+
+### Release 6a — M2 public website (migration 0370; local, then the usual gate)
+
+All 13 public screens of the prototype (`site/*`): home (hero, live activity, counters, journey, proposer & seconder,
+services, temporary → permanent, verify, news, Urdu launch countdown, call to action), about, membership (fees from
+settings, documents by business type, FAQ), services, service detail, directory, verify, track, live board, news &
+events (calendar), resources (blank official form, printable), contact & complaint desk, login. EN + UR, right-to-left
+for Urdu; motion off under reduced motion and inside the app.
+
+Migration 0370 (service-role functions only; visitors never call them): `api.site_stats` (official counts, demo left
+out), `api.site_feed` (token, kind, stage, time — no names), `api.site_track` (one token: stage and dates),
+`api.site_contact` (ticket from the contact form / complaint desk); `public_directory` no longer lists demo companies;
+`settings.site.launchAt` (TODO(MCCI): confirm the launch date; hidden once passed) is now in `public_settings`.
+App: track 30 lookups / min per address, contact 5 tickets / hour per address (nginx sets X-Real-IP;
+`TRUST_PROXY_CLIENT_IP=1` in production), a hidden field for bots, the emailed confirmation carries only the ticket
+number. Not yet: online service requests (M7 — "Apply now" disabled with the reason), news / events content (written in
+the admin Content screen, M8; until then the empty states show), Ask MCCI AI (M8), office-bearers' names other than
+the President (TODO(MCCI)).

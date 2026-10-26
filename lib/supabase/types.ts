@@ -261,6 +261,26 @@ export type Database = {
 "settings_for_server":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"site_contact":
+{ Args: { "p_body": string,"p_category": string,"p_contact": string,"p_kind": string,"p_name": string,"p_ref": string,"p_subject": string }; Returns: {
+              "public_ref": string,"ticket": string
+            }[]
+                           },
+"site_feed":
+{ Args: { "p_limit"?: number }; Returns: {
+              "at": string,"kind": string,"status": string,"token": string
+            }[]
+                           },
+"site_stats":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "applications_open": number,"converted": number,"members": number,"services_issued": number,"services_open": number,"temporary": number
+            }[]
+                           },
+"site_track":
+{ Args: { "p_token": string }; Returns: {
+              "decided_at": string,"due_at": string,"kind": string,"printing": boolean,"status": string,"submitted_at": string,"token": string
+            }[]
+                           },
 "staff_directory":
 { Args: Record<PropertyKey, never>; Returns: {
               "active": boolean,"created_at": string,"designation": string,"email": string,"full_name": string,"last_sign_in_at": string,"seniority": number,"totp": boolean,"user_id": string

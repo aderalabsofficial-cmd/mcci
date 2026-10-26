@@ -4,11 +4,15 @@ import type { ReactNode } from 'react';
 import { LangToggle } from '@/components/shared/lang-toggle';
 import { BottomTabs } from '@/components/shell/bottom-tabs';
 import { SiteFooter } from '@/components/site/site-footer';
+import { SiteFx } from '@/components/site/site-fx';
 import { SiteHeader } from '@/components/site/site-header';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { bottomTabsModel, loginModel, moreSheetModel, msg, siteNavModel } from '@/lib/nav/model';
 import { getShell } from '@/lib/shell/server';
+import '@/app/styles/proto.css';
+import '@/app/styles/proto-app.css';
+import '@/app/styles/site.css';
 
 /**
  * Public website frame. In a browser: transparent header + footer (compact header and menu sheet on phones).
@@ -39,6 +43,7 @@ export default async function SiteLayout({
         <main id="main" className="pb-[calc(var(--bottomnav-h)+env(safe-area-inset-bottom))]">
           {children}
         </main>
+        <SiteFx />
         <BottomTabs
           tabs={bottomTabsModel('site', locale)}
           more={moreSheetModel('site', locale)}
@@ -69,6 +74,7 @@ export default async function SiteLayout({
       />
       <main id="main">{children}</main>
       <SiteFooter locale={locale} />
+      <SiteFx />
     </>
   );
 }

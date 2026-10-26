@@ -30,7 +30,8 @@
     "pageTabs": "Sections of this page",
     "actionStale": "MCCI Digital was updated while this page was open. Nothing was saved by this click — please reload the page and try again.",
     "actionUnconfirmed": "The server did not confirm this. It may not have been saved — please reload the page to check, then try again.",
-    "reload": "Reload page"
+    "reload": "Reload page",
+    "breadcrumb": "Breadcrumb"
   },
   "nav": {
     "site": {
@@ -2422,6 +2423,383 @@
       "confirm": "Type IMPORT to confirm.",
       "decision": "Unknown decision.",
       "generic": "Something went wrong. Please try again."
+    }
+  },
+  "site": {
+    "home": "Home",
+    "apply": "Apply for membership",
+    "memberLogin": "Member login",
+    "explore": "Explore services",
+    "hero": {
+      "pill": "Multan Chamber of Commerce & Industry · now digital",
+      "title1": "Multan’s trade,",
+      "title2": "now digital.",
+      "ur": "Membership, services and verification — all online, fast and transparent",
+      "sub": "Apply on the official MCCI form — upload your documents and AI fills it in. Your proposer and seconder sign online. Pay at the bank, upload the receipt, and become a member with a 60-day temporary membership while your certificate is printed.",
+      "trust1": "QR-verified documents",
+      "trust2": "24-hour response",
+      "trust3": "Secure, bilingual"
+    },
+    "live": {
+      "label": "LIVE · CHAMBER ACTIVITY",
+      "open": "Open board",
+      "track": "Track a token",
+      "none": "No activity yet. Applications and service requests will appear here, anonymised.",
+      "anon": "Token, service, status and time only",
+      "membership": "Membership application"
+    },
+    "marquee": {
+      "temp": "Temporary membership in 60 days",
+      "endorse": "Digital proposer & seconder",
+      "qr": "QR verification",
+      "lang": "Urdu & English"
+    },
+    "stats": {
+      "members": "Members in the Chamber",
+      "services": "Digital services",
+      "response": "Response commitment",
+      "temp": "Temporary membership",
+      "days": " days"
+    },
+    "journey": {
+      "title": "Membership, fully digital",
+      "sub": "Eight clear steps on the official MCCI New Membership form. You see each one live on your dashboard.",
+      "upload": "Upload, don’t retype",
+      "uploadSub": "Your document list matches your business type. AI fills the form; you only check the highlighted fields.",
+      "member": "Member from the day you pay",
+      "memberSub": "A 60-day temporary membership with QR certificate is issued as soon as MCCI verifies your fee.",
+      "print": "Secure certificate",
+      "printSub": "Printed on security paper with a unique serial; your membership turns permanent when it arrives."
+    },
+    "endorse": {
+      "title1": "Proposer & seconder —",
+      "title2": "signed online",
+      "sub": "You choose two existing MCCI members of your category. They approve your application from their own portal — no visit, no paper.",
+      "ur": "تجویز کنندہ اور تائید کنندہ — آن لائن دستخط",
+      "s1": "Choose two members",
+      "s1Sub": "Search valid MCCI members of your class. Same-sector members appear first.",
+      "s2": "They get a live request",
+      "s2Sub": "Each member sees your request instantly in their MCCI portal and by email, with your note.",
+      "s3": "They sign digitally",
+      "s3Sub": "Declaration, drawn signature and a one-time email code. Time and device are recorded.",
+      "s4": "Straight to committee",
+      "s4Sub": "When both have signed, your file moves to the Membership Committee automatically.",
+      "start": "Start my application"
+    },
+    "services": {
+      "title": "Chamber services, online",
+      "sub": "Seven services that used to need a visit. Each request gets a token and a 24-hour response.",
+      "view": "View service",
+      "pageTitle": "Digital Services",
+      "pageSub": "Seven chamber services, one platform, one token system.",
+      "all": "All services",
+      "allSub": "Available to permanent and temporary members."
+    },
+    "service": {
+      "need": "What you need",
+      "needSub": "Prepare these documents.",
+      "fields": "Details you will enter",
+      "how1": "Log in",
+      "how1Sub": "Temporary or permanent member",
+      "how2": "Upload",
+      "how2Sub": "AI reads and pre-fills",
+      "how3": "Pay & submit",
+      "how3Sub": "Token + 24h clock",
+      "how4": "Download",
+      "how4Sub": "QR-verified PDF",
+      "fee": "Fee: PKR {fee}",
+      "response": "Response within {hours} hours · QR-verified output.",
+      "applyNow": "Apply now",
+      "applySoon": "Online service requests open with the next release; until then please visit or call the Secretariat.",
+      "trackToken": "Track a token",
+      "notFound": "This service was not found."
+    },
+    "temp": {
+      "title": "From temporary to permanent",
+      "sub": "No waiting for printing to start using the Chamber.",
+      "s1": "Fee verified",
+      "s1Sub": "Bank receipt checked by Accounts",
+      "s2": "Temporary — day 1",
+      "s2Sub": "QR certificate, all services open",
+      "s3": "Security printing",
+      "s3Sub": "Unique serial on security paper",
+      "s4": "Permanent",
+      "s4Sub": "Certificate uploaded; temporary QR shows “superseded”"
+    },
+    "verify": {
+      "title": "Verify a document",
+      "sub": "Scan the QR or type the code on any MCCI certificate, temporary certificate or letter.",
+      "placeholder": "Code e.g. MCCI-QR-ABCDE-23456",
+      "label": "Document code",
+      "go": "Verify",
+      "help": "Results show Valid, Temporary, Superseded, Expired or Revoked — every scan is counted."
+    },
+    "news": {
+      "title": "News & events",
+      "sub": "What is happening at the Chamber.",
+      "none": "No news has been published yet.",
+      "pageTitle": "News & Events",
+      "pageSub": "Announcements, workshops and delegations.",
+      "latest": "Latest news",
+      "upcoming": "Upcoming events",
+      "noEvents": "No upcoming events.",
+      "events": "Events",
+      "read": "Read",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "dayEvents": "Events on {date}",
+      "noDayEvents": "No events on this day.",
+      "seats": "{n} seats",
+      "categories": {
+        "News": "News",
+        "Notice": "Notice",
+        "Circular": "Circular",
+        "Event": "Event"
+      }
+    },
+    "urdu": {
+      "eyebrow": "LAUNCH COUNTDOWN",
+      "title1": "ایوانِ تجارت و صنعت ملتان",
+      "title2": "ڈیجیٹل ہو رہا ہے",
+      "sub": "رکنیت، ویزا لیٹرز، سرٹیفکیٹ آف اوریجن اور دستاویزات کی تصدیق، سب کچھ آن لائن، تیز اور شفاف۔ فیس کی تصدیق ہوتے ہی 60 دن کی عارضی رکنیت۔",
+      "tag1": "کاغذی کارروائی ختم ہو رہی ہے",
+      "tag2": "خدمات آپ کے موبائل پر آ رہی ہیں",
+      "tag3": "ملتان کا کاروبار آگے بڑھ رہا ہے",
+      "left": "نئی ویب سائٹ کے آغاز میں باقی وقت",
+      "d": "دن",
+      "h": "گھنٹے",
+      "m": "منٹ",
+      "s": "سیکنڈ"
+    },
+    "cta": {
+      "title": "Ready to move your business online?",
+      "sub": "Apply in minutes. Become a member as soon as your fee is verified.",
+      "ur": "آج ہی آن لائن درخواست دیں"
+    },
+    "about": {
+      "title": "About MCCI",
+      "sub": "A trade body for Multan, rebuilt for the digital era.",
+      "mission": "Our mission",
+      "missionSub": "Faster, transparent, accessible services for the business community of Multan and the region.",
+      "m1": "Digital access",
+      "m1Sub": "Every service online, from any city.",
+      "m2": "Transparency",
+      "m2Sub": "Tokens, countdowns and audit trails.",
+      "m3": "Efficiency",
+      "m3Sub": "AI-assisted checks cut re-work.",
+      "leadership": "Leadership",
+      "leadershipSub": "Elected President and Executive Committee.",
+      "president": "President",
+      "svp": "Senior Vice President",
+      "vp": "Vice President",
+      "sg": "Secretary General",
+      "executive": "Executive Committee",
+      "secretariat": "Secretariat"
+    },
+    "membership": {
+      "title": "Membership",
+      "sub": "Apply online on the official MCCI form. Temporary membership for 60 days from fee verification, permanent when your secure certificate arrives.",
+      "fee": "Membership fee",
+      "feeSub": "As printed on the MCCI New Membership form.",
+      "corporate": "Corporate Class",
+      "corporateSub": "Body corporate, multinational, sales-tax-registered manufacturer, or sales-tax-registered business with turnover ≥ Rs. {turnover}.",
+      "associate": "Associate Class",
+      "associateSub": "Every other business concern within MCCI’s jurisdiction.",
+      "women": "Women Entrepreneurs",
+      "womenSub": "Corporate or Associate class, for women-owned businesses.",
+      "admission": "Admission fee",
+      "subscription": "Annual subscription",
+      "card": "Membership card",
+      "total": "Total",
+      "extraCard": "Extra card for a partner / director: PKR {fee}.",
+      "docs": "Documents you need",
+      "docsSub": "Choose your business type to see the exact list.",
+      "docsNote": "Business address must match the NTN certificate. Application must be proposed and seconded by two valid MCCI members — you choose them and they sign online.",
+      "ifApplicable": "if applicable",
+      "endorse": "Proposer & seconder",
+      "endorseSub": "You choose two existing members of your category; they approve and sign from their own portal.",
+      "journey": "Your journey",
+      "journeySub": "Eight steps — you see each one live on your dashboard and by email.",
+      "t1": "Temporary membership — 60 days",
+      "t1Sub": "Issued as soon as MCCI Accounts verify your fee payment. Temporary certificate with QR, all services open.",
+      "t2": "Security printing",
+      "t2Sub": "Your certificate is printed on security paper with a unique serial while you use services.",
+      "t3": "Converted to permanent",
+      "t3Sub": "MCCI uploads the printed certificate; your membership turns permanent instantly and the temporary QR shows “superseded”.",
+      "blankForm": "Download blank form",
+      "faq": "Questions",
+      "faqSub": "Common membership questions.",
+      "q1": "What is temporary membership?",
+      "a1": "When your fee is paid, MCCI issues a temporary membership for 60 days with a QR certificate. You can use all services. When the printed certificate reaches MCCI, staff upload it and your membership becomes permanent automatically.",
+      "q2": "How much is the fee?",
+      "a2": "Corporate PKR {corporate} · Associate PKR {associate} · Women Entrepreneurs PKR {women}. Extra card for a partner / director PKR {extra}. Renewal: annual subscription only.",
+      "q3": "Which documents do I need?",
+      "a3": "It depends on your business type. The application shows the exact list: CNIC, NTN, tax return, address proof, bank certificate, photo — and for partnerships and companies the deed / SECP documents.",
+      "q4": "When does membership expire?",
+      "a4": "Every year on 31 March. Renewal window is 1–31 March.",
+      "q5": "I do not know a proposer",
+      "a5": "Choose “MCCI please help” when you pick your proposer and the Membership Desk will arrange one."
+    },
+    "directory": {
+      "title": "Business Directory",
+      "sub": "Member companies of Multan — public fields only.",
+      "table": "Member directory",
+      "listed": "{n} listed",
+      "search": "Search company or sector",
+      "allClasses": "All classes",
+      "cols": {
+        "company": "Company",
+        "sector": "Sector",
+        "cls": "Class",
+        "no": "Membership No.",
+        "status": "Status"
+      },
+      "none": "No member companies are listed yet.",
+      "noMatch": "No company matches your search.",
+      "view": "View {company}",
+      "validTo": "Valid to",
+      "publicOnly": "Only public fields are shown. Contact details are shared by MCCI on request.",
+      "status": {
+        "Permanent": "Member",
+        "Temporary": "Temporary member"
+      }
+    },
+    "track": {
+      "title": "Track a Token",
+      "sub": "See the stage of any application. No personal data is shown.",
+      "status": "Status",
+      "statusSub": "Enter your token.",
+      "label": "Token",
+      "go": "Track",
+      "example": "e.g. MCCI-2026-M-0231 or MCCI-2026-10482",
+      "none": "No token found.",
+      "invalid": "That does not look like an MCCI token (e.g. MCCI-2026-M-0231).",
+      "limited": "Too many lookups from this connection. Please wait a minute.",
+      "membership": "Membership application",
+      "submitted": "Submitted {date}",
+      "decided": "Decided {date}",
+      "due": "Response due {date}",
+      "board": "Live board",
+      "boardSub": "Token, service, status and time only."
+    },
+    "board": {
+      "title": "Live Board",
+      "sub": "Everything happening at the Chamber, anonymised. Built for the lobby screen too.",
+      "activity": "Chamber activity",
+      "activitySub": "Updated every minute.",
+      "issued": "Services issued",
+      "temp": "Temporary members",
+      "converted": "Converted to permanent",
+      "open": "In progress",
+      "feed": "Live feed",
+      "live": "LIVE"
+    },
+    "stage": {
+      "submitted": "Submitted",
+      "review": "Document check",
+      "returned": "Returned for correction",
+      "proposer": "Proposer & Seconder",
+      "committee": "Committee approval",
+      "payment": "Fee payment",
+      "temp": "Temporary membership",
+      "permanent": "Permanent member",
+      "rejected": "Not approved",
+      "Submitted": "Submitted",
+      "In review": "In review",
+      "Returned": "Returned",
+      "Ready to sign": "Ready to sign",
+      "Issued": "Issued",
+      "Rejected": "Rejected"
+    },
+    "resources": {
+      "title": "Resources",
+      "sub": "Official forms, checklists and guides.",
+      "downloads": "Downloads",
+      "download": "Download",
+      "open": "Open",
+      "r1": "Membership Form (official, blank)",
+      "r1Sub": "MCCI New Membership application form, 4 pages",
+      "r2": "Temporary membership — how it works",
+      "r2Sub": "60 days from fee payment until the permanent certificate is uploaded",
+      "r3": "Documents checklist by business type",
+      "r3Sub": "Proprietorship, partnership, private and public companies",
+      "r4": "Service Guide 2026",
+      "r4Sub": "All seven services",
+      "formTitle": "MCCI New Membership form (blank)",
+      "formSub": "Print it, or save it as PDF from the print dialog. Applying online fills it in for you.",
+      "print": "Print / save as PDF"
+    },
+    "contact": {
+      "title": "Contact & Complaint Desk",
+      "sub": "Reach the Secretariat, or file a complaint with a trackable ticket.",
+      "touch": "Get in touch",
+      "touchSub": "We reply within 24 hours.",
+      "tabContact": "Contact",
+      "tabComplaint": "Complaint desk",
+      "name": "Name",
+      "contact": "Mobile / email",
+      "subject": "Subject",
+      "member": "Member ID (optional)",
+      "token": "Token (optional)",
+      "message": "Message",
+      "about": "Complaint about",
+      "cats": {
+        "delay": "Service delay",
+        "staff": "Staff conduct",
+        "document": "Document issue",
+        "other": "Other"
+      },
+      "details": "Details",
+      "send": "Send message",
+      "submit": "Submit complaint",
+      "hours": "Mon–Sat",
+      "tel": "Tel {tel}",
+      "call": "Call",
+      "email": {
+        "contact": "Thank you for contacting the Multan Chamber of Commerce & Industry. Your message has been received with ticket number {ticket}.",
+        "complaint": "Your complaint to the Multan Chamber of Commerce & Industry has been registered with ticket number {ticket}.",
+        "reply": "The Secretariat replies within 24 hours. Please quote the ticket number if you call.",
+        "subject": "MCCI ticket {ticket}"
+      },
+      "mailLabel": "Email",
+      "map": "Map",
+      "sent": "Received — your ticket number is {ticket}. The Secretariat replies within 24 hours.",
+      "sentMailed": "Received — your ticket number is {ticket}; we have emailed it to you. The Secretariat replies within 24 hours.",
+      "errors": {
+        "fields": "Please fill in your name, a mobile number or email, and the message.",
+        "limited": "Too many messages from this connection. Please try again in an hour, or call the Secretariat.",
+        "generic": "The message could not be sent. Please try again, or call the Secretariat."
+      }
+    },
+    "svc": {
+      "ebil": {
+        "desc": "Electronic Business Invitation Letter",
+        "note": "Submitted and tracked online; letter issued with a verification QR"
+      },
+      "visa": {
+        "desc": "Visa Recommendation Letter",
+        "note": "Issued digitally with QR verification"
+      },
+      "guar": {
+        "desc": "for obtaining Chinese visa",
+        "note": "AI pre-fills the form from your documents"
+      },
+      "sample": {
+        "desc": "carry free commercial samples abroad",
+        "note": "24-hour response target"
+      },
+      "other": {
+        "desc": "membership / company profile etc.",
+        "note": "Letter templates managed by MCCI"
+      },
+      "co": {
+        "desc": "Attestation of Certificate of Origin (C.O.)",
+        "note": "Documents checked online; attested copy issued with a verification QR"
+      },
+      "att": {
+        "desc": "certificate, financial report, authority letter, MoU",
+        "note": "Every attested document gets a verification QR"
+      }
     }
   }
 }

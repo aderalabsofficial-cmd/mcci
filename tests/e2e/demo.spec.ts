@@ -71,7 +71,8 @@ async function activate(browser: Browser, email: string): Promise<Page> {
   await page.getByLabel('Create password').fill(password);
   await page.getByLabel('Confirm password').fill(password);
   await page.locator('[data-action="invite.activate"]').click();
-  await expect(page).toHaveURL(/\/portal/);
+  // account creation + first sign-in take several seconds when the laptop runs the whole suite
+  await expect(page).toHaveURL(/\/portal/, { timeout: 20_000 });
   return page;
 }
 

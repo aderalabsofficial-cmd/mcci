@@ -14,11 +14,13 @@ describe('nav model', () => {
   it('links built screens and disables the rest with a reason naming the milestone', () => {
     const nav = siteNavModel('en');
     expect(nav[0]).toMatchObject({ id: 'home', href: '/', reason: null });
-    expect(nav.find((i) => i.id === 'membership')).toMatchObject({
-      id: 'membership',
-      href: null,
-      reason: 'Being built — milestone M2',
-    });
+    // M2 (public website) is built: every public page is a link
+    expect(nav.find((i) => i.id === 'membership')).toMatchObject({ id: 'membership', href: '/membership', reason: null });
+    expect(nav.every((i) => i.href !== null)).toBe(true);
+    const reports = sidebarModel('admin', 'en')
+      .flatMap((s) => s.items)
+      .find((i) => i.id === 'reports')!;
+    expect(reports).toMatchObject({ href: null, reason: 'Being built — milestone M9' });
     expect(loginModel('ur')).toMatchObject({ href: '/login', reason: null }); // M1 is built
     const events = sidebarModel('portal', 'ur')
       .flatMap((s) => s.items)

@@ -39,7 +39,7 @@ export function SiteHeader({
   // Sign-in pages have no dark hero behind the header (the form column is light): use the solid header from the
   // start so its white controls stay readable.
   const pathname = usePathname();
-  const solid = scrolled || /^\/(login|register)(\/|$)/.test(pathname);
+  const solid = scrolled || /^\/(login|register|invite)(\/|$)/.test(pathname);
 
   useEffect(() => {
     const onScroll = () => setSolid(window.scrollY > 40);
