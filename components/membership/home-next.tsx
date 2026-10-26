@@ -1,14 +1,53 @@
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { startApplication } from '@/lib/membership/actions';
-import type { MyApplication } from '@/lib/membership/load';
+import type { MyApplication, MyMembership } from '@/lib/membership/load';
 import { pkr, voucherDate } from '@/lib/committee/voucher';
 import { msg } from '@/lib/nav/model';
 import { both, Ic, L, NextCard } from './ui';
 
+/**
+ * An existing member (added by MCCI, imported, or a labelled demo member) without an open online application: their
+ * membership, the proposer / seconder requests waiting for them, and services — never "start an application".
+ */
+function MemberNext({ member, locale }: { member: MyMembership; locale: Locale }) {
+  const t = (k: string, vars?: Record<string, string>) => msg(locale, `membership.next.member.${k}`, vars);
+  const active = member.status === 'Permanent' || member.status === 'Temporary';
+  const k = active ? 't' : member.status === 'Suspended' ? 'tSuspended' : 'tExpired';
+  const vars = { no: member.member_no, cls: msg(locale, `membership.classes.${member.class}`), until: voucherDate(`${member.valid_to}T12:00:00+05:00`, locale) };
+  const body = [
+    member.demo ? t('demo') : '',
+    active ? t('d', vars) : t('dExpired', vars),
+    member.pendingEndorsements > 0 ? t('waiting', { n: String(member.pendingEndorsements) }) : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <NextCard tone={active ? (member.status === 'Temporary' ? 'teal' : 'green') : 'red'} icon={active ? 'badge' : 'flag'} title={both(`membership.next.member.${k}`)} body={body}>
+      {member.pendingEndorsements > 0 && (
+        <Link className="btn btn-gold btn-big" href="/portal/endorse" data-action="nav">
+          <Ic name="signature" /> <L {...both('membership.next.member.requests', { n: String(member.pendingEndorsements) })} />
+        </Link>
+      )}
+      <Link className="btn btn-big" href="/portal/membership" data-action="nav">
+        <Ic name="award" /> <L {...both('membership.next.myMembership')} />
+      </Link>
+      {active && (
+        <Link className="btn btn-big" href="/portal/apply" data-action="nav">
+          <Ic name="file" /> <L {...both('membership.next.member.service')} />
+        </Link>
+      )}
+    </NextCard>
+  );
+}
+
 /** "What to do now" for the member's stage (prototype member.js next()) */
-export function HomeNext({ app, locale }: { app: MyApplication | null; locale: Locale }) {
+export function HomeNext({ app, locale, member = null }: { app: MyApplication | null; locale: Locale; member?: MyMembership | null }) {
   const t = (k: string, vars?: Record<string, string>) => msg(locale, `membership.next.${k}`, vars);
+  // already a member and no application in progress: the membership itself
+  if (member && (!app || ['withdrawn', 'draft', 'rejected', 'permanent'].includes(app.stage))) {
+    return <MemberNext member={member} locale={locale} />;
+  }
   const progress = (
     <Link className="btn btn-big" href="/portal/mtrack" data-action="nav">
       <Ic name="clock" /> <L {...both('membership.next.progress')} />

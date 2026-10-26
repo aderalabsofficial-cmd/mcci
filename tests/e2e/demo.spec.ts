@@ -127,7 +127,12 @@ test('demo members: added by the SG, sign in on their own, propose and second wi
 
   // each demo member signs with the code from their mailbox
   for (const [p, who] of [[proposer, people.proposer], [seconder, people.seconder]] as const) {
-    await p.goto('/portal/endorse');
+    // a demo member is an active member: no application of their own, the waiting request is on their home page
+    await p.goto('/portal');
+    await expect(p.getByRole('main')).toContainText('You are an MCCI member');
+    await expect(p.getByRole('main')).not.toContainText('Start my application');
+    await p.getByRole('link', { name: /Open requests \(1\)/ }).click();
+    await expect(p).toHaveURL(/\/portal\/endorse/);
     await p.locator('[data-action="end.sign"]').first().click();
     const d = p.getByRole('dialog');
     const pad = d.locator('canvas.sigpad');

@@ -1,19 +1,22 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { z } from 'zod';
 import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { type ActionResult, dbFail, fail, ok, permissionFail } from '@/lib/access/result';
 import { deleteAuthenticators } from '@/lib/auth/admin/invitations';
+import { confirmPassword } from '@/lib/auth/admin/reauth';
 import { sendInvitation } from '@/lib/invitations/email';
 import { msg } from '@/lib/nav/model';
+import { forwardedAuthHeaders } from '@/lib/net/client-ip';
 import { STAFF_MODULES } from '@/lib/permissions/levels';
 import { requirePermission } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * Staff & Roles (actions staff.invite, staff.edit, staff.resend, staff.revoke, staff.reset2fa, perm.cycle, perm.reset —
+ * Staff & Roles (actions staff.invite, staff.edit, staff.resend, staff.revoke, staff.reset2fa, perm.save, perm.reset —
  * docs/catalogue/actions.md). Each starts with requirePermission('staff', 'approve') — Secretary General by default
  * (docs/06) — and then calls an api.* function WITH THE USER'S OWN SESSION, which checks the same permission again
  * in the database, changes the rows and writes audit_log (who, old → new, why) through the row triggers
@@ -165,41 +168,49 @@ export async function resetStaffMfa(_: ActionResult | null, form: FormData): Pro
   return ok(locale, 'access.staff.reset2faDone');
 }
 
-const limitSchema = z.object({
-  designation: z.string().trim().min(1).max(80),
-  module: z.enum(STAFF_MODULES),
-  level: z.coerce.number().int().min(0).max(3),
-});
+/** the password is checked by Supabase Auth on the server, then the database requires that fresh check (0400) */
+async function confirmed(locale: Locale, userId: string, form: FormData): Promise<ActionResult | null> {
+  const password = String(form.get('password') ?? '');
+  if (!password) return fail(locale, 'access.errors.reauth');
+  const r = await confirmPassword(userId, password, forwardedAuthHeaders(await headers()));
+  if (r === 'limited') return fail(locale, 'access.errors.reauthLimited');
+  if (r === 'wrong') return fail(locale, 'access.errors.reauthWrong');
+  return null;
+}
 
-export async function setRoleLimit(_: ActionResult | null, form: FormData): Promise<ActionResult> {
+const levelsSchema = z.partialRecord(z.enum(STAFF_MODULES), z.number().int().min(0).max(3));
+
+/**
+ * perm.save: one designation's limits, saved together after the person re-enters their password (owner's request,
+ * 26 Oct 2026; migration 0400). Only the levels that changed are written; every change is audited with the reason.
+ */
+export async function saveRoleLimits(_: ActionResult | null, form: FormData): Promise<ActionResult> {
   const locale = localeOf(form);
   const g = await guard(locale);
   if (g.denied) return g.denied;
-  const parsed = limitSchema.safeParse({
-    designation: form.get('designation'),
-    module: form.get('module'),
-    level: form.get('level'),
-  });
-  if (!parsed.success) return fail(locale, 'access.errors.level');
+  const designation = z.string().trim().min(1).max(80).safeParse(form.get('designation'));
+  let levels;
+  try {
+    levels = levelsSchema.parse(JSON.parse(String(form.get('levels') ?? '{}')));
+  } catch {
+    return fail(locale, 'access.errors.level');
+  }
+  if (!designation.success) return fail(locale, 'access.errors.designation');
+  const refused = await confirmed(locale, g.actor!.userId, form);
+  if (refused) return refused;
   const supabase = await createClient();
-  const { error } = await supabase.schema('api').rpc('role_permission_set', {
-    p_designation: parsed.data.designation,
-    p_module: parsed.data.module,
-    p_level: parsed.data.level,
-  });
-  if (error) return dbFail(locale, error, 'perm.cycle');
+  const { data, error } = await supabase.schema('api').rpc('role_permissions_save', { p_designation: designation.data, p_levels: levels });
+  if (error) return dbFail(locale, error, 'perm.save');
   revalidatePath(PAGE, 'page');
-  return ok(locale, 'access.staff.limitSaved', {
-    designation: parsed.data.designation,
-    module: msg(locale, `access.modules.${parsed.data.module}`),
-    level: msg(locale, `access.levels.${parsed.data.level}`),
-  });
+  return ok(locale, 'access.staff.limitsSaved', { designation: designation.data, n: String(data ?? 0) });
 }
 
 export async function resetRoleLimits(_: ActionResult | null, form: FormData): Promise<ActionResult> {
   const locale = localeOf(form);
   const g = await guard(locale);
   if (g.denied) return g.denied;
+  const refused = await confirmed(locale, g.actor!.userId, form);
+  if (refused) return refused;
   const supabase = await createClient();
   const { error } = await supabase.schema('api').rpc('role_permissions_reset');
   if (error) return dbFail(locale, error, 'perm.reset');

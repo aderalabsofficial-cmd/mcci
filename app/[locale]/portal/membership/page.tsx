@@ -7,7 +7,8 @@ import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { classOf, fee } from '@/lib/flow/application';
 import { JOURNEY, journeyIndex } from '@/lib/membership/reference';
-import { loadMyApplication, loadPublicSettings } from '@/lib/membership/load';
+import { loadMyApplication, loadMyMembership, loadPublicSettings } from '@/lib/membership/load';
+import { voucherDate } from '@/lib/committee/voucher';
 import { msg } from '@/lib/nav/model';
 import { createClient } from '@/lib/supabase/server';
 
@@ -25,13 +26,15 @@ export default async function MembershipPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const supabase = await createClient();
-  const [app, settings, { data: docs }] = await Promise.all([
+  const [app, member, settings, { data: docs }] = await Promise.all([
     loadMyApplication(),
+    loadMyMembership(),
     loadPublicSettings(),
     supabase.from('documents').select('code, kind, status, valid_to').order('created_at', { ascending: false }),
   ]);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `membership.${k}`, v);
-  const open = app && app.stage !== 'withdrawn';
+  const asMember = member && (!app || ['withdrawn', 'draft', 'rejected', 'permanent'].includes(app.stage));
+  const open = !asMember && app && app.stage !== 'withdrawn';
   const due =
     open && app.form.biz
       ? fee(app.form, app.women, app.partners.filter((p) => p.extra_card).length, settings.fees)
@@ -39,7 +42,7 @@ export default async function MembershipPage({ params }: Props) {
 
   const status = (
     <>
-      <HomeNext app={app} locale={locale} />
+      <HomeNext app={app} locale={locale} member={member} />
       {open && app.stage !== 'draft' && (
         <Card title={<L {...both('membership.home.journey')} />}>
           <Journey stage={app.stage} big />
@@ -59,6 +62,19 @@ export default async function MembershipPage({ params }: Props) {
               ],
               [m('wiz.submitted.cls'), app.form.biz ? m(`classes.${app.class ?? classOf(app.form)}`) : ''],
               [m('page.feeDue'), due ? `Rs. ${due.total.toLocaleString('en-PK')}` : ''],
+            ]}
+          />
+        </Card>
+      ) : asMember ? (
+        <Card title={m('page.member.title')}>
+          <KV
+            pairs={[
+              [m('page.member.company'), member.company],
+              [m('page.member.no'), member.member_no],
+              [m('page.member.cls'), `${m(`classes.${member.class}`)}${member.women ? ' · W' : ''}`],
+              [m('page.member.status'), msg(locale, `register.status.${member.status}`)],
+              [m('page.member.since'), voucherDate(`${member.since}T12:00:00+05:00`, locale)],
+              [m('page.member.validTo'), voucherDate(`${member.valid_to}T12:00:00+05:00`, locale)],
             ]}
           />
         </Card>

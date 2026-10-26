@@ -13,6 +13,7 @@ export interface ActionResult {
 }
 
 const HINTS = new Set([
+  'reauth',
   'email',
   'already_staff',
   'already_invited',

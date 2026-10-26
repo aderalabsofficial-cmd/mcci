@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
 }
 
 async function handle(request: NextRequest): Promise<NextResponse> {
-  const { response, userId, configured } = await updateSession(request, intl(request));
+  const { response, userId, configured, expired } = await updateSession(request, intl(request));
   // First line of defence only: layouts check the session and staff 2-step again on the server, and every data
   // access is enforced by RLS / api.* functions in the database.
   if (configured && !userId && PROTECTED.test(request.nextUrl.pathname)) {
@@ -23,7 +23,12 @@ async function handle(request: NextRequest): Promise<NextResponse> {
     const login = new URL(ur ? '/ur/login' : '/login', request.url);
     // without the locale prefix: the login page's redirect() adds it again
     login.searchParams.set('next', path.replace(/^\/ur(?=\/|$)/, '') || '/');
-    return NextResponse.redirect(login);
+    // signed out after 15 minutes without activity: the login page says why
+    if (expired) login.searchParams.set('expired', '1');
+    const redirect = NextResponse.redirect(login);
+    // the cleared session cookies go with the redirect
+    for (const c of response.cookies.getAll()) redirect.cookies.set(c);
+    return redirect;
   }
   return response;
 }

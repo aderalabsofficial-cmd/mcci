@@ -125,20 +125,41 @@ test.describe('Staff & Roles', () => {
     await expect(page.getByRole('button', { name: `E2E Third ${run}` })).toHaveCount(0);
   });
 
-  test('limits by designation: a click moves one step; reset restores the defaults', async ({ page }) => {
+  test('limits by designation: changes wait for Save on that designation and the password; undo; reset needs it too', async ({ page }) => {
     await signInAs(page, 'sg');
     await page.goto('/admin/staff');
-    const cell = page.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: No access' });
-    await cell.click();
-    await expect(page.getByRole('status')).toContainText('Front Desk / Data Entry · Reports & AI: View');
-    await expect(page.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: View' })).toBeVisible();
+    const row = page.locator('[data-designation="Front Desk / Data Entry"]');
+    await row.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: No access' }).click();
+    // only on screen: marked unsaved, nothing stored yet
+    await expect(row).toHaveAttribute('data-unsaved', '1');
+    await expect(row).toContainText('1 unsaved change');
+    await row.locator('[data-action="perm.undo"]').click();
+    await expect(row).not.toHaveAttribute('data-unsaved', /.+/);
+    await expect(row.locator('[data-action="perm.save"]')).toBeDisabled();
     await expect(
       page.getByRole('button', { name: 'Secretary General · Staff & audit: Approve' }),
       'the Secretary General row is fixed',
     ).toBeDisabled();
+
+    await row.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: No access' }).click();
+    await row.locator('[data-action="perm.save"]').click();
+    const d = page.getByRole('dialog');
+    await expect(d.locator('[data-changes]')).toContainText('Reports & AI: No access → View');
+    // a wrong password changes nothing
+    await d.getByLabel('Your password').fill('not-the-password-123');
+    await d.locator('[data-action="perm.save.confirm"]').click();
+    await expect(d).toContainText('That password is not correct. Nothing was changed.');
+    await d.getByLabel('Your password').fill(accounts.sg!.password);
+    await d.locator('[data-action="perm.save.confirm"]').click();
+    await expect(page.getByRole('status')).toContainText('Front Desk / Data Entry: 1 limit(s) saved.');
+    await expect(row.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: View' })).toBeVisible();
+    await expect(row).not.toHaveAttribute('data-unsaved', /.+/);
+
     await page.locator('[data-action="perm.reset"]').click();
+    await page.getByRole('dialog').getByLabel('Your password').fill(accounts.sg!.password);
+    await page.locator('[data-action="perm.reset.confirm"]').click();
     await expect(page.getByRole('status')).toContainText('Default limits restored');
-    await expect(page.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: No access' })).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Front Desk / Data Entry · Reports & AI: No access' })).toBeVisible();
   });
 });
 

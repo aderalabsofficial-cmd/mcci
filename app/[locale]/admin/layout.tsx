@@ -1,9 +1,11 @@
 import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { AreaShell } from '@/components/shell/area-shell';
+import { IdleGuard } from '@/components/shell/idle-guard';
 import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { getSession } from '@/lib/permissions/server';
+import { IDLE_MS } from '@/lib/session/idle';
 import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
 
@@ -32,6 +34,7 @@ export default async function AdminLayout({
       account={{ name: session!.access.full_name ?? '', role: session!.access.staff!.designation }}
     >
       {children}
+      <IdleGuard locale={locale} idleMs={IDLE_MS} />
     </AreaShell>
   );
 }

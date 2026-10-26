@@ -333,6 +333,12 @@
     },
     "link": {
       "invalid": "This link has expired or was already used. Please sign in, or request a new link."
+    },
+    "idleSignedOut": "You were signed out after 15 minutes without activity. Please sign in again.",
+    "idle": {
+      "warn": "You will be signed out in {s} seconds",
+      "stay": "Stay signed in",
+      "help": "For your security, MCCI Digital signs you out after 15 minutes without activity."
     }
   },
   "access": {
@@ -447,7 +453,18 @@
       "allStatuses": "All statuses",
       "showing": "Showing {shown} of {total} records",
       "exportCsv": "Export CSV",
-      "sortBy": "Sort by {column}"
+      "sortBy": "Sort by {column}",
+      "undo": "Undo",
+      "unsaved": "{n} unsaved change(s)",
+      "nothingToSave": "No changes in this row",
+      "changedFrom": "was {level}",
+      "limitsHelpSave": "Click a cell to change it: — (no access) → View → Edit → Approve. Changes are not saved until you press Save on that designation and confirm with your password. “Approve” covers final decisions such as committee approval, extending or revoking temporary memberships, signing documents and verifying payments.",
+      "confirmSaveTitle": "Save limits for {designation}",
+      "confirmResetTitle": "Reset every designation to the default limits?",
+      "confirmHelp": "For security, changes to staff access need your password.",
+      "yourPassword": "Your password",
+      "confirmSave": "Confirm and save",
+      "limitsSaved": "{designation}: {n} limit(s) saved."
     },
     "errors": {
       "notAllowed": "You are not allowed to do this.",
@@ -465,7 +482,10 @@
       "module": "Unknown screen group.",
       "level": "Unknown level.",
       "lastOwner": "Your company must keep at least one active Owner.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "reauth": "Enter your password to confirm this change.",
+      "reauthWrong": "That password is not correct. Nothing was changed.",
+      "reauthLimited": "Too many password attempts. Please wait 15 minutes. Nothing was changed."
     },
     "invite": {
       "title": "Accept your invitation",
@@ -914,7 +934,18 @@
       },
       "tempUntil": "Membership No. {no} is active until {until}. Your temporary certificate is ready.",
       "tempExpired": "Your temporary membership {no} expired on {until}. MCCI can extend it — please contact MCCI.",
-      "certificate": "View certificate"
+      "certificate": "View certificate",
+      "member": {
+        "t": "You are an MCCI member",
+        "tExpired": "Your membership has expired",
+        "tSuspended": "Your membership is suspended",
+        "d": "Membership No. {no} · {cls} · valid until {until}.",
+        "dExpired": "Membership No. {no} expired on {until}. Please contact the Membership Desk to renew.",
+        "waiting": "{n} proposer / seconder request(s) are waiting for you.",
+        "requests": "Open requests ({n})",
+        "service": "Request a service",
+        "demo": "DEMO — for presentation only, not an official membership"
+      }
     },
     "wiz": {
       "pageTitle": "Application form",
@@ -1149,7 +1180,16 @@
       "renewLater": "Renewal opens from 1 to 31 March each year once you are a member.",
       "applicationKV": "Application",
       "stage": "Stage",
-      "feeDue": "Fee after approval"
+      "feeDue": "Fee after approval",
+      "member": {
+        "title": "Your membership",
+        "company": "Company",
+        "no": "Membership No.",
+        "cls": "Class",
+        "status": "Status",
+        "since": "Member since",
+        "validTo": "Valid until"
+      }
     },
     "form": {
       "title": "Official form",
@@ -1787,6 +1827,32 @@
       "revoked": {
         "t": "Temporary membership revoked",
         "b": "Membership {no}: {reason}"
+      }
+    },
+    "service_received": {
+      "t": "Request {token} received",
+      "b": "MCCI received your {service} request {token}."
+    },
+    "service_returned": {
+      "t": "Request {token} returned",
+      "b": "MCCI returned your request {token} for a correction."
+    },
+    "service_rejected": {
+      "t": "Request {token} not approved",
+      "b": "MCCI could not approve your request {token}."
+    },
+    "service_issued": {
+      "t": "Document issued for {token}",
+      "b": "Your {service} for request {token} is issued. Download it from your requests."
+    },
+    "ticket": {
+      "reply": {
+        "t": "Reply to {ticket}",
+        "b": "MCCI replied to your ticket {ticket}."
+      },
+      "resolved": {
+        "t": "Ticket {ticket} resolved",
+        "b": "MCCI marked your ticket {ticket} as resolved."
       }
     }
   },
@@ -3113,6 +3179,218 @@
       "signed and issued": "Signed and issued",
       "rejected": "Not approved",
       "cancelled": "Cancelled"
+    }
+  },
+  "eng": {
+    "notes": {
+      "title": "Messages",
+      "readAll": "Mark all read",
+      "all": "All messages",
+      "none": "No messages yet. Every step of your application and requests appears here and by email.",
+      "new": "New",
+      "channel": "Email + Portal",
+      "open": "Open {title}",
+      "reach": "How should we reach you?",
+      "emailAlways": "Every step — application, payments, services, documents — is emailed to you and shown here.",
+      "urdu": "Messages in Urdu",
+      "urduSub": "Your preferred language for messages",
+      "save": "Save",
+      "goTo": "Go to the page"
+    },
+    "events": {
+      "title": "Events",
+      "upcoming": "Upcoming",
+      "none": "No upcoming events.",
+      "register": "Register",
+      "registered": "Registered",
+      "full": "Full",
+      "registerFor": "Register for {title}",
+      "seatsLeft": "{n} seats left",
+      "adminTitle": "Events",
+      "create": "Create event",
+      "edit": "Edit {title}",
+      "table": "Events",
+      "cols": {
+        "event": "Event",
+        "date": "Date",
+        "registered": "Registered",
+        "status": "Status"
+      },
+      "published": "Published",
+      "draft": "Not published",
+      "past": "Past",
+      "form": {
+        "title": "Title (English)",
+        "titleUr": "Title (Urdu)",
+        "type": "Type (e.g. Seminar, Delegation)",
+        "startsAt": "Date and time (Pakistan time)",
+        "venue": "Venue",
+        "seats": "Seats (empty = no limit)",
+        "body": "Details (English)",
+        "bodyUr": "Details (Urdu)",
+        "published": "Published (members can see and register)",
+        "save": "Save event"
+      }
+    },
+    "support": {
+      "title": "Help & Support",
+      "help": "How can we help?",
+      "sub": "Real people at the Membership Desk, Mon–Sat 9 am – 5 pm.",
+      "call": "Call us",
+      "email": "Email us",
+      "ai": "Ask MCCI AI",
+      "aiSub": "Instant answers",
+      "aiSoon": "Coming in the next release",
+      "ticket": "Open a ticket",
+      "ticketSub": "Reply within 24 hours",
+      "visit": "Visit the Chamber",
+      "visitSub": "Address & hours",
+      "guides": "Guides",
+      "guidesSub": "Forms & checklists",
+      "mine": "My tickets",
+      "noTickets": "No tickets yet.",
+      "faq": "Common questions",
+      "newTitle": "Open a ticket",
+      "newHelp": "MCCI replies within 24 hours, by email and here.",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send",
+      "back": "All tickets",
+      "reply": "Reply",
+      "replyLabel": "Your reply",
+      "you": "You",
+      "mcci": "MCCI"
+    },
+    "tk": {
+      "title": "Complaint Desk",
+      "kOpen": "Open",
+      "kProgress": "In progress",
+      "kResolved": "Resolved",
+      "kPublic": "From the public site",
+      "table": "Tickets",
+      "cols": {
+        "ticket": "Ticket",
+        "from": "From",
+        "subject": "Subject",
+        "owner": "Owner",
+        "opened": "Opened",
+        "status": "Status"
+      },
+      "none": "No tickets yet.",
+      "unassigned": "Unassigned",
+      "assign": "Assign",
+      "assignTo": "Assign to",
+      "resolve": "Resolve",
+      "resolveTitle": "Mark this ticket resolved?",
+      "resolveHelp": "The requester is told by email. A reply from them opens it again.",
+      "resolveNote": "Closing note (optional, sent to the requester)",
+      "thread": "Conversation",
+      "publicFrom": "{name} · {email}",
+      "status": {
+        "Open": "Open",
+        "In progress": "In progress",
+        "Resolved": "Resolved",
+        "Closed": "Closed"
+      }
+    },
+    "content": {
+      "title": "Website Content (CMS)",
+      "new": "New post",
+      "edit": "Edit {title}",
+      "table": "Posts",
+      "cols": {
+        "title": "Title",
+        "type": "Type",
+        "updated": "Published",
+        "status": "Status"
+      },
+      "none": "No posts yet — press “New post”.",
+      "form": {
+        "category": "Type",
+        "title": "Title (English)",
+        "titleUr": "Title (Urdu)",
+        "body": "Text (English)",
+        "bodyUr": "Text (Urdu)",
+        "status": "Status",
+        "save": "Save post"
+      },
+      "statuses": {
+        "Draft": "Draft",
+        "Live": "Live on the website",
+        "Archived": "Archived"
+      }
+    },
+    "notify": {
+      "title": "Notification Center",
+      "sub": "Every message is emailed and shown in the member portal, in English and Urdu.",
+      "table": "Templates",
+      "cols": {
+        "event": "Event",
+        "template": "Template",
+        "channels": "Channels",
+        "sent": "Sent",
+        "failed": "Not delivered"
+      },
+      "test": "Send test",
+      "testFor": "Send a test of “{event}” to your email",
+      "wording": "Wording is in English and Urdu in every email; changes to it ship with a release.",
+      "events": {
+        "receiptReceived": "Payment receipt received",
+        "paymentVerified": "Payment verified",
+        "paymentRejected": "Receipt not accepted",
+        "tempIssued": "Temporary membership issued",
+        "tempExtended": "Temporary membership extended",
+        "serviceReceived": "Service request received",
+        "serviceReturned": "Service request returned",
+        "serviceRejected": "Service request not approved",
+        "serviceIssued": "Service letter issued",
+        "eventRegistered": "Event registration",
+        "ticketReply": "Reply to a ticket",
+        "ticketResolved": "Ticket resolved",
+        "membership_submitted": "Application submitted",
+        "membership_returned": "Application returned",
+        "membership_verified": "Documents verified",
+        "membership_rejected": "Application not approved",
+        "membership_approved_voucher": "Approved — fee voucher",
+        "endorse_request": "Proposer / seconder request",
+        "endorse_code": "Signing code",
+        "temp_expired": "Temporary membership expired"
+      }
+    },
+    "email": {
+      "open": "Open MCCI Digital",
+      "eventSubject": "Registered: {title}",
+      "eventBody": "Your company is registered for {title} on {when} at {venue}. Show this code at the entrance:",
+      "replySubject": "MCCI replied to ticket {ticket}",
+      "replyBody": "MCCI replied to your ticket {ticket}:",
+      "resolvedSubject": "Ticket {ticket} resolved",
+      "resolvedBody": "MCCI marked your ticket {ticket} as resolved. Reply in the portal if you need anything more."
+    },
+    "done": {
+      "readAll": "{n} messages marked read.",
+      "eventCreated": "Event “{title}” created.",
+      "eventSaved": "Event “{title}” saved.",
+      "registered": "Registered for {title}. The confirmation was emailed to you.",
+      "ticketOpened": "Ticket {ticket} opened. MCCI replies within 24 hours.",
+      "replied": "Reply sent.",
+      "assigned": "Ticket assigned.",
+      "resolved": "Ticket resolved; the requester was told.",
+      "postSaved": "“{title}” saved.",
+      "postLive": "“{title}” is live on the website.",
+      "testSent": "Test email sent to {email}.",
+      "emailFailed": "(The email could not be sent; it is shown in the portal.)"
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "fields": "Please check the fields.",
+      "not_found": "Not found.",
+      "seats": "More companies are already registered than these seats.",
+      "past": "This event has already started.",
+      "already": "Your company is already registered.",
+      "full": "No seats are left.",
+      "closed": "This ticket is already resolved.",
+      "staff": "Choose an active staff member.",
+      "generic": "Something went wrong. Please try again."
     }
   }
 }

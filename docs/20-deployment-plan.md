@@ -698,3 +698,25 @@ real arguments → 42501), `service_history` RLS on, 7 services offered (fees st
 200, the service page's "Apply now" links to the portal; every new portal and admin page (EN and UR) → login; no app
 errors; nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit. Not exercised on production: a real request
 (it needs a member with an active membership — none yet — and would email them); verified locally end to end.
+
+### Owner's priority items (26 Oct 2026; migration 0400) — ahead of the remaining M8 pages
+
+1. **Members without an online application are treated as members.** Existing members (added in the Members
+   Register, imported, or labelled DEMO) used to see "Start my application" on their portal home. Now the home page and
+   My Membership show "You are an MCCI member" with the number, class and validity, the proposer / seconder requests
+   waiting for them ("Open requests (n)" → Endorsement Requests) and services — no application needed. Demo members
+   approve requests exactly as real members do.
+2. **Designation limits are saved per designation, with the person's password.** Clicking a cell changes it on screen
+   only (marked unsaved); each designation has Save and Undo; Save shows the changes and asks for the password; "Reset to
+   defaults" asks too. The server checks the password with Supabase Auth (a throw-away sign-in, 5 attempts per 15
+   minutes) and records the confirmation (`api.reauth_mark`, service role only); the database function
+   `api.role_permissions_save` requires and uses up a confirmation at most 5 minutes old, so a stolen session or a direct
+   database call cannot change limits. The old one-cell function (0290) is no longer callable by signed-in users.
+3. **Sign-out after 15 minutes without activity, for every signed-in session.** Server: the middleware records each page
+   load and saved action of a signed-in person (httpOnly cookie `mcci_seen`; link prefetches do not count); after 15
+   minutes it signs the session out — the refresh token is revoked — and the sign-in page says why. Browser: typing,
+   clicking and scrolling in any MCCI Digital tab count; a warning with "Stay signed in" in the last minute; at the limit
+   the session is signed out. `SESSION_IDLE_MINUTES` (1–120) changes the limit without a code change. Known limit: a
+   person who deletes that cookie on their own device escapes the server check (the browser timer still applies);
+   Supabase Auth's own inactivity timeout would close this, but it is an Auth container setting (needs the owner's
+   approval for a stack reload).

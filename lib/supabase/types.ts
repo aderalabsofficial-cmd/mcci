@@ -165,6 +165,14 @@ export type Database = {
 "end_withdraw":
 { Args: { "p_endorsement": string }; Returns: undefined
                            },
+"ev_save":
+{ Args: { "p_body": string,"p_body_ur": string,"p_id": string,"p_published": boolean,"p_seats": number,"p_starts_at": string,"p_title": string,"p_title_ur": string,"p_type": string,"p_venue": string }; Returns: string
+                           },
+"event_register":
+{ Args: { "p_company": string,"p_event": string }; Returns: {
+              "email_id": number,"name": string,"starts_at": string,"ticket_code": string,"title": string,"to_email": string,"venue": string
+            }[]
+                           },
 "import_commit":
 { Args: { "p_confirm": string,"p_import": string }; Returns: {
               "created": number,"failed": number,"skipped": number,"updated": number
@@ -220,6 +228,12 @@ export type Database = {
 "my_access":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"note_read":
+{ Args: { "p_note": string }; Returns: undefined
+                           },
+"note_read_all":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "pay_counter":
 { Args: { "p_note"?: string,"p_ref": string,"p_voucher": string }; Returns: {
               "amount": number,"app_id": string,"email_id": number,"expires_at": string,"lang": string,"member_no": string,"name": string,"ref_type": string,"temp_code": string,"to_email": string,"voucher_no": string
@@ -240,17 +254,26 @@ export type Database = {
               "amount": number,"app_id": string,"email_id": number,"expires_at": string,"lang": string,"member_no": string,"name": string,"ref_type": string,"temp_code": string,"to_email": string,"voucher_no": string
             }[]
                            },
+"post_save":
+{ Args: { "p_body": string,"p_body_ur": string,"p_category": string,"p_id": string,"p_status": string,"p_title": string,"p_title_ur": string }; Returns: string
+                           },
 "qr_revoke":
 { Args: { "p_code": string,"p_reason": string }; Returns: undefined
                            },
 "rate_limit_take":
 { Args: { "p_bucket": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },
+"reauth_mark":
+{ Args: { "p_user": string }; Returns: undefined
+                           },
 "role_permission_set":
 { Args: { "p_designation": string,"p_level": number,"p_module": string }; Returns: undefined
                            },
 "role_permissions_reset":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"role_permissions_save":
+{ Args: { "p_designation": string,"p_levels": Json }; Returns: number
                            },
 "settings_bank":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -365,6 +388,22 @@ export type Database = {
                            },
 "temp_revoke":
 { Args: { "p_reason": string,"p_temp": string }; Returns: undefined
+                           },
+"ticket_assign":
+{ Args: { "p_staff": string,"p_ticket": string }; Returns: undefined
+                           },
+"ticket_new":
+{ Args: { "p_body": string,"p_company": string,"p_subject": string }; Returns: string
+                           },
+"ticket_reply":
+{ Args: { "p_body": string,"p_ticket": string }; Returns: {
+              "email_id": number,"name": string,"staff": boolean,"ticket": string,"to_email": string
+            }[]
+                           },
+"ticket_resolve":
+{ Args: { "p_note": string,"p_ticket": string }; Returns: {
+              "email_id": number,"name": string,"ticket": string,"to_email": string
+            }[]
                            },
 "voucher_cancel":
 { Args: { "p_reason": string,"p_voucher": string }; Returns: undefined
@@ -1156,6 +1195,32 @@ isOneToOne: false
       columns: ["company_id"]
 isOneToOne: false
       referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notification_reads": {
+                  Row: {
+                    "notification_id": string,"read_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "notification_id": string,"read_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "notification_id"?: string,"read_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_reads_notification_id_fkey"
+      columns: ["notification_id"]
+isOneToOne: false
+      referencedRelation: "notifications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notification_reads_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]

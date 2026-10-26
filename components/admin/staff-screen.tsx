@@ -2,20 +2,19 @@
 
 import { ArrowUpDown, Award, Download, Mail, RefreshCw, Search, Shield, Users } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { LimitsCard } from '@/components/admin/limits-card';
 import { ActionForm, Hidden } from '@/components/shared/action-form';
 import { FormMessage, Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import type { ActionResult } from '@/lib/access/result';
 import { formatAgo, formatDate } from '@/lib/format';
 import { msg } from '@/lib/nav/model';
-import { STAFF_MODULES, type Level } from '@/lib/permissions/levels';
+import type { Level } from '@/lib/permissions/levels';
 import {
   inviteStaff,
   resendStaffInvite,
-  resetRoleLimits,
   resetStaffMfa,
   revokeStaffInvite,
-  setRoleLimit,
   updateStaff,
 } from '@/lib/staff/actions';
 import { cn } from '@/lib/utils';
@@ -36,7 +35,6 @@ export interface StaffRow {
   self: boolean;
 }
 
-const SG = 'Secretary General';
 const BADGE: Record<StaffRow['status'], string> = {
   Active: 'badge-green',
   Invited: 'badge-orange',
@@ -139,6 +137,11 @@ export function StaffScreen({
         designations={designations}
         limits={limits}
         onDone={setNotice}
+        card={(title, action, children) => (
+          <Card title={String(title)} action={action}>
+            {children}
+          </Card>
+        )}
       />
 
       {inviting && (
@@ -574,125 +577,3 @@ function PersonDialog({
   );
 }
 
-function LimitsCard({
-  locale,
-  canManage,
-  designations,
-  limits,
-  onDone,
-}: {
-  locale: Locale;
-  canManage: boolean;
-  designations: { name: string; seniority: number }[];
-  limits: Record<string, Record<string, Level>>;
-  onDone: (r: ActionResult) => void;
-}) {
-  const t = (k: string, vars?: Record<string, string>) => msg(locale, `access.staff.${k}`, vars);
-  const reset = canManage ? (
-    <ActionForm action={resetRoleLimits} onDone={onDone}>
-      {(pending) => (
-        <>
-          <Hidden values={{ locale }} />
-          <button className="btn" data-action="perm.reset" disabled={pending}>
-            <RefreshCw className="size-4" aria-hidden />
-            {t('resetDefaults')}
-          </button>
-        </>
-      )}
-    </ActionForm>
-  ) : null;
-
-  return (
-    <Card title={t('limitsTitle')} action={reset}>
-      <p className="mb-3 text-[14px] text-muted">{t('limitsHelp')}</p>
-      <div className="-mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
-        <table className="w-full min-w-[1100px] border-collapse">
-          <thead>
-            <tr className="border-b border-line text-[12px] text-muted">
-              <th scope="col" className="min-w-[190px] px-1.5 py-2 text-start font-bold">
-                {msg(locale, 'access.staff.colDesignation')}
-              </th>
-              <th scope="col" className="px-1.5 py-2 font-bold">
-                {t('colLevel')}
-              </th>
-              {STAFF_MODULES.map((m) => (
-                <th key={m} scope="col" className="px-1.5 py-2 text-center font-bold">
-                  {msg(locale, `access.modules.${m}`)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {designations.map((d) => (
-              <tr key={d.name} className="border-b border-line last:border-0">
-                <th scope="row" className="px-1.5 py-2 text-start align-top text-[13px]">
-                  <b>{d.name}</b>
-                  <small className="block font-normal text-muted">{msg(locale, `access.designations.${d.name}`)}</small>
-                </th>
-                <td className="px-1.5 py-2 text-center text-[12px]">L{d.seniority}</td>
-                {STAFF_MODULES.map((m) => (
-                  <td key={m} className="px-1.5 py-2 text-center">
-                    <LimitCell
-                      locale={locale}
-                      designation={d.name}
-                      module={m}
-                      level={limits[d.name]?.[m] ?? 0}
-                      canManage={canManage}
-                      onDone={onDone}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
-  );
-}
-
-function LimitCell({
-  locale,
-  designation,
-  module,
-  level,
-  canManage,
-  onDone,
-}: {
-  locale: Locale;
-  designation: string;
-  module: string;
-  level: Level;
-  canManage: boolean;
-  onDone: (r: ActionResult) => void;
-}) {
-  const label = level === 0 ? '—' : msg(locale, `access.levels.${level}`);
-  const fixed = designation === SG;
-  const title = fixed
-    ? msg(locale, 'access.staff.sgFixed')
-    : canManage
-      ? msg(locale, 'access.staff.cellTitle', {
-          designation,
-          module: msg(locale, `access.modules.${module}`),
-          level: msg(locale, `access.levels.${level}`),
-        })
-      : msg(locale, 'access.staff.readOnly');
-  return (
-    <ActionForm action={setRoleLimit} onDone={onDone}>
-      {(pending) => (
-        <>
-          <Hidden values={{ locale, designation, module, level: String((level + 1) % 4) }} />
-          <button
-            className={cn('lvl', `l${level}`)}
-            data-action="perm.cycle"
-            disabled={pending || fixed || !canManage}
-            title={title}
-            aria-label={`${designation} · ${msg(locale, `access.modules.${module}`)}: ${msg(locale, `access.levels.${level}`)}`}
-          >
-            {label}
-          </button>
-        </>
-      )}
-    </ActionForm>
-  );
-}

@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(27);
+select plan(32);
 
 -- ───────── api.staff_directory ─────────
 select throws_ok($$ select tests.exec_as(null, 'select * from api.staff_directory()') $$,
@@ -32,24 +32,36 @@ select is(tests.num_as(tests.id('viewer_a'), 'select count(*) from api.company_p
 select is(tests.num_as(tests.id('owner_a'), 'select count(*) from public.profiles'),
   1::bigint, 'profiles stay own-row only for members (the function is the only way to colleagues)');
 
--- ───────── api.role_permission_set / reset ─────────
-select throws_ok($$ select tests.exec_as(tests.id('auditor'), 'select api.role_permission_set(''Membership Officer'', ''cmt'', 1::smallint)') $$,
+-- ───────── designation limits: saved per designation after a password confirmation (0400) ─────────
+select throws_ok($q$ select tests.exec_as(tests.id('auditor'), 'select api.role_permissions_save(''Membership Officer'', ''{"cmt": 1}'')') $q$,
   '42501', null, 'the Auditor (staff level 1) cannot change limits');
-select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.role_permission_set(''Membership Officer'', ''cmt'', 1::smallint)') $$,
+select throws_ok($q$ select tests.exec_as(tests.id('owner_a'), 'select api.role_permissions_save(''Membership Officer'', ''{"cmt": 1}'')') $q$,
   '42501', null, 'a member cannot change limits');
-select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.role_permission_set(''Secretary General'', ''cmt'', 0::smallint)') $$,
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_save(''Secretary General'', ''{"cmt": 0}'')') $q$,
   'P0001', 'Secretary General keeps full control', 'the Secretary General''s own limits are fixed');
-select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.role_permission_set(''Membership Officer'', ''nope'', 1::smallint)') $$,
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_save(''Membership Officer'', ''{"nope": 1}'')') $q$,
   'P0001', 'unknown module', 'unknown module refused');
-select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.role_permission_set(''Membership Officer'', ''cmt'', 4::smallint)') $$,
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_save(''Membership Officer'', ''{"cmt": 4}'')') $q$,
   'P0001', 'level out of range', 'level above 3 refused');
-select lives_ok($$ select tests.exec_as(tests.id('sg'), 'select api.role_permission_set(''Membership Officer'', ''cmt'', 2::smallint)') $$,
-  'the SG changes a limit');
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_save(''Membership Officer'', ''{"cmt": 2}'')') $q$,
+  'P0001', 'confirm with your password', 'not without the password confirmation');
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permission_set(''Membership Officer'', ''cmt'', 2::smallint)') $q$,
+  '42501', null, 'the one-cell change (no password) is no longer callable');
+select ok(not has_function_privilege('authenticated', 'api.reauth_mark(uuid)', 'execute') and not has_function_privilege('anon', 'api.reauth_mark(uuid)', 'execute'),
+  'only the server records a password confirmation');
+select api.reauth_mark(tests.id('sg'));
+select is(tests.num_as(tests.id('sg'), 'select api.role_permissions_save(''Membership Officer'', ''{"cmt": 2, "dash": 1}'')'),
+  1::bigint, 'after the password check the SG saves the designation (one level changed)');
 select is(tests.num_as(tests.id('mo'), 'select (api.my_access() -> ''staff'' -> ''levels'' ->> ''cmt'')::int'),
   2::bigint, 'the new limit applies to the Membership Officer at once');
-select ok(exists (select 1 from public.audit_log where object = 'role_permissions' and reason = 'designation limit changed'
+select ok(exists (select 1 from public.audit_log where object = 'role_permissions' and reason like 'designation limits saved after password confirmation%'
                   and user_id = tests.id('sg')), 'the change is audited with who and why');
-select lives_ok($$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_reset()') $$, 'the SG resets to defaults');
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_save(''Membership Officer'', ''{"cmt": 1}'')') $q$,
+  'P0001', 'confirm with your password', 'the confirmation is used up by the change');
+select throws_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_reset()') $q$,
+  'P0001', 'confirm with your password', 'reset to defaults needs the password too');
+select api.reauth_mark(tests.id('sg'));
+select lives_ok($q$ select tests.exec_as(tests.id('sg'), 'select api.role_permissions_reset()') $q$, 'the SG resets to defaults');
 select is((select level from public.role_permissions where designation = 'Membership Officer' and module = 'cmt'),
   (select level from private.role_permission_defaults where designation = 'Membership Officer' and module = 'cmt'),
   'the default limit is back');

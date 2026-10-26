@@ -5,7 +5,7 @@ import { HomeNext } from '@/components/membership/home-next';
 import { both, Card, Ic, Journey, L, Tile } from '@/components/membership/ui';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
-import { loadMyApplication, loadPublicSettings } from '@/lib/membership/load';
+import { loadMyApplication, loadMyMembership, loadPublicSettings } from '@/lib/membership/load';
 import { noteText } from '@/lib/membership/notes';
 import { msg, screenLink } from '@/lib/nav/model';
 import { getSession } from '@/lib/permissions/server';
@@ -37,7 +37,7 @@ const TileLink = ({
 export default async function PortalHomePage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  const [session, app, settings] = await Promise.all([getSession(), loadMyApplication(), loadPublicSettings()]);
+  const [session, app, settings, member] = await Promise.all([getSession(), loadMyApplication(), loadPublicSettings(), loadMyMembership()]);
   const first = (session?.access.full_name ?? '').trim().split(/\s+/)[0] || '';
   const supabase = await createClient();
   const { data: notes } = await supabase
@@ -46,8 +46,10 @@ export default async function PortalHomePage({ params }: Props) {
     .order('created_at', { ascending: false })
     .limit(4);
   const tel = settings.chamber.tel.split(',')[0]!.replace(/[^\d]/g, '');
-  const sub =
-    app && app.stage !== 'withdrawn'
+  const asMember = member && (!app || ['withdrawn', 'draft', 'rejected', 'permanent'].includes(app.stage));
+  const sub = asMember
+    ? `${member.member_no} · ${msg(locale, `membership.classes.${member.class}`)}`
+    : app && app.stage !== 'withdrawn'
       ? msg(locale, 'membership.home.applicant', { token: app.token })
       : msg(locale, 'membership.home.newApplicant');
   const tile = (key: string, icon: string, color: string, label: string, subText?: string) => {
@@ -79,7 +81,7 @@ export default async function PortalHomePage({ params }: Props) {
             />
           </h1>
           <p>
-            {app?.form.name || msg(locale, 'membership.home.welcome')} · {sub}
+            {(asMember ? member.company : app?.form.name) || msg(locale, 'membership.home.welcome')} · {sub}
           </p>
         </div>
         <a className="btn" href={`tel:+${tel}`} data-action="help.call">
@@ -87,9 +89,9 @@ export default async function PortalHomePage({ params }: Props) {
         </a>
       </div>
 
-      <HomeNext app={app} locale={locale} />
+      <HomeNext app={app} locale={locale} member={member} />
 
-      {app && app.stage !== 'draft' && app.stage !== 'withdrawn' && (
+      {!asMember && app && app.stage !== 'draft' && app.stage !== 'withdrawn' && (
         <div className="card" style={{ marginBottom: 18 }}>
           <div className="ch">
             <h3>

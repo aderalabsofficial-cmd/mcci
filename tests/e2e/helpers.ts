@@ -23,7 +23,9 @@ export async function signInAs(page: Page, who: 'member' | 'staff' | 'sg') {
   const state = JSON.parse(readFileSync(STATE[who], 'utf8')) as {
     cookies: Parameters<BrowserContext['addCookies']>[0];
   };
-  await page.context().addCookies(state.cookies);
+  // the idle clock (mcci_seen, lib/session/idle.ts) starts with this test, as in a fresh browser: the saved sessions
+  // are reused for the whole run, which takes longer than the 15-minute limit
+  await page.context().addCookies(state.cookies.filter((c) => c.name !== 'mcci_seen'));
 }
 
 /**

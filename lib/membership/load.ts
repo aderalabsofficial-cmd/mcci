@@ -274,3 +274,54 @@ export function publicStorageUrl(url: string): string {
   const u = new URL(url);
   return new URL(u.pathname + u.search, pub).toString();
 }
+
+export interface MyMembership {
+  member_no: string;
+  class: 'Corporate' | 'Associate';
+  women: boolean;
+  status: 'Permanent' | 'Temporary' | 'Expired' | 'Suspended' | 'Revoked' | 'TempExpired';
+  since: string;
+  valid_to: string;
+  company: string;
+  demo: boolean;
+  /** proposer / seconder requests waiting for this person's company */
+  pendingEndorsements: number;
+}
+
+const STATUS_ORDER = ['Permanent', 'Temporary', 'Suspended', 'Expired', 'TempExpired', 'Revoked'];
+
+/**
+ * The membership the signed-in person's company already holds (an existing member, added by hand, imported, or a
+ * labelled demo member) — they are a member without an online application. Null when the company is not a member.
+ */
+export const loadMyMembership = cache(async (): Promise<MyMembership | null> => {
+  const session = await getSession();
+  if (!session) return null;
+  const companyIds = session.access.companies.map((c) => c.id);
+  if (!companyIds.length) return null;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('members')
+    .select('id, member_no, class, women, status, since, valid_to, companies(name, demo)')
+    .in('company_id', companyIds);
+  const rows = (data ?? []).sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
+  const m = rows[0];
+  if (!m) return null;
+  const { count } = await supabase
+    .from('endorsements')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'Pending')
+    .in('endorser_member_id', rows.map((r) => r.id));
+  const c = m.companies as unknown as { name: string; demo: boolean } | null;
+  return {
+    member_no: m.member_no,
+    class: m.class,
+    women: m.women,
+    status: m.status,
+    since: m.since,
+    valid_to: m.valid_to,
+    company: c?.name ?? '',
+    demo: c?.demo ?? false,
+    pendingEndorsements: count ?? 0,
+  };
+});
