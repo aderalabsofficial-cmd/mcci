@@ -5,23 +5,21 @@ import { readLocalEnv } from '../integration/local-env';
 import { signInAs } from './helpers';
 
 /**
- * Release 3 proposer & seconder (docs/04): the applicant of a verified file picks a proposer and a seconder from the
- * eligible members and sends the requests; each endorser signs in, reads the declaration, draws a signature and
- * confirms with the 6-digit code emailed to them (read from Mailpit); after the second signature the file moves to
- * the Membership Committee. Staff add an existing member in the Members Register.
+ * Proposer & seconder (docs/04; consent only since 0430, docs/21 point 17): the applicant of a verified file picks a
+ * proposer and a seconder from the eligible members and sends the requests; each endorser signs in, reads the summary
+ * and presses Approve — no signature, no emailed code. After both, the file waits for the Membership Officer to type
+ * the number and forward it. Staff add an existing member in the Members Register.
  */
 const env = readLocalEnv();
 test.skip(!env, 'needs the local Supabase stack (MCCI_IT_LOCAL=1 with its URL and keys)');
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'desktop project only'));
 
-const MAILPIT = 'http://127.0.0.1:54324';
 type Person = { id: string; email: string; password: string; company: string; memberNo: string; rep: string };
 
 let admin: SupabaseClient;
 let applicant: Person;
 const endorsers: Person[] = [];
 let appId = '';
-// never all digits: emails are searched for the 6-digit signing code
 const tag = `t${randomUUID().slice(0, 5)}`;
 
 async function person(name: string): Promise<Person> {
@@ -116,52 +114,25 @@ async function login(page: Page, who: Person) {
   await expect(page).toHaveURL(/\/portal$/);
 }
 
-/** the newest 6-digit code Mailpit caught for this address */
-async function codeFor(email: string): Promise<string> {
-  let found = '';
-  await expect
-    .poll(
-      async () => {
-        const list = await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)).json();
-        const id = list.messages?.[0]?.ID;
-        if (!id) return '';
-        const m = await (await fetch(`${MAILPIT}/api/v1/message/${id}`)).json();
-        found = /\b(\d{6})\b/.exec(m.Text ?? '')?.[1] ?? '';
-        return found;
-      },
-      { timeout: 15_000 },
-    )
-    .toMatch(/^\d{6}$/);
-  return found;
-}
-
-async function sign(browser: Browser, who: Person) {
+async function approve(browser: Browser, who: Person) {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   await login(page, who);
   await page.goto('/portal/endorse');
-  await page.locator('[data-action="end.sign"]').first().click();
+  await page.locator('[data-action="end.approve"]').first().click();
+  // consent only: no signature pad, no emailed code (owner's decision, docs/21 point 17)
   const dialog = page.getByRole('dialog');
-  await expect(dialog.locator('[data-action="end.decl"]')).toHaveAttribute('aria-pressed', 'true');
-  const pad = dialog.locator('canvas.sigpad');
-  const box = (await pad.boundingBox())!;
-  await page.mouse.move(box.x + 30, box.y + 40);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 120, box.y + 90, { steps: 8 });
-  await page.mouse.move(box.x + 220, box.y + 50, { steps: 8 });
-  await page.mouse.up();
-  await dialog.locator('[data-action="end.code"]').click();
-  await expect(dialog.getByRole('status')).toContainText('We emailed a 6-digit code');
-  await dialog.getByLabel('6-digit code from your email').fill(await codeFor(who.email));
-  await dialog.locator('[data-action="end.sign.confirm"]').click();
-  await expect(page.getByRole('main').getByRole('status')).toContainText('Signed — the applicant can see it now.');
+  await expect(dialog.locator('canvas')).toHaveCount(0);
+  await expect(dialog.getByLabel(/code/i)).toHaveCount(0);
+  await dialog.locator('[data-action="end.approve.confirm"]').click();
+  await expect(page.getByRole('main').getByRole('status')).toContainText('Approved — the applicant can see it now.');
   await ctx.close();
 }
 
 const stage = async () =>
   (await admin.from('applications').select('stage').eq('id', appId).single()).data!.stage as string;
 
-test('applicant asks a proposer and a seconder; both sign with an emailed code; the file goes to committee', async ({
+test('applicant asks a proposer and a seconder; both approve in their portal; the file waits for the officer', async ({
   page,
   browser,
 }) => {
@@ -181,17 +152,18 @@ test('applicant asks a proposer and a seconder; both sign with an emailed code; 
     expect(data).toEqual([{ role, status: 'Pending' }]);
   }
 
-  // the applicant's own company never appears as a choice; endorsers sign in turn
-  await sign(browser, endorsers[0]!);
+  // the applicant's own company never appears as a choice; endorsers approve in turn
+  await approve(browser, endorsers[0]!);
   expect(await stage()).toBe('proposer');
-  await sign(browser, endorsers[1]!);
-  expect(await stage()).toBe('committee');
+  await approve(browser, endorsers[1]!);
+  // nothing moves by itself: the Membership Officer types the number and forwards (0430)
+  expect(await stage()).toBe('proposer');
 
   const { data: rows } = await admin
     .from('endorsements')
-    .select('status, signature_path')
+    .select('status, signature_path, ref')
     .eq('application_id', appId);
-  expect(rows!.every((r) => r.status === 'Approved' && r.signature_path)).toBe(true);
+  expect(rows!.every((r) => r.status === 'Approved' && !r.signature_path && /^[0-9A-F]{12}$/.test(r.ref))).toBe(true);
 });
 
 test('staff add an existing member and invite its owner', async ({ page }) => {

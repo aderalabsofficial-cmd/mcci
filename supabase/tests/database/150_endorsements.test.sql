@@ -1,5 +1,5 @@
--- Release 3 proposer & seconder (migration 0320): eligibility, request / withdraw / remind, inbox, one-time code,
--- sign / decline, automatic move to committee, hourly job, Members Register (add member + owner invitation).
+-- Release 3 proposer & seconder (migration 0320; consent only since 0430): eligibility, request / withdraw / remind,
+-- inbox, approve / decline, hourly job, Members Register (add member + owner invitation).
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -40,18 +40,17 @@ select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api
 update public.endorsements set last_reminded_at = now() - interval '2 days' where id = (select id from t_e where role = 'proposer');
 select lives_ok($$ select tests.exec_as(tests.id('mo'), 'select * from api.end_remind((select id from t_e where role = ''proposer''))') $$, 'an officer can remind too');
 
--- one-time code: issued by the server (service role) only; wrong codes count; the right one signs
-select throws_ok($$ select tests.exec_as(tests.id('owner_b'), 'select * from api.end_code_issue((select id from t_e where role = ''proposer''), tests.id(''owner_b''))') $$, '42501', null, 'a browser session cannot get the code itself');
-select throws_ok(format('select * from api.end_code_issue(%L, %L)', (select id from t_e where role = 'proposer'), tests.id('owner_a')), '42501', null, 'the code is only issued for the endorser''s own users');
-create temp table t_code on commit drop as select code from api.end_code_issue((select id from t_e where role = 'proposer'), tests.id('owner_b'));
-grant select on t_code to authenticated;
-select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.end_sign((select id from t_e where role = ''proposer''), (select code from t_code), ''I propose'', ''x/s.png'', null, null, null)') $$, '42501', null, 'the applicant cannot sign for the endorser');
-select is(tests.num_as(tests.id('owner_b'), 'select count(*) from (select api.end_sign((select id from t_e where role = ''proposer''), ''000000x'', ''I propose'', ''x/s.png'', null, null, null) r) s where r = ''wrong_code'''), 1::bigint, 'a wrong code is refused');
-select is((select attempts from private.endorsement_otps where endorsement_id = (select id from t_e where role = 'proposer')), 1::smallint, 'and counted');
-select is(tests.num_as(tests.id('owner_b'), 'select count(*) from (select api.end_sign((select id from t_e where role = ''proposer''), (select code from t_code), ''I propose this application'', ''x/s.png'', null, ''203.0.113.9'', ''test'') r) s where r = ''signed'''), 1::bigint, 'the right code signs');
-select results_eq($$ select status::text, ref ~ '^[0-9A-F]{12}$', otp_verified_at is not null, host(ip) from public.endorsements where id = (select id from t_e where role = 'proposer') $$,
-  $$ values ('Approved', true, true, '203.0.113.9') $$, 'approved with reference, code time and address');
-select is((select count(*) from private.endorsement_otps where endorsement_id = (select id from t_e where role = 'proposer')), 0::bigint, 'the code is gone after use');
+-- consent only (0430, owner's decision): no one-time code, no signature — the endorser approves in their portal
+select ok(not has_function_privilege('authenticated', 'api.end_sign(uuid,text,text,text,text,text,text)', 'execute'),
+  'the code-and-signature path is retired');
+select is((select value ->> 'needCode' from private.settings where key = 'endorse'), 'false', 'no emailed code');
+select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.end_approve((select id from t_e where role = ''proposer''))') $$, '42501', null, 'the applicant cannot approve for the endorser');
+select lives_ok($$ select tests.exec_as(tests.id('owner_b'), 'select api.end_approve((select id from t_e where role = ''proposer''), ''203.0.113.9'', ''test'')') $$, 'the proposer approves');
+select results_eq($$ select status::text, ref ~ '^[0-9A-F]{12}$', signature_path is null, host(ip) from public.endorsements where id = (select id from t_e where role = 'proposer') $$,
+  $$ values ('Approved', true, true, '203.0.113.9') $$, 'approved with reference and address, no signature');
+select throws_ok($$ select tests.exec_as(tests.id('owner_b'), 'select api.end_approve((select id from t_e where role = ''proposer''))') $$, 'P0001', null, 'once only');
+select is((select count(*) from public.application_history where application_id = tests.id('app_a_draft') and step = 'proposer approved'), 1::bigint, 'on the file''s history');
+select is((select count(*) from public.notifications where user_id = tests.id('owner_a') and title = 'Your proposer approved'), 1::bigint, 'the applicant is told');
 
 -- decline, then another member; both signed while in "proposer" → committee
 select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.end_request(tests.id(''app_a_draft''), ''seconder'', tests.id(''member_e''), ''Kindly second'')') $$, 'the applicant asks member E to second');
@@ -62,8 +61,8 @@ select is((select count(*) from public.notifications where user_id = tests.id('o
 update public.applications set stage = 'proposer' where id = tests.id('app_a_draft');
 select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.end_request(tests.id(''app_a_draft''), ''seconder'', tests.id(''member_e''), ''Please reconsider'')') $$, 'after a decline the applicant can ask again');
 update public.endorsements set status = 'Approved', decided_at = now() where application_id = tests.id('app_a_draft') and role = 'seconder' and status = 'Pending';
-select ok(private.endorse_advance(tests.id('app_a_draft')), 'both signed in "proposer" → moves on');
-select is((select stage::text from public.applications where id = tests.id('app_a_draft')), 'committee', 'the application is with the committee');
+select ok(private.endorse_advance(tests.id('app_a_draft')), 'both approved in "proposer" → noted');
+select is((select stage::text from public.applications where id = tests.id('app_a_draft')), 'proposer', 'it waits for the officer to type the number and forward (0430)');
 
 -- hourly job: expiry
 insert into public.endorsements (application_id, role, endorser_member_id, expires_at, status)

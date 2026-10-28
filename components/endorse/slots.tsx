@@ -186,7 +186,7 @@ export function EndorseSlots({
                 <div className="esig">
                   {x.signatureUrl && (
                     // eslint-disable-next-line @next/next/no-img-element -- signed URL of a private file
-                    <img src={x.signatureUrl} alt={m('inbox.yourSignature')} />
+                    <img src={x.signatureUrl} alt={m('slots.status.Approved')} />
                   )}
                   <small>{m('slots.signed', { date: x.decided_at ? date(x.decided_at) : '', ref: x.ref ?? '' })}</small>
                 </div>

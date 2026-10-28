@@ -47,7 +47,7 @@ export default async function EndorsePage({ params }: Props) {
     applicant: r.applicant ?? '',
     business: r.business ?? '',
     bizLabel: r.biz
-      ? `${msg(locale, `membership.biz.${r.biz}.name`)}${r.manufacturing ? ` · ${msg(locale, 'membership.biz.mfg.name')}` : ''}`
+      ? `${msg(locale, `membership.biz.${r.biz}.name`)}${r.manufacturing ? ` · ${msg(locale, 'membership.cat.mfg.name')}` : ''}`
       : '—',
     nature: r.nature ?? '',
     address: r.address ?? '',
@@ -90,12 +90,7 @@ export default async function EndorsePage({ params }: Props) {
           color="#ef4444"
         />
       </div>
-      <EndorseInbox
-        locale={locale}
-        rows={rows}
-        me={session.access.full_name ?? ''}
-        needCode={settings.endorse.needCode}
-      />
+      <EndorseInbox locale={locale} rows={rows} me={session.access.full_name ?? ''} />
     </div>
   );
 }

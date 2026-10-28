@@ -71,6 +71,8 @@ export interface ReviewFile {
   sign_path: string | null;
   stamp_path: string | null;
   jurisdiction_ok: boolean | null;
+  /** typed by the Membership Officer when forwarding to the committee (0430) */
+  member_no: string | null;
   docs: AppDocument[];
   partners: AppPartner[];
   history: AppHistory[];
@@ -86,7 +88,7 @@ export async function loadReviewFile(token: string): Promise<ReviewFile | null> 
   const { data: a, error } = await supabase
     .from('applications')
     .select(
-      'id, token, stage, form, field_confidence, class, women, review, return_note, reject_note, submitted_at, photo_path, sign_path, stamp_path, jurisdiction_ok',
+      'id, token, stage, form, field_confidence, class, women, review, return_note, reject_note, submitted_at, photo_path, sign_path, stamp_path, jurisdiction_ok, member_no',
     )
     .eq('token', token)
     .maybeSingle();

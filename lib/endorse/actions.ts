@@ -3,20 +3,16 @@
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { z } from 'zod';
-import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { bilingualEmail } from '@/lib/email/bilingual';
 import { sendEmail } from '@/lib/email/send';
-import { issueCode, storeSignature } from '@/lib/endorse/admin';
-import { checkUpload } from '@/lib/files/sniff';
-import { trimDrawn } from '@/lib/membership/images';
 import { msg } from '@/lib/nav/model';
 import { trustedClientIp } from '@/lib/net/client-ip';
 import { PermissionError, requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * Proposer & seconder (docs/04; actions end.pick, end.compose, end.withdraw, end.remind, end.review, end.sign,
+ * Proposer & seconder (docs/04; actions end.pick, end.compose, end.withdraw, end.remind, end.review, end.approve,
  * end.decline, adm.prop.remind). Every call runs with the person's own session; the api.* functions of migration 0320
  * decide who may do what (applicant, endorser, officer) and check eligibility again. Emails go after the database
  * change; a failed email never undoes it (the portal message is already written).
@@ -175,71 +171,24 @@ async function ownRequest(id: string) {
   return row;
 }
 
-export async function sendSignCode(locale: Locale, id: string): Promise<EndResult & { to?: string }> {
-  try {
-    const session = await requireUser();
-    const row = await ownRequest(uuid.parse(id));
-    if (row.status !== 'Pending') return { ok: false, message: msg(locale, 'endorse.errors.wrong_stage') };
-    const issued = await issueCode(id, session.userId);
-    if ('error' in issued) {
-      return {
-        ok: false,
-        message: msg(locale, issued.error === 'too_soon' ? 'endorse.errors.too_soon' : 'endorse.errors.notAllowed'),
-      };
-    }
-    const sent = await mail({
-      to: issued.email,
-      name: session.access.full_name,
-      subject: 'endorse.email.codeSubject',
-      vars: { business: row.business ?? '', role: msg('en', `endorse.roles.${row.role}`) },
-      paragraphs: ['endorse.email.codeBody', 'endorse.email.codeValid'],
-      code: issued.code,
-    });
-    if (!sent) return { ok: false, message: msg(locale, 'endorse.errors.codeNotSent') };
-    const masked = issued.email.replace(/^(.).*(@.*)$/, '$1•••$2');
-    return { ok: true, message: msg(locale, 'endorse.done.codeSent', { email: masked }), to: masked };
-  } catch (error) {
-    return fail(locale, error, 'end.code');
-  }
-}
-
-export async function signEndorsement(form: FormData): Promise<EndResult> {
-  const locale = asLocale(String(form.get('locale') ?? 'en'));
+/** end.approve: consent only (owner's decision, docs/21 point 17) — no code, no signature */
+export async function approveEndorsement(locale: Locale, id: string): Promise<EndResult> {
   try {
     await requireUser();
-    const id = uuid.parse(form.get('id'));
-    const code = z
-      .string()
-      .regex(/^\d{6}$/)
-      .safeParse(String(form.get('code') ?? '').trim());
-    if (!code.success) return { ok: false, message: msg(locale, 'endorse.errors.code') };
-    const declaration = z.string().trim().min(20).max(2000).parse(form.get('declaration'));
-    const file = form.get('signature');
-    if (!(file instanceof File)) return { ok: false, message: msg(locale, 'endorse.errors.signature') };
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const check = checkUpload(bytes, ['png']);
-    if ('problem' in check) return { ok: false, message: msg(locale, 'endorse.errors.signature') };
-    const row = await ownRequest(id);
+    const row = await ownRequest(uuid.parse(id));
     if (row.status !== 'Pending') return { ok: false, message: msg(locale, 'endorse.errors.wrong_stage') };
-    const stored = await storeSignature(id, await trimDrawn(bytes));
-    if (!stored) return { ok: false, message: msg(locale, 'endorse.errors.generic') };
     const h = await headers();
     const supabase = await createClient();
-    const { data, error } = await supabase.schema('api').rpc('end_sign', {
-      p_endorsement: id,
-      p_code: code.data,
-      p_declaration: declaration,
-      p_signature_path: stored.path,
-      p_doc_hash: stored.docHash,
+    const { error } = await supabase.schema('api').rpc('end_approve', {
+      p_endorsement: row.id,
       p_ip: trustedClientIp(h) ?? '',
       p_user_agent: (h.get('user-agent') ?? '').slice(0, 300),
     });
     if (error) throw error;
-    if (data !== 'signed') return { ok: false, message: msg(locale, `endorse.errors.${data}`) };
     refresh();
-    return { ok: true, message: msg(locale, 'endorse.done.signed') };
+    return { ok: true, message: msg(locale, 'endorse.done.approved') };
   } catch (error) {
-    return fail(locale, error, 'end.sign');
+    return fail(locale, error, 'end.approve');
   }
 }
 

@@ -1,17 +1,17 @@
 'use client';
 
-import { Check, Lock, RefreshCw, Signature, X } from 'lucide-react';
+import { Check, Lock, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
-import { declineEndorsement, sendSignCode, signEndorsement } from '@/lib/endorse/actions';
+import { approveEndorsement, declineEndorsement } from '@/lib/endorse/actions';
 import { msg } from '@/lib/nav/model';
 import { callAction } from '@/lib/client/call-action';
 
 /**
  * Endorsement requests for a member (prototype member/endorse): waiting requests and history; Review (applicant summary,
- * never documents or CNIC), Approve & sign (declaration + drawn signature + 6-digit code emailed to the signer),
+ * never documents or CNIC), Approve (consent only — owner's decision, docs/21 point 17: no code, no signature) and
  * Decline (reason). The server checks again that the request is the person's own.
  */
 
@@ -35,19 +35,9 @@ export interface InboxRow {
   partners: string[];
 }
 
-type Dialog = { kind: 'review' | 'sign' | 'decline'; row: InboxRow } | null;
+type Dialog = { kind: 'review' | 'approve' | 'decline'; row: InboxRow } | null;
 
-export function EndorseInbox({
-  locale,
-  rows,
-  me,
-  needCode,
-}: {
-  locale: Locale;
-  rows: InboxRow[];
-  me: string;
-  needCode: boolean;
-}) {
+export function EndorseInbox({ locale, rows, me }: { locale: Locale; rows: InboxRow[]; me: string }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `endorse.${k}`, v);
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -55,13 +45,8 @@ export function EndorseInbox({
   const [note, setNote] = useState<{ ok: boolean; message: string } | null>(null);
   const [inner, setInner] = useState<{ ok: boolean; message: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [accepted, setAccepted] = useState(true);
-  const [code, setCode] = useState('');
   const [reason, setReason] = useState('');
   const [extra, setExtra] = useState('');
-  const canvas = useRef<HTMLCanvasElement | null>(null);
-  const last = useRef<[number, number] | null>(null);
-  const [drawn, setDrawn] = useState(false);
   const date = (iso: string) =>
     new Date(iso).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', {
       timeZone: 'Asia/Karachi',
@@ -72,11 +57,8 @@ export function EndorseInbox({
 
   const pending = rows.filter((r) => r.status === 'Pending');
   const past = rows.filter((r) => r.status !== 'Pending');
-  const open = (kind: 'review' | 'sign' | 'decline', row: InboxRow) => {
+  const open = (kind: 'review' | 'approve' | 'decline', row: InboxRow) => {
     setInner(null);
-    setCode('');
-    setAccepted(true);
-    setDrawn(false);
     setReason(msg(locale, 'endorse.inbox.reasons.know'));
     setExtra('');
     setDialog({ kind, row });
@@ -89,10 +71,6 @@ export function EndorseInbox({
       business: row.business,
       verb: m(row.role === 'proposer' ? 'inbox.verbProposer' : 'inbox.verbSeconder'),
     });
-  const point = (e: React.PointerEvent<HTMLCanvasElement>): [number, number] => {
-    const r = e.currentTarget.getBoundingClientRect();
-    return [((e.clientX - r.left) * 560) / r.width, ((e.clientY - r.top) * 170) / r.height];
-  };
 
   const card = (r: InboxRow) => {
     const daysLeft = Math.max(0, Math.ceil((new Date(r.expires_at).getTime() - Date.now()) / 86_400_000));
@@ -120,8 +98,8 @@ export function EndorseInbox({
             <button type="button" className="btn btn-w" data-action="end.review" onClick={() => open('review', r)}>
               {m('inbox.review')}
             </button>
-            <button type="button" className="btn btn-gold btn-w" data-action="end.sign" onClick={() => open('sign', r)}>
-              <Signature size={16} aria-hidden /> {m('inbox.sign')}
+            <button type="button" className="btn btn-gold btn-w" data-action="end.approve" onClick={() => open('approve', r)}>
+              <Check size={16} aria-hidden /> {m('inbox.approve')}
             </button>
           </>
         ) : (
@@ -178,8 +156,8 @@ export function EndorseInbox({
               >
                 {m('inbox.decline')}
               </button>
-              <button type="button" className="btn btn-gold" data-action="end.sign" onClick={() => open('sign', d.row)}>
-                <Signature size={16} aria-hidden /> {m('inbox.sign')}
+              <button type="button" className="btn btn-gold" data-action="end.approve" onClick={() => open('approve', d.row)}>
+                <Check size={16} aria-hidden /> {m('inbox.approve')}
               </button>
             </>
           ) : undefined
@@ -227,10 +205,9 @@ export function EndorseInbox({
       </Modal>
 
       <Modal
-        open={d?.kind === 'sign'}
+        open={d?.kind === 'approve'}
         onOpenChange={(o) => !o && setDialog(null)}
-        wide
-        title={m('inbox.sign')}
+        title={d ? m('inbox.approveTitle', { role: m(`roles.${d.row.role}`), business: d.row.business }) : ''}
         closeLabel={msg(locale, 'common.close')}
         footer={
           d ? (
@@ -241,21 +218,11 @@ export function EndorseInbox({
               <button
                 type="button"
                 className="btn btn-gold"
-                data-action="end.sign.confirm"
-                disabled={busy === 'sign'}
+                data-action="end.approve.confirm"
+                disabled={busy === 'approve'}
                 onClick={async () => {
-                  if (!accepted) return setInner({ ok: false, message: m('errors.declaration') });
-                  if (!drawn || !canvas.current) return setInner({ ok: false, message: m('errors.signature') });
-                  if (needCode && !/^\d{6}$/.test(code)) return setInner({ ok: false, message: m('errors.code') });
-                  setBusy('sign');
-                  const blob: Blob | null = await new Promise((res) => canvas.current!.toBlob(res, 'image/png'));
-                  const fd = new FormData();
-                  fd.set('locale', locale);
-                  fd.set('id', d.row.id);
-                  fd.set('code', code);
-                  fd.set('declaration', declaration(d.row));
-                  if (blob) fd.set('signature', new File([blob], 'signature.png', { type: 'image/png' }));
-                  const r = await callAction(locale, () => signEndorsement(fd));
+                  setBusy('approve');
+                  const r = await callAction(locale, () => approveEndorsement(locale, d.row.id));
                   setBusy(null);
                   if (!r.ok) return setInner(r);
                   setDialog(null);
@@ -263,8 +230,8 @@ export function EndorseInbox({
                   startTransition(() => router.refresh());
                 }}
               >
-                <Signature size={16} aria-hidden />{' '}
-                {busy === 'sign' ? msg(locale, 'membership.wiz.working') : m('inbox.signApprove')}
+                <Check size={16} aria-hidden />{' '}
+                {busy === 'approve' ? msg(locale, 'membership.wiz.working') : m('inbox.approve')}
               </button>
             </>
           ) : undefined
@@ -272,100 +239,11 @@ export function EndorseInbox({
       >
         {d && (
           <div className="proto">
-            <button
-              type="button"
-              className={`decl ${accepted ? 'on' : ''}`}
-              aria-pressed={accepted}
-              data-action="end.decl"
-              onClick={() => setAccepted((a) => !a)}
-            >
-              <i>{accepted ? '✓' : ''}</i>
-              <span>{declaration(d.row)}</span>
-            </button>
-            <h4 className="jg">{m('inbox.yourSignature')}</h4>
-            <canvas
-              ref={(el) => {
-                canvas.current = el;
-                if (el) {
-                  const x = el.getContext('2d')!;
-                  x.lineWidth = 2.6;
-                  x.lineCap = 'round';
-                  x.lineJoin = 'round';
-                  x.strokeStyle = '#0b2a8a';
-                }
-              }}
-              className="sigpad"
-              width={560}
-              height={170}
-              aria-label={m('inbox.yourSignature')}
-              style={{ touchAction: 'none', width: '100%' }}
-              onPointerDown={(e) => {
-                last.current = point(e);
-                e.currentTarget.setPointerCapture(e.pointerId);
-              }}
-              onPointerMove={(e) => {
-                if (!last.current) return;
-                const p = point(e);
-                const x = e.currentTarget.getContext('2d')!;
-                x.beginPath();
-                x.moveTo(...last.current);
-                x.lineTo(...p);
-                x.stroke();
-                last.current = p;
-                if (!drawn) setDrawn(true);
-              }}
-              onPointerUp={() => {
-                last.current = null;
-              }}
-            />
-            <div className="pb" style={{ marginTop: 8 }}>
-              <button
-                type="button"
-                className="btn btn-w"
-                data-action="end.clear"
-                onClick={() => {
-                  canvas.current?.getContext('2d')?.clearRect(0, 0, 560, 170);
-                  setDrawn(false);
-                }}
-              >
-                <RefreshCw size={16} aria-hidden /> {m('inbox.clear')}
-              </button>
-            </div>
-            {needCode && (
-              <div className="fg" style={{ marginTop: 14 }}>
-                <label className="jf">
-                  {m('inbox.code')} <em className="rq">*</em>
-                  <input
-                    inputMode="numeric"
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  />
-                </label>
-                <div style={{ alignSelf: 'end' }}>
-                  <button
-                    type="button"
-                    className="btn"
-                    data-action="end.code"
-                    disabled={busy === 'code'}
-                    onClick={async () => {
-                      setBusy('code');
-                      setInner(await callAction(locale, () => sendSignCode(locale, d.row.id)));
-                      setBusy(null);
-                    }}
-                  >
-                    {busy === 'code' ? msg(locale, 'membership.wiz.working') : m('inbox.sendCode')}
-                  </button>
-                </div>
-              </div>
-            )}
-            {inner && (
-              <p
-                role={inner.ok ? 'status' : 'alert'}
-                style={{ marginTop: 10, fontWeight: 700, color: inner.ok ? '#0f5b3c' : '#b91c1c' }}
-              >
-                {inner.ok ? <Check size={16} aria-hidden /> : <X size={16} aria-hidden />} {inner.message}
+            <p>{declaration(d.row)}</p>
+            <p className="muted">{m('inbox.approveHelp')}</p>
+            {inner && !inner.ok && (
+              <p role="alert" style={{ marginTop: 10, fontWeight: 700, color: '#b91c1c' }}>
+                <X size={16} aria-hidden /> {inner.message}
               </p>
             )}
           </div>

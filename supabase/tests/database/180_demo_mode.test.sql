@@ -38,18 +38,19 @@ select is(tests.num_as(tests.id('owner_a'), 'select count(*) from api.end_candid
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.end_request(tests.id(''app_a_draft''), ''proposer'', (select id from public.members where member_no = ''DEMO-A-01''), ''x'')') $$, 'P0001', null, 'and cannot ask one (server-side check)');
 select is((select private.endorse_why('d3000000-0000-0000-0000-0000000000d3', 'proposer', tests.id('member_b'))), 'Not a demo member', 'a real member cannot endorse a demo application');
 
--- the demo applicant asks; the demo member signs with the code (same rules as real members)
+-- the demo applicant asks the demo member (same rules as real members)
 create temp table t_dm on commit drop as select id from public.members where member_no = 'DEMO-A-01';
 grant select on t_dm to authenticated;
 select lives_ok($$ select tests.exec_as(tests.id('fresh'), 'select * from api.end_request(''d3000000-0000-0000-0000-0000000000d3'', ''proposer'', (select id from t_dm), ''Kindly propose'')') $$, 'the demo applicant sends the proposer request');
 select is((select status::text from public.endorsements where application_id = 'd3000000-0000-0000-0000-0000000000d3'), 'Pending', 'pending like any request');
 
--- never on the committee's agenda, never decided
+-- on the committee desk (0430) but never approved; never on an agenda
 select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_meeting_create(''Membership Committee'', ''MC demo test'', (now() at time zone ''Asia/Karachi'')::date)') $$, 'a meeting is open');
-update public.applications set stage = 'committee', class = 'Associate' where id = 'd3000000-0000-0000-0000-0000000000d3';
+update public.applications set stage = 'committee', class = 'Associate', member_no = 'A-901' where id = 'd3000000-0000-0000-0000-0000000000d3';
 select is((select count(*) from public.committee_items where application_id = 'd3000000-0000-0000-0000-0000000000d3'), 0::bigint, 'a demo file is not placed on the agenda');
-insert into public.committee_items (application_id, meeting_id) select 'd3000000-0000-0000-0000-0000000000d3', id from public.meetings where name = 'MC demo test';
-select throws_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide(''d3000000-0000-0000-0000-0000000000d3'', (select id from public.meetings where name = ''MC demo test''), ''Approved'')') $$, 'P0001', null, 'and never approved (no number, no voucher) even if placed by hand');
+insert into public.committee_assignments (convener, members, status, proposed_by, decided_by, decided_at)
+values (tests.id('cs'), '{}', 'Approved', tests.id('sg'), tests.id('president'), now());
+select throws_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(''d3000000-0000-0000-0000-0000000000d3'', ''Approved'')') $$, 'P0001', null, 'and never approved by the Convener (no voucher, no member record)');
 
 -- one-step removal
 select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select * from api.demo_clear()') $$, '42501', null, 'only reg ≥ 3 removes demo data');

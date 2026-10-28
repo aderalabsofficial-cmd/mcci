@@ -36,6 +36,9 @@ export type Database = {
               "company": string,"decided_at": string,"decline_reason": string,"expires_at": string,"id": string,"last_reminded_at": string,"member_no": string,"message": string,"ref": string,"reminders": number,"rep": string,"requested_at": string,"role": string,"signature_path": string,"status": string
             }[]
                            },
+"app_forward":
+{ Args: { "p_app": string,"p_member_no": string }; Returns: string
+                           },
 "app_missing":
 { Args: { "p_app": string }; Returns: (string)[]
                            },
@@ -84,9 +87,25 @@ export type Database = {
               "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"next_meeting": string,"to_email": string,"token": string,"voucher_no": string
             }[]
                            },
+"cmt_assign_decide":
+{ Args: { "p_approve": boolean,"p_id": string,"p_note"?: string }; Returns: undefined
+                           },
+"cmt_assign_propose":
+{ Args: { "p_convener": string,"p_members": (string)[],"p_note"?: string }; Returns: string
+                           },
+"cmt_committee":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "convener": string,"convener_name": string,"decided_at": string,"decided_by_name": string,"decision_note": string,"id": string,"me_convener": boolean,"me_member": boolean,"members": Json,"note": string,"proposed_at": string,"proposed_by_name": string,"status": string
+            }[]
+                           },
 "cmt_decide":
 { Args: { "p_app": string,"p_decision": string,"p_meeting": string,"p_note"?: string }; Returns: {
               "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"next_meeting": string,"to_email": string,"token": string,"voucher_no": string
+            }[]
+                           },
+"cmt_decide_direct":
+{ Args: { "p_app": string,"p_decision": string,"p_note"?: string }; Returns: {
+              "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"to_email": string,"token": string,"voucher_no": string
             }[]
                            },
 "cmt_meeting_create":
@@ -96,6 +115,9 @@ export type Database = {
                            },
 "cmt_minutes":
 { Args: { "p_meeting": string,"p_minutes": string }; Returns: undefined
+                           },
+"cmt_note":
+{ Args: { "p_app": string,"p_note": string }; Returns: undefined
                            },
 "company_people":
 { Args: { "p_company": string }; Returns: {
@@ -133,6 +155,9 @@ export type Database = {
                            },
 "email_mark":
 { Args: { "p_email": number,"p_error"?: string,"p_ok": boolean,"p_provider_id"?: string }; Returns: undefined
+                           },
+"end_approve":
+{ Args: { "p_endorsement": string,"p_ip"?: string,"p_user_agent"?: string }; Returns: string
                            },
 "end_candidates":
 { Args: { "p_app": string,"p_query"?: string,"p_role": Database["public"]['Enums']["endorse_role"] }; Returns: {
@@ -731,6 +756,38 @@ isOneToOne: false
     },{
       foreignKeyName: "change_requests_requested_by_fkey"
       columns: ["requested_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"committee_assignments": {
+                  Row: {
+                    "committee": string,"convener": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"id": string,"members": (string)[],"note": string | null,"proposed_at": string,"proposed_by": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "committee"?: string,"convener": string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"members"?: (string)[],"note"?: string | null,"proposed_at"?: string,"proposed_by": string,"status"?: string
+                  }
+                  Update: {
+                    "committee"?: string,"convener"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"id"?: string,"members"?: (string)[],"note"?: string | null,"proposed_at"?: string,"proposed_by"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "committee_assignments_convener_fkey"
+      columns: ["convener"]
+isOneToOne: false
+      referencedRelation: "staff"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "committee_assignments_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "committee_assignments_proposed_by_fkey"
+      columns: ["proposed_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]

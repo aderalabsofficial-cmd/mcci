@@ -12,7 +12,7 @@ import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { loadAppCommittee } from '@/lib/committee/load';
 import { pkr } from '@/lib/committee/voucher';
-import { classOf, fee } from '@/lib/flow/application';
+import { applicableDocs, classOf, fee } from '@/lib/flow/application';
 import { loadDocLists, loadEndorsements, loadPublicSettings } from '@/lib/membership/load';
 import { FORM_FIELDS } from '@/lib/membership/reference';
 import { formEndorser, signedUrls } from '@/lib/membership/view';
@@ -90,6 +90,8 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     signatureUrl: e.signature_path ? (urls.get(e.signature_path) ?? null) : null,
   }));
   const f = file.form;
+  // only the documents this applicant was asked for (sales tax certificate if GST registered, Form C if a registered AOP)
+  const reqs = applicableDocs(file.requirements, f);
   const byKey = new Map(file.docs.map((d) => [d.key, d]));
   const cls = file.class ?? classOf(f);
   const accepted = file.docs.filter((d) => d.status === 'ok').length;
@@ -121,14 +123,14 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     stageLabel: msg(locale, `review.stages.${file.stage}`),
     stageTone: STAGE_TONE[file.stage] ?? 'gray',
     name: f.name ?? '',
-    bizLabel: `${bizLabel}${f.manufacturing ? ` · ${msg(locale, 'membership.biz.mfg.name')}` : ''}`,
+    bizLabel: `${bizLabel}${f.manufacturing ? ` · ${msg(locale, 'membership.cat.mfg.name')}` : ''}`,
     particulars: FORM_FIELDS.filter((k) => k !== 'fax' || f.fax).map((k) => ({
       key: k,
       label: msg(locale, `membership.fields.${k}`),
       value: String(f[k] ?? ''),
       check: file.field_confidence[k] !== undefined && file.field_confidence[k]! < LOW,
     })),
-    docs: file.requirements.map((r) => {
+    docs: reqs.map((r) => {
       const d = byKey.get(r.key);
       return {
         id: d?.id ?? '',
@@ -162,7 +164,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     kpis: {
       time: m('days', { n: String(days) }),
       timeSub: m('kTimeSub', { n: String(settings.processDays) }),
-      docs: `${accepted} / ${file.requirements.length}`,
+      docs: `${accepted} / ${reqs.length}`,
       cls: msg(locale, `membership.classes.${cls}`),
       clsSub: file.women ? m('kClassWomen') : m('kClassRule'),
       fee: f.biz
@@ -171,6 +173,8 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     },
     cls,
     photoUrl: file.photo_path ? (urls.get(file.photo_path) ?? null) : null,
+    memberNo: file.member_no,
+    endorsed: new Set(ends.filter((e) => e.status === 'Approved').map((e) => e.role)).size === 2,
   };
 
   const cmtLevel = staffLevel(session.access, 'cmt');

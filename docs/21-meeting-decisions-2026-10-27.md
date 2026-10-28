@@ -190,3 +190,20 @@ mailbox · access to mcci.org.pk DNS when ready.
 | **R4 · Certificates** | Bulk upload of security-printed certificate scans; AI reading and matching; QR stamped; member sees own certificate; verify page | 30–31 |
 | **R5 · Confidential data** | IT Convener only downloads / exports; on-screen viewer for everyone else; view log; manual restoration | 3, 32 |
 | **R6 · Register and public** | Register filters and split counters; public directory and sector PDF; logo; `APP_URL` ready for mcci.org.pk; engagement pages (events, complaints, support, notifications, content) | 34–37 |
+
+## 11. Rules added while building (for the owner to confirm or change)
+- **R1:** members registered earlier under a removed sector item keep it on their record. The sales tax question is
+  still asked of a body corporate, only to know whether to ask for the sales tax certificate; it does not change the
+  class.
+- **R2:** only the Convener of the committee the President approved can approve or decline. The SG and the meeting
+  path (agenda, "approve all") no longer decide; meetings and minutes stay as a record and nothing is placed on an
+  agenda.
+- **R2:** the Convener can also **return a file to the Membership Officer** with a note. The note is internal (the
+  applicant does not see it), and so are committee members' notes.
+- **R2:** declining a file **releases its typed number**, so it can be given to someone else.
+- **R2:** the Convener and the members must be staff accounts with Membership Committee access (for example the
+  designations "Membership Committee Convener" / "Membership Committee Member").
+- **R2 · demo files** (test applicants): they can be forwarded and seen on the desk, declined or returned, but **never
+  approved** (no voucher, no member record), so test data stays out of the official register. A number typed on a
+  demo file never blocks the same number for a real applicant. *This is why MCCI-2026-M-0265 (DEMO · AMIR KHAN) was
+  not visible on the old desk: the old desk hid demo files and waited for a meeting.*

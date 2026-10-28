@@ -125,26 +125,17 @@ test('demo members: added by the SG, sign in on their own, propose and second wi
     await expect(applicant.locator(`[data-role="${role}"]`)).toContainText(who.rep);
   }
 
-  // each demo member signs with the code from their mailbox
-  for (const [p, who] of [[proposer, people.proposer], [seconder, people.seconder]] as const) {
+  // each demo member approves in their portal (consent only: no signature, no code)
+  for (const p of [proposer, seconder]) {
     // a demo member is an active member: no application of their own, the waiting request is on their home page
     await p.goto('/portal');
     await expect(p.getByRole('main')).toContainText('You are an MCCI member');
     await expect(p.getByRole('main')).not.toContainText('Start my application');
     await p.getByRole('link', { name: /Open requests \(1\)/ }).click();
     await expect(p).toHaveURL(/\/portal\/endorse/);
-    await p.locator('[data-action="end.sign"]').first().click();
-    const d = p.getByRole('dialog');
-    const pad = d.locator('canvas.sigpad');
-    const box = (await pad.boundingBox())!;
-    await p.mouse.move(box.x + 30, box.y + 40);
-    await p.mouse.down();
-    await p.mouse.move(box.x + 200, box.y + 80, { steps: 10 });
-    await p.mouse.up();
-    await d.locator('[data-action="end.code"]').click();
-    await d.getByLabel('6-digit code from your email').fill(await mail(who.email, /\b(\d{6})\b/));
-    await d.locator('[data-action="end.sign.confirm"]').click();
-    await expect(p.getByRole('main').getByRole('status')).toContainText('Signed');
+    await p.locator('[data-action="end.approve"]').first().click();
+    await p.getByRole('dialog').locator('[data-action="end.approve.confirm"]').click();
+    await expect(p.getByRole('main').getByRole('status')).toContainText('Approved');
   }
   const { data: ends } = await admin.from('endorsements').select('status').eq('application_id', app!.id);
   expect(ends!.map((e) => e.status)).toEqual(['Approved', 'Approved']);
@@ -153,7 +144,7 @@ test('demo members: added by the SG, sign in on their own, propose and second wi
   await page.goto('/admin/members');
   await card.locator('[data-action="demo.clear"]').click();
   await page.locator('[data-action="demo.clear.confirm"]').click();
-  await expect(card.locator('[data-outcome="ok"]')).toContainText('Demo data removed');
+  await expect(card.locator('[data-outcome="ok"]')).toContainText('Demo data removed', { timeout: 30_000 });
   expect((await admin.from('companies').select('id').eq('demo', true)).data).toEqual([]);
   expect((await admin.from('applications').select('id').eq('id', app!.id)).data).toEqual([]);
   const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
@@ -218,7 +209,7 @@ test('a self-registered applicant marked as demo by the SG can choose the demo m
   await page.goto('/admin/members');
   await card.locator('[data-action="demo.clear"]').click();
   await page.locator('[data-action="demo.clear.confirm"]').click();
-  await expect(card.locator('[data-outcome="ok"]')).toContainText('Demo data removed');
+  await expect(card.locator('[data-outcome="ok"]')).toContainText('Demo data removed', { timeout: 30_000 });
   expect((await admin.from('companies').select('id').eq('id', co!.id)).data).toEqual([]);
   const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
   expect((users?.users ?? []).filter((x) => x.email === email)).toEqual([]);

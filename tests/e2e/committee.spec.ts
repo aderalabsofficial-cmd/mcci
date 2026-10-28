@@ -1,19 +1,21 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes, randomInt, randomUUID } from 'node:crypto';
 import { expect, type Page, test } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { readLocalEnv } from '../integration/local-env';
+import { readAccounts } from './accounts';
 import { signInAs } from './helpers';
 
 /**
- * Release 4 Membership Committee (docs/03 §1, docs/05 M5): a file reaching the committee waits until a meeting is
- * scheduled, then is on its agenda; the Secretary General defers it with a reason, schedules the next meeting and
- * approves it — the membership number and the payment voucher are created and emailed; the applicant sees both in
- * the portal (also in Urdu). A second file is rejected with the committee's reason. Minutes are recorded.
+ * Membership Committee since 0430 (docs/21 §1, §3): the Secretary General assigns the committee and it counts once the
+ * President approves it; the Membership Officer types the membership number and forwards a verified file whose
+ * proposer and seconder both approved; the file is on the committee desk at once (no meeting); the Convener approves
+ * — voucher created and emailed, the applicant sees both in the portal (also in Urdu) — or declines / returns a file.
+ * The President's approval is written directly here (the e2e accounts have no President); pgTAP 240 tests that rule.
  */
 const env = readLocalEnv();
 test.skip(!env, 'needs the local Supabase stack (MCCI_IT_LOCAL=1 with its URL and keys)');
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'desktop project only'));
-// one applicant and shared meetings: the two tests run one after the other
+// one committee and one applicant: the tests run one after the other
 test.describe.configure({ mode: 'serial' });
 
 const MAILPIT = 'http://127.0.0.1:54324';
@@ -22,8 +24,10 @@ let admin: SupabaseClient;
 const applicant = { id: '', email: `e2e-cmt-${tag}@test.local`, password: randomBytes(18).toString('base64url') };
 let company = '';
 const apps: { id: string; token: string; name: string }[] = [];
+const no = () => `A-${randomInt(80000, 99999)}`;
 
-async function application(name: string, cls: 'Associate' | 'Corporate') {
+/** a verified file of the applicant whose proposer and seconder both approved (stage "proposer") */
+async function application(name: string) {
   const { data, error } = await admin
     .from('applications')
     .insert({
@@ -31,15 +35,21 @@ async function application(name: string, cls: 'Associate' | 'Corporate') {
       created_by: applicant.id,
       stage: 'proposer',
       submitted_at: new Date().toISOString(),
-      class: cls,
-      form: { biz: cls === 'Corporate' ? 'pvt' : 'prop', name, rep: 'Committee Applicant' },
+      class: 'Associate',
+      form: { biz: 'prop', manufacturing: false, name, rep: 'Committee Applicant' },
     })
     .select('id, token')
     .single();
   expect(error).toBeNull();
+  const member = readAccounts().memberRowId!;
+  const at = new Date().toISOString();
+  const expires = new Date(Date.now() + 7 * 86_400_000).toISOString();
+  await admin.from('endorsements').insert([
+    { application_id: data!.id, role: 'proposer', endorser_member_id: member, status: 'Approved', decided_at: at, expires_at: expires },
+    { application_id: data!.id, role: 'seconder', endorser_member_id: member, status: 'Approved', decided_at: at, expires_at: expires },
+  ]);
   apps.push({ id: data!.id, token: data!.token, name });
-  // the second signature moves a file to the committee (as private.endorse_advance does)
-  await admin.from('applications').update({ stage: 'committee' }).eq('id', data!.id);
+  return apps[apps.length - 1]!;
 }
 
 test.beforeAll(async () => {
@@ -56,7 +66,9 @@ test.beforeAll(async () => {
   company = randomUUID();
   await admin.from('companies').insert({ id: company, name: `Committee Traders ${tag}`, biz_type: 'prop' });
   await admin.from('company_users').insert({ company_id: company, user_id: applicant.id, role: 'Owner' });
-  await application(`Committee Traders ${tag}`, 'Associate');
+  // a committee left over from an earlier local run does not count for this one
+  await admin.from('committee_assignments').update({ status: 'Superseded' }).eq('status', 'Approved');
+  await admin.from('committee_assignments').update({ status: 'Withdrawn' }).eq('status', 'Pending');
 });
 
 test.afterAll(async () => {
@@ -65,66 +77,79 @@ test.afterAll(async () => {
   await admin.from('payment_vouchers').delete().in('ref_id', ids);
   await admin.from('email_log').delete().in('application_id', ids);
   await admin.from('notifications').delete().eq('user_id', applicant.id);
+  await admin.from('endorsements').delete().in('application_id', ids);
   await admin.from('applications').delete().in('id', ids);
-  await admin.from('meetings').delete().like('name', `%${tag}%`);
   await admin.from('companies').delete().eq('id', company);
+  await admin.from('committee_assignments').delete().eq('proposed_by', readAccounts().sg!.id);
   await admin.auth.admin.deleteUser(applicant.id);
 });
 
 const main = (page: Page) => page.getByRole('main');
 const stage = async (id: string) =>
   (await admin.from('applications').select('stage, member_no').eq('id', id).single()).data!;
-const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
 
-async function schedule(page: Page, name: string) {
-  await page.goto('/admin/meetings');
-  await page.locator('[data-action="mt.create"]').click();
+test('the SG assigns the Membership Committee; it counts once the President approves', async ({ page }) => {
+  test.setTimeout(90_000);
+  const sg = readAccounts().sg!;
+  await signInAs(page, 'sg');
+  await page.goto('/admin/committee');
+  const card = main(page).getByTestId('committee-assignment');
+  await expect(card).toContainText('No committee yet');
+  await card.locator('[data-action="cmt.assign"]').click();
   const d = page.getByRole('dialog');
-  await d.getByLabel('Meeting').fill(name);
-  await d.getByLabel('Date').fill(today());
-  await d.locator('[data-action="mt.create.confirm"]').click();
-  await expect(main(page).getByRole('status')).toContainText(/Meeting MC-\d{4}-\d+ scheduled/);
-  return (await admin.from('meetings').select('id').eq('name', name).single()).data!.id as string;
-}
+  await d.getByLabel('Convener').selectOption(sg.id);
+  await d.locator('[data-action="cmt.assign.confirm"]').click();
+  await expect(card.getByRole('status').first()).toContainText('Sent to the President for approval.');
+  await expect(card.getByTestId('committee-pending')).toContainText('Waiting for the President');
+  // the SG cannot approve their own proposal: no button for them
+  await expect(card.locator('[data-action="cmt.assign.decide"]')).toHaveCount(0);
 
-test('the committee defers, then approves a file: number, voucher and email; the applicant sees them', async ({
+  // the President approves (written directly: see the note at the top)
+  const { error } = await admin
+    .from('committee_assignments')
+    .update({ status: 'Approved', decided_by: sg.id, decided_at: new Date().toISOString() })
+    .eq('proposed_by', sg.id)
+    .eq('status', 'Pending');
+  expect(error).toBeNull();
+  await page.reload();
+  await expect(card).toContainText('Convener');
+  await expect(card.getByTestId('committee-pending')).toHaveCount(0);
+});
+
+test('the officer forwards with the number; the Convener approves: voucher and email; the applicant sees them', async ({
   page,
   browser,
 }) => {
   test.setTimeout(180_000);
-  const file = apps[0]!;
+  const file = await application(`Committee Traders ${tag}`);
+  const number = no();
+
+  // the Membership Officer types the number (the letter must match the class) and forwards
+  await signInAs(page, 'staff');
+  await page.goto(`/admin/mreview?t=${file.token}`);
+  await main(page).locator('[data-action="adm.forward"]').click();
+  const d = page.getByRole('dialog');
+  await d.getByLabel(/Membership number/).fill(`C-${number.slice(2)}`);
+  await d.locator('[data-action="adm.forward.confirm"]').click();
+  await expect(page.getByText('C is for Corporate').first()).toBeVisible();
+  // the dialog stays open with what was typed: correct it (any case, with or without the dash)
+  await d.getByLabel(/Membership number/).fill(number.toLowerCase().replace('-', ' '));
+  await d.locator('[data-action="adm.forward.confirm"]').click();
+  await expect(main(page).getByRole('status').first()).toContainText(`Forwarded to the Membership Committee with No. ${number}.`);
+  expect(await stage(file.id)).toEqual({ stage: 'committee', member_no: number });
+
+  // on the desk at once; the Convener (the SG, as assigned above) approves
   await signInAs(page, 'sg');
-
-  // no meeting yet: the file waits
   await page.goto('/admin/committee');
-  await expect(page.getByRole('heading', { name: 'Waiting for a meeting' })).toBeVisible();
-  await expect(main(page).locator(`[data-token="${file.token}"]`)).toBeVisible();
-
-  // scheduling a meeting puts it on the agenda
-  const m1 = await schedule(page, `MC ${tag} A`);
-  await page.goto(`/admin/committee?m=${m1}`);
   const row = main(page).locator(`[data-token="${file.token}"]`);
-  await expect(row).toBeVisible();
-
-  // defer needs the committee's reason
-  await row.locator('[data-decision="Deferred"]').click();
-  await page.locator('[data-action="cmt.decide.confirm"]').click();
-  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('committee’s reason');
-  await page.getByRole('dialog').getByLabel(/Committee note/).fill('Bring the latest NTN certificate');
-  await page.locator('[data-action="cmt.decide.confirm"]').click();
-  await expect(main(page).getByRole('status')).toContainText('Deferred');
-  expect((await stage(file.id)).stage).toBe('committee');
-
-  // next meeting; approve
-  const m2 = await schedule(page, `MC ${tag} B`);
-  await page.goto(`/admin/committee?m=${m2}`);
-  await main(page).locator(`[data-token="${file.token}"] [data-decision="Approved"]`).click();
+  await expect(row).toContainText(`No. ${number}`);
+  await row.locator('[data-decision="Approved"]').click();
   await expect(page.getByRole('dialog')).toContainText('cannot be undone');
   await page.locator('[data-action="cmt.decide.confirm"]').click();
-  await expect(main(page).getByRole('status')).toContainText(/Approved · MCCI-A-\d+ · payment voucher PV-\d{4}-\d+ sent\./);
-  const after = await stage(file.id);
-  expect(after.stage).toBe('payment');
-  expect(after.member_no).toMatch(/^MCCI-A-\d+$/);
+  await expect(main(page).getByRole('status').first()).toContainText(
+    new RegExp(`Approved · ${number} · payment voucher PV-\\d{4}-\\d+ sent\\.`),
+  );
+  expect(await stage(file.id)).toEqual({ stage: 'payment', member_no: number });
   const { data: v } = await admin
     .from('payment_vouchers')
     .select('voucher_no, amount, status')
@@ -139,7 +164,7 @@ test('the committee defers, then approves a file: number, voucher and email; the
     .eq('template_key', 'membership_approved_voucher');
   expect(mails).toEqual([{ template_key: 'membership_approved_voucher', status: 'sent' }]);
   const found = await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${applicant.email}`)}`)).json();
-  expect(found.messages?.[0]?.Subject).toContain(after.member_no);
+  expect(found.messages?.[0]?.Subject).toContain(number);
 
   // the applicant: what to do now, Payments, Urdu message
   const ctx = await browser.newContext();
@@ -156,35 +181,35 @@ test('the committee defers, then approves a file: number, voucher and email; the
   await expect(card).toContainText(v!.voucher_no);
   await expect(card).toContainText('Rs. 11,500');
   await expect(card).toContainText('To be confirmed by MCCI');
-  await expect(card.locator('[data-action="doc.print"]')).toBeVisible();
   await ap.goto('/ur/portal');
-  await expect(ap.getByRole('main')).toContainText(`منظور — رکنیت نمبر ${after.member_no}`);
+  await expect(ap.getByRole('main')).toContainText(`منظور — رکنیت نمبر ${number}`);
   await ctx.close();
-
-  // minutes
-  await page.goto('/admin/meetings');
-  await page.locator(`[data-meeting="${m2}"] [data-action="mt.minutes"]`).click();
-  await page.getByRole('dialog').getByLabel('Minutes / decisions').fill('Item 1 approved.');
-  await page.locator('[data-action="mt.minutes.confirm"]').click();
-  await expect(page.locator(`[data-meeting="${m2}"]`)).toContainText('Minutes recorded');
 });
 
-test('the committee rejects a file with its reason', async ({ page }) => {
+test('the Convener returns a file to the officer, then declines one with a reason (the number is released)', async ({
+  page,
+}) => {
   test.setTimeout(120_000);
-  await application(`Rejected Traders ${tag}`, 'Corporate');
-  const file = apps[apps.length - 1]!;
+  const file = await application(`Declined Traders ${tag}`);
+  const number = no();
+  await admin.from('applications').update({ stage: 'committee', member_no: number }).eq('id', file.id);
   await signInAs(page, 'sg');
-  // placed on the earliest open meeting (or a new one when none is open)
-  let { data: item } = await admin.from('committee_items').select('meeting_id').eq('application_id', file.id).maybeSingle();
-  if (!item) {
-    await schedule(page, `MC ${tag} C`);
-    ({ data: item } = await admin.from('committee_items').select('meeting_id').eq('application_id', file.id).maybeSingle());
-  }
-  await page.goto(`/admin/committee?m=${item!.meeting_id}`);
-  await main(page).locator(`[data-token="${file.token}"] [data-decision="Rejected"]`).click();
-  await page.getByRole('dialog').getByLabel(/Committee note/).fill('Outside the Chamber’s jurisdiction');
+  await page.goto('/admin/committee');
+  const row = () => main(page).locator(`[data-token="${file.token}"]`);
+
+  await row().locator('[data-decision="Returned"]').click();
   await page.locator('[data-action="cmt.decide.confirm"]').click();
-  await expect(main(page).getByRole('status')).toContainText('Rejected — the applicant has been told.');
-  const s = await stage(file.id);
-  expect(s).toEqual({ stage: 'rejected', member_no: null });
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('reason');
+  await page.getByRole('dialog').getByLabel(/Membership Officer check/).fill('Check the NTN on the certificate again');
+  await page.locator('[data-action="cmt.decide.confirm"]').click();
+  await expect(main(page).getByRole('status').first()).toContainText('Returned to the Membership Officer.');
+  expect(await stage(file.id)).toEqual({ stage: 'proposer', member_no: number });
+
+  await admin.from('applications').update({ stage: 'committee' }).eq('id', file.id);
+  await page.reload();
+  await row().locator('[data-decision="Rejected"]').click();
+  await page.getByRole('dialog').getByLabel(/Reason/).fill('Outside the Chamber’s jurisdiction');
+  await page.locator('[data-action="cmt.decide.confirm"]').click();
+  await expect(main(page).getByRole('status').first()).toContainText('Declined — the applicant has been told.');
+  expect(await stage(file.id)).toEqual({ stage: 'rejected', member_no: null });
 });

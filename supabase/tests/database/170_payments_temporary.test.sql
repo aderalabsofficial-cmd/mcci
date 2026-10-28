@@ -14,8 +14,11 @@ select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_m
 update public.applications set class = 'Corporate', women = false, stage = 'proposer',
        form = '{"biz":"pvt","rep":"Owner A","name":"A Industries (Pvt) Ltd","address":"1 Industrial Estate, Multan","ntn":"7654321-0"}'
  where id = tests.id('app_a_review');
-update public.applications set stage = 'committee' where id = tests.id('app_a_review');
-select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide(tests.id(''app_a_review''), (select meeting_id from public.committee_items where application_id = tests.id(''app_a_review'') and decision is null), ''Approved'')') $$, 'approved');
+-- since 0430: forwarded with a typed number; the Convener of the approved committee decides
+insert into public.committee_assignments (convener, members, status, proposed_by, decided_by, decided_at)
+values (tests.id('cs'), '{}', 'Approved', tests.id('sg'), tests.id('president'), now());
+update public.applications set stage = 'committee', member_no = 'C-701' where id = tests.id('app_a_review');
+select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(tests.id(''app_a_review''), ''Approved'')') $$, 'approved');
 create temp table t_v on commit drop as
   select id, voucher_no, company_id from public.payment_vouchers
   where ref_type = 'membership' and ref_id = tests.id('app_a_review') and id <> tests.id('voucher_a_unpaid');
@@ -56,7 +59,7 @@ select is((select count(*) from public.notifications where company_id = tests.id
 insert into storage.objects (bucket_id, name) select 'receipts', company_id || '/vouchers/' || id || '/r2.jpg' from t_v;
 select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.pay_upload((select voucher_no from t_v), (select company_id || ''/vouchers/'' || id || ''/r2.jpg'' from t_v))') $$, 'a clear receipt again');
 select throws_ok($$ select tests.exec_as_aal1(tests.id('accounts_staff'), 'select * from api.pay_verify((select voucher_no from t_v))') $$, '42501', null, 'verifying needs the 2-step login');
-select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_verify((select voucher_no from t_v)) r where r.temp_code ~ ''^MCCI-QR-'' and r.member_no ~ ''^MCCI-C-'''), 1::bigint, 'verified: temporary membership issued in the same request');
+select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_verify((select voucher_no from t_v)) r where r.temp_code ~ ''^MCCI-QR-'' and r.member_no = ''C-701'''), 1::bigint, 'verified: temporary membership issued in the same request');
 select results_eq($$ select a.stage::text, m.status::text, m.member_no = a.member_no, m.valid_to = private.membership_year_end()
                      from public.applications a join public.members m on m.id = a.member_id where a.id = tests.id('app_a_review') $$,
   $$ values ('temp', 'Temporary', true, true) $$, 'member Temporary with the committee''s number, valid to 31 March');
@@ -99,8 +102,8 @@ select ok((select count(*) from api.temp_jobs() j where j.kind = 'alert_15') >= 
 select is((select count(*) from api.temp_jobs() j where j.kind = 'alert_15'), 0::bigint, 'only once');
 
 -- ───────── counter payment (company B) and voucher cancel / reissue / expiry ─────────
-update public.applications set class = 'Corporate', stage = 'committee', form = '{"biz":"pvt","rep":"Owner B","name":"B Traders"}' where id = tests.id('app_b_draft');
-select lives_ok(format('select tests.exec_as(tests.id(''cs''), %L)', format('select * from api.cmt_decide(tests.id(''app_b_draft''), %L, ''Approved'')', (select meeting_id from public.committee_items where application_id = tests.id('app_b_draft') and decision is null))), 'B approved');
+update public.applications set class = 'Corporate', stage = 'committee', member_no = 'C-702', form = '{"biz":"pvt","rep":"Owner B","name":"B Traders"}' where id = tests.id('app_b_draft');
+select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(tests.id(''app_b_draft''), ''Approved'')') $$, 'B approved');
 select throws_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select * from api.pay_counter((select voucher_no from public.payment_vouchers where ref_id = tests.id(''app_b_draft'')), '' '')') $$, 'P0001', null, 'a counter payment needs the receipt reference');
 select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_counter((select voucher_no from public.payment_vouchers where ref_id = tests.id(''app_b_draft'')), ''MCCI-CASH-0007'') r where r.temp_code is not null'), 1::bigint, 'paid at the counter: temporary membership issued');
 select is((select method from public.payment_receipts where voucher_id = (select id from public.payment_vouchers where ref_id = tests.id('app_b_draft'))), 'counter', 'recorded as a counter payment');

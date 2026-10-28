@@ -53,6 +53,9 @@ test.beforeAll(async () => {
       sign_path: `${company}/applications/x/sign/s.png`,
       form: {
         biz: 'prop',
+        manufacturing: false,
+        repEmail: 'rep@test.local',
+        repAddress: 'Multan',
         nature: { sector: 'trade', items: ['Wholesaler'], other: '' },
         addrMatch: true,
         name: 'Review Traders',

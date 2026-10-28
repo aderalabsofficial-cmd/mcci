@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Clock, Pencil, X } from 'lucide-react';
+import { Check, Clock, Pencil, Send, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState, useTransition } from 'react';
 import { Ic } from '@/components/membership/ui';
@@ -20,6 +20,7 @@ import {
   setCheck,
   setClass,
   startReview,
+  forwardToCommittee,
   verifyApplication,
 } from '@/lib/review/actions';
 
@@ -60,12 +61,17 @@ export interface ReviewData {
   kpis: { time: string; timeSub: string; docs: string; cls: string; clsSub: string; fee: string };
   cls: 'Corporate' | 'Associate';
   photoUrl: string | null;
+  /** typed by the officer when forwarding (0430) */
+  memberNo: string | null;
+  /** both proposer and seconder approved */
+  endorsed: boolean;
 }
 
 type Dialog =
   | { kind: 'return' }
   | { kind: 'reject' }
   | { kind: 'verify' }
+  | { kind: 'forward' }
   | { kind: 'class' }
   | { kind: 'doc'; doc: ReviewDoc }
   | { kind: 'edit'; field: ReviewData['particulars'][number] }
@@ -202,6 +208,15 @@ export function ReviewScreen({
       </button>,
     );
   }
+  // documents verified + both consents → the officer types the membership number and forwards (docs/21 points 22–23)
+  const canForward = canWork && ((data.stage === 'proposer' && data.endorsed) || (data.stage === 'committee' && !data.memberNo));
+  if (canForward) {
+    actions.push(
+      <button key="forward" type="button" className="btn btn-primary" data-action="adm.forward" onClick={() => open({ kind: 'forward' })}>
+        <Send size={16} aria-hidden /> {msg(locale, 'review.forward.button')}
+      </button>,
+    );
+  }
   if (canDecide && ['submitted', 'returned', 'proposer'].includes(data.stage)) {
     actions.push(
       <button
@@ -271,6 +286,20 @@ export function ReviewScreen({
           ok: () => verifyApplication(locale, data.id),
           okLabel: m('verify'),
           action: 'adm.verify.confirm',
+        };
+      case 'forward':
+        return {
+          title: msg(locale, 'review.forward.title'),
+          intro: msg(locale, 'review.forward.help'),
+          body: (
+            <label className="form-field">
+              {msg(locale, 'review.forward.label')}
+              <input value={value} maxLength={20} autoComplete="off" placeholder="C-201" onChange={(e) => setValue(e.target.value)} />
+            </label>
+          ),
+          ok: () => forwardToCommittee(locale, data.id, value),
+          okLabel: msg(locale, 'review.forward.button'),
+          action: 'adm.forward.confirm',
         };
       case 'class':
         return {

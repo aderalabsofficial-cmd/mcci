@@ -47,7 +47,9 @@ function fail(locale: Locale, error: unknown, what: string): ReviewResult {
                 ? 'review.desk.verifyBlockedChecks'
                 : e.hint === 'field'
                   ? 'review.errors.field'
-                  : null;
+                  : e.hint && ['member_no', 'member_no_class', 'member_no_used', 'endorsements'].includes(e.hint)
+                    ? `review.forward.errors.${e.hint}`
+                    : null;
     if (key) return { ok: false, message: msg(locale, key) };
   }
   console.error(`${what} failed`, e?.code, e?.message);
@@ -227,5 +229,21 @@ export async function rejectApplication(locale: Locale, appId: string, why: stri
     return { ok: true, message: msg(locale, sent ? 'review.done.rejected' : 'review.done.emailFailed') };
   } catch (error) {
     return fail(locale, error, 'adm.reject');
+  }
+}
+
+/** adm.forward: the Membership Officer types the membership number (C-201 / A-786) and forwards to the committee */
+export async function forwardToCommittee(locale: Locale, appId: string, memberNo: string): Promise<ReviewResult> {
+  try {
+    await requirePermission('mem', 2);
+    const no = z.string().trim().min(1).max(20).safeParse(memberNo);
+    if (!no.success) return { ok: false, message: msg(locale, 'review.forward.errors.member_no') };
+    const supabase = await createClient();
+    const { data, error } = await supabase.schema('api').rpc('app_forward', { p_app: uuid.parse(appId), p_member_no: no.data });
+    if (error) throw error;
+    refresh();
+    return { ok: true, message: msg(locale, 'review.forward.done', { no: data ?? '' }) };
+  } catch (error) {
+    return fail(locale, error, 'adm.forward');
   }
 }

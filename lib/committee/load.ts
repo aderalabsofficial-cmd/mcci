@@ -2,7 +2,7 @@ import 'server-only';
 import type { AppForm } from '@/lib/flow/application';
 import { createClient } from '@/lib/supabase/server';
 
-export { canDecideOn, karachiToday } from '@/lib/committee/rules';
+export { karachiToday } from '@/lib/committee/rules';
 
 /**
  * Committee Desk and Meetings & Minutes (prototype admin/committee, admin/meetings). Read with the staff member's own
@@ -22,31 +22,6 @@ export interface Meeting {
   minutes: string | null;
   open: number;
   decided: number;
-}
-
-export interface AgendaItem {
-  appId: string;
-  token: string;
-  item: number | null;
-  name: string;
-  biz: string | null;
-  cls: 'Corporate' | 'Associate' | null;
-  women: boolean;
-  proposer: string | null;
-  seconder: string | null;
-  photo_path: string | null;
-  /** the committee's earlier deferral of this file, if any */
-  deferred: { meeting: string; note: string | null } | null;
-}
-
-export interface Desk {
-  meetings: Meeting[];
-  /** the meeting shown: the one asked for, else the earliest pending Membership Committee meeting with open items */
-  current: Meeting | null;
-  agenda: AgendaItem[];
-  /** with the committee but on no meeting yet (none scheduled) */
-  waiting: AgendaItem[];
-  counts: { approved: number; deferred: number; payment: number };
 }
 
 export async function loadMeetings(): Promise<Meeting[]> {
@@ -69,79 +44,6 @@ export async function loadMeetings(): Promise<Meeting[]> {
     open: (items ?? []).filter((i) => i.meeting_id === m.id && !i.decision).length,
     decided: (items ?? []).filter((i) => i.meeting_id === m.id && i.decision).length,
   }));
-}
-
-export async function loadDesk(meetingId?: string): Promise<Desk> {
-  const supabase = await createClient();
-  const meetings = (await loadMeetings()).filter((m) => m.committee === 'Membership Committee');
-  const pending = meetings
-    .filter((m) => m.status === 'Pending')
-    .sort((a, b) => (a.held_on ?? '9999').localeCompare(b.held_on ?? '9999'));
-  const current =
-    meetings.find((m) => m.id === meetingId) ?? pending.find((m) => m.open > 0) ?? pending[0] ?? null;
-
-  const [{ data: apps, error }, { data: items }, { data: ends }] = await Promise.all([
-    supabase
-      .from('applications')
-      .select('id, token, stage, form, class, women, photo_path, companies!inner(demo)')
-      .in('stage', ['committee', 'payment', 'temp', 'permanent'])
-      // demo files (0350) never reach the committee's agenda or counts
-      .eq('companies.demo', false),
-    supabase.from('committee_items').select('application_id, meeting_id, item_no, decision, note, decided_at'),
-    supabase
-      .from('endorsements')
-      .select('application_id, role, status, members(rep_name)')
-      .eq('status', 'Approved'),
-  ]);
-  if (error) throw new Error(`applications: ${error.message}`);
-  const its = items ?? [];
-  const endorser = (app: string, role: string) =>
-    ((ends ?? []).find((e) => e.application_id === app && e.role === role)?.members as unknown as {
-      rep_name: string;
-    } | null)?.rep_name ?? null;
-  const toItem = (a: NonNullable<typeof apps>[number], item: number | null): AgendaItem => {
-    const f = (a.form ?? {}) as AppForm;
-    const d = its
-      .filter((i) => i.application_id === a.id && i.decision === 'Deferred')
-      .sort((x, y) => (y.decided_at ?? '').localeCompare(x.decided_at ?? ''))[0];
-    return {
-      appId: a.id,
-      token: a.token,
-      item,
-      name: f.name ?? '',
-      biz: f.biz ?? null,
-      cls: a.class,
-      women: a.women,
-      proposer: endorser(a.id, 'proposer'),
-      seconder: endorser(a.id, 'seconder'),
-      photo_path: a.photo_path,
-      deferred: d ? { meeting: d.meeting_id, note: d.note } : null,
-    };
-  };
-  const inCommittee = (apps ?? []).filter((a) => a.stage === 'committee');
-  const agenda = current
-    ? its
-        .filter((i) => i.meeting_id === current.id && !i.decision)
-        .sort((x, y) => (x.item_no ?? 0) - (y.item_no ?? 0))
-        .flatMap((i) => {
-          const a = inCommittee.find((x) => x.id === i.application_id);
-          return a ? [toItem(a, i.item_no)] : [];
-        })
-    : [];
-  const waiting = inCommittee
-    .filter((a) => !its.some((i) => i.application_id === a.id && !i.decision))
-    .map((a) => toItem(a, null));
-  return {
-    meetings,
-    current,
-    agenda,
-    waiting,
-    counts: {
-      approved: (apps ?? []).filter((a) => a.stage !== 'committee').length,
-      deferred: inCommittee.filter((a) => its.some((i) => i.application_id === a.id && i.decision === 'Deferred')).length,
-      payment: (apps ?? []).filter((a) => a.stage === 'payment').length,
-    },
-  };
 }
 
 export interface AppCommittee {
@@ -192,5 +94,143 @@ export async function loadAppCommittee(appId: string): Promise<AppCommittee> {
       .sort((a, b) => (a.held_on ?? '').localeCompare(b.held_on ?? '')),
     member_no: app?.member_no ?? null,
     voucher: v?.[0] ? { no: v[0].voucher_no, amount: v[0].amount, status: v[0].status, due_at: v[0].due_at } : null,
+  };
+}
+
+// ───────── R2 (migration 0430): the committee in force, and every forwarded file ─────────
+
+export interface CommitteePerson {
+  id: string;
+  name: string;
+  designation?: string;
+}
+
+export interface Assignment {
+  id: string;
+  status: 'Approved' | 'Pending';
+  convener: CommitteePerson;
+  members: CommitteePerson[];
+  note: string | null;
+  proposedBy: string | null;
+  proposedAt: string;
+  decidedBy: string | null;
+  decidedAt: string | null;
+}
+
+export interface CommitteeNow {
+  current: Assignment | null;
+  pending: Assignment | null;
+  meConvener: boolean;
+  meMember: boolean;
+}
+
+/** the Membership Committee approved by the President, and the one the SG proposed that waits for the President */
+export async function loadCommittee(): Promise<CommitteeNow> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.schema('api').rpc('cmt_committee');
+  if (error) throw new Error(`cmt_committee: ${error.message}`);
+  const as = (r: NonNullable<typeof data>[number]): Assignment => ({
+    id: r.id,
+    status: r.status as Assignment['status'],
+    convener: { id: r.convener, name: r.convener_name },
+    members: ((r.members ?? []) as unknown as { id: string; name: string; designation: string }[]).map((x) => ({
+      id: x.id,
+      name: x.name,
+      designation: x.designation,
+    })),
+    note: r.note,
+    proposedBy: r.proposed_by_name,
+    proposedAt: r.proposed_at,
+    decidedBy: r.decided_by_name,
+    decidedAt: r.decided_at,
+  });
+  const cur = (data ?? []).find((r) => r.status === 'Approved');
+  const pen = (data ?? []).find((r) => r.status === 'Pending');
+  return {
+    current: cur ? as(cur) : null,
+    pending: pen ? as(pen) : null,
+    meConvener: cur?.me_convener === true,
+    meMember: cur?.me_convener === true || cur?.me_member === true,
+  };
+}
+
+export interface ForwardedFile {
+  appId: string;
+  token: string;
+  name: string;
+  biz: string | null;
+  cls: 'Corporate' | 'Associate' | null;
+  women: boolean;
+  memberNo: string | null;
+  proposer: string | null;
+  seconder: string | null;
+  photo_path: string | null;
+  forwardedAt: string | null;
+  notes: { by: string | null; at: string; note: string | null }[];
+  /** a test file of a demo applicant (0350/0405): shown marked */
+  demo: boolean;
+}
+
+export interface Forwarded {
+  files: ForwardedFile[];
+  /** documents verified, both consents in, waiting for the officer to type the number and forward */
+  ready: number;
+  counts: { approved: number; returned: number; payment: number };
+}
+
+/** every file with the committee — no meeting or agenda needed (docs/21 point 24) */
+export async function loadForwarded(): Promise<Forwarded> {
+  const supabase = await createClient();
+  const [{ data: apps, error }, { data: ends }, { data: hist }] = await Promise.all([
+    supabase
+      .from('applications')
+      .select('id, token, stage, form, class, women, member_no, photo_path, companies(demo)')
+      .in('stage', ['proposer', 'committee', 'payment', 'temp', 'permanent']),
+    supabase.from('endorsements').select('application_id, role, status, members(rep_name)').eq('status', 'Approved'),
+    supabase
+      .from('application_history')
+      .select('application_id, step, note, by_name, at')
+      .in('step', ['forwarded', 'committee note', 'returned to officer'])
+      .order('at', { ascending: false }),
+  ]);
+  if (error) throw new Error(`applications: ${error.message}`);
+  const endorser = (app: string, role: string) =>
+    ((ends ?? []).find((e) => e.application_id === app && e.role === role)?.members as unknown as {
+      rep_name: string;
+    } | null)?.rep_name ?? null;
+  const consents = (app: string) => new Set((ends ?? []).filter((e) => e.application_id === app).map((e) => e.role)).size;
+  const all = apps ?? [];
+  const files = all
+    .filter((a) => a.stage === 'committee')
+    .map((a): ForwardedFile => {
+      const f = (a.form ?? {}) as AppForm;
+      const h = (hist ?? []).filter((x) => x.application_id === a.id);
+      return {
+        appId: a.id,
+        token: a.token,
+        name: f.name ?? '',
+        biz: f.biz ?? null,
+        cls: a.class,
+        women: a.women,
+        memberNo: a.member_no,
+        proposer: endorser(a.id, 'proposer'),
+        seconder: endorser(a.id, 'seconder'),
+        photo_path: a.photo_path,
+        forwardedAt: h.find((x) => x.step === 'forwarded')?.at ?? null,
+        notes: h.filter((x) => x.step === 'committee note').map((x) => ({ by: x.by_name, at: x.at, note: x.note })),
+        demo: (a.companies as unknown as { demo: boolean } | null)?.demo === true,
+      };
+    })
+    .sort((x, y) => (x.forwardedAt ?? '').localeCompare(y.forwardedAt ?? ''));
+  return {
+    files,
+    ready: all.filter((a) => a.stage === 'proposer' && consents(a.id) === 2).length,
+    counts: {
+      approved: all.filter((a) => ['payment', 'temp', 'permanent'].includes(a.stage)).length,
+      returned: all.filter(
+        (a) => a.stage === 'proposer' && (hist ?? []).some((x) => x.application_id === a.id && x.step === 'returned to officer'),
+      ).length,
+      payment: all.filter((a) => a.stage === 'payment').length,
+    },
   };
 }
