@@ -4,7 +4,7 @@ import { expect, test as setup } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { readLocalEnv } from '../integration/local-env';
 import { totp } from '../support/totp';
-import { ACCOUNTS_FILE, AUTH_DIR, type E2eAccounts, STATE } from './accounts';
+import { ACCOUNTS_FILE, AUTH_DIR, type E2eAccounts, STAFF, STATE } from './accounts';
 
 /**
  * Runs once before the browser projects. With the local Supabase stack (MCCI_IT_LOCAL=1 + keys, see
@@ -37,6 +37,9 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
     },
     staff: { id: '', email: `e2e-${run}-staff@test.local`, password: pw(), totpSecret: '' },
     sg: { id: '', email: `e2e-${run}-sg@test.local`, password: pw(), totpSecret: '' },
+    president: { id: '', email: `e2e-${run}-president@test.local`, password: pw(), totpSecret: '' },
+    convener: { id: '', email: `e2e-${run}-convener@test.local`, password: pw(), totpSecret: '' },
+    itconv: { id: '', email: `e2e-${run}-itconv@test.local`, password: pw(), totpSecret: '' },
     reset: { id: '', email: `e2e-${run}-reset@test.local`, password: pw() },
     companyId: randomUUID(),
     memberRowId: randomUUID(),
@@ -44,7 +47,7 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
   // written first, so teardown can clean up whatever exists even if a later step fails
   writeFileSync(ACCOUNTS_FILE, JSON.stringify(accounts));
 
-  for (const who of ['member', 'staff', 'sg', 'reset'] as const) {
+  for (const who of ['member', 'staff', 'sg', 'president', 'convener', 'itconv', 'reset'] as const) {
     const a = accounts[who]!;
     const created = await admin.auth.admin.createUser({
       email: a.email,
@@ -55,6 +58,9 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
           member: `E2E Member ${run}`,
           staff: `E2E Officer ${run}`,
           sg: `E2E Secretary ${run}`,
+          president: `E2E President ${run}`,
+          convener: `E2E Convener ${run}`,
+          itconv: `E2E IT Convener ${run}`,
           reset: `E2E Reset ${run}`,
         }[who],
       },
@@ -82,11 +88,12 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
       valid_to: '2099-03-31',
     }),
   );
-  ok(await admin.from('staff').insert({ user_id: accounts.staff!.id, designation: 'Membership Officer' }));
-  ok(await admin.from('staff').insert({ user_id: accounts.sg!.id, designation: 'Secretary General' }));
+  for (const who of Object.keys(STAFF) as (keyof typeof STAFF)[]) {
+    ok(await admin.from('staff').insert({ user_id: accounts[who]!.id, designation: STAFF[who] }));
+  }
 
   // each staff authenticator, enrolled with the person's own session (as the 2-step page does)
-  for (const who of ['staff', 'sg'] as const) {
+  for (const who of Object.keys(STAFF) as (keyof typeof STAFF)[]) {
     const a = accounts[who]!;
     const person = createClient(env.url, env.publishableKey, noSession);
     ok(await person.auth.signInWithPassword({ email: a.email, password: a.password }));
@@ -116,7 +123,7 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
   await member.storageState({ path: STATE.member });
   await member.close();
 
-  for (const who of ['staff', 'sg'] as const) {
+  for (const who of Object.keys(STAFF) as (keyof typeof STAFF)[]) {
     const a = accounts[who]!;
     const ctx = await browser.newContext();
     const sp = await ctx.newPage();

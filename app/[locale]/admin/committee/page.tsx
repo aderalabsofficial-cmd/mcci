@@ -11,7 +11,7 @@ import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { type CommitteePerson, type ForwardedFile, loadCommittee, loadForwarded } from '@/lib/committee/load';
 import { voucherDate } from '@/lib/committee/voucher';
-import { signedUrls } from '@/lib/membership/view';
+import { staffFileUrls } from '@/lib/files/urls';
 import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
@@ -63,7 +63,7 @@ export default async function CommitteePage({ params }: Props) {
     loadCommittee(),
     isSg ? loadStaffChoices() : Promise.resolve<CommitteePerson[]>([]),
   ]);
-  const urls = await signedUrls(desk.files.map((a) => a.photo_path));
+  const urls = staffFileUrls('application-docs', desk.files.map((a) => a.photo_path));
   const day = (iso: string | null) => (iso ? voucherDate(iso, locale) : '');
   const items: DeskItem[] = desk.files.map((a) => ({
     appId: a.appId,

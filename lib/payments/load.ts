@@ -1,5 +1,5 @@
 import 'server-only';
-import { publicStorageUrl } from '@/lib/membership/load';
+import { staffFileUrls } from '@/lib/files/urls';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -50,10 +50,8 @@ export async function loadVouchers(): Promise<StaffVoucher[]> {
     ? await supabase.from('applications').select('id, token').in('id', apps)
     : { data: [] as { id: string; token: string }[] };
   const waiting = (rs ?? []).filter((r) => r.status === 'Submitted' && r.path).map((r) => r.path!);
-  const { data: signed } = waiting.length
-    ? await supabase.storage.from('receipts').createSignedUrls(waiting, 600)
-    : { data: [] as { path: string | null; signedUrl: string }[] };
-  const url = new Map((signed ?? []).filter((s) => s.path && s.signedUrl).map((s) => [s.path!, publicStorageUrl(s.signedUrl!)]));
+  // staff see receipts through the file route (logged; 0460), never a storage link
+  const url = staffFileUrls('receipts', waiting);
   return (vs ?? []).map((v) => ({
     no: v.voucher_no,
     company: (v.companies as unknown as { name: string } | null)?.name ?? '—',

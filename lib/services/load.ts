@@ -1,5 +1,6 @@
 import 'server-only';
 import type { Access } from '@/lib/permissions/levels';
+import { staffFileUrl } from '@/lib/files/urls';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -78,7 +79,7 @@ export interface SvcDetail extends SvcRow {
   member: { member_no: string; status: string; valid_to: string } | null;
 }
 
-export async function loadRequest(token: string, userId: string): Promise<SvcDetail | null> {
+export async function loadRequest(token: string, userId: string, forStaff = false): Promise<SvcDetail | null> {
   const supabase = await createClient();
   const { data } = await supabase.from('service_requests').select(COLS).eq('token', token).maybeSingle();
   if (!data) return null;
@@ -92,7 +93,12 @@ export async function loadRequest(token: string, userId: string): Promise<SvcDet
     supabase.from('members').select('member_no, status, valid_to').eq('company_id', r.company_id).order('valid_to', { ascending: false }).limit(1).maybeSingle(),
   ]);
   const paths = (docs.data ?? []).map((d) => d.path);
-  const signed = paths.length ? (await supabase.storage.from('service-docs').createSignedUrls(paths, 600)).data ?? [] : [];
+  // the member gets signed links to their own files; staff the logged file route (0460)
+  const signed = forStaff
+    ? paths.map((p) => ({ signedUrl: staffFileUrl('service-docs', p) }))
+    : paths.length
+      ? ((await supabase.storage.from('service-docs').createSignedUrls(paths, 600)).data ?? [])
+      : [];
   // the names of who wrote each message (colleagues and staff are not readable profiles for members: use the role)
   return {
     ...r,

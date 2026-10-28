@@ -41,6 +41,8 @@ export interface ReviewDoc {
   status: 'pending' | 'ok' | 'rejected' | null;
   reason: string | null;
   url: string | null;
+  /** the original file — the IT Convener's only (0460) */
+  download?: string | null;
   reuploaded: boolean;
 }
 
@@ -519,6 +521,11 @@ export function ReviewScreen({
                   {x.url && (
                     <a className="btn btn-w" href={x.url} target="_blank" rel="noreferrer" data-action="wiz.doc.view">
                       {m('view')}
+                    </a>
+                  )}
+                  {x.download && (
+                    <a className="btn btn-w" href={x.download} data-action="doc.download">
+                      {m('downloadOriginal')}
                     </a>
                   )}
                   {inReview && canWork && (

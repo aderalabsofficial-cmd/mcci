@@ -15,7 +15,8 @@ import { pkr } from '@/lib/committee/voucher';
 import { applicableDocs, classOf, fee } from '@/lib/flow/application';
 import { loadDocLists, loadEndorsements, loadPublicSettings } from '@/lib/membership/load';
 import { FORM_FIELDS } from '@/lib/membership/reference';
-import { formEndorser, signedUrls } from '@/lib/membership/view';
+import { formEndorser } from '@/lib/membership/view';
+import { staffFileUrl, staffFileUrls } from '@/lib/files/urls';
 import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
@@ -67,7 +68,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     loadDocLists(),
     loadEndorsements(file.id),
   ]);
-  const urls = await signedUrls([
+  // staff never get a storage link: the file route logs every view and watermarks images (0460)
+  const itConvener = session.access.staff?.designation === 'IT Convener';
+  const urls = staffFileUrls('application-docs', [
     ...file.docs.map((d) => d.path),
     file.photo_path,
     file.sign_path,
@@ -142,6 +145,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         status: d?.status ?? null,
         reason: d?.reject_reason ?? null,
         url: d ? (urls.get(d.path) ?? null) : null,
+        download: d && itConvener ? staffFileUrl('application-docs', d.path, true) : null,
         reuploaded: file.reuploaded.includes(r.key),
       };
     }),

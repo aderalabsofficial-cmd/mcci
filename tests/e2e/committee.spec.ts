@@ -10,7 +10,8 @@ import { signInAs } from './helpers';
  * President approves it; the Membership Officer types the membership number and forwards a verified file whose
  * proposer and seconder both approved; the file is on the committee desk at once (no meeting); the Convener approves
  * — voucher created and emailed, the applicant sees both in the portal (also in Urdu) — or declines / returns a file.
- * The President's approval is written directly here (the e2e accounts have no President); pgTAP 240 tests that rule.
+ * Every step through the real screens with the real personas: Secretary General, President, Membership Officer,
+ * Membership Committee Convener (tests/e2e/accounts.ts).
  */
 const env = readLocalEnv();
 test.skip(!env, 'needs the local Supabase stack (MCCI_IT_LOCAL=1 with its URL and keys)');
@@ -90,30 +91,39 @@ const stage = async (id: string) =>
 
 test('the SG assigns the Membership Committee; it counts once the President approves', async ({ page }) => {
   test.setTimeout(90_000);
-  const sg = readAccounts().sg!;
+  const convener = readAccounts().convener!;
   await signInAs(page, 'sg');
   await page.goto('/admin/committee');
   const card = main(page).getByTestId('committee-assignment');
   await expect(card).toContainText('No committee yet');
   await card.locator('[data-action="cmt.assign"]').click();
   const d = page.getByRole('dialog');
-  await d.getByLabel('Convener').selectOption(sg.id);
+  // a Membership Officer has no committee access: refused as Convener
+  await d.getByRole('combobox', { name: 'Convener' }).selectOption(readAccounts().staff!.id);
+  await d.locator('[data-action="cmt.assign.confirm"]').click();
+  await expect(d.getByRole('alert')).toContainText('Membership Committee access');
+  await d.getByRole('combobox', { name: 'Convener' }).selectOption(convener.id);
   await d.locator('[data-action="cmt.assign.confirm"]').click();
   await expect(card.getByRole('status').first()).toContainText('Sent to the President for approval.');
   await expect(card.getByTestId('committee-pending')).toContainText('Waiting for the President');
   // the SG cannot approve their own proposal: no button for them
   await expect(card.locator('[data-action="cmt.assign.decide"]')).toHaveCount(0);
 
-  // the President approves (written directly: see the note at the top)
-  const { error } = await admin
-    .from('committee_assignments')
-    .update({ status: 'Approved', decided_by: sg.id, decided_at: new Date().toISOString() })
-    .eq('proposed_by', sg.id)
-    .eq('status', 'Pending');
-  expect(error).toBeNull();
-  await page.reload();
-  await expect(card).toContainText('Convener');
+  // nobody decides yet: the SG has no decision buttons on the desk
+  await expect(main(page).locator('[data-action="cmt.decide"]')).toHaveCount(0);
+
+  // the President approves on the screen
+  await signInAs(page, 'president');
+  await page.goto('/admin/committee');
+  await card.getByTestId('committee-pending').locator('[data-action="cmt.assign.decide"][data-decision="yes"]').click();
+  await expect(card.getByRole('status').first()).toContainText('approved and in force');
+  await expect(card).toContainText(`E2E Convener`);
   await expect(card.getByTestId('committee-pending')).toHaveCount(0);
+
+  // the Membership Officer (no committee access) does not see the desk
+  await signInAs(page, 'staff');
+  await page.goto('/admin/committee');
+  await expect(main(page).getByTestId('committee-assignment')).toHaveCount(0);
 });
 
 test('the officer forwards with the number; the Convener approves: voucher and email; the applicant sees them', async ({
@@ -138,8 +148,12 @@ test('the officer forwards with the number; the Convener approves: voucher and e
   await expect(main(page).getByRole('status').first()).toContainText(`Forwarded to the Membership Committee with No. ${number}.`);
   expect(await stage(file.id)).toEqual({ stage: 'committee', member_no: number });
 
-  // on the desk at once; the Convener (the SG, as assigned above) approves
+  // on the desk at once; the SG sees it but cannot decide; the Convener approves
   await signInAs(page, 'sg');
+  await page.goto('/admin/committee');
+  await expect(main(page).locator(`[data-token="${file.token}"]`)).toBeVisible();
+  await expect(main(page).locator(`[data-token="${file.token}"] [data-action="cmt.decide"]`)).toHaveCount(0);
+  await signInAs(page, 'convener');
   await page.goto('/admin/committee');
   const row = main(page).locator(`[data-token="${file.token}"]`);
   await expect(row).toContainText(`No. ${number}`);
@@ -193,7 +207,7 @@ test('the Convener returns a file to the officer, then declines one with a reaso
   const file = await application(`Declined Traders ${tag}`);
   const number = no();
   await admin.from('applications').update({ stage: 'committee', member_no: number }).eq('id', file.id);
-  await signInAs(page, 'sg');
+  await signInAs(page, 'convener');
   await page.goto('/admin/committee');
   const row = () => main(page).locator(`[data-token="${file.token}"]`);
 

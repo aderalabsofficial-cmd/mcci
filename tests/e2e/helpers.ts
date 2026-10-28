@@ -18,7 +18,7 @@ const PROTECTED = /^\/(?:ur\/)?(portal|admin)(?:\/|$)/;
  * Gives the page the session auth.setup.ts saved for a synthetic member or (TOTP-verified) staff member — a real
  * session from the login page, not a bypass. Without a backend the test is skipped and says why.
  */
-export async function signInAs(page: Page, who: 'member' | 'staff' | 'sg') {
+export async function signInAs(page: Page, who: 'member' | 'staff' | 'sg' | 'president' | 'convener' | 'itconv') {
   test.skip(!readAccounts().backend, NO_BACKEND);
   const state = JSON.parse(readFileSync(STATE[who], 'utf8')) as {
     cookies: Parameters<BrowserContext['addCookies']>[0];

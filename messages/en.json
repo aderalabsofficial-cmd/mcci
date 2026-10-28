@@ -1397,7 +1397,8 @@
       "working": "Please wait…",
       "verifyBlockedDocs": "Accept every document first.",
       "verifyBlockedChecks": "Tick the officer checklist first.",
-      "sgOnly": "Secretary General only"
+      "sgOnly": "Secretary General only",
+      "downloadOriginal": "Download original"
     },
     "done": {
       "opened": "Review started.",
@@ -1657,7 +1658,8 @@
         "not_blacklisted": "This member is not blacklisted.",
         "fees": "The membership fees are not configured. Ask the administrator."
       }
-    }
+    },
+    "export": "Export register (CSV)"
   },
   "committee": {
     "names": {

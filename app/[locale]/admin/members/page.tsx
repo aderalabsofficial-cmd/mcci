@@ -86,7 +86,14 @@ export default async function MembersPage({ params }: Props) {
           <h1>{m('title')}</h1>
           <p>{m('sub')}</p>
         </div>
-        <div className="pb">{level >= 2 && <AddMember locale={locale} validTo={yearEnd()} />}</div>
+        <div className="pb">
+          {session.access.staff?.designation === 'IT Convener' && (
+            <a className="btn" href="/api/register/export" download data-action="reg.export">
+              {m('export')}
+            </a>
+          )}
+          {level >= 2 && <AddMember locale={locale} validTo={yearEnd()} />}
+        </div>
       </div>
       <div className="kg">
         <Kpi label={m('kMembers')} value={rows.length} sub={m('kMembersSub')} icon="users" color="#7c3aed" />

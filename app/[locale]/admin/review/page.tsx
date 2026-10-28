@@ -37,7 +37,7 @@ export default async function ServiceReviewPage({ params, searchParams }: Props)
     const all = await loadRequests();
     token = (all.find((r) => r.status === 'In review') ?? all.find((r) => !['Issued', 'Rejected'].includes(r.status)))?.token;
   }
-  const [detail, services] = await Promise.all([token ? loadRequest(token, session.userId) : Promise.resolve(null), loadServices()]);
+  const [detail, services] = await Promise.all([token ? loadRequest(token, session.userId, true) : Promise.resolve(null), loadServices()]);
   if (!detail) {
     return (
       <div className="proto">

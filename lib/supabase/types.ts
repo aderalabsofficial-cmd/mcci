@@ -233,6 +233,9 @@ export type Database = {
               "email_id": number,"name": string,"starts_at": string,"ticket_code": string,"title": string,"to_email": string,"venue": string
             }[]
                            },
+"file_access":
+{ Args: { "p_bucket": string,"p_mode": string,"p_path": string }; Returns: boolean
+                           },
 "import_commit":
 { Args: { "p_confirm": string,"p_import": string }; Returns: {
               "created": number,"failed": number,"skipped": number,"updated": number
@@ -342,6 +345,11 @@ export type Database = {
                            },
 "reauth_mark":
 { Args: { "p_user": string }; Returns: undefined
+                           },
+"register_export":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "address": string,"blacklisted": boolean,"class": string,"company": string,"email": string,"gst": string,"member_no": string,"ntn": string,"rep_name": string,"sector": string,"since": string,"status": string,"tel": string,"valid_to": string,"women": boolean
+            }[]
                            },
 "role_permission_set":
 { Args: { "p_designation": string,"p_level": number,"p_module": string }; Returns: undefined
@@ -1162,6 +1170,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"file_access_log": {
+                  Row: {
+                    "allowed": boolean,"at": string,"bucket": string,"designation": string | null,"id": number,"mode": string,"path": string,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allowed": boolean,"at"?: string,"bucket": string,"designation"?: string | null,"id"?: never,"mode": string,"path": string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "allowed"?: boolean,"at"?: string,"bucket"?: string,"designation"?: string | null,"id"?: never,"mode"?: string,"path"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "file_access_log_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"import_rows": {
                   Row: {

@@ -20,14 +20,17 @@ teardown('remove e2e accounts', async () => {
     if (accounts.companyId)
       await step('change requests', () => admin.from('change_requests').delete().eq('company_id', accounts.companyId!));
     if (accounts.companyId) await step('company', () => admin.from('companies').delete().eq('id', accounts.companyId!));
-    for (const who of ['staff', 'sg'] as const) {
-      const id = accounts[who]?.id;
-      if (id) await step(who, () => admin.from('staff').delete().eq('user_id', id));
+    // a committee the tests assigned (it refers to the staff rows below)
+    const staffIds = (['staff', 'sg', 'president', 'convener', 'itconv'] as const).map((w) => accounts[w]?.id).filter((x): x is string => !!x);
+    if (staffIds.length) {
+      await step('committee', () => admin.from('committee_assignments').delete().in('proposed_by', staffIds));
+      await step('committee (convener)', () => admin.from('committee_assignments').delete().in('convener', staffIds));
     }
+    for (const id of staffIds) await step(`staff ${id}`, () => admin.from('staff').delete().eq('user_id', id));
     // invitations sent by the tests (staff and company users), and staff rows of accepted test invitations
     await step('invitations', () => admin.from('invitations').delete().like('email', `e2e-${accounts.run}-%`));
     // the two accounts above plus any created by the tests themselves (registration): all e2e-<run>-…@test.local
-    const ids = new Set([accounts.member?.id, accounts.staff?.id, accounts.sg?.id].filter((x): x is string => !!x));
+    const ids = new Set([accounts.member?.id, ...staffIds].filter((x): x is string => !!x));
     const extra = await admin.from('profiles').select('id').like('email', `e2e-${accounts.run}-%@test.local`);
     if (extra.error) failures.push(`list e2e profiles: ${extra.error.message}`);
     for (const p of extra.data ?? []) ids.add(p.id);
