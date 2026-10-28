@@ -3,11 +3,16 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(28);
+select plan(29);
 
 select is((select count(*) from public.designations
             where name in ('Membership Committee Convener', 'Membership Committee Member', 'IT Convener')), 3::bigint,
   'three new designations');
+-- "Reset to defaults" (api.role_permissions_reset) restores private.role_permission_defaults: it has their limits (0465)
+select is((select count(*) from private.role_permission_defaults
+            where designation in ('Membership Committee Convener', 'Membership Committee Member', 'IT Convener')), 13::bigint,
+  'reset to defaults keeps the new designations'' limits');
+
 
 -- ───────── the committee: SG proposes, President approves ─────────
 select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.cmt_assign_propose(tests.id(''cs''), array[tests.id(''auditor'')])') $$,
