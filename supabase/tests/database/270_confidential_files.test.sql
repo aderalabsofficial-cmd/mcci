@@ -48,7 +48,7 @@ select ok((select count(*) from public.file_access_log where path = 'a0000000-00
 select is(tests.num_as(tests.id('mo'), 'select count(*) from api.register_export()'), 0::bigint, 'the Membership Officer gets nothing from the register export');
 select is(tests.num_as(tests.id('sg'), 'select count(*) from api.register_export()'), 0::bigint, 'nor the Secretary General');
 select ok(tests.num_as(tests.id('so'), 'select count(*) from api.register_export()') >= 2, 'the IT Convener exports it');
-select is((select count(*) from public.file_access_log where bucket = 'register' and mode = 'export'), 3::bigint, 'each export attempt is logged');
+select is((select count(*) from public.file_access_log where bucket = 'register' and mode = 'export' and at = now()), 3::bigint, 'each export attempt is logged');
 
 -- ───────── committee notes: the committee's only ─────────
 insert into public.application_history (application_id, step, note) values (tests.id('app_a_review'), 'committee note', 'internal');

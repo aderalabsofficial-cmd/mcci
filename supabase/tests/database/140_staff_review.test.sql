@@ -12,6 +12,8 @@ update public.applications set stage = 'submitted', created_by = tests.id('owner
            "address":"Multan","ntn":"1-1","tel":"061","email":"a@test.local","particulars":"Wholesale","est":"2010-01-01",
            "rep":"Owner A","desig":"Proprietor","cnic":"36302-1111111-1","mobile":"0300"}'
  where id = tests.id('app_a_review');
+-- partners / directors give email and address (0440)
+update public.application_partners set email = 'p1@test.local', address = 'Multan' where application_id = tests.id('app_a_review');
 delete from public.application_documents where application_id = tests.id('app_a_review');
 insert into public.application_documents (application_id, key, path, file_name)
 select tests.id('app_a_review'), k, 'a/applications/r/' || k, k || '.pdf' from unnest(array['cnic','ntn','addr','bank','photo']) k;
