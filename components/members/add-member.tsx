@@ -95,10 +95,8 @@ export function AddMember({ locale, validTo }: { locale: Locale; validTo: string
               {m('validTo')}
               <input name="validTo" type="date" required defaultValue={validTo} />
             </label>
-            <label className="form-field" style={{ alignSelf: 'end' }}>
-              <span>
-                <input name="women" type="checkbox" /> {m('women')}
-              </span>
+            <label className="flex min-h-11 items-center gap-2.5 self-end">
+              <input name="women" type="checkbox" className="size-5 shrink-0" /> {m('women')}
             </label>
             <label className="form-field">
               {m('owner')}

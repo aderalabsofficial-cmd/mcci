@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/admin/no-access';
-import { ImportPreview, type PreviewMember, type PreviewRow } from '@/components/import/import-preview';
+import { ImportPreview, type InviteCounts, type PreviewMember, type PreviewRow } from '@/components/import/import-preview';
 import { ImportUpload } from '@/components/import/import-upload';
 import { PageHeader } from '@/components/shared/page-header';
 import { Link } from '@/i18n/navigation';
@@ -52,14 +52,25 @@ export default async function ImportPage({ params, searchParams }: Props) {
   const open = (imports ?? []).find((i) => i.id === openId) ?? null;
 
   let rows: PreviewRow[] = [];
+  let invites: InviteCounts | null = null;
   const members: Record<string, PreviewMember> = {};
   if (open) {
     const { data } = await supabase
       .from('import_rows')
-      .select('row_no, data, issues, confidence, match, match_member, decision, result')
+      .select('row_no, data, issues, confidence, match, match_member, decision, result, invite_status, invited_at')
       .eq('import_id', open.id)
       .order('row_no');
     rows = (data ?? []) as unknown as PreviewRow[];
+    if (open.status === 'committed') {
+      // invitations to the members it created or updated (0406); "sending" for over 10 minutes is sent again
+      invites = { sent: 0, failed: 0, no_email: 0, has_account: 0, waiting: 0 };
+      for (const r of data ?? []) {
+        if (r.result !== 'created' && r.result !== 'updated') continue;
+        const stale = r.invite_status === 'sending' && Date.now() - new Date(r.invited_at ?? 0).getTime() > 10 * 60_000;
+        const k = !r.invite_status || stale ? 'waiting' : r.invite_status === 'sending' ? 'sent' : (r.invite_status as keyof InviteCounts);
+        invites[k]++;
+      }
+    }
     const ids = [...new Set(rows.map((r) => r.match_member).filter((x): x is string => Boolean(x)))];
     for (let i = 0; i < ids.length; i += 200) {
       const { data: ms } = await supabase
@@ -169,6 +180,7 @@ export default async function ImportPage({ params, searchParams }: Props) {
           rows={rows}
           members={members}
           canRollback={level >= 3}
+          invites={invites}
         />
       )}
     </div>

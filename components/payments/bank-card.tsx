@@ -94,11 +94,9 @@ export function BankCard({ locale, bank, canEdit }: { locale: Locale; bank: Bank
               <input name="branch" maxLength={120} defaultValue={confirmed ? bank!.branch : ''} />
             </label>
           </div>
-          <label className="form-field">
-            <span>
-              <input name="confirmed" type="checkbox" /> {m('confirmBox')}
-            </span>
-          </label>
+          <label className="flex min-h-11 items-center gap-2.5">
+              <input name="confirmed" type="checkbox" className="size-5 shrink-0" /> {m('confirmBox')}
+            </label>
           {error && (
             <p role="alert" style={{ color: '#b91c1c', fontWeight: 700 }}>
               {error}

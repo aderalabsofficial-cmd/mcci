@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Trash2, Undo2, Upload, X } from 'lucide-react';
+import { Check, Mail, Trash2, Undo2, Upload, X } from 'lucide-react';
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { IMPORT_NOTE_KEY } from '@/components/import/import-upload';
 import { Kpi } from '@/components/review/kpi';
@@ -9,7 +9,7 @@ import { Modal } from '@/components/shared/modal';
 import { Link, useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { callAction, type Outcome } from '@/lib/client/call-action';
-import { commitImport, decideImportRow, discardImport, rollbackImport } from '@/lib/import/actions';
+import { commitImport, decideImportRow, discardImport, inviteImported, rollbackImport } from '@/lib/import/actions';
 import type { ImportData, Issue } from '@/lib/import/normalize';
 import { msg } from '@/lib/nav/model';
 
@@ -40,6 +40,15 @@ export interface PreviewMember {
   updatable: boolean;
 }
 
+/** invitation counts of a committed import (migration 0406 import_rows.invite_status) */
+export interface InviteCounts {
+  sent: number;
+  failed: number;
+  no_email: number;
+  has_account: number;
+  waiting: number;
+}
+
 const PAGE = 100;
 const COMPARE = ['class', 'status', 'representative_name', 'valid_to', 'company_name', 'ntn', 'certificate_serial'] as const;
 type Filter = 'all' | 'attention' | Decision;
@@ -67,6 +76,7 @@ export function ImportPreview({
   rows,
   members,
   canRollback,
+  invites,
 }: {
   locale: Locale;
   importId: string;
@@ -76,6 +86,7 @@ export function ImportPreview({
   rows: PreviewRow[];
   members: Record<string, PreviewMember>;
   canRollback: boolean;
+  invites: InviteCounts | null;
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `imp.${k}`, v);
   const router = useRouter();
@@ -88,6 +99,7 @@ export function ImportPreview({
   const [dialog, setDialog] = useState<'commit' | 'discard' | 'rollback' | null>(null);
   const [inner, setInner] = useState<Outcome | null>(null);
   const [confirm, setConfirm] = useState('');
+  const [sending, setSending] = useState<{ sent: number; failed: number } | null>(null);
   const open = status === 'preview';
   const locked = busy !== null || refreshing;
 
@@ -148,6 +160,37 @@ export function ImportPreview({
     setDialog(null);
     setConfirm('');
     setNote(res);
+    refresh();
+    // every member the import created or updated is invited by email (owner's request; migration 0406)
+    if (key === 'commit') void invite(false);
+  }
+
+  /** imp.invite: batch after batch until none is left; retry also sends the ones whose email failed before */
+  async function invite(retry: boolean) {
+    setBusy('invite');
+    let sent = 0;
+    let failed = 0;
+    setSending({ sent, failed });
+    let again = retry;
+    for (;;) {
+      const r = await callAction(locale, () => inviteImported(locale, importId, again));
+      again = false;
+      if (!r.ok || !('left' in r)) {
+        setNote(r);
+        break;
+      }
+      sent += r.sent;
+      failed += r.failed;
+      setSending({ sent, failed });
+      if (r.left === 0) {
+        const done = m('invite.done', { sent: String(sent), failed: String(failed) });
+        // after a commit its outcome stays in view, followed by the invitations'
+        setNote((n) => ({ ok: failed === 0, message: n?.ok && !retry ? `${n.message} ${done}` : done }));
+        break;
+      }
+    }
+    setBusy(null);
+    setSending(null);
     refresh();
   }
 
@@ -304,7 +347,40 @@ export function ImportPreview({
           </button>
         </div>
       )}
+      {status === 'committed' && invites && (
+        <div
+          className="banner"
+          style={{ marginTop: 14, background: '#e8f0fb', color: '#0b2a5b', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}
+          data-invites={invites.waiting + invites.failed} aria-live="polite">
+          <b>
+            <Mail size={16} aria-hidden /> {m('invite.title')}
+          </b>
+          <p style={{ margin: '4px 0 0' }}>
+            {sending
+              ? m('invite.sending', { sent: String(sending.sent), failed: String(sending.failed) })
+              : m('invite.counts', {
+                  sent: String(invites.sent),
+                  failed: String(invites.failed),
+                  noEmail: String(invites.no_email),
+                  hasAccount: String(invites.has_account),
+                  waiting: String(invites.waiting),
+                })}
+          </p>
+        </div>
+      )}
       <div className="pb" style={{ marginTop: 14 }}>
+        {status === 'committed' && invites && (
+          <button
+            type="button"
+            className="btn btn-primary"
+            data-action="imp.invite"
+            disabled={locked || invites.waiting + invites.failed === 0}
+            title={invites.waiting + invites.failed === 0 ? m('invite.nothing') : undefined}
+            onClick={() => void invite(true)}
+          >
+            <Mail size={16} aria-hidden /> {m('invite.send', { n: String(invites.waiting + invites.failed) })}
+          </button>
+        )}
         {open && (
           <>
             <button

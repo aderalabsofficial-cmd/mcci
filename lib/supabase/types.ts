@@ -192,6 +192,14 @@ export type Database = {
 "import_discard":
 { Args: { "p_import": string }; Returns: undefined
                            },
+"import_invite_mark":
+{ Args: { "p_import": string,"p_ok": boolean,"p_row": number }; Returns: undefined
+                           },
+"import_invite_next":
+{ Args: { "p_import": string,"p_limit"?: number,"p_retry"?: boolean }; Returns: {
+              "company": string,"email": string,"full_name": string,"row_no": number,"token": string
+            }[]
+                           },
 "import_rollback":
 { Args: { "p_import": string }; Returns: {
               "kept": number,"removed": number
@@ -1026,14 +1034,14 @@ isOneToOne: false
                   ]
                 },"import_rows": {
                   Row: {
-                    "confidence": number | null,"created_member": string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"issues": NonNullable<Json>,"match": string,"match_member": string | null,"raw": Json | null,"result": string | null,"row_no": number
+                    "confidence": number | null,"created_member": string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"invitation_id": string | null,"invite_status": string | null,"invited_at": string | null,"issues": NonNullable<Json>,"match": string,"match_member": string | null,"raw": Json | null,"result": string | null,"row_no": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "confidence"?: number | null,"created_member"?: string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"issues"?: NonNullable<Json>,"match": string,"match_member"?: string | null,"raw"?: Json | null,"result"?: string | null,"row_no": number
+                    "confidence"?: number | null,"created_member"?: string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"invitation_id"?: string | null,"invite_status"?: string | null,"invited_at"?: string | null,"issues"?: NonNullable<Json>,"match": string,"match_member"?: string | null,"raw"?: Json | null,"result"?: string | null,"row_no": number
                   }
                   Update: {
-                    "confidence"?: number | null,"created_member"?: string | null,"data"?: NonNullable<Json>,"decision"?: string,"import_id"?: string,"issues"?: NonNullable<Json>,"match"?: string,"match_member"?: string | null,"raw"?: Json | null,"result"?: string | null,"row_no"?: number
+                    "confidence"?: number | null,"created_member"?: string | null,"data"?: NonNullable<Json>,"decision"?: string,"import_id"?: string,"invitation_id"?: string | null,"invite_status"?: string | null,"invited_at"?: string | null,"issues"?: NonNullable<Json>,"match"?: string,"match_member"?: string | null,"raw"?: Json | null,"result"?: string | null,"row_no"?: number
                   }
                   Relationships: [
                     {
@@ -1047,6 +1055,12 @@ isOneToOne: false
       columns: ["import_id"]
 isOneToOne: false
       referencedRelation: "imports"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "import_rows_invitation_id_fkey"
+      columns: ["invitation_id"]
+isOneToOne: false
+      referencedRelation: "invitations"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "import_rows_match_member_fkey"

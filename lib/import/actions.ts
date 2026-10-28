@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { Locale } from '@/i18n/routing';
 import { asLocale } from '@/i18n/locale';
 import { aiEnabled } from '@/lib/ai/extract';
+import { sendInvitation } from '@/lib/invitations/email';
 import { readPdfDirectory } from '@/lib/import/ai';
 import { normalizeRow, normalizeSheet, type ImportRow } from '@/lib/import/normalize';
 import { checkImportFile, IMPORT_MIME, readSheet } from '@/lib/import/parse';
@@ -24,6 +25,14 @@ export interface ImportResult {
   ok: boolean;
   message: string;
   id?: string;
+}
+
+/** one batch of invitations to imported members (imp.invite) */
+export interface InviteBatch extends ImportResult {
+  sent: number;
+  failed: number;
+  /** still to be sent after this batch (0 = done) */
+  left: number;
 }
 
 const id = z.string().uuid();
@@ -174,5 +183,47 @@ export async function rollbackImport(locale: Locale, importId: string): Promise<
     return { ok: true, id: importId, message: msg(locale, 'imp.done.rolledBack', { removed: String(r?.removed ?? 0), kept: String(r?.kept ?? 0) }) };
   } catch (error) {
     return fail(locale, error, 'imp.rollback');
+  }
+}
+
+/**
+ * imp.invite (migration 0406): emails the next batch of invitations to the members a committed import created or
+ * updated — each as the Owner of their company, to the email in the sheet. The page calls it until nothing is left,
+ * so a large sheet never meets the request time limit; the database skips companies with someone already signed in.
+ */
+export async function inviteImported(locale: Locale, importId: string, retry = false): Promise<InviteBatch> {
+  const none = { sent: 0, failed: 0, left: 0 };
+  try {
+    const actor = await requirePermission('reg', 2);
+    const imp = id.parse(importId);
+    const supabase = await createClient();
+    const { data, error } = await supabase.schema('api').rpc('import_invite_next', { p_import: imp, p_limit: 10, p_retry: retry });
+    if (error) throw error;
+    let sent = 0;
+    let failed = 0;
+    for (const r of data ?? []) {
+      const ok = await sendInvitation({
+        kind: 'company_user',
+        to: r.email,
+        name: r.full_name,
+        inviter: actor.access.full_name || 'MCCI',
+        company: r.company,
+        role: 'Owner',
+        token: r.token,
+      });
+      await supabase.schema('api').rpc('import_invite_mark', { p_import: imp, p_row: r.row_no, p_ok: ok });
+      if (ok) sent++;
+      else failed++;
+    }
+    const { count } = await supabase
+      .from('import_rows')
+      .select('row_no', { count: 'exact', head: true })
+      .eq('import_id', imp)
+      .in('result', ['created', 'updated'])
+      .is('invite_status', null);
+    const left = (data?.length ?? 0) === 0 ? 0 : (count ?? 0);
+    return { ok: true, id: importId, sent, failed, left, message: msg(locale, 'imp.invite.batch', { sent: String(sent), failed: String(failed) }) };
+  } catch (error) {
+    return { ...fail(locale, error, 'imp.invite'), ...none };
   }
 }

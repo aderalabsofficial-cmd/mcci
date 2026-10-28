@@ -17,6 +17,8 @@ test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'deskto
 // an Associate number below the sequence start, so the official numbering is not moved by the test
 const no = `MCCI-A-0${randomInt(100, 999)}`;
 const company = `Import Test ${no}`;
+const email = `import-${no.toLowerCase()}@test.local`;
+const MAILPIT = 'http://127.0.0.1:54324';
 let admin: SupabaseClient;
 
 test.beforeAll(() => {
@@ -32,11 +34,12 @@ test.afterAll(async () => {
     await admin.from('members').delete().eq('id', m.id);
     await admin.from('companies').delete().eq('id', m.company_id);
   }
+  await admin.from('invitations').delete().eq('email', email);
 });
 
 const csv = [
   'membership_no,class,women,company_name,business_type,representative_name,email,member_since,valid_to,status',
-  `${no},Associate,N,${company},prop,Rep Import,import@test.local,01/04/2016,31/03/2027,Permanent`,
+  `${no},Associate,N,${company},prop,Rep Import,${email},01/04/2016,31/03/2027,Permanent`,
   'MCCI-C-9001,Corporate,N,Company B (member),pvt,Someone Else,b@test.local,,31/03/2028,Permanent',
   'MCCI-C-77,Corporate,N,,pvt,No Company,,,31/03/2027,Permanent',
 ].join('\r\n');
@@ -77,6 +80,23 @@ test('import: preview checks every row, nothing is written before IMPORT, number
   await c.locator('[data-action="imp.commit.confirm"]').click();
   await expect(preview.locator('[data-outcome="ok"]')).toContainText('Imported: 1 created, 0 updated, 2 skipped, 0 failed');
   await expect(preview).toHaveAttribute('data-status', 'committed');
+  // every imported member is invited by email right away (migration 0406)
+  await expect(preview.locator('[data-outcome="ok"]')).toContainText('Invitations: 1 sent, 0 not delivered', { timeout: 30_000 });
+  await expect(preview.locator('[data-invites]')).toContainText('1 sent');
+  await expect(preview.locator('[data-action="imp.invite"]')).toBeDisabled();
+  await expect
+    .poll(async () => {
+      const list = await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)).json();
+      for (const x of list.messages ?? []) {
+        const msg = await (await fetch(`${MAILPIT}/api/v1/message/${x.ID}`)).json();
+        if (/\/invite\/\S+/.test(msg.Text ?? '') && (msg.Text ?? '').includes(company)) return true;
+      }
+      return false;
+    }, { timeout: 20_000 })
+    .toBe(true);
+  const { data: inv } = await admin.from('invitations').select('company_role, status, expires_at, companies!inner(name)').eq('companies.name', company).single();
+  expect(inv).toMatchObject({ company_role: 'Owner', status: 'Invited' });
+  expect(new Date(inv!.expires_at).getTime()).toBeGreaterThan(Date.now() + 29 * 86_400_000);
 
   const { data: m } = await admin.from('members').select('member_no, class, status, rep_name, since, valid_to, imported, public_listing, companies(name)').eq('member_no', no).single();
   expect(m).toMatchObject({ member_no: no, class: 'Associate', status: 'Permanent', rep_name: 'Rep Import', since: '2016-04-01', valid_to: '2027-03-31', imported: true, public_listing: false });
@@ -89,6 +109,8 @@ test('import: preview checks every row, nothing is written before IMPORT, number
   await page.locator('[data-action="imp.rollback.confirm"]').click();
   await expect(preview.locator('[data-outcome="ok"]')).toContainText('Rolled back: 1 members removed, 0 kept');
   expect((await admin.from('members').select('id').eq('member_no', no)).data).toEqual([]);
+  // its invitation went with it
+  expect((await admin.from('invitations').select('id').eq('email', email)).data).toEqual([]);
 });
 
 test('import: a file that is not a spreadsheet is refused whatever its name', async ({ page }) => {
