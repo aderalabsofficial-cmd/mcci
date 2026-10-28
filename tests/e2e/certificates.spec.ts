@@ -35,7 +35,7 @@ test.beforeAll(async () => {
   // a member registered earlier with this number (the certificate's number) and its owner's account
   await admin.from('members').delete().eq('member_no', NO);
   company = randomUUID();
-  await admin.from('companies').insert({ id: company, name: 'Home Innovators (Pvt.) Ltd.', biz_type: 'pvt' });
+  await admin.from('companies').insert({ id: company, name: 'Garden Makers (Pvt.) Ltd.', biz_type: 'pvt' });
   const { data: m } = await admin
     .from('members')
     .insert({ member_no: NO, company_id: company, class: 'Corporate', status: 'Permanent', rep_name: 'Cert Owner', since: '2026-05-20', valid_to: '2027-03-31' })

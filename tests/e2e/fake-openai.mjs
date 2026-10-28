@@ -37,8 +37,8 @@ const cert = (no, company, c = 95) => ({
   serial_no: f('B 1934589', c),
 });
 const CERTIFICATES = {
-  640: cert('C-90869', 'Home Innovators (Pvt.) Ltd.'),
-  641: cert('C-90869', 'Home Innovators (Pvt.) Ltd.', 40),
+  640: cert('C-90869', 'Garden Makers (Pvt.) Ltd.'),
+  641: cert('C-90869', 'Garden Makers (Pvt.) Ltd.', 40),
   642: cert('C-99999', 'Nobody Industries'),
 };
 const pngWidth = (body) => {
