@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { addMember } from '@/lib/members/actions';
-import { SECTORS } from '@/lib/membership/reference';
+import { BIZ_TYPES, SECTORS } from '@/lib/membership/reference';
 import { msg } from '@/lib/nav/model';
 import { callAction } from '@/lib/client/call-action';
 
@@ -54,7 +54,7 @@ export function AddMember({ locale, validTo }: { locale: Locale; validTo: string
             <label className="form-field">
               {m('biz')}
               <select name="biz" defaultValue="prop">
-                {(['prop', 'aop', 'pvt', 'mnc', 'public'] as const).map((b) => (
+                {BIZ_TYPES.map((b) => (
                   <option key={b} value={b}>
                     {msg(locale, `membership.biz.${b}.name`)}
                   </option>

@@ -12,7 +12,7 @@ import { sendEmail } from '@/lib/email/send';
 import { checkUpload, EXT, type FileKind, MIME, sniff, type UploadProblem } from '@/lib/files/sniff';
 import { type AppForm, isBiz, MAX_PARTNERS } from '@/lib/flow/application';
 import { cleanInk, passportPhoto, trimDrawn } from '@/lib/membership/images';
-import { FORM_FIELDS, MAX_NATURE_ITEMS, SECTORS } from '@/lib/membership/reference';
+import { BIZ_TYPES, FORM_FIELDS, MAX_NATURE_ITEMS, SECTORS } from '@/lib/membership/reference';
 import { msg } from '@/lib/nav/model';
 import { PermissionError, requireCompanyPermission, requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
@@ -101,8 +101,10 @@ export async function startApplication(form: FormData): Promise<void> {
 const text = (max: number) => z.string().trim().max(max);
 const formPatch = z
   .object({
-    biz: z.enum(['prop', 'aop', 'pvt', 'mnc', 'public']),
+    biz: z.enum(BIZ_TYPES),
     manufacturing: z.boolean(),
+    aopRegistered: z.boolean(),
+    stWef: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
     salesTax: z.boolean(),
     turnover50: z.boolean(),
     addrMatch: z.boolean(),
@@ -126,6 +128,8 @@ const formPatch = z
     desig: text(120),
     cnic: text(30),
     mobile: text(30),
+    repEmail: z.union([z.literal(''), z.string().trim().toLowerCase().email().max(254)]),
+    repAddress: text(400),
   })
   .partial()
   .strict();
@@ -177,7 +181,14 @@ export async function saveDraft(locale: Locale, appId: string, patch: DraftPatch
 // ───────── partners (wiz.partner.add / del / card) ─────────
 
 const partnerFields = z
-  .object({ name: text(120), cnic: text(30), mobile: text(30), extra_card: z.boolean() })
+  .object({
+    name: text(120),
+    cnic: text(30),
+    mobile: text(30),
+    email: z.union([z.literal(''), z.string().trim().toLowerCase().email().max(254)]),
+    address: text(400),
+    extra_card: z.boolean(),
+  })
   .partial()
   .strict();
 

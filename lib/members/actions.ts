@@ -6,6 +6,7 @@ import { asLocale } from '@/i18n/locale';
 import { sendInvitation } from '@/lib/invitations/email';
 import { msg } from '@/lib/nav/model';
 import { PermissionError, requirePermission } from '@/lib/permissions/server';
+import { BIZ_TYPES } from '@/lib/membership/reference';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -21,7 +22,7 @@ export interface MemberAddResult {
 
 const schema = z.object({
   company: z.string().trim().min(2).max(200),
-  biz: z.enum(['prop', 'aop', 'pvt', 'mnc', 'public']),
+  biz: z.enum(BIZ_TYPES),
   cls: z.enum(['Corporate', 'Associate']),
   memberNo: z.union([z.literal(''), z.string().trim().toUpperCase().regex(/^MCCI-[CA]-\d{3,6}$/)]),
   rep: z.string().trim().min(2).max(120),

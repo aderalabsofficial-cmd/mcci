@@ -8,7 +8,7 @@ select plan(41);
 -- a complete proprietorship file of company A, submitted (built directly; the applicant path is covered by 130)
 update public.applications set stage = 'submitted', created_by = tests.id('owner_a'), jurisdiction_ok = true, decl1 = true, decl2 = true,
   sign_path = 'x/sign.png', review = '{}',
-  form = '{"biz":"prop","nature":{"sector":"trade","items":["Wholesaler"],"other":""},"addrMatch":true,"name":"A Traders",
+  form = '{"biz":"prop","manufacturing":false,"repEmail":"a@test.local","repAddress":"Multan","nature":{"sector":"trade","items":["Wholesaler"],"other":""},"addrMatch":true,"name":"A Traders",
            "address":"Multan","ntn":"1-1","tel":"061","email":"a@test.local","particulars":"Wholesale","est":"2010-01-01",
            "rep":"Owner A","desig":"Proprietor","cnic":"36302-1111111-1","mobile":"0300"}'
  where id = tests.id('app_a_review');

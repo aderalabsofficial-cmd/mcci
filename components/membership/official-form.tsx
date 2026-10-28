@@ -31,7 +31,7 @@ export interface Endorser {
 export interface OfficialFormProps {
   blank?: boolean;
   form: AppForm;
-  partners: { name: string; cnic: string | null; mobile: string | null }[];
+  partners: { name: string; cnic: string | null; mobile: string | null; email?: string | null }[];
   photo?: string | null;
   sign?: string | null;
   stamp?: string | null;
@@ -130,13 +130,18 @@ function EndorserTable({ who, x }: { who: string; x: Endorser }) {
   );
 }
 
-const BT: [BizType | 'mfg', string][] = [
+/** main category, then the legal form (docs/21 points 6–7: "Manufacturing Concern" is now the category) */
+const CAT: [boolean, string][] = [
+  [true, 'Manufacturing'],
+  [false, 'Non-manufacturing'],
+];
+const BT: [BizType, string][] = [
   ['prop', 'Proprietorship'],
   ['aop', 'Partnership /AOP'],
   ['pvt', 'Ltd. / Pvt. Ltd Co.'],
   ['mnc', 'Multinational Co.'],
   ['public', 'Public Ltd. Co.'],
-  ['mfg', 'Manufacturing Concern'],
+  ['llp', 'LLP'],
 ];
 
 export function OfficialForm(p: OfficialFormProps) {
@@ -280,10 +285,25 @@ export function OfficialForm(p: OfficialFormProps) {
         <h3 className="of-h3">PARTICULARS OF MEMBER</h3>
         <div className="of-tk">Tick Relevant Box</div>
         <div className="of-ticks">
+          {CAT.map(([k, label]) => (
+            <div key={label}>
+              <small>{label}</small>
+              <Tick on={f.manufacturing === k} />
+            </div>
+          ))}
+        </div>
+        <div className="of-ticks">
           {BT.map(([k, label]) => (
             <div key={k}>
-              <small>{label}</small>
-              <Tick on={k === 'mfg' ? Boolean(f.manufacturing) : f.biz === k} />
+              <small>
+                {label}
+                {k === 'aop' && f.biz === 'aop' && typeof f.aopRegistered === 'boolean'
+                  ? f.aopRegistered
+                    ? ' (Registered)'
+                    : ' (Unregistered)'
+                  : ''}
+              </small>
+              <Tick on={f.biz === k} />
             </div>
           ))}
         </div>
@@ -301,6 +321,12 @@ export function OfficialForm(p: OfficialFormProps) {
               </td>
               <td>{v(f.gst)}</td>
             </tr>
+            {f.salesTax && (
+              <tr>
+                <td className="lb">Sales tax registered w.e.f.</td>
+                <td colSpan={3}>{v(f.stWef)}</td>
+              </tr>
+            )}
             <tr>
               <td className="lb">Business Telephone No.</td>
               <td>{v(f.tel)}</td>
@@ -334,6 +360,8 @@ export function OfficialForm(p: OfficialFormProps) {
                 ['Designation', f.desig],
                 ['CNIC No.', f.cnic],
                 ['Mobile No.', f.mobile],
+                ['Email', f.repEmail],
+                ['Address', f.repAddress],
               ] as const
             ).map(([l, val]) => (
               <tr key={l}>
@@ -351,6 +379,7 @@ export function OfficialForm(p: OfficialFormProps) {
               <th>Name</th>
               <th>CNIC</th>
               <th>Mobile No.</th>
+              <th>Email</th>
             </tr>
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <tr key={i}>
@@ -358,6 +387,7 @@ export function OfficialForm(p: OfficialFormProps) {
                 <td>{v(P[i]?.name)}</td>
                 <td>{v(P[i]?.cnic)}</td>
                 <td>{v(P[i]?.mobile)}</td>
+                <td>{v(P[i]?.email)}</td>
               </tr>
             ))}
           </tbody>
@@ -369,7 +399,7 @@ export function OfficialForm(p: OfficialFormProps) {
         <EndorserTable who="Seconded" x={p.blank ? {} : (p.seconder ?? {})} />
         <p className="of-p sm">
           I declare that the particulars given in this Application Form are true to the best of my knowledge and belief
-          and that I have no criminal record/conviction and that nothing has been concealed.
+          and that I have no criminal conviction and that nothing has been concealed.
         </p>
         <div className="of-sg b">
           <div>

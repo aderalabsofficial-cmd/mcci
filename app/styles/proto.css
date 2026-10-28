@@ -371,7 +371,10 @@
 .proto .ai-cta>div {flex:1;min-width:200px}
 .proto .ai-cta b {display:block}
 .proto .ai-cta small {color:var(--m)}
-.proto .prow {display:grid;grid-template-columns:30px 1.4fr 1.2fr 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
+.proto .prow {display:grid;grid-template-columns:30px 1.4fr 1.2fr 1fr 1.3fr auto auto;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--b)}
+.proto .prow .prole {grid-column:2/-1;order:-1;font-size:12px;font-weight:700;color:var(--gt,#a8741e);text-transform:uppercase;letter-spacing:.06em}
+.proto .prow .pn {order:-2}
+.proto .prow input.pa {grid-column:2/-1}
 .proto .prow input {background:var(--card2);border:1px solid var(--b);border-radius:10px;padding:9px 10px;width:100%}
 .proto .pn {width:28px;height:28px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-weight:800}
 .proto .g2c {display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -580,7 +583,7 @@
   .proto .wz-steps {grid-template-columns:repeat(2,1fr)}
   .proto .wz-steps span {display:none}
   .proto .prow {grid-template-columns:24px 1fr 1fr;}
-  .proto .prow input:nth-of-type(3) {grid-column:2/4}
+  .proto .prow input:nth-of-type(n+3) {grid-column:2/4}
   .proto .cert-meta {grid-template-columns:1fr 1fr}
   .proto .next {padding:18px}
   .proto .next-b h2 {font-size:20px}
@@ -624,6 +627,12 @@
 .proto .kg {grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .proto .wz-k {font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gt,#a8741e);margin-bottom:4px}
 .proto .biz.six {grid-template-columns:repeat(6,1fr)}
+.proto .biz.two {grid-template-columns:repeat(2,minmax(0,320px))}
+.proto .wz-guide {border:1px solid var(--b);border-inline-start:4px solid var(--gold);border-radius:12px;background:var(--card2);padding:12px 14px;margin-bottom:16px}
+.proto .wz-guide b {display:block;margin-bottom:4px}
+.proto .wz-guide p {margin:2px 0;color:var(--m);font-size:14px}
+.proto .wz-guide p[lang=ur] {font-size:16px;line-height:1.9;color:var(--t)}
+.proto .juris input.st-wef {font:inherit;padding:8px 10px;border-radius:10px;border:2px solid var(--b);background:var(--card);color:var(--t);min-height:44px}
 .proto .biz button {position:relative}
 .proto .biz .tk {position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:6px;border:2px solid var(--b);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px;background:var(--card);color:#2a1d05}
 .proto .biz .on .tk {background:var(--gold);border-color:var(--gold)}
@@ -648,6 +657,7 @@
 }
 @media(max-width:800px) {
   .proto .biz.six,
+.proto .biz.two,
 .proto .kvline {grid-template-columns:1fr}
 }
 .proto .nat {display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:12px}

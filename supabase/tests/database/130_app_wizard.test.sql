@@ -30,7 +30,7 @@ select throws_ok(format('select tests.exec_as(tests.id(''fresh''), %L)', format(
 -- fill everything a proprietorship needs, as the applicant
 select lives_ok(format('select tests.exec_as(tests.id(''fresh''), %L)', format($q$
   update public.applications set
-    form = '{"biz":"prop","nature":{"sector":"trade","items":["Wholesaler"],"other":""},"addrMatch":true,
+    form = '{"biz":"prop","manufacturing":false,"repEmail":"fresh@fresh.test","repAddress":"12 Hussain Agahi, Multan","nature":{"sector":"trade","items":["Wholesaler"],"other":""},"addrMatch":true,
              "name":"Fresh Traders","address":"12 Hussain Agahi, Multan","ntn":"1234567-8","tel":"061-4500000",
              "email":"info@fresh.test","particulars":"Wholesale & Distribution: Wholesaler","est":"2019-03-01",
              "rep":"Fresh","desig":"Proprietor","cnic":"36302-1234567-1","mobile":"0300-1234567"}',
@@ -42,7 +42,7 @@ select lives_ok(format('select tests.exec_as(tests.id(''fresh''), %L)', format($
   'applicant uploads the five required documents');
 select is(private.app_missing((select id from t_app)), '{}'::text[], 'nothing missing for a proprietorship (stamp optional)');
 update public.applications set form = form || '{"salesTax":true}' where id = (select id from t_app);
-select is(private.app_missing((select id from t_app)), array['doc:st'], 'sales-tax registered: the sales tax certificate becomes required');
+select is(private.app_missing((select id from t_app)), array['field:stWef', 'doc:st'], 'sales-tax registered: the w.e.f. date and the registration certificate become required');
 update public.applications set form = form - 'salesTax' where id = (select id from t_app);
 
 select throws_ok(format('select tests.exec_as(tests.id(''owner_b''), %L)', format('select api.app_submit(%L)', (select id from t_app))),

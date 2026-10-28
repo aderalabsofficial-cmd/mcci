@@ -29,6 +29,8 @@ export interface AppPartner {
   name: string;
   cnic: string | null;
   mobile: string | null;
+  email: string | null;
+  address: string | null;
   extra_card: boolean;
 }
 
@@ -154,7 +156,7 @@ export const loadDocLists = cache(async (): Promise<Record<BizType, string[]>> =
   const supabase = await createClient();
   const { data, error } = await supabase.from('document_requirements').select('biz_type, label_en, sort').order('sort');
   if (error) throw new Error(`document_requirements: ${error.message}`);
-  const out: Record<BizType, string[]> = { prop: [], aop: [], pvt: [], mnc: [], public: [] };
+  const out: Record<BizType, string[]> = { prop: [], aop: [], pvt: [], mnc: [], public: [], llp: [] };
   for (const r of data ?? []) out[r.biz_type as BizType].push(r.label_en);
   return out;
 });
@@ -195,7 +197,7 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
       .eq('application_id', row.id),
     supabase
       .from('application_partners')
-      .select('id, position, name, cnic, mobile, extra_card')
+      .select('id, position, name, cnic, mobile, email, address, extra_card')
       .eq('application_id', row.id)
       .order('position'),
     supabase

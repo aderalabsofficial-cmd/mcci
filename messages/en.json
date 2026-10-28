@@ -597,7 +597,7 @@
       },
       "pvt": {
         "name": "Ltd. / Pvt. Ltd Co.",
-        "hint": "Registered with SECP"
+        "hint": "Registered with SECP · incl. Single Member Co."
       },
       "mnc": {
         "name": "Multinational Co.",
@@ -607,9 +607,9 @@
         "name": "Public Ltd. Co.",
         "hint": "Listed / public company"
       },
-      "mfg": {
-        "name": "Manufacturing Concern",
-        "hint": "Factory / production · tick as well"
+      "llp": {
+        "name": "LLP",
+        "hint": "Limited Liability Partnership · SECP"
       }
     },
     "nature": {
@@ -677,8 +677,7 @@
       "build": {
         "name": "Construction & Real Estate",
         "items": {
-          "builder-and-developer": "Builder & developer",
-          "construction-contractor": "Construction contractor",
+          "builders-and-contractors": "Builders & contractors",
           "building-materials": "Building materials",
           "real-estate-agency": "Real estate agency",
           "architects-and-engineers": "Architects & engineers"
@@ -691,7 +690,8 @@
           "pharmacy-medical-store": "Pharmacy / medical store",
           "pharma-distribution": "Pharma distribution",
           "diagnostic-laboratory": "Diagnostic laboratory",
-          "medical-equipment": "Medical equipment"
+          "medical-equipment": "Medical equipment",
+          "pharmaceutical-company": "Pharmaceutical company"
         }
       },
       "logi": {
@@ -707,11 +707,10 @@
       "fin": {
         "name": "Finance & Professional",
         "items": {
-          "bank-financial-institution": "Bank / financial institution",
           "insurance": "Insurance",
           "chartered-accountants": "Chartered accountants",
           "legal-and-tax-consultants": "Legal & tax consultants",
-          "management-consultancy": "Management consultancy"
+          "general-consultancy": "General consultancy"
         }
       },
       "energy": {
@@ -720,7 +719,7 @@
           "petroleum-cng-station": "Petroleum / CNG station",
           "solar-and-renewable-energy": "Solar & renewable energy",
           "electrical-goods": "Electrical goods",
-          "auto-dealer": "Auto dealer",
+          "car-dealers-and-showrooms": "Car dealers & showrooms",
           "auto-parts-and-workshop": "Auto parts & workshop"
         }
       },
@@ -734,11 +733,16 @@
           "events-and-marriage-hall": "Events & marriage hall"
         }
       },
-      "svc": {
-        "name": "Media & Other Services",
+      "media": {
+        "name": "Media",
         "items": {
           "printing-and-publishing": "Printing & publishing",
-          "advertising-and-media": "Advertising & media",
+          "advertising-and-media": "Advertising & media"
+        }
+      },
+      "svc": {
+        "name": "Other Services",
+        "items": {
           "security-services": "Security services",
           "cleaning-and-facility-services": "Cleaning & facility services",
           "other-services": "Other services"
@@ -759,15 +763,18 @@
       "rep": "Name of Authorized Representative",
       "desig": "Designation",
       "cnic": "CNIC No.",
-      "mobile": "Mobile No."
+      "mobile": "Mobile No.",
+      "repEmail": "Email of Authorized Representative",
+      "repAddress": "Address of Authorized Representative",
+      "stWef": "Sales tax registered w.e.f."
     },
     "docs": {
       "cnic": "CNIC / Passport",
       "ntn": "NTN certificate",
       "itr": "Income tax return",
-      "st": "Sales tax certificate",
+      "st": "Sales Tax Registration Certificate",
       "addr": "Address proof",
-      "bank": "Bank certificate",
+      "bank": "Bank Maintenance Certificate",
       "photo": "Passport photo",
       "deed": "Partnership deed",
       "formc": "Form \"C\"",
@@ -775,7 +782,9 @@
       "moa": "Memorandum & Articles",
       "inc": "Certificate of Incorporation",
       "board": "Board resolution / POA",
-      "forma": "Form A & Form 9"
+      "forma": "Form A & Form 9",
+      "pphoto": "Photos of all partners / directors",
+      "llpa": "LLP agreement"
     },
     "missing": {
       "biz": "Business type (tick relevant box)",
@@ -786,7 +795,9 @@
       "sign": "Signature",
       "stamp": "Company stamp / seal",
       "decl": "Both declarations",
-      "notFound": "Application not found"
+      "notFound": "Application not found",
+      "category": "Main business category (manufacturing / non-manufacturing)",
+      "aopReg": "Registered or unregistered AOP"
     },
     "journey": {
       "submitted": {
@@ -834,10 +845,10 @@
       "card": "Card — authorized representative",
       "extra": "Extra cards ({n})",
       "total": "Total — paid after approval",
-      "whyCorporateBody": "A body corporate / multinational is a Corporate Member.",
-      "whyMfg": "A sales-tax-registered manufacturing concern is a Corporate Member.",
-      "whyTurnover": "A sales-tax-registered business with turnover of Rs. 50 million or more is a Corporate Member.",
-      "whyAssociate": "Not a body corporate, not a sales-tax-registered manufacturer and turnover below Rs. 50 million, so Associate Member."
+      "whyCorporateBody": "A body corporate registered with SECP (Pvt / Public Ltd, Multinational, LLP) is a Corporate Member.",
+      "whyMfg": "A sales-tax-registered manufacturer is a Corporate Member.",
+      "whyTurnover": "A sales-tax-registered non-manufacturer with turnover of Rs. 50 million or more is a Corporate Member.",
+      "whyAssociate": "Not a body corporate, and not sales-tax-registered with manufacturing or Rs. 50 million turnover, so Associate Member."
     },
     "home": {
       "whatNow": "What to do now",
@@ -869,12 +880,12 @@
     },
     "next": {
       "start": {
-        "t": "Apply for MCCI membership",
+        "t": "Apply for New Membership",
         "d": "Six simple steps. Upload your documents — AI fills the form for you.",
         "b": "Start my application"
       },
       "draft": {
-        "t": "Apply for MCCI membership",
+        "t": "Apply for New Membership",
         "d": "You are on step {step} of 6. Your answers are saved automatically.",
         "b": "Continue my application"
       },
@@ -968,7 +979,12 @@
       "type": {
         "kicker": "Particulars of member · Tick relevant box",
         "title": "What type of business do you have?",
-        "help": "Tick your legal form. If you also make goods (factory / production), tick Manufacturing Concern as well, the same as on the paper form."
+        "help": "Tick your legal form, the same as on the paper form.",
+        "aop": {
+          "q": "Is the partnership registered with the Registrar of Firms?",
+          "reg": "Registered AOP (Form C)",
+          "unreg": "Unregistered AOP"
+        }
       },
       "nature": {
         "title": "Nature of business",
@@ -983,10 +999,11 @@
       },
       "cls": {
         "title": "For your membership class",
-        "help": "From the form's Corporate / Associate rules and the Women Entrepreneurs fee.",
+        "help": "MCCI decides Corporate or Associate from your answers below — you do not choose it.",
         "salesTax": "Is the business registered for sales tax?",
         "turnover50": "Is annual turnover Rs. 50 million or more?",
-        "women": "Is it a women-owned business (Women Entrepreneur)?"
+        "women": "Is it a women-owned business (Women Entrepreneur)?",
+        "bodyCorp": "A body corporate registered with SECP is a Corporate Member — no class questions."
       },
       "yes": "Yes",
       "no": "No",
@@ -999,7 +1016,7 @@
         "kicker": "Instructions and requirements of membership",
         "title": "Upload your documents",
         "help": "The list below is exactly what the form requires for a {biz}, in the same order. Take a photo with your phone or choose a PDF.",
-        "mfg": "No extra documents are needed for a manufacturing concern.",
+        "mfg": "No extra documents are needed for manufacturing.",
         "chooseType": "Choose your type of business first (step 1).",
         "progress": "{done} of {total} added",
         "optional": "if applicable",
@@ -1012,7 +1029,8 @@
         "uploading": "Uploading…",
         "rejected": "rejected",
         "photoName": "Passport photo (auto-cropped)",
-        "fileHint": "PDF, JPG or PNG · up to 10 MB"
+        "fileHint": "PDF, JPG or PNG · up to 10 MB",
+        "noReturn": "Only the registration certificate is needed — no sales tax return."
       },
       "ai": {
         "title": "Let AI fill the form for you",
@@ -1056,7 +1074,13 @@
         "card": "Card",
         "cardTitle": "Optional membership card Rs. {fee}",
         "addPartner": "Add partner / director",
-        "removePartner": "Remove partner {n}"
+        "removePartner": "Remove partner {n}",
+        "partnerEmail": "Email",
+        "partnerAddress": "Address",
+        "partnersAop": "Managing Partner / Partners",
+        "partnersCo": "Directors",
+        "partnersLlp": "Partners",
+        "repPhoto": "The passport-size photo of the authorized representative is uploaded in step 2."
       },
       "endorse": {
         "kicker": "Proposed and seconded by valid members",
@@ -1080,7 +1104,7 @@
         "stampUpload": "Upload stamp photo",
         "declTitle": "Declarations from the form",
         "decl1": "I am desirous of becoming member of the Multan Chamber of Commerce & Industry, I have read and understand Memorandum and Articles of Association and By Laws of this Chamber and I agree to abide by the same. If at any stage I will not abide by or breach any Rules and Regulations as defined in the Memorandum and Articles of Association and By Laws of the Multan Chamber of Commerce & Industry so in that case the Multan Chamber of Commerce & Industry will have the right to cancel my membership. I will pay Admission Fee along with Annual Subscription Fee subject to approval of my application by the Membership Committee of the Multan Chamber of Commerce & Industry.",
-        "decl2": "I declare that the particulars given in this Application Form are true to the best of my knowledge and belief and that I have no criminal record/conviction and that nothing has been concealed.",
+        "decl2": "I declare that the particulars given in this Application Form are true to the best of my knowledge and belief and that I have no criminal conviction and that nothing has been concealed.",
         "pad": "Sign here",
         "clear": "Clear",
         "use": "Use this signature",
@@ -1122,7 +1146,16 @@
       },
       "restored": "Your changes that were not saved before are back and are being saved now.",
       "saveStale": "Not saved — MCCI Digital was updated. Reload the page; your changes are kept in this browser.",
-      "retry": "Retry"
+      "retry": "Retry",
+      "guide": {
+        "title": "What to do on this step",
+        "type": "Choose Manufacturing or Non-manufacturing, then your type of business. Answer the class questions (if shown) and choose what your business does. Your class and fee appear at the bottom.",
+        "docs": "Upload each document on the list — a phone photo or a PDF is fine. Then press \"Read with AI\" and the form fills itself. A wrong or unclear document does not stop you; MCCI will tell you if anything else is needed.",
+        "details": "Check every field. Yellow fields were read by AI — please confirm them. Add the authorized representative's email and address, and every partner / director with their email.",
+        "endorse": "Choose two MCCI members of your class who know your business. They only press Approve in their own portal — no signature or code is needed.",
+        "sign": "Sign on the screen or upload a photo of your signature, add the company stamp, and tick both declarations.",
+        "review": "Read your official form once. If anything is listed as still needed, go back and add it. Then press Submit — MCCI will contact you through this portal."
+      }
     },
     "track": {
       "title": "Track my application",
@@ -1228,6 +1261,18 @@
       "submittedBody": "We have received your MCCI membership application {token}.",
       "submittedNext": "The Membership Desk will check your documents. You will get an email and a portal message if anything is needed.",
       "track": "Track my application"
+    },
+    "cat": {
+      "title": "Main business category",
+      "help": "Do you make goods (factory / production)? Choose one.",
+      "mfg": {
+        "name": "Manufacturing",
+        "hint": "Factory / production of goods"
+      },
+      "non": {
+        "name": "Non-manufacturing",
+        "hint": "Trade, import / export, services and others"
+      }
     }
   },
   "review": {
@@ -2521,7 +2566,7 @@
   },
   "site": {
     "home": "Home",
-    "apply": "Apply for membership",
+    "apply": "Apply for New Membership",
     "memberLogin": "Member login",
     "explore": "Explore services",
     "hero": {

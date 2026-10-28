@@ -1,6 +1,6 @@
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
-import { BIZ_TYPES, type BizType, REQUIRED_FIELDS, SECTORS, sector } from '@/lib/membership/reference';
+import { BIZ_TYPES, type BizType, isBodyCorporate, REQUIRED_FIELDS, SECTORS, sector } from '@/lib/membership/reference';
 
 /**
  * Membership application rules (docs/03 §1, prototype F.classOf / F.fee / F.validateApp). Pure functions shared by
@@ -18,7 +18,12 @@ export interface NatureChoice {
 /** applications.form (keys: migration 0300 header) */
 export interface AppForm {
   biz?: BizType;
+  /** main category: true = Manufacturing, false = Non-manufacturing, unset = not chosen yet */
   manufacturing?: boolean;
+  /** Partnership / AOP only: registered with the Registrar of Firms (Form C) */
+  aopRegistered?: boolean;
+  /** sales tax registration "with effect from" date (YYYY-MM-DD), when salesTax */
+  stWef?: string;
   salesTax?: boolean;
   turnover50?: boolean;
   nature?: NatureChoice;
@@ -40,6 +45,8 @@ export interface AppForm {
   desig?: string;
   cnic?: string;
   mobile?: string;
+  repEmail?: string;
+  repAddress?: string;
 }
 
 export interface DocRequirement {
@@ -73,20 +80,37 @@ export const isBiz = (v: unknown): v is BizType =>
 
 export type MemberClass = 'Corporate' | 'Associate';
 
-/** Corporate vs Associate, the rule printed on the form (private.class_of) */
+/**
+ * Corporate vs Associate (private.class_of; docs/21 point 8): a body corporate registered with SECP is Corporate;
+ * a proprietorship / AOP is Corporate when sales-tax registered and either manufacturing or (non-manufacturing with)
+ * turnover of Rs 50 million or more; everything else is Associate.
+ */
 export function classOf(f: AppForm): MemberClass {
-  if (f.biz === 'pvt' || f.biz === 'public' || f.biz === 'mnc') return 'Corporate';
-  if (f.manufacturing && f.salesTax) return 'Corporate';
-  if (f.salesTax && f.turnover50) return 'Corporate';
-  return 'Associate';
+  return classWhy(f) === 'whyAssociate' ? 'Associate' : 'Corporate';
 }
 
 /** messages key (membership.fee.*) explaining the class */
 export function classWhy(f: AppForm): 'whyCorporateBody' | 'whyMfg' | 'whyTurnover' | 'whyAssociate' {
-  if (f.biz === 'pvt' || f.biz === 'public' || f.biz === 'mnc') return 'whyCorporateBody';
-  if (f.manufacturing && f.salesTax) return 'whyMfg';
-  if (f.salesTax && f.turnover50) return 'whyTurnover';
+  if (isBodyCorporate(f.biz)) return 'whyCorporateBody';
+  if (f.salesTax && f.manufacturing) return 'whyMfg';
+  if (f.salesTax && !f.manufacturing && f.turnover50) return 'whyTurnover';
   return 'whyAssociate';
+}
+
+/** the class questions are shown only to a proprietorship / AOP, and turnover only where it changes the class */
+export const askClass = (f: AppForm) => Boolean(f.biz) && !isBodyCorporate(f.biz);
+export const askTurnover = (f: AppForm) => askClass(f) && f.manufacturing === false && f.salesTax === true;
+
+/**
+ * The documents this applicant is asked for, from the checklist of their business type: the sales tax registration
+ * certificate only when sales-tax registered (then required), Form C only for a registered AOP (then required).
+ * private.app_docs applies the same rule in the database.
+ */
+export function applicableDocs<R extends DocRequirement>(requirements: R[], f: AppForm): R[] {
+  return requirements
+    .filter((r) => (r.key === 'st' ? f.salesTax === true : r.key === 'formc' ? f.aopRegistered === true : true))
+    .map((r) => (r.key === 'st' || r.key === 'formc' ? { ...r, required: true } : r))
+    .sort((a, b) => a.sort - b.sort);
 }
 
 export interface FeeSchedule {
@@ -136,6 +160,8 @@ export function missing(app: AppState, requirements: DocRequirement[], rules: Me
   const out: string[] = [];
   const biz: BizType = isBiz(f.biz) ? f.biz : 'prop';
   if (!isBiz(f.biz)) out.push('biz');
+  if (typeof f.manufacturing !== 'boolean') out.push('category');
+  if (biz === 'aop' && typeof f.aopRegistered !== 'boolean') out.push('aopReg');
   const n = f.nature ?? {};
   if (!filled(n.sector) || (!(n.items ?? []).length && !filled(n.other))) out.push('nature');
   if (app.jurisdiction_ok !== true) out.push('juris');
@@ -144,9 +170,10 @@ export function missing(app: AppState, requirements: DocRequirement[], rules: Me
     const v = f[k];
     if (!filled(v) || (k === 'est' && !DATE.test(String(v)))) out.push(`field:${k}`);
   }
+  if (f.salesTax === true && !DATE.test(String(f.stWef ?? ''))) out.push('field:stWef');
   const have = new Set(app.docs.filter((d) => d.status !== 'rejected').map((d) => d.key));
-  for (const r of [...requirements].sort((a, b) => a.sort - b.sort)) {
-    if ((r.required || (r.key === 'st' && f.salesTax)) && !have.has(r.key)) out.push(`doc:${r.key}`);
+  for (const r of applicableDocs(requirements, f)) {
+    if (r.required && !have.has(r.key)) out.push(`doc:${r.key}`);
   }
   if (biz !== 'prop' && app.partners < 2) out.push('partners');
   if (!app.sign_path) out.push('sign');

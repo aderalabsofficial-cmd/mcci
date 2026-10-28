@@ -5,7 +5,7 @@
  * (public.document_requirements, migration 0140) so MCCI can change it without a deploy.
  */
 
-export const BIZ_TYPES = ['prop', 'aop', 'pvt', 'mnc', 'public'] as const;
+export const BIZ_TYPES = ['prop', 'aop', 'pvt', 'mnc', 'public', 'llp'] as const;
 export type BizType = (typeof BIZ_TYPES)[number];
 export const BIZ_ICON: Record<BizType, string> = {
   prop: 'user',
@@ -13,9 +13,13 @@ export const BIZ_ICON: Record<BizType, string> = {
   pvt: 'building',
   mnc: 'globe',
   public: 'landmark',
+  llp: 'briefcase',
 };
+/** a body corporate registered with SECP: Corporate directly, no class questions (docs/21 point 8) */
+export const BODY_CORPORATE: readonly BizType[] = ['pvt', 'mnc', 'public', 'llp'];
+export const isBodyCorporate = (b: string | undefined | null) => BODY_CORPORATE.includes(b as BizType);
 
-/** nature of business: 12 sectors, then up to 3 activities (slugs; labels in messages membership.nature.*) */
+/** nature of business: 13 sectors (owner's list of 28 Oct 2026, docs/21 point 9), then up to 3 activities (slugs; labels in messages membership.nature.*) */
 export const SECTORS = [
   {
     k: 'mfg',
@@ -93,8 +97,7 @@ export const SECTORS = [
     icon: 'building',
     c: '#f59e0b',
     items: [
-      'builder-and-developer',
-      'construction-contractor',
+      'builders-and-contractors',
       'building-materials',
       'real-estate-agency',
       'architects-and-engineers',
@@ -110,6 +113,7 @@ export const SECTORS = [
       'pharma-distribution',
       'diagnostic-laboratory',
       'medical-equipment',
+      'pharmaceutical-company',
     ],
   },
   {
@@ -123,11 +127,10 @@ export const SECTORS = [
     icon: 'landmark',
     c: '#1b4f9c',
     items: [
-      'bank-financial-institution',
       'insurance',
       'chartered-accountants',
       'legal-and-tax-consultants',
-      'management-consultancy',
+      'general-consultancy',
     ],
   },
   {
@@ -138,7 +141,7 @@ export const SECTORS = [
       'petroleum-cng-station',
       'solar-and-renewable-energy',
       'electrical-goods',
-      'auto-dealer',
+      'car-dealers-and-showrooms',
       'auto-parts-and-workshop',
     ],
   },
@@ -149,16 +152,16 @@ export const SECTORS = [
     items: ['hotel', 'restaurant-and-catering', 'school-college', 'training-institute', 'events-and-marriage-hall'],
   },
   {
-    k: 'svc',
+    k: 'media',
     icon: 'mic',
+    c: '#9333ea',
+    items: ['printing-and-publishing', 'advertising-and-media'],
+  },
+  {
+    k: 'svc',
+    icon: 'settings',
     c: '#64748b',
-    items: [
-      'printing-and-publishing',
-      'advertising-and-media',
-      'security-services',
-      'cleaning-and-facility-services',
-      'other-services',
-    ],
+    items: ['security-services', 'cleaning-and-facility-services', 'other-services'],
   },
 ] as const;
 export type SectorKey = (typeof SECTORS)[number]['k'];
@@ -178,7 +181,7 @@ export const BUSINESS_FIELDS = [
   'particulars',
   'est',
 ] as const;
-export const REP_FIELDS = ['rep', 'desig', 'cnic', 'mobile'] as const;
+export const REP_FIELDS = ['rep', 'desig', 'cnic', 'mobile', 'repEmail', 'repAddress'] as const;
 export const FORM_FIELDS = [...BUSINESS_FIELDS, ...REP_FIELDS] as const;
 export type FormField = (typeof FORM_FIELDS)[number];
 /** fields the form requires (prototype F.validateApp, private.app_missing) */
@@ -194,6 +197,8 @@ export const REQUIRED_FIELDS: readonly FormField[] = [
   'desig',
   'cnic',
   'mobile',
+  'repEmail',
+  'repAddress',
 ];
 
 /** the six wizard steps (prototype WS) */

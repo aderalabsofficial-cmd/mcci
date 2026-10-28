@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   type AppState,
   activitySlug,
+  applicableDocs,
+  askClass,
+  askTurnover,
   classOf,
   classWhy,
   type DocRequirement,
@@ -11,7 +14,7 @@ import {
   missingLabel,
   particularsFromNature,
 } from '@/lib/flow/application';
-import { journeyIndex } from '@/lib/membership/reference';
+import { journeyIndex, SECTORS } from '@/lib/membership/reference';
 
 const FEES: FeeSchedule = {
   Corporate: { admission: 5000, subscription: 12000, card: 500 },
@@ -45,9 +48,19 @@ const PVT = req([
   ['forma', true],
 ]);
 
+const AOP = req([
+  ['cnic', true],
+  ['ntn', true],
+  ['st', false],
+  ['deed', true],
+  ['formc', false],
+  ['photo', true],
+]);
+
 const complete: AppState = {
   form: {
     biz: 'prop',
+    manufacturing: false,
     nature: { sector: 'trade', items: ['Wholesaler'] },
     addrMatch: true,
     name: 'Fresh Traders',
@@ -61,6 +74,8 @@ const complete: AppState = {
     desig: 'Proprietor',
     cnic: '36302-1234567-1',
     mobile: '0300-1234567',
+    repEmail: 'fresh@fresh.test',
+    repAddress: '12 Hussain Agahi, Multan',
   },
   jurisdiction_ok: true,
   women: false,
@@ -82,6 +97,24 @@ describe('membership class and fee (rule printed on the form)', () => {
     expect(classOf({ biz: 'prop', manufacturing: true })).toBe('Associate');
     expect(classWhy({ biz: 'prop', manufacturing: true, salesTax: true })).toBe('whyMfg');
     expect(classWhy({ biz: 'prop' })).toBe('whyAssociate');
+  });
+
+  it("owner's rules of 28 Oct 2026: LLP is a body corporate; AOP manufacturing + GST is Corporate; no GST is Associate", () => {
+    expect(classOf({ biz: 'llp' })).toBe('Corporate');
+    expect(classOf({ biz: 'aop', manufacturing: true, salesTax: true })).toBe('Corporate');
+    expect(classOf({ biz: 'aop', manufacturing: false, salesTax: true, turnover50: true })).toBe('Corporate');
+    expect(classOf({ biz: 'aop', manufacturing: false, salesTax: true, turnover50: false })).toBe('Associate');
+    expect(classOf({ biz: 'aop', manufacturing: true, salesTax: false, turnover50: true })).toBe('Associate');
+  });
+
+  it('asks the class questions only of a proprietorship / AOP, and turnover only for non-manufacturing with GST', () => {
+    for (const biz of ['pvt', 'mnc', 'public', 'llp'] as const) expect(askClass({ biz })).toBe(false);
+    expect(askClass({ biz: 'aop' })).toBe(true);
+    expect(askClass({})).toBe(false);
+    expect(askTurnover({ biz: 'prop', manufacturing: false, salesTax: true })).toBe(true);
+    expect(askTurnover({ biz: 'prop', manufacturing: true, salesTax: true })).toBe(false);
+    expect(askTurnover({ biz: 'prop', manufacturing: false, salesTax: false })).toBe(false);
+    expect(askTurnover({ biz: 'pvt', manufacturing: false, salesTax: true })).toBe(false);
   });
 
   it('adds up admission, subscription, card and extra cards in integer PKR', () => {
@@ -115,7 +148,9 @@ describe('missing items (same codes as private.app_missing)', () => {
       docs: [],
     };
     const m = missing(empty, PROP);
-    expect(m.slice(0, 4)).toEqual(['biz', 'nature', 'juris', 'addr']);
+    expect(m.slice(0, 5)).toEqual(['biz', 'category', 'nature', 'juris', 'addr']);
+    expect(m).toContain('field:repEmail');
+    expect(m).toContain('field:repAddress');
     expect(m).toContain('field:name');
     expect(m.filter((c) => c.startsWith('doc:'))).toEqual(['doc:cnic', 'doc:ntn', 'doc:addr', 'doc:bank', 'doc:photo']);
     expect(m.slice(-2)).toEqual(['sign', 'decl']);
@@ -130,13 +165,39 @@ describe('missing items (same codes as private.app_missing)', () => {
   });
 
   it('a sales-tax registered business must add the sales tax certificate; rejected files do not count', () => {
-    expect(missing({ ...complete, form: { ...complete.form, salesTax: true } }, PROP)).toEqual(['doc:st']);
+    expect(missing({ ...complete, form: { ...complete.form, salesTax: true } }, PROP)).toEqual(['field:stWef', 'doc:st']);
+    expect(missing({ ...complete, form: { ...complete.form, salesTax: true, stWef: '2020-07-01' } }, PROP)).toEqual([
+      'doc:st',
+    ]);
     const rejected = {
       ...complete,
       docs: complete.docs.map((d) => (d.key === 'ntn' ? { ...d, status: 'rejected' as const } : d)),
     };
     expect(missing(rejected, PROP)).toEqual(['doc:ntn']);
     expect(missing({ ...complete, form: { ...complete.form, est: '01/03/2019' } }, PROP)).toEqual(['field:est']);
+  });
+
+  it('sales tax certificate only when GST registered; Form C only (and then required) for a registered AOP', () => {
+    const keys = (f: AppState['form']) => applicableDocs(AOP, f).map((r) => `${r.key}${r.required ? '*' : ''}`);
+    expect(keys({ biz: 'aop' })).toEqual(['cnic*', 'ntn*', 'deed*', 'photo*']);
+    expect(keys({ biz: 'aop', salesTax: true, aopRegistered: true })).toEqual([
+      'cnic*',
+      'ntn*',
+      'st*',
+      'deed*',
+      'formc*',
+      'photo*',
+    ]);
+    const aop: AppState = {
+      ...complete,
+      form: { ...complete.form, biz: 'aop' },
+      docs: ['cnic', 'ntn', 'deed', 'photo'].map((key) => ({ key, status: 'pending' as const })),
+      partners: 2,
+      stamp_path: 'x',
+    };
+    expect(missing(aop, AOP)).toEqual(['aopReg']);
+    expect(missing({ ...aop, form: { ...aop.form, aopRegistered: false } }, AOP)).toEqual([]);
+    expect(missing({ ...aop, form: { ...aop.form, aopRegistered: true } }, AOP)).toEqual(['doc:formc']);
   });
 
   it('says each missing item in plain English and Urdu', () => {
@@ -156,6 +217,16 @@ describe('nature of business and journey', () => {
       'IT & Digital: Cloud hosting',
     );
     expect(activitySlug('trade', 'Commission agent (Arhti)')).toBe('commission-agent-arhti');
+  });
+
+  it('sector list of 28 Oct 2026: no banks or auto dealers; builders & contractors; media apart from other services', () => {
+    const all = SECTORS.flatMap((x) => x.items as readonly string[]);
+    for (const gone of ['bank-financial-institution', 'auto-dealer', 'management-consultancy', 'builder-and-developer'])
+      expect(all).not.toContain(gone);
+    for (const added of ['builders-and-contractors', 'pharmaceutical-company', 'general-consultancy', 'car-dealers-and-showrooms'])
+      expect(all).toContain(added);
+    expect(SECTORS.find((x) => x.k === 'media')?.items).toEqual(['printing-and-publishing', 'advertising-and-media']);
+    expect(new Set(all).size).toBe(all.length);
   });
 
   it('places each stage on the 8-step journey', () => {

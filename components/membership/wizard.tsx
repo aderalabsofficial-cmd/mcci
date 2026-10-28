@@ -22,6 +22,9 @@ import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import {
   type AppForm,
+  applicableDocs,
+  askClass,
+  askTurnover,
   classOf,
   classWhy,
   type DocRequirement,
@@ -45,6 +48,7 @@ import {
   updatePartner,
 } from '@/lib/membership/actions';
 import {
+  BIZ_ICON,
   BIZ_TYPES,
   BUSINESS_FIELDS,
   type FormField,
@@ -87,6 +91,8 @@ export interface WizardApp {
     name: string;
     cnic: string | null;
     mobile: string | null;
+    email: string | null;
+    address: string | null;
     extra_card: boolean;
   }[];
   requirements: DocRequirement[];
@@ -309,6 +315,7 @@ export function Wizard({
     [f, s.jurisdiction_ok, s.women, s.decl1, s.decl2, app.sign, app.stamp, docs, app.partners.length],
   );
   const missingNow = missing(state, app.requirements, rules);
+  const reqs = applicableDocs(app.requirements, f);
 
   // ───────── pieces ─────────
 
@@ -521,65 +528,118 @@ export function Wizard({
 
   let body: ReactNode = null;
   if (step === 0) {
+    const pickCard = (on: boolean, act: string, onClick: () => void, icon: string, label: string, hint: string, key: string) => (
+      <button key={key} type="button" className={on ? 'on' : ''} aria-pressed={on} data-action={act} onClick={onClick}>
+        <em className="tk">{on ? '✓' : ''}</em>
+        <i>
+          <Ic name={icon} size={30} />
+        </i>
+        <b>{msg('en', label)}</b>
+        <span lang="ur">{msg('ur', label)}</span>
+        <small>{msg(locale, hint)}</small>
+      </button>
+    );
     body = (
       <>
         <p className="wz-k">{m('wiz.type.kicker')}</p>
         <h2 className="wz-h">
-          <Bi {...both('wiz.type.title')} />
+          <Bi {...both('cat.title')} />
         </h2>
+        <p className="muted">{m('cat.help')}</p>
+        <div className="biz two" data-testid="category">
+          {([true, false] as const).map((mfg) =>
+            pickCard(
+              f.manufacturing === mfg,
+              'wiz.category',
+              () => setForm({ manufacturing: mfg }),
+              mfg ? 'factory' : 'shoppingBag',
+              `membership.cat.${mfg ? 'mfg' : 'non'}.name`,
+              `membership.cat.${mfg ? 'mfg' : 'non'}.hint`,
+              mfg ? 'mfg' : 'non',
+            ),
+          )}
+        </div>
+
+        <h3 className="wz-h2">
+          <Bi {...both('wiz.type.title')} />
+        </h3>
         <p className="muted">{m('wiz.type.help')}</p>
         <div className="biz six">
-          {BIZ_TYPES.map((b) => (
-            <button
-              key={b}
-              type="button"
-              className={f.biz === b ? 'on' : ''}
-              aria-pressed={f.biz === b}
-              data-action="wiz.biz"
-              onClick={async () => {
+          {BIZ_TYPES.map((b) =>
+            pickCard(
+              f.biz === b,
+              'wiz.biz',
+              async () => {
                 setForm({ biz: b });
                 await flush();
                 startTransition(() => router.refresh());
-              }}
-            >
-              <em className="tk">{f.biz === b ? '✓' : ''}</em>
-              <i>
-                <Ic
-                  name={
-                    b === 'prop'
-                      ? 'user'
-                      : b === 'aop'
-                        ? 'users'
-                        : b === 'pvt'
-                          ? 'building'
-                          : b === 'mnc'
-                            ? 'globe'
-                            : 'landmark'
-                  }
-                  size={30}
-                />
-              </i>
-              <b>{msg('en', `membership.biz.${b}.name`)}</b>
-              <span lang="ur">{msg('ur', `membership.biz.${b}.name`)}</span>
-              <small>{m(`biz.${b}.hint`)}</small>
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`mfg ${f.manufacturing ? 'on' : ''}`}
-            aria-pressed={Boolean(f.manufacturing)}
-            data-action="wiz.flag"
-            onClick={() => setForm({ manufacturing: !f.manufacturing })}
-          >
-            <em className="tk">{f.manufacturing ? '✓' : ''}</em>
-            <i>
-              <Ic name="factory" size={30} />
-            </i>
-            <b>{msg('en', 'membership.biz.mfg.name')}</b>
-            <span lang="ur">{msg('ur', 'membership.biz.mfg.name')}</span>
-            <small>{m('biz.mfg.hint')}</small>
-          </button>
+              },
+              BIZ_ICON[b],
+              `membership.biz.${b}.name`,
+              `membership.biz.${b}.hint`,
+              b,
+            ),
+          )}
         </div>
+        {f.biz === 'aop' && (
+          <div className="juris" style={{ marginTop: 12 }}>
+            <span>
+              {msg('en', 'membership.wiz.type.aop.q')}
+              <small lang="ur">{msg('ur', 'membership.wiz.type.aop.q')}</small>
+            </span>
+            <div className="seg" role="group" aria-label={m('wiz.type.aop.q')}>
+              {([true, false] as const).map((reg) => (
+                <button
+                  key={String(reg)}
+                  type="button"
+                  className={f.aopRegistered === reg ? 'on' : ''}
+                  aria-pressed={f.aopRegistered === reg}
+                  data-action="wiz.aopReg"
+                  onClick={async () => {
+                    setForm({ aopRegistered: reg });
+                    await flush();
+                    startTransition(() => router.refresh());
+                  }}
+                >
+                  {msg('en', `membership.wiz.type.aop.${reg ? 'reg' : 'unreg'}`)} ·{' '}
+                  <span lang="ur">{msg('ur', `membership.wiz.type.aop.${reg ? 'reg' : 'unreg'}`)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {f.biz && (
+          <>
+            <h3 className="wz-h2">
+              <Bi {...both('wiz.cls.title')} />
+            </h3>
+            {askClass(f) ? (
+              <>
+                <p className="muted">{m('wiz.cls.help')}</p>
+                <div className="yns">
+                  {yn('salesTax', 'salesTax')}
+                  {askTurnover(f) && yn('turnover50', 'turnover50')}
+                  {yn('women', 'women')}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="banner green" role="status" data-testid="body-corporate">
+                  <Check size={18} color="#fff" aria-hidden />
+                  <span>
+                    {msg('en', 'membership.wiz.cls.bodyCorp')}{' '}
+                    <span lang="ur">{msg('ur', 'membership.wiz.cls.bodyCorp')}</span>
+                  </span>
+                </div>
+                <div className="yns" style={{ marginTop: 10 }}>
+                  {yn('salesTax', 'salesTax')}
+                  {yn('women', 'women')}
+                </div>
+              </>
+            )}
+          </>
+        )}
 
         <h3 className="wz-h2">
           <Bi {...both('wiz.nature.title')} />
@@ -641,16 +701,6 @@ export function Wizard({
         )}
 
         <h3 className="wz-h2">
-          <Bi {...both('wiz.cls.title')} />
-        </h3>
-        <p className="muted">{m('wiz.cls.help')}</p>
-        <div className="yns">
-          {yn('salesTax', 'salesTax')}
-          {yn('turnover50', 'turnover50')}
-          {yn('women', 'women')}
-        </div>
-
-        <h3 className="wz-h2">
           <Bi {...both('wiz.juris.title')} />
         </h3>
         <div className="juris">
@@ -690,8 +740,8 @@ export function Wizard({
   }
 
   if (step === 1) {
-    const done = app.requirements.filter((r) => docs.some((d) => d.key === r.key)).length;
-    const total = app.requirements.length;
+    const done = reqs.filter((r) => docs.some((d) => d.key === r.key)).length;
+    const total = reqs.length;
     body = (
       <>
         <p className="wz-k">{m('wiz.docs.kicker')}</p>
@@ -702,6 +752,23 @@ export function Wizard({
           {f.biz ? m('wiz.docs.help', { biz: msg(locale, `membership.biz.${f.biz}.name`) }) : m('wiz.docs.chooseType')}
           {f.manufacturing ? ` ${m('wiz.docs.mfg')}` : ''} <small>({m('wiz.docs.fileHint')})</small>
         </p>
+        {f.salesTax && (
+          <div className="juris" style={{ margin: '10px 0' }}>
+            <span>
+              {msg('en', 'membership.fields.stWef')} <em className="rq">*</em>
+              <small lang="ur">{msg('ur', 'membership.fields.stWef')}</small>
+              <small>{m('wiz.docs.noReturn')}</small>
+            </span>
+            <input
+              type="date"
+              className="st-wef"
+              value={f.stWef ?? ''}
+              aria-label={m('fields.stWef')}
+              required
+              onChange={(e) => setForm({ stWef: e.target.value })}
+            />
+          </div>
+        )}
         <div className="prog">
           <u>
             <i style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
@@ -711,7 +778,7 @@ export function Wizard({
         <DocSlots
           locale={locale}
           appId={app.id}
-          requirements={app.requirements}
+          requirements={reqs}
           docs={docs}
           photoUrl={app.photoUrl}
           editable
@@ -751,6 +818,8 @@ export function Wizard({
   }
 
   if (step === 2) {
+    const partnersKey =
+      f.biz === 'aop' ? 'partnersAop' : f.biz === 'llp' ? 'partnersLlp' : f.biz && f.biz !== 'prop' ? 'partnersCo' : 'partners';
     const aiFields = Object.entries(s.conf).filter(([, c]) => c > 0 && c < 100);
     body = (
       <>
@@ -785,9 +854,10 @@ export function Wizard({
         <h4 className="jg">
           {msg('en', 'membership.wiz.details.rep')} · {msg('ur', 'membership.wiz.details.rep')}
         </h4>
-        <div className="fg">{REP_FIELDS.map((k) => field(k))}</div>
+        <div className="fg">{REP_FIELDS.map((k) => field(k, k === 'repAddress'))}</div>
+        <p className="muted">{m('wiz.details.repPhoto')}</p>
         <h4 className="jg">
-          {msg('en', 'membership.wiz.details.partners')} · {msg('ur', 'membership.wiz.details.partners')}{' '}
+          {msg('en', `membership.wiz.details.${partnersKey}`)} · {msg('ur', `membership.wiz.details.${partnersKey}`)}{' '}
           {f.biz === 'prop' && <small className="opt">{m('wiz.details.partnersOptional')}</small>}
         </h4>
         {app.partners.map((p, i) => (
@@ -795,6 +865,17 @@ export function Wizard({
             key={p.id}
             locale={locale}
             n={i + 1}
+            role={
+              f.biz === 'aop'
+                ? i === 0
+                  ? 'membership.wiz.details.managingPartner'
+                  : 'membership.wiz.details.partner'
+                : f.biz === 'llp'
+                  ? 'membership.wiz.details.partner'
+                  : f.biz && f.biz !== 'prop'
+                    ? 'membership.wiz.details.director'
+                    : null
+            }
             p={p}
             fee={fees.extraCard}
             onChange={(patch) =>
@@ -1042,6 +1123,15 @@ export function Wizard({
             )}
           </div>
         )}
+        <div className="wz-guide" data-testid="step-guide">
+          <b>
+            <Bi {...both('wiz.guide.title')} />
+          </b>
+          <p>{msg('en', `membership.wiz.guide.${WIZARD_STEPS[step]!.k}`)}</p>
+          <p lang="ur" dir="rtl">
+            {msg('ur', `membership.wiz.guide.${WIZARD_STEPS[step]!.k}`)}
+          </p>
+        </div>
         {body}
       </div>
       <p className="wz-save" role="status" aria-live="polite" data-state={save}>
@@ -1151,6 +1241,7 @@ function Bi({ en, ur }: { en: string; ur: string }) {
 function PartnerRow({
   locale,
   n,
+  role,
   p,
   fee: cardFee,
   onChange,
@@ -1158,22 +1249,50 @@ function PartnerRow({
 }: {
   locale: Locale;
   n: number;
-  p: { name: string; cnic: string | null; mobile: string | null; extra_card: boolean };
+  /** "Managing Partner" / "Partner" / "Director" (messages key), by business type */
+  role: string | null;
+  p: {
+    name: string;
+    cnic: string | null;
+    mobile: string | null;
+    email: string | null;
+    address: string | null;
+    extra_card: boolean;
+  };
   fee: number;
-  onChange: (patch: { name?: string; cnic?: string; mobile?: string; extra_card?: boolean }) => void;
+  onChange: (patch: {
+    name?: string;
+    cnic?: string;
+    mobile?: string;
+    email?: string;
+    address?: string;
+    extra_card?: boolean;
+  }) => void;
   onRemove: () => void;
 }) {
-  const [v, setV] = useState({ name: p.name, cnic: p.cnic ?? '', mobile: p.mobile ?? '' });
+  const [v, setV] = useState({
+    name: p.name,
+    cnic: p.cnic ?? '',
+    mobile: p.mobile ?? '',
+    email: p.email ?? '',
+    address: p.address ?? '',
+  });
   const t = useRef<ReturnType<typeof setTimeout> | null>(null);
   const m = (k: string, vars?: Record<string, string>) => msg(locale, `membership.wiz.details.${k}`, vars);
-  const edit = (k: 'name' | 'cnic' | 'mobile', value: string) => {
+  const valid = (k: keyof typeof v, value: string) =>
+    k !== 'email' || value.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  const edit = (k: keyof typeof v, value: string) => {
     setV((x) => ({ ...x, [k]: value }));
     if (t.current) clearTimeout(t.current);
+    if (!valid(k, value)) return;
     t.current = setTimeout(() => onChange({ [k]: value }), 600);
   };
   return (
     <div className="prow">
-      <span className="pn">{n}</span>
+      <span className="pn" title={role ? msg(locale, role) : undefined}>
+        {n}
+      </span>
+      {role && <small className="prole">{msg(locale, role)}</small>}
       <input
         value={v.name}
         placeholder={m('partnerName')}
@@ -1191,6 +1310,14 @@ function PartnerRow({
         placeholder={m('partnerMobile')}
         aria-label={`${m('partnerMobile')} ${n}`}
         onChange={(e) => edit('mobile', e.target.value)}
+      />
+      <input
+        type="email"
+        value={v.email}
+        placeholder={m('partnerEmail')}
+        aria-label={`${m('partnerEmail')} ${n}`}
+        aria-invalid={!valid('email', v.email)}
+        onChange={(e) => edit('email', e.target.value)}
       />
       <button
         type="button"
@@ -1211,6 +1338,13 @@ function PartnerRow({
       >
         <Trash2 size={18} color="#ef4444" aria-hidden />
       </button>
+      <input
+        className="pa"
+        value={v.address}
+        placeholder={m('partnerAddress')}
+        aria-label={`${m('partnerAddress')} ${n}`}
+        onChange={(e) => edit('address', e.target.value)}
+      />
     </div>
   );
 }

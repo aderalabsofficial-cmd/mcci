@@ -99,7 +99,7 @@ export async function loadReviewFile(token: string): Promise<ReviewFile | null> 
       .eq('application_id', a.id),
     supabase
       .from('application_partners')
-      .select('id, position, name, cnic, mobile, extra_card')
+      .select('id, position, name, cnic, mobile, email, address, extra_card')
       .eq('application_id', a.id)
       .order('position'),
     supabase

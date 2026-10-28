@@ -84,16 +84,22 @@ async function startApplication(page: Page) {
 
 const saved = (page: Page) => expect(page.locator('.wz-save')).toHaveText('Saved', { timeout: 15_000 });
 
-test('a new applicant fills the whole form with AI help and submits (proprietorship, 7 documents)', async ({
+test('a new applicant fills the whole form with AI help and submits (proprietorship, 6 documents)', async ({
   page,
 }) => {
   test.setTimeout(180_000);
   const uid = await applicant(page, 'Amir Khan');
-  await expect(page.getByRole('heading', { name: 'Apply for MCCI membership' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Apply for New Membership' })).toBeVisible();
   await startApplication(page);
 
-  // step 1: type, nature, class questions, jurisdiction; class and fee follow the rule
+  // every step says what to do, in English and Urdu
+  await expect(page.getByTestId('step-guide').locator('p[lang="ur"]')).toContainText('مینوفیکچرنگ');
+
+  // step 1: main category, type, class questions, nature, jurisdiction; class and fee follow the rule
+  await page.getByRole('button', { name: /^Non-manufacturing/ }).click();
   await page.getByRole('button', { name: /^Proprietorship/ }).click();
+  // a proprietorship answers the class questions; turnover is asked only once sales tax is "Yes"
+  await expect(page.locator('[data-action="wiz.flag"]')).toHaveCount(2);
   await page.getByRole('button', { name: /^Wholesale & Distribution/ }).click();
   await page.getByRole('button', { name: 'Wholesaler', exact: true }).click();
   await page.getByRole('group', { name: 'Eligibility' }).getByRole('button', { name: /^Yes/ }).click();
@@ -101,9 +107,10 @@ test('a new applicant fills the whole form with AI help and submits (proprietors
   await expect(page.locator('.feebox')).toContainText('Rs. 11,500');
   await saved(page);
 
-  // step 2: exactly the 7 slots of a proprietorship
+  // step 2: the 6 slots of a proprietorship that is not sales-tax registered (no sales tax certificate)
   await page.locator('[data-action="wiz.next"]').click();
-  await expect(page.locator('[data-doc]')).toHaveCount(7);
+  await expect(page.locator('[data-doc]')).toHaveCount(6);
+  await expect(page.locator('[data-doc="st"]')).toHaveCount(0);
   for (const key of ['cnic', 'ntn', 'addr', 'bank']) {
     const slot = page.locator(`[data-doc="${key}"]`);
     await choose(
@@ -134,7 +141,7 @@ test('a new applicant fills the whole form with AI help and submits (proprietors
   );
   await page.locator('[data-action="photo.save"]').click();
   await expect(page.locator('[data-doc="photo"]')).toHaveClass(/\bok\b/, { timeout: 20_000 });
-  await expect(page.locator('.prog')).toContainText('5 of 7 added');
+  await expect(page.locator('.prog')).toContainText('5 of 6 added');
 
   // AI reads the documents and fills the form; low-confidence fields are highlighted
   await page.locator('[data-action="wiz.ai"]').click();
@@ -152,6 +159,8 @@ test('a new applicant fills the whole form with AI help and submits (proprietors
   await page.getByLabel(/Date of Business Establishment/).fill('2018-05-01');
   await page.getByLabel(/^Designation/).fill('Proprietor');
   await page.getByLabel(/Mobile No\./).fill('0300-1234567');
+  await page.getByLabel(/Email of Authorized Representative/).fill('amir@fresh.test');
+  await page.getByLabel(/Address of Authorized Representative/).fill('22 Abdali Road, Multan Cantt.');
   await page.locator('[data-action="wiz.addr"]').click();
   await expect(page.locator('.jf.w')).toHaveCount(0);
   await saved(page);
@@ -207,17 +216,51 @@ test('Pvt Ltd shows 11 documents; submitting with missing items lists them in pl
   await startApplication(page);
   await page.getByRole('button', { name: /^Ltd\. \/ Pvt\. Ltd Co\./ }).click();
   await expect(page.locator('.feebox')).toContainText('Corporate');
+  // a body corporate registered with SECP: no class questions, only sales tax (for the documents) and women
+  await expect(page.getByTestId('body-corporate')).toBeVisible();
+  await expect(page.locator('[data-action="wiz.flag"]')).toHaveCount(2);
   await saved(page);
   await page.locator('[data-action="wiz.step"]').nth(1).click();
   await expect(page.locator('[data-doc]')).toHaveCount(11);
+  await expect(page.locator('[data-doc="pphoto"]')).toBeVisible();
   await page.locator('[data-action="wiz.step"]').nth(5).click();
   const missing = page.getByTestId('missing');
+  await expect(missing).toContainText('Main business category');
   await expect(missing).toContainText('Memorandum & Articles');
   await expect(missing).toContainText('At least two partners / directors');
   await expect(missing).toContainText('Company stamp / seal');
   await page.locator('[data-action="wiz.submit"]').click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('Some items are still missing');
   await expect(page).toHaveURL(/\/portal\/join$/);
+});
+
+test('LLP is Corporate; a registered AOP asks Form C, an unregistered one does not', async ({ page }) => {
+  test.setTimeout(90_000);
+  await applicant(page, 'Hina Malik');
+  await startApplication(page);
+  await page.getByTestId('category').getByRole('button', { name: /^Manufacturing/ }).click();
+  await page.getByRole('button', { name: /^LLP/ }).click();
+  await expect(page.locator('.feebox')).toContainText('Corporate');
+  await expect(page.getByTestId('body-corporate')).toBeVisible();
+  await page.getByRole('button', { name: /^Partnership \/ AOP/ }).click();
+  await expect(page.getByTestId('body-corporate')).toHaveCount(0);
+  await page.getByRole('button', { name: /^Registered AOP/ }).click();
+  await saved(page);
+  await page.locator('[data-action="wiz.step"]').nth(1).click();
+  await expect(page.locator('[data-doc="formc"]')).toBeVisible();
+  await page.locator('[data-action="wiz.step"]').nth(0).click();
+  await page.getByRole('button', { name: /^Unregistered AOP/ }).click();
+  await saved(page);
+  await page.locator('[data-action="wiz.step"]').nth(1).click();
+  await expect(page.locator('[data-doc="formc"]')).toHaveCount(0);
+  // sales tax registered: the w.e.f. date and the registration certificate are asked; manufacturing + GST = Corporate
+  await page.locator('[data-action="wiz.step"]').nth(0).click();
+  await page.locator('[data-action="wiz.flag"]').first().click();
+  await expect(page.locator('.feebox')).toContainText('Corporate');
+  await saved(page);
+  await page.locator('[data-action="wiz.step"]').nth(1).click();
+  await expect(page.locator('[data-doc="st"]')).toBeVisible();
+  await expect(page.getByLabel(/Sales tax registered w\.e\.f\./)).toBeVisible();
 });
 
 test('a returned application shows only the rejected document; re-upload and resubmit', async ({ page }) => {
@@ -234,6 +277,9 @@ test('a returned application shows only the rejected document; re-upload and res
     .update({
       form: {
         biz: 'prop',
+        manufacturing: false,
+        repEmail: 'b@test.local',
+        repAddress: 'Multan',
         nature: { sector: 'trade', items: ['Wholesaler'], other: '' },
         addrMatch: true,
         name: 'Bilal Stores',
