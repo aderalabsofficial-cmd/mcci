@@ -13,6 +13,8 @@ import { getShell } from '@/lib/shell/server';
 import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
 import '@/app/styles/site.css';
+import '@/app/styles/mobile.css';
+import { MobileTables } from '@/components/shared/mobile-tables';
 
 /**
  * Public website frame. In a browser: transparent header + footer (compact header and menu sheet on phones).
@@ -73,6 +75,7 @@ export default async function SiteLayout({
         }}
       />
       <main id="main">{children}</main>
+      <MobileTables />
       <SiteFooter locale={locale} />
       <SiteFx />
     </>

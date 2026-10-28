@@ -68,9 +68,19 @@ export async function expectNoOrphans(page: Page) {
  * (innerWidth) grows with too-wide content, so innerWidth alone would hide the overflow.
  */
 export async function expectNoHorizontalOverflow(page: Page) {
-  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+  const { scrollWidth, clientWidth, inner } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
+    // owner, 28 Oct 2026: no section may need a sideways scroll on a phone either (tables become cards, mobile.css);
+    // a deliberately scrolling strip says so with data-scroll-x
+    inner: [...document.querySelectorAll<HTMLElement>('main *')]
+      .filter((el) => {
+        const o = getComputedStyle(el).overflowX;
+        return (o === 'auto' || o === 'scroll') && el.scrollWidth > el.clientWidth + 2 && el.offsetParent !== null && !el.closest('[data-scroll-x]');
+      })
+      .slice(0, 5)
+      .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')} (${el.scrollWidth} > ${el.clientWidth})`),
   }));
   expect(scrollWidth, `page is ${scrollWidth}px wide in a ${clientWidth}px viewport`).toBeLessThanOrEqual(clientWidth);
+  if (clientWidth <= 640) expect(inner, `sections that scroll sideways at ${clientWidth}px`).toEqual([]);
 }

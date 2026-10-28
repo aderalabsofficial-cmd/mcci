@@ -65,7 +65,7 @@ export function LimitsCard({
     <>
       <p className="mb-3 text-[14px] text-muted">{t('limitsHelpSave')}</p>
       {/* relative: the screen-reader-only header stays inside this scroll area (it widened the page on phones) */}
-      <div className="relative -mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
+      <div className="mcards mgrid relative -mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
         <table className="w-full min-w-[1200px] border-collapse">
           <thead>
             <tr className="border-b border-line text-[12px] text-muted">

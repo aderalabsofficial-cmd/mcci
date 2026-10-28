@@ -8,6 +8,8 @@ import { getSession } from '@/lib/permissions/server';
 import { IDLE_MS } from '@/lib/session/idle';
 import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
+import '@/app/styles/mobile.css';
+import { MobileTables } from '@/components/shared/mobile-tables';
 
 /**
  * Admin panel: active staff only, with a TOTP-verified session (docs/09). Members are sent to their portal, staff
@@ -34,6 +36,7 @@ export default async function AdminLayout({
       account={{ name: session!.access.full_name ?? '', role: session!.access.staff!.designation }}
     >
       {children}
+      <MobileTables />
       <IdleGuard locale={locale} idleMs={IDLE_MS} />
     </AreaShell>
   );

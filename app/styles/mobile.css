@@ -1,0 +1,141 @@
+/*
+ * Compact phone layout (owner, 28 Oct 2026: "like the Binance app" — docs/15-mobile-app.md §5): at phone width every
+ * screen is dense and readable without sideways scrolling and with as little scrolling down as possible.
+ *  - KPI tiles and small blocks two per row, smaller type; long hints cut to one line;
+ *  - tables become cards (one card per row, label + value pairs; labels come from the table head, set by
+ *    components/shared/mobile-tables.tsx) — no table needs a sideways scroll on a phone;
+ *  - choice grids (business type, sectors, services, stage board) several per row;
+ *  - headings, cards and buttons tighter; action rows wrap.
+ * Loaded after proto.css / site.css; only inside @media (max-width: 640px).
+ */
+@media (max-width: 640px) {
+  /* ── page header and cards ── */
+  .proto .ph {gap: 8px; margin-bottom: 12px}
+  .proto .ph h1 {font-size: 19px; line-height: 1.25}
+  .proto .ph p {font-size: 12.5px; line-height: 1.45}
+  .proto .ph .pb {width: 100%}
+  .proto .card {padding: 12px; border-radius: 14px}
+  .proto .card .ch {margin-bottom: 8px}
+  .proto .card .ch h3 {font-size: 15px}
+  .proto .pb {gap: 6px}
+  .proto .btn {min-height: 44px; min-width: 46px; padding: 8px 12px; font-size: 13px}
+  .proto .btn-big {min-height: 46px; padding: 10px 14px; font-size: 14px}
+  .proto .em {padding: 14px 6px; font-size: 13px}
+  .proto .banner {font-size: 13px; padding: 10px 12px}
+
+  /* ── KPI tiles: two per row, compact ── */
+  .proto .kg {grid-template-columns: 1fr 1fr !important; gap: 8px; margin-bottom: 12px}
+  .proto .kpi {padding: 10px; gap: 8px; align-items: flex-start}
+  .proto .kpi .ki {width: 32px; height: 32px; border-radius: 9px; flex: none}
+  .proto .kpi .ki svg {width: 18px; height: 18px}
+  .proto .kpi small {font-size: 11px; line-height: 1.3; display: block}
+  .proto .kpi b {font-size: 18px; margin-right: 4px}
+  .proto .kpi p {font-size: 10.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%}
+
+  /* ── official form preview: scaled to the phone (it is an A4 page) ── */
+  .proto .formv {overflow: hidden}
+  .proto .formv .of-wrap {zoom: .4}
+
+  /* ── choice grids: several per row ── */
+  .proto .biz, .proto .biz.six {grid-template-columns: 1fr 1fr !important; gap: 8px}
+  .proto .biz.two {grid-template-columns: 1fr 1fr !important}
+  .proto .biz button {padding: 10px 8px; border-radius: 14px; gap: 2px}
+  .proto .biz i {width: 40px; height: 40px; border-radius: 12px; margin-bottom: 2px}
+  .proto .biz i svg {width: 22px; height: 22px}
+  .proto .biz b {font-size: 12.5px}
+  .proto .biz span {font-size: 14px}
+  .proto .biz small {font-size: 10.5px}
+  .proto .nat {grid-template-columns: repeat(3, 1fr) !important; gap: 6px}
+  .proto .nat button {padding: 8px; border-radius: 12px}
+  .proto .nat i {width: 28px; height: 28px; margin-bottom: 2px}
+  .proto .nat b {font-size: 11.5px}
+  .proto .nat span {font-size: 12px; line-height: 1.5}
+  .proto .yns {grid-template-columns: 1fr !important; gap: 6px}
+  .proto .yn {padding: 10px 12px}
+  .proto .btg, .proto .btg.svc {grid-template-columns: 1fr 1fr !important; gap: 8px}
+  .proto .kan {grid-template-columns: 1fr 1fr !important; gap: 8px}
+  .proto .wz-steps {grid-template-columns: repeat(3, 1fr) !important; gap: 6px}
+  .proto .wz-steps button {padding: 8px 4px}
+  .proto .wz-steps b {font-size: 11px}
+  .proto .wz-guide {padding: 10px 12px}
+  .proto .wz-guide p {font-size: 12.5px}
+  .proto .wz-guide p[lang='ur'] {font-size: 14px}
+  .proto .kv {grid-template-columns: 1fr 1fr !important; gap: 8px}
+  .proto .g2c {grid-template-columns: 1fr !important; gap: 10px}
+  .proto .fg {grid-template-columns: 1fr !important; gap: 10px}
+
+  /* ── list rows (agenda, requests, documents): wrap, smaller ── */
+  .proto .agenda {flex-wrap: wrap; gap: 8px; padding: 10px 0}
+  .proto .agenda > div:nth-child(2) {flex: 1 1 60%; min-width: 0}
+  .proto .agenda .pb {width: 100%}
+  .proto .agenda small {font-size: 12px}
+  .proto .ofphoto {width: 44px; height: 54px}
+  .proto .li {gap: 8px}
+
+  /* ── journey and stage board ── */
+  .proto .steps8 {grid-template-columns: repeat(3, 1fr) !important; gap: 6px}
+  .proto .steps8 > div {padding: 8px 4px}
+  .proto .steps8 b {font-size: 11px}
+  .proto .steps8 span {font-size: 12px}
+}
+
+/* public site at phone width: shorter sections, cards two per row, compact timeline (owner, 28 Oct 2026) */
+@media (max-width: 640px) {
+  .site .sx {padding: 30px 0}
+  .site .sh {margin-bottom: 16px}
+  .site .sh h2 {font-size: 21px; margin-bottom: 6px}
+  .site .sh p {font-size: 13.5px}
+  .site .xhero.home {padding: calc(var(--xh) + 14px) 0 48px}
+  .site .xhero.home h1 {font-size: 30px; line-height: 1.15}
+  .site .xhero.sub {padding: calc(var(--xh) + 14px) 0 40px}
+  .site .g2, .site .g3, .site .g4 {grid-template-columns: 1fr 1fr; gap: 8px}
+  .site .sc {padding: 12px; border-radius: 14px}
+  .site .sc > i {width: 36px; height: 36px; border-radius: 11px; margin-bottom: 8px}
+  .site .sc > i svg {width: 20px; height: 20px}
+  .site .sc h4 {font-size: 13.5px; line-height: 1.3; margin-bottom: 4px}
+  .site .sc p {font-size: 12px; line-height: 1.45; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden}
+  .site .sc > b {font-size: 12px}
+  .site .xtl {grid-template-columns: 1fr 1fr; row-gap: 14px}
+  .site .xtl:before {display: none}
+  .site .xtl-s i {width: 46px; height: 46px; margin-bottom: 6px; box-shadow: none}
+  .site .xtl-s i svg {width: 20px; height: 20px}
+  .site .xtl-s b {font-size: 13px}
+  .site .xtl-s small {font-size: 11px}
+  .site .urdu-cd, .site .xcta2, .site .xdark {padding: 36px 0}
+  .site .lch div {padding: 8px 4px}
+  .site .lch b {font-size: 22px}
+  .site .xstats {padding: 22px 0 4px}
+  .site .xstats .wr {grid-template-columns: 1fr 1fr; gap: 8px}
+  .site .xstat {padding: 12px 8px; border-radius: 14px}
+}
+
+/* tables → cards at phone width (labels from the head, set by components/shared/mobile-tables.tsx): every .tw table
+   of the prototype screens and every .mcards table of the staff screens — one card per row, no sideways scroll */
+@media (max-width: 640px) {
+  .tw, .mcards {overflow: visible !important; border: 0 !important; margin-inline: 0 !important; padding-inline: 0 !important}
+  .tw table, .mcards table {min-width: 0 !important}
+  .tw table, .tw tbody, .tw tr, .tw td, .tw tbody th,
+  .mcards table, .mcards tbody, .mcards tr, .mcards td, .mcards tbody th {display: block; width: 100%}
+  .tw thead, .mcards thead {display: none}
+  .tw tr, .mcards tbody tr {border: 1px solid var(--b, var(--line)) !important; border-radius: 12px; padding: 8px 10px; margin-bottom: 8px;
+    background: var(--card)}
+  .tw td, .mcards td {display: grid; grid-template-columns: minmax(84px, 40%) 1fr; gap: 6px; align-items: center;
+    padding: 3px 0 !important; border: 0 !important; font-size: 13px; text-align: start !important; word-break: break-word}
+  .tw td::before, .mcards td::before {content: attr(data-label); color: var(--m, var(--muted)); font-size: 11.5px; font-weight: 600}
+  .tw td:not([data-label])::before, .tw td[data-label='']::before,
+  .mcards td:not([data-label])::before, .mcards td[data-label='']::before {display: none}
+  .tw td:not([data-label]), .tw td[data-label=''], .mcards td:not([data-label]), .mcards td[data-label=''] {grid-template-columns: 1fr}
+  .mcards tbody th {padding: 2px 0 6px !important; border: 0 !important}
+  .mcards.mgrid tbody tr {display: flex; flex-wrap: wrap; column-gap: 0}
+  .mcards.mgrid tbody th {flex: 1 1 100%}
+  .mcards.mgrid td {flex: 0 0 33.33%; width: 33.33%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    padding: 4px 4px 4px 0 !important}
+  .mcards.mgrid td::before {font-size: 10.5px; line-height: 1.2}
+  .mcards.mgrid2 tbody tr {display: flex; flex-wrap: wrap}
+  .mcards.mgrid2 td {flex: 0 0 50%; width: 50%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+    padding: 3px 6px 3px 0 !important}
+  .mcards.mgrid2 td:first-child {flex-basis: 100%; width: 100%}
+  .mcards.mgrid2 td::before {font-size: 10.5px; line-height: 1.2}
+  .tw td.em {display: block; text-align: center !important}
+  .tw td .pb, .mcards td .pb {justify-content: flex-start}
+}

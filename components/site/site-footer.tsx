@@ -9,10 +9,10 @@ import { footerModel, msg } from '@/lib/nav/model';
 export function SiteFooter({ locale }: { locale: Locale }) {
   const columns = footerModel(locale);
   return (
-    <footer className="relative overflow-hidden bg-navy-950 pt-16 pb-6 text-[#cbd5e1]">
+    <footer className="relative overflow-hidden bg-navy-950 pt-10 pb-6 text-[#cbd5e1] sm:pt-16">
       <div className="footer-bg" aria-hidden />
       <div className="relative mx-auto max-w-[1240px] px-[var(--gutter)] sm:px-6">
-        <div className="grid gap-[30px] min-[901px]:grid-cols-[1.5fr_1fr_1fr_1fr] sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-[30px] min-[901px]:grid-cols-[1.5fr_1fr_1fr_1fr] [&>*:first-child]:col-span-2 min-[901px]:[&>*:first-child]:col-span-1">
           <div>
             <Link href="/" className="flex items-center gap-3 text-white">
               <Image src="/images/logo-white.png" width={70} height={70} alt={msg(locale, 'brand.logoAlt')} />

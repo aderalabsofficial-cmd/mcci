@@ -263,7 +263,7 @@ function StaffTable({ locale, rows, onOpen }: { locale: Locale; rows: StaffRow[]
       {rows.length === 0 ? (
         <p className="text-muted">{t('empty')}</p>
       ) : (
-        <div className="-mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
+        <div className="mcards mgrid2 -mx-[var(--card-pad)] overflow-x-auto px-[var(--card-pad)]">
           <table className="w-full min-w-[680px] border-collapse text-[14px]">
             <thead>
               <tr className="border-b border-line text-start text-[12.5px] text-muted">

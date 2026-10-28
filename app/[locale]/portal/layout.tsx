@@ -8,6 +8,8 @@ import { getSession } from '@/lib/permissions/server';
 import { IDLE_MS } from '@/lib/session/idle';
 import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
+import '@/app/styles/mobile.css';
+import { MobileTables } from '@/components/shared/mobile-tables';
 
 /** Member portal: a signed-in person (middleware redirects earlier; this is the server-side check). */
 export default async function PortalLayout({
@@ -30,6 +32,7 @@ export default async function PortalLayout({
     >
       {/* prototype styles for the member screens (app/styles/proto.css) */}
       <div className="proto">{children}</div>
+      <MobileTables />
       <IdleGuard locale={locale} idleMs={IDLE_MS} />
     </AreaShell>
   );
