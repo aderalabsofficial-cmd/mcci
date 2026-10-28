@@ -23,6 +23,28 @@ const member = (no, company, rep, validTo, status, c = 95) => ({
   status: f(status, 93),
   certificate_serial: f(null, 0),
 });
+// a scanned security-press certificate (lib/certificates/ai.ts): the answer depends on the test image's width, so one
+// fake serves the clear, the blurry and the unknown-member scans of tests/e2e/certificates.spec.ts
+const cert = (no, company, c = 95) => ({
+  membership_no: f(no, c),
+  company_name: f(company, c),
+  class: f('Corporate Class', c),
+  membership_year: f('2026-2027', c),
+  valid_to: f('31st March 2027', c),
+  issued_on: f('20th May 2026', c),
+  ntn: f(null, 0),
+  book_no: f('B 19346', c),
+  serial_no: f('B 1934589', c),
+});
+const CERTIFICATES = {
+  640: cert('C-90869', 'Home Innovators (Pvt.) Ltd.'),
+  641: cert('C-90869', 'Home Innovators (Pvt.) Ltd.', 40),
+  642: cert('C-99999', 'Nobody Industries'),
+};
+const pngWidth = (body) => {
+  const url = JSON.stringify(body).match(/data:image\/png;base64,([A-Za-z0-9+/=]{40,})/)?.[1];
+  return url ? Buffer.from(url.slice(0, 40), 'base64').readUInt32BE(16) : 0;
+};
 const ANSWERS = {
   // a service request's documents (lib/services/ai.ts): the first four details of the service, in order
   service_request: { f0: f('ACME GmbH', 94), f1: f('Germany', 96), f2: f('6302.10', 88), f3: f('12000', 90) },
@@ -67,8 +89,10 @@ createServer((req, res) => {
       res.writeHead(404, { 'content-type': 'application/json' });
       return res.end(JSON.stringify({ error: { message: 'not found' } }));
     }
-    const name = JSON.parse(body)?.text?.format?.name ?? '';
-    const answer = ANSWERS[name.replace(/^mcci_/, '')] ?? {};
+    const parsed = JSON.parse(body);
+    const name = parsed?.text?.format?.name ?? '';
+    const answer =
+      name === 'mcci_certificate' ? (CERTIFICATES[pngWidth(parsed?.input)] ?? {}) : (ANSWERS[name.replace(/^mcci_/, '')] ?? {});
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(
       JSON.stringify({

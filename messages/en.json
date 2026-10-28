@@ -60,7 +60,7 @@
     "admin": {
       "dashboard": "Dashboard",
       "pipeline": "Membership Pipeline",
-      "tempCerts": "Temporary & Certificates",
+      "tempCerts": "Certificates",
       "membersRegister": "Members Register",
       "serviceRequests": "Service Requests",
       "documentsQr": "Documents & QR",
@@ -147,7 +147,7 @@
       "requests": "Membership Pipeline",
       "mreview": "Application Review",
       "committee": "Committee Desk",
-      "temp": "Temporary Memberships",
+      "temp": "Certificates",
       "certs": "Printing & Receiving",
       "serials": "Serial Register",
       "members": "Members Register",
@@ -193,7 +193,7 @@
       "requests": "Pipeline",
       "mreview": "Application Review",
       "committee": "Committee Desk",
-      "temp": "Temporary Memberships",
+      "temp": "Certificates",
       "certs": "Printing & Receiving",
       "serials": "Serial Register",
       "members": "Register",
@@ -361,7 +361,7 @@
       "dash": "Dashboard",
       "mem": "Membership applications",
       "cmt": "Committee decisions",
-      "temp": "Temporary & certificates",
+      "temp": "Certificates",
       "reg": "Members register",
       "svc": "Service requests & signing",
       "docs": "Documents & QR",
@@ -1318,7 +1318,7 @@
       "proposer": "Proposer / seconder",
       "committee": "Committee",
       "payment": "Payment",
-      "temp": "Temporary member",
+      "temp": "Member",
       "permanent": "Permanent member",
       "rejected": "Rejected",
       "withdrawn": "Withdrawn",
@@ -2213,7 +2213,8 @@
       "copied": "Link copied",
       "print": "Print / save PDF",
       "close": "Close",
-      "none": "Nothing issued yet. Your temporary certificate appears here as soon as MCCI verifies your fee."
+      "none": "Nothing issued yet. Your temporary certificate appears here as soon as MCCI verifies your fee.",
+      "scanToVerify": "Scan to verify on the MCCI website"
     }
   },
   "staffActions": {
@@ -2667,7 +2668,7 @@
       "membership": "Membership application"
     },
     "marquee": {
-      "temp": "Temporary membership in 60 days",
+      "temp": "Membership active as soon as the fee is verified",
       "endorse": "Digital proposer & seconder",
       "qr": "QR verification",
       "lang": "Urdu & English"
@@ -2676,7 +2677,7 @@
       "members": "Members in the Chamber",
       "services": "Digital services",
       "response": "Response commitment",
-      "temp": "Temporary membership",
+      "temp": "Active membership",
       "days": " days"
     },
     "journey": {
@@ -2919,7 +2920,7 @@
       "proposer": "Proposer & Seconder",
       "committee": "Committee approval",
       "payment": "Fee payment",
-      "temp": "Temporary membership",
+      "temp": "Member",
       "permanent": "Permanent member",
       "rejected": "Not approved",
       "Submitted": "Submitted",
@@ -3544,6 +3545,95 @@
       "closed": "This ticket is already resolved.",
       "staff": "Choose an active staff member.",
       "generic": "Something went wrong. Please try again."
+    }
+  },
+  "certs": {
+    "title": "Certificates",
+    "sub": "Upload the scans of the certificates printed by the security press. Each is read, matched to the member and checked by a person; on confirmation its QR code is printed on the scan.",
+    "registry": "QR registry",
+    "kReview": "To review",
+    "kReviewSub": "Read, waiting for a person",
+    "kConflicts": "With conflicts",
+    "kConflictsSub": "Need the approver",
+    "kConfirmed": "Confirmed",
+    "kConfirmedSub": "QR printed on the scan",
+    "kFailed": "Unreadable",
+    "kFailedSub": "Check by hand or upload again",
+    "uploadTitle": "Upload certificate scans",
+    "uploadHelp": "JPG or PNG, one certificate per file, up to 10 MB each; several at once. The same scan is never taken twice.",
+    "upload": "Choose scans",
+    "uploading": "Uploading and reading {n} of {total}…",
+    "scans": "Scans",
+    "none": "No scans yet.",
+    "scanOf": "Scan {name}",
+    "matched": "Matched: {member}",
+    "noMatch": "No member matched",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "confirmTitle": "Confirm certificate: {name}",
+    "confirmHelp": "Check the scan against the member. Confirming creates the certificate QR code and prints it on the scan. The member’s number and validity are not changed.",
+    "confirmOk": "Confirm and print QR",
+    "rejectTitle": "Reject scan: {name}",
+    "rejectReason": "Reason",
+    "member": "Member",
+    "pickMember": "Choose the member…",
+    "overrideHelp": "The scan does not fully match the register (see the conflicts). Confirm only if you are sure, with the reason.",
+    "override": "I checked the conflicts and confirm anyway",
+    "overrideReason": "Reason for the override",
+    "needApprover": "This scan has conflicts: only the certificate approver (Secretary General / Deputy Secretary) can confirm it.",
+    "status": {
+      "uploaded": "Uploaded",
+      "extracted": "To review",
+      "failed": "Unreadable",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected"
+    },
+    "fields": {
+      "membership_no": "No.",
+      "company_name": "Company",
+      "class": "Class",
+      "membership_year": "Year",
+      "valid_to": "Valid to",
+      "issued_on": "Given on",
+      "ntn": "NTN",
+      "book_no": "Book",
+      "serial_no": "Serial"
+    },
+    "conflicts": {
+      "unreadable": "could not be read",
+      "no_number": "no membership number found",
+      "unknown_member": "number not in the register",
+      "demo": "a demo member",
+      "name_mismatch": "company name differs from the register",
+      "class_mismatch": "class differs from the register",
+      "serial_mismatch": "serial differs from the register",
+      "ntn_mismatch": "NTN differs from the register",
+      "already_certified": "member already has a valid certificate (it will be superseded)",
+      "not_active": "membership not active",
+      "member_changed": "a different member than the reading",
+      "low_confidence": "{field} not clearly readable"
+    },
+    "done": {
+      "uploaded": "{n} scan(s) uploaded and read.",
+      "confirmed": "Confirmed for {no}: QR {code} printed on the certificate.",
+      "rejected": "Scan rejected."
+    },
+    "errors": {
+      "notAllowed": "You are not allowed to do this.",
+      "fields": "Please check the fields.",
+      "generic": "Something went wrong. Please try again.",
+      "noFile": "Choose at least one scan.",
+      "tooMany": "At most {n} scans at once.",
+      "tooBig": "{name}: larger than 10 MB.",
+      "type": "{name}: use a JPG or PNG scan.",
+      "duplicateFile": "{name}: this scan was already uploaded.",
+      "duplicate": "This scan was already uploaded.",
+      "wrong_stage": "This scan is no longer waiting for review. Refresh the page.",
+      "not_found": "Member not found.",
+      "demo": "Demo members never get a certificate.",
+      "conflicts": "This scan has conflicts: tick the override and write the reason.",
+      "reason_required": "Please write the reason.",
+      "path": "Upload failed. Please try again."
     }
   }
 }

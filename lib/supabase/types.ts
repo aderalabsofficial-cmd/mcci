@@ -80,6 +80,30 @@ export type Database = {
 "app_withdraw":
 { Args: { "p_app": string,"p_reason"?: string }; Returns: undefined
                            },
+"cert_file":
+{ Args: { "p_code": string }; Returns: {
+              "member_no": string,"path": string,"status": string
+            }[]
+                           },
+"cert_scan_confirm":
+{ Args: { "p_id": string,"p_member": string,"p_note"?: string,"p_override"?: boolean }; Returns: {
+              "code": string,"member_no": string
+            }[]
+                           },
+"cert_scan_extracted":
+{ Args: { "p_data": Json,"p_id": string }; Returns: {
+              "conflicts": (string)[],"member_id": string,"status": string
+            }[]
+                           },
+"cert_scan_register":
+{ Args: { "p_file_name": string,"p_id": string,"p_path": string,"p_sha256": string }; Returns: string
+                           },
+"cert_scan_reject":
+{ Args: { "p_id": string,"p_note": string }; Returns: undefined
+                           },
+"cert_scan_stamped":
+{ Args: { "p_id": string,"p_path": string }; Returns: undefined
+                           },
 "cert_view":
 { Args: { "p_code": string }; Returns: {
               "class": string,"code": string,"company": string,"expires_at": string,"extended": boolean,"issued_at": string,"kind": string,"member_no": string,"status": string,"temp_status": string,"title": string,"valid_to": string,"voucher_no": string,"women": boolean
@@ -349,7 +373,7 @@ export type Database = {
                            },
 "site_stats":
 { Args: Record<PropertyKey, never>; Returns: {
-              "applications_open": number,"converted": number,"members": number,"services_issued": number,"services_open": number,"temporary": number
+              "applications_open": number,"associate": number,"corporate": number,"members": number,"services_issued": number,"services_open": number
             }[]
                            },
 "site_track":
@@ -740,6 +764,44 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"certificate_scans": {
+                  Row: {
+                    "conflicts": (string)[],"document_id": string | null,"extracted": NonNullable<Json>,"file_name": string | null,"id": string,"log": NonNullable<Json>,"match_member": string | null,"path": string,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"sha256": string,"stamped_path": string | null,"status": string,"uploaded_at": string,"uploaded_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "conflicts"?: (string)[],"document_id"?: string | null,"extracted"?: NonNullable<Json>,"file_name"?: string | null,"id"?: string,"log"?: NonNullable<Json>,"match_member"?: string | null,"path": string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sha256": string,"stamped_path"?: string | null,"status"?: string,"uploaded_at"?: string,"uploaded_by"?: string | null
+                  }
+                  Update: {
+                    "conflicts"?: (string)[],"document_id"?: string | null,"extracted"?: NonNullable<Json>,"file_name"?: string | null,"id"?: string,"log"?: NonNullable<Json>,"match_member"?: string | null,"path"?: string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sha256"?: string,"stamped_path"?: string | null,"status"?: string,"uploaded_at"?: string,"uploaded_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "certificate_scans_document_id_fkey"
+      columns: ["document_id"]
+isOneToOne: false
+      referencedRelation: "documents"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificate_scans_match_member_fkey"
+      columns: ["match_member"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificate_scans_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "certificate_scans_uploaded_by_fkey"
+      columns: ["uploaded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"change_requests": {
                   Row: {

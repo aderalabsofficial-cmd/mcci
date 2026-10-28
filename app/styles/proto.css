@@ -719,3 +719,20 @@
   .proto .ecard,
 .proto .ereq {flex-wrap:wrap}
 }
+
+/* certificates (0450): the stamped scan with its QR shown larger beside it; the review list's reading */
+.proto .cert-scan {display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:18px;align-items:start}
+.proto .cert-scan img {width:100%;height:auto;border-radius:10px;border:1px solid var(--b);background:#fff}
+.proto .cert-qr {display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;border:1px solid var(--b);border-radius:14px;background:#fff;color:#0b2a5b;text-align:center}
+.proto .cert-qr-svg svg {width:180px;height:180px}
+.proto .cert-qr small {color:#475569}
+.proto .cert-fields span {display:inline-block;margin-inline-end:8px}
+.proto .cert-fields span.low {color:#b45309}
+@media(max-width:800px) {
+  .proto .cert-scan {grid-template-columns:1fr}
+  .proto .cert-qr-svg svg {width:150px;height:150px}
+}
+@media print {
+  .proto .cert-scan {grid-template-columns:1fr}
+  .proto .cert-qr {display:none}
+}

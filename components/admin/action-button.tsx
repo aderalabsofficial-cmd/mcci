@@ -8,7 +8,7 @@ import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 import { renewMember, restoreMember, setBlacklist } from '@/lib/members/actions';
 import { cancelVoucher, counterPayment, reissueVoucher, rejectPayment, verifyPayment } from '@/lib/payments/actions';
-import { extendTemp, issueTemp, revokeDocument, revokeTemp } from '@/lib/temp/actions';
+import { revokeDocument } from '@/lib/temp/actions';
 import { callAction } from '@/lib/client/call-action';
 
 /** staff actions of Release 5 (docs/catalogue/actions.md), each re-checked on the server and in the database */
@@ -18,9 +18,6 @@ export type StaffAction =
   | 'psid.markpaid'
   | 'psid.cancel'
   | 'psid.gen'
-  | 'temp.issue'
-  | 'temp.extend'
-  | 'temp.revoke'
   | 'qr.revoke'
   | 'reg.renew'
   | 'reg.restore'
@@ -34,16 +31,13 @@ const FIELDS: Record<StaffAction, Field[]> = {
   'psid.markpaid': ['ref', 'note'],
   'psid.cancel': ['reason'],
   'psid.gen': [],
-  'temp.issue': [],
-  'temp.extend': ['reason'],
-  'temp.revoke': ['reason'],
   'qr.revoke': ['reason'],
   'reg.renew': [],
   'reg.restore': ['reason'],
   'reg.blacklist': ['reason'],
   'reg.whitelist': ['reason'],
 };
-const DANGER: StaffAction[] = ['pay.reject', 'psid.cancel', 'temp.revoke', 'qr.revoke', 'reg.blacklist'];
+const DANGER: StaffAction[] = ['pay.reject', 'psid.cancel', 'qr.revoke', 'reg.blacklist'];
 
 /**
  * A button that opens a short confirmation (with a reason or reference where the action needs one), runs the server
@@ -87,13 +81,7 @@ export function ActionButton({
               ? cancelVoucher(locale, target, v.reason)
               : action === 'psid.gen'
                 ? reissueVoucher(locale, target)
-                : action === 'temp.issue'
-                  ? issueTemp(locale, target)
-                  : action === 'temp.extend'
-                    ? extendTemp(locale, target, v.reason)
-                    : action === 'temp.revoke'
-                      ? revokeTemp(locale, target, v.reason)
-                      : action === 'reg.renew'
+                : action === 'reg.renew'
                         ? renewMember(locale, target)
                         : action === 'reg.restore'
                           ? restoreMember(locale, target, v.reason)

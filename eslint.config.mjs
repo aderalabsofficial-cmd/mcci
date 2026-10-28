@@ -56,6 +56,7 @@ const SERVICE_ROLE_PATHS = [
   'lib/endorse/admin/**',
   'lib/verify/admin/**',
   'lib/temp/admin/**',
+  'lib/certificates/admin/**',
   'lib/demo/admin/**',
   'lib/site/admin/**',
 ];
