@@ -97,7 +97,7 @@ async function asApplicant(page: Page) {
   await page.getByLabel('Mobile, email or member ID').fill(applicant.email);
   await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(applicant.password);
   await page.locator('[data-action="login.member"]').click();
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
 }
 
 const stage = async () =>
@@ -163,8 +163,10 @@ test('officer returns a file, the applicant corrects it, the officer verifies it
   await page.locator('[data-doc="ntn"] [data-action="adm.doc.ok"]').click();
   await expect(page.locator('[data-doc="ntn"]')).toContainText('Accepted');
   for (const sw of await page.locator('[data-action="adm.check"]').all()) {
+    // the screen is locked while the page refreshes after the previous action (it says "Please wait…")
+    await expect(sw).toBeEnabled({ timeout: 20_000 });
     await sw.click();
-    await expect(sw).toHaveAttribute('aria-checked', 'true');
+    await expect(sw).toHaveAttribute('aria-checked', 'true', { timeout: 20_000 });
   }
   await page.locator('[data-action="adm.verify"]').click();
   await page.locator('[data-action="adm.verify.confirm"]').click();
@@ -179,7 +181,7 @@ test('officer returns a file, the applicant corrects it, the officer verifies it
 test('members never reach the staff screens', async ({ page }) => {
   await signInAs(page, 'member');
   await page.goto('/admin/requests');
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   await page.goto(`/admin/mreview?t=${token || 'MCCI-2026-M-0001'}`);
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
 });

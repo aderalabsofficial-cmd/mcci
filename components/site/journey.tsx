@@ -4,12 +4,12 @@ import type { Locale } from '@/i18n/routing';
 import { JOURNEY } from '@/lib/membership/reference';
 import { msg } from '@/lib/nav/model';
 
-/** the 8-step membership journey as shown to visitors (prototype JOURNEY: icons, temporary membership marked) */
+/** the membership journey as shown to visitors (no temporary membership since 0440); fee payment marked */
 export function PublicJourney({ locale }: { locale: Locale }) {
   return (
     <div className="steps8 big" role="list" aria-label={msg(locale, 'site.journey.title')}>
       {JOURNEY.map((s, i) => (
-        <div key={s.k} role="listitem" className={i === 5 ? 'n' : ''}>
+        <div key={s.k} role="listitem" className={i === 4 ? 'n' : ''}>
           <i aria-hidden>
             <Ic name={s.icon} size={22} />
           </i>

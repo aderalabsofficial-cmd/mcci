@@ -211,15 +211,13 @@ export const WIZARD_STEPS = [
   { k: 'review', icon: 'send' },
 ] as const;
 
-/** the member's 8-step journey (prototype M.STEPS) */
+/** the member's 6-step journey (no temporary membership since 0440, docs/21 point 29) */
 export const JOURNEY = [
   { k: 'submitted', icon: 'filePlus' },
   { k: 'review', icon: 'shield' },
   { k: 'proposer', icon: 'users' },
   { k: 'committee', icon: 'award' },
   { k: 'payment', icon: 'card' },
-  { k: 'temp', icon: 'hourglass' },
-  { k: 'printing', icon: 'printer' },
   { k: 'permanent', icon: 'check' },
 ] as const;
 
@@ -236,8 +234,8 @@ export type AppStage =
   | 'rejected'
   | 'withdrawn';
 
-/** position on the 8-step journey (prototype M.stepIndex); -1 before submission */
-export function journeyIndex(stage: AppStage, printing = false): number {
+/** position on the journey; -1 before submission. A legacy "temp" file counts as a member. */
+export function journeyIndex(stage: AppStage): number {
   if (stage === 'draft' || stage === 'withdrawn') return -1;
   const at: Partial<Record<AppStage, number>> = {
     submitted: 0,
@@ -247,9 +245,8 @@ export function journeyIndex(stage: AppStage, printing = false): number {
     committee: 3,
     payment: 4,
     temp: 5,
-    permanent: 7,
+    permanent: 5,
     rejected: 1,
   };
-  const i = at[stage] ?? 0;
-  return stage === 'temp' && printing ? 6 : i;
+  return at[stage] ?? 0;
 }

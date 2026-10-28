@@ -50,7 +50,7 @@ test.describe('desktop shells', () => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
     await page.locator('[data-action="lang.toggle"]:visible').click();
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
     await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   });
 

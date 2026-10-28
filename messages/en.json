@@ -800,7 +800,8 @@
       "decl": "Both declarations",
       "notFound": "Application not found",
       "category": "Main business category (manufacturing / non-manufacturing)",
-      "aopReg": "Registered or unregistered AOP"
+      "aopReg": "Registered or unregistered AOP",
+      "partnerContacts": "Email and address of every partner / director"
     },
     "journey": {
       "submitted": {
@@ -823,17 +824,9 @@
         "name": "Fee payment",
         "who": "You"
       },
-      "temp": {
-        "name": "Temporary membership",
-        "who": "60 days"
-      },
-      "printing": {
-        "name": "Certificate printing",
-        "who": "Printer"
-      },
       "permanent": {
-        "name": "Permanent member",
-        "who": "Done"
+        "name": "MCCI member",
+        "who": "Active to 31 March"
       }
     },
     "classes": {
@@ -903,12 +896,12 @@
       },
       "proposer": {
         "t": "Documents verified — choose your proposer and seconder",
-        "d": "MCCI has accepted your documents. Choose two MCCI members as proposer and seconder; your file goes to the Membership Committee as soon as both sign.",
+        "d": "MCCI has accepted your documents. Choose two MCCI members as proposer and seconder; once both approve, MCCI forwards your file to the Membership Committee.",
         "b": "Proposer & seconder"
       },
       "committee": {
         "t": "With the Membership Committee",
-        "d": "You will be informed right after the meeting.",
+        "d": "The Committee Convener decides. You will be told here and by email at once.",
         "agenda": "On the agenda of {meeting} (item {item})."
       },
       "payment": {
@@ -917,13 +910,9 @@
         "voucher": "Membership No. {no}. Pay {amount} with payment voucher {voucher} before {due} — see Payments for how to pay.",
         "b": "View voucher"
       },
-      "temp": {
-        "t": "You are a temporary member",
-        "d": "All services are open for you. Your membership becomes permanent when your printed certificate reaches MCCI."
-      },
       "permanent": {
-        "t": "You are a permanent member",
-        "d": "Thank you for being part of the Multan Chamber."
+        "t": "You are an MCCI member",
+        "d": "Your membership is active until 31 March. Your certificate appears in My Documents once MCCI receives it from the security press."
       },
       "rejected": {
         "t": "Application not approved",
@@ -946,8 +935,6 @@
         "d": "MCCI Accounts could not accept your receipt:",
         "b": "Upload a clear receipt"
       },
-      "tempUntil": "Membership No. {no} is active until {until}. Your temporary certificate is ready.",
-      "tempExpired": "Your temporary membership {no} expired on {until}. MCCI can extend it — please contact MCCI.",
       "certificate": "View certificate",
       "member": {
         "t": "You are an MCCI member",
@@ -1205,7 +1192,10 @@
         "proposer approved": "Proposer approved",
         "seconder approved": "Seconder approved",
         "committee note": "Committee member's note",
-        "returned to officer": "Returned to the Membership Officer by the Convener"
+        "returned to officer": "Returned to the Membership Officer by the Convener",
+        "member activated": "Payment verified — membership active",
+        "blacklisted": "Marked blacklisted by MCCI",
+        "blacklist removed": "Blacklist mark removed"
       }
     },
     "page": {
@@ -1317,7 +1307,7 @@
         "proposer": "Proposer / Seconder",
         "committee": "Committee",
         "payment": "Payment",
-        "temp": "Temporary"
+        "permanent": "Member"
       },
       "committeeDesk": "Committee desk"
     },
@@ -1608,8 +1598,6 @@
     "cancel": "Cancel",
     "kMembers": "Members on MCCI Digital",
     "kMembersSub": "Added here or approved online",
-    "kPermanent": "Permanent",
-    "kTemporary": "Temporary",
     "table": "Member register",
     "none": "No members yet. Add the members who will propose and second applicants.",
     "cols": {
@@ -1619,7 +1607,8 @@
       "cls": "Class",
       "validTo": "Valid to",
       "owner": "Owner sign-in",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Actions"
     },
     "owner_Invited": "Invited",
     "owner_Active": "Signed in",
@@ -1644,6 +1633,30 @@
       "member_no": "Membership number like MCCI-C-1134 or MCCI-A-2205.",
       "member_no_taken": "This membership number is already used.",
       "generic": "Something went wrong. Please try again."
+    },
+    "kCorporate": "Corporate",
+    "kAssociate": "Associate",
+    "kBlacklisted": "Blacklisted",
+    "kBlacklistedSub": "Whitelisting needed before renewal",
+    "life": {
+      "mustWhitelist": "Blacklisted — whitelist before renewal",
+      "done": {
+        "renew": "Renewal voucher {voucher} issued. The membership is renewed once Accounts verify the payment.",
+        "restore": "Membership restored, valid until {until}.",
+        "blacklist": "Marked blacklisted. Renewal is refused until the whitelisting is recorded.",
+        "whitelist": "Whitelisting recorded. The member can be renewed."
+      },
+      "errors": {
+        "reason_required": "Please write the reason (at least 3 characters).",
+        "not_found": "Member not found. Refresh the page.",
+        "demo": "Demo members are never renewed or restored.",
+        "not_whitelisted": "This member is blacklisted. Record the whitelisting (with the evidence) before renewal.",
+        "wrong_status": "Not possible for this membership status (a suspended or revoked member is restored first; an active one needs no restoration).",
+        "already_renewed": "This membership year is already renewed.",
+        "open_voucher": "A renewal voucher is already open for this member.",
+        "not_blacklisted": "This member is not blacklisted.",
+        "fees": "The membership fees are not configured. Ask the administrator."
+      }
     }
   },
   "committee": {
@@ -1981,9 +1994,9 @@
           "t": "Accounts verify",
           "d": "Against the bank statement"
         },
-        "temp": {
-          "t": "Temporary membership",
-          "d": "Issued automatically"
+        "active": {
+          "t": "Membership active",
+          "d": "Active at once, valid to 31 March"
         }
       }
     },
@@ -2021,13 +2034,13 @@
     "done": {
       "uploaded": "Receipt received for {voucher}. MCCI Accounts will verify it.",
       "verified": "Payment verified for {voucher}.",
-      "verifiedTemp": "Payment verified for {voucher}; temporary membership {no} issued.",
       "rejected": "Receipt for {voucher} not accepted; the member has been told.",
       "cancelled": "Voucher {voucher} cancelled.",
       "reissued": "New voucher {voucher} issued.",
       "bankSaved": "Bank account saved (not confirmed — vouchers still say \"to be confirmed\").",
       "bankConfirmed": "Bank account confirmed: it now shows on vouchers and members can upload receipts.",
-      "emailFailed": "The email could not be sent; the member sees it in the portal."
+      "emailFailed": "The email could not be sent; the member sees it in the portal.",
+      "verifiedActive": "Payment verified for {voucher}; membership {no} is now active."
     },
     "errors": {
       "notAllowed": "You are not allowed to do this.",
@@ -2052,10 +2065,13 @@
       "rejectedBody": "MCCI Accounts could not accept the receipt for payment voucher {voucher}. Please upload a clear, correct receipt in Payments. The reason:",
       "verifiedSubject": "Payment verified — {voucher}",
       "verifiedBody": "MCCI Accounts verified your payment of {amount} for voucher {voucher}. Thank you.",
-      "tempSubject": "Temporary membership issued — {no}",
-      "tempBody": "Your temporary membership {no} is active until {until}. Your temporary certificate ({code}) is in My Documents and can be verified by its QR code. MCCI will issue your permanent certificate after printing.",
       "openPayments": "Open Payments",
-      "openDocuments": "Open My Documents"
+      "openDocuments": "Open My Documents",
+      "activeSubject": "Welcome — your MCCI membership {no} is active",
+      "activeBody": "Your membership {no} is active until {until} (the membership year runs 1 April – 31 March). Your certificate will appear in My Documents once MCCI receives it from the security press.",
+      "openMembership": "Open My Membership",
+      "tempSubject": "Temporary membership issued — {no}",
+      "tempBody": "Your temporary membership {no} is active until {until}. Your temporary certificate ({code}) is in My Documents and can be verified by its QR code. MCCI will issue your permanent certificate after printing."
     }
   },
   "temp": {
@@ -2260,6 +2276,30 @@
       "title": "Revoke document: {subject}",
       "help": "Public verification shows \"Revoked\" from now on.",
       "ok": "Revoke document"
+    },
+    "reg_renew": {
+      "button": "Renew",
+      "title": "Renew membership: {subject}",
+      "help": "Issues the renewal voucher (annual subscription). Once Accounts verify the payment, the membership runs to the next 31 March.",
+      "ok": "Issue renewal voucher"
+    },
+    "reg_restore": {
+      "button": "Restore",
+      "title": "Restore membership: {subject}",
+      "help": "For a lapsed, suspended or revoked member whose dues are settled. Write what was settled (years, receipt). Valid to this year’s 31 March.",
+      "ok": "Restore"
+    },
+    "reg_blacklist": {
+      "button": "Mark blacklisted",
+      "title": "Mark blacklisted: {subject}",
+      "help": "Write the source (e.g. which notice). The member stays a member; renewal is refused until the whitelisting is recorded.",
+      "ok": "Mark blacklisted"
+    },
+    "reg_whitelist": {
+      "button": "Record whitelisting",
+      "title": "Record whitelisting: {subject}",
+      "help": "Write the evidence you saw (letter number, date). Renewal is possible again.",
+      "ok": "Record whitelisting"
     }
   },
   "verify": {
@@ -2320,8 +2360,6 @@
     "hello": "Good day, {name}",
     "kMembers": "Members",
     "kMembersSub": "Permanent and temporary",
-    "kTemp": "Temporary active",
-    "kTempSub": "Until certificates arrive",
     "kCollected": "Collected this month",
     "kCollectedSub": "Verified payments",
     "kCommittee": "With the committee",
@@ -2340,7 +2378,9 @@
     "allClear": "Nothing waiting for you right now.",
     "activity": "Latest on membership files",
     "noActivity": "No activity yet.",
-    "system": "System"
+    "system": "System",
+    "kCorporate": "Corporate members",
+    "kAssociate": "Associate members"
   },
   "demo": {
     "title": "Demo members (for presentations)",
@@ -2866,11 +2906,11 @@
       "activity": "Chamber activity",
       "activitySub": "Updated every minute.",
       "issued": "Services issued",
-      "temp": "Temporary members",
-      "converted": "Converted to permanent",
       "open": "In progress",
       "feed": "Live feed",
-      "live": "LIVE"
+      "live": "LIVE",
+      "corporate": "Corporate members",
+      "associate": "Associate members"
     },
     "stage": {
       "submitted": "Submitted",

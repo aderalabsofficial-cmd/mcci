@@ -17,6 +17,9 @@ export type Database = {
 "ai_extraction_finish":
 { Args: { "p_extraction": string,"p_fields": Json,"p_model": string,"p_ok": boolean }; Returns: undefined
                            },
+"app_blacklist":
+{ Args: { "p_app": string,"p_note": string,"p_on": boolean }; Returns: undefined
+                           },
 "app_check":
 { Args: { "p_app": string,"p_item": string,"p_on": boolean }; Returns: undefined
                            },
@@ -265,6 +268,15 @@ export type Database = {
 { Args: { "p_biz": Database["public"]['Enums']["biz_type"],"p_class": Database["public"]['Enums']["member_class"],"p_company": string,"p_member_no": string,"p_owner_email": string,"p_owner_name": string,"p_rep": string,"p_sector": string,"p_since": string,"p_valid_to": string,"p_women": boolean }; Returns: {
               "company_id": string,"invitation_id": string,"member_id": string,"member_no": string,"token": string
             }[]
+                           },
+"member_blacklist":
+{ Args: { "p_member": string,"p_note": string,"p_on": boolean }; Returns: undefined
+                           },
+"member_renew_start":
+{ Args: { "p_member": string }; Returns: string
+                           },
+"member_restore":
+{ Args: { "p_member": string,"p_reason": string }; Returns: string
                            },
 "my_access":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -685,14 +697,14 @@ isOneToOne: false
                   ]
                 },"applications": {
                   Row: {
-                    "address_matches_ntn": boolean | null,"class": Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at": string,"created_by": string,"decided_at": string | null,"decl1": boolean,"decl2": boolean,"field_confidence": NonNullable<Json>,"form": NonNullable<Json>,"id": string,"jurisdiction_ok": boolean | null,"kind": string,"member_id": string | null,"member_no": string | null,"photo_path": string | null,"reject_note": string | null,"return_note": string | null,"review": NonNullable<Json>,"sign_path": string | null,"stage": Database["public"]['Enums']["app_stage"],"stamp_path": string | null,"submitted_at": string | null,"token": string,"updated_at": string,"women": boolean
+                    "address_matches_ntn": boolean | null,"blacklist_note": string | null,"blacklisted": boolean,"class": Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at": string,"created_by": string,"decided_at": string | null,"decl1": boolean,"decl2": boolean,"field_confidence": NonNullable<Json>,"form": NonNullable<Json>,"id": string,"jurisdiction_ok": boolean | null,"kind": string,"member_id": string | null,"member_no": string | null,"photo_path": string | null,"reject_note": string | null,"return_note": string | null,"review": NonNullable<Json>,"sign_path": string | null,"stage": Database["public"]['Enums']["app_stage"],"stamp_path": string | null,"submitted_at": string | null,"token": string,"updated_at": string,"women": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "address_matches_ntn"?: boolean | null,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at"?: string,"created_by": string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"member_no"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
+                    "address_matches_ntn"?: boolean | null,"blacklist_note"?: string | null,"blacklisted"?: boolean,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id": string,"created_at"?: string,"created_by": string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"member_no"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
                   }
                   Update: {
-                    "address_matches_ntn"?: boolean | null,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id"?: string,"created_at"?: string,"created_by"?: string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"member_no"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
+                    "address_matches_ntn"?: boolean | null,"blacklist_note"?: string | null,"blacklisted"?: boolean,"class"?: Database["public"]['Enums']["member_class"] | null,"company_id"?: string,"created_at"?: string,"created_by"?: string,"decided_at"?: string | null,"decl1"?: boolean,"decl2"?: boolean,"field_confidence"?: NonNullable<Json>,"form"?: NonNullable<Json>,"id"?: string,"jurisdiction_ok"?: boolean | null,"kind"?: string,"member_id"?: string | null,"member_no"?: string | null,"photo_path"?: string | null,"reject_note"?: string | null,"return_note"?: string | null,"review"?: NonNullable<Json>,"sign_path"?: string | null,"stage"?: Database["public"]['Enums']["app_stage"],"stamp_path"?: string | null,"submitted_at"?: string | null,"token"?: string,"updated_at"?: string,"women"?: boolean
                   }
                   Relationships: [
                     {
@@ -1259,14 +1271,14 @@ isOneToOne: false
                   ]
                 },"members": {
                   Row: {
-                    "class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at": string,"id": string,"imported": boolean,"member_no": string,"public_listing": boolean,"rep_name": string,"serial": string | null,"since": string,"status": Database["public"]['Enums']["member_status"],"suspended_reason": string | null,"valid_to": string,"women": boolean
+                    "blacklist_note": string | null,"blacklisted": boolean,"blacklisted_at": string | null,"class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at": string,"id": string,"imported": boolean,"member_no": string,"public_listing": boolean,"rep_name": string,"restored_at": string | null,"serial": string | null,"since": string,"status": Database["public"]['Enums']["member_status"],"suspended_reason": string | null,"valid_to": string,"whitelist_note": string | null,"whitelisted_at": string | null,"women": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at"?: string,"id"?: string,"imported"?: boolean,"member_no": string,"public_listing"?: boolean,"rep_name": string,"serial"?: string | null,"since": string,"status": Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_to": string,"women"?: boolean
+                    "blacklist_note"?: string | null,"blacklisted"?: boolean,"blacklisted_at"?: string | null,"class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at"?: string,"id"?: string,"imported"?: boolean,"member_no": string,"public_listing"?: boolean,"rep_name": string,"restored_at"?: string | null,"serial"?: string | null,"since": string,"status": Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_to": string,"whitelist_note"?: string | null,"whitelisted_at"?: string | null,"women"?: boolean
                   }
                   Update: {
-                    "class"?: Database["public"]['Enums']["member_class"],"company_id"?: string,"created_at"?: string,"id"?: string,"imported"?: boolean,"member_no"?: string,"public_listing"?: boolean,"rep_name"?: string,"serial"?: string | null,"since"?: string,"status"?: Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_to"?: string,"women"?: boolean
+                    "blacklist_note"?: string | null,"blacklisted"?: boolean,"blacklisted_at"?: string | null,"class"?: Database["public"]['Enums']["member_class"],"company_id"?: string,"created_at"?: string,"id"?: string,"imported"?: boolean,"member_no"?: string,"public_listing"?: boolean,"rep_name"?: string,"restored_at"?: string | null,"serial"?: string | null,"since"?: string,"status"?: Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_to"?: string,"whitelist_note"?: string | null,"whitelisted_at"?: string | null,"women"?: boolean
                   }
                   Relationships: [
                     {

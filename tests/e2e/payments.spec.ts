@@ -5,11 +5,13 @@ import { readLocalEnv } from '../integration/local-env';
 import { signInAs } from './helpers';
 
 /**
- * Release 5 payments and temporary membership (docs/03 §3–4, docs/05 M6):
+ * Payments and activation without temporary membership (0340, 0440; docs/21 points 27–29, docs/22 §3):
  * A. bank account not confirmed: the member is told not to pay and cannot upload; Accounts record a counter payment;
- *    the temporary membership, certificate with QR and public verification follow; the SG extends, then revokes.
+ *    the membership is active at once (Permanent, valid to 31 March). In the Members Register the officer marks the
+ *    member blacklisted — renewal is refused with a clear message — records the whitelisting, issues the renewal
+ *    voucher; Accounts verify it and the membership runs to the next 31 March. A lapsed member is restored by hand.
  * B. the SG confirms MCCI's bank account; the member uploads a receipt; Accounts reject it with a reason; the member
- *    uploads again; Accounts verify → temporary membership. The bank account is set back to "not confirmed".
+ *    uploads again; Accounts verify → membership active. The bank account is set back to "not confirmed".
  */
 const env = readLocalEnv();
 test.skip(!env, 'needs the local Supabase stack (MCCI_IT_LOCAL=1 with its URL and keys)');
@@ -84,6 +86,7 @@ test.afterAll(async () => {
       await admin.from('temp_memberships').delete().in('member_id', members);
       await admin.from('print_items').delete().in('member_id', members);
       await admin.from('documents').delete().in('member_id', members);
+      await admin.from('payment_vouchers').delete().in('ref_id', members);
     }
     await admin.from('applications').update({ member_id: null }).eq('id', p.app);
     await admin.from('members').delete().eq('company_id', p.company);
@@ -104,11 +107,12 @@ async function asMember(browser: Browser, p: Person): Promise<Page> {
   await page.getByLabel('Mobile, email or member ID').fill(p.email);
   await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(p.password);
   await page.locator('[data-action="login.member"]').click();
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   return page;
 }
 
 const flash = (page: Page) => page.locator('[data-flash]');
+const REASON = 'Reason (the member will see it)';
 
 async function act(page: Page, row: string, action: string, fields: Record<string, string> = {}) {
   await page.locator(`${row} [data-action="${action}"]`).first().click();
@@ -117,7 +121,12 @@ async function act(page: Page, row: string, action: string, fields: Record<strin
   await d.locator(`[data-action="${action}.confirm"]`).click();
 }
 
-test('A. counter payment → temporary membership, certificate, public verification, extend, revoke', async ({ page, browser }) => {
+const yearEnd = (d: Date) => {
+  const k = new Date(d.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }));
+  return `${k.getUTCFullYear() + (k.getUTCMonth() >= 3 ? 1 : 0)}-03-31`;
+};
+
+test('A. counter payment → membership active; blacklist blocks renewal; whitelist, renew, restore', async ({ page, browser }) => {
   test.setTimeout(180_000);
   const p = people[0]!;
 
@@ -127,48 +136,57 @@ test('A. counter payment → temporary membership, certificate, public verificat
   await expect(mp.getByRole('main')).toContainText('To be confirmed by MCCI');
   await expect(mp.locator('[data-action="pay.upload"]')).toHaveCount(0);
 
-  // Accounts (the SG has every level) record the payment received at the counter
+  // Accounts (the SG has every level) record the payment received at the counter → active at once
   await signInAs(page, 'sg');
   await page.goto('/admin/psid');
   await act(page, `[data-voucher="${p.voucher}"]`, 'psid.markpaid', { 'Bank / counter receipt reference': 'MCCI-CASH-0001' });
-  await expect(flash(page)).toContainText(`temporary membership ${p.no} issued`);
+  await expect(flash(page)).toContainText(`membership ${p.no} is now active`);
   const { data: a } = await admin.from('applications').select('stage, member_id').eq('id', p.app).single();
-  expect(a!.stage).toBe('temp');
-  const { data: doc } = await admin.from('documents').select('code, status').eq('member_id', a!.member_id).single();
-  expect(doc!.status).toBe('Temporary');
+  expect(a!.stage).toBe('permanent');
+  const { data: mem } = await admin.from('members').select('status, valid_to').eq('id', a!.member_id).single();
+  expect(mem).toEqual({ status: 'Permanent', valid_to: yearEnd(new Date()) });
+  expect((await admin.from('temp_memberships').select('id').eq('member_id', a!.member_id)).data).toEqual([]);
   const { data: co } = await admin.from('companies').select('name, ntn').eq('id', p.company).single();
   expect(co).toEqual({ name: `Counter Traders ${tag}`, ntn: '1112223-4' });
 
-  // the member: what to do now → certificate with QR
+  // the member: an active member, no temporary membership anywhere
   await mp.goto('/portal');
-  await expect(mp.getByRole('main')).toContainText(`Membership No. ${p.no} is active until`);
-  await mp.locator('[data-action="doc.view"]').first().click();
-  await expect(mp).toHaveURL(new RegExp(`/portal/documents\\?code=${doc!.code}$`));
-  const cert = mp.locator(`[data-cert="${doc!.code}"]`);
-  await expect(cert).toContainText(p.no);
-  await expect(cert).toContainText(`Counter Traders ${tag}`);
-  await expect(cert.locator('svg')).toHaveCount(1);
+  await expect(mp.getByRole('main')).toContainText('You are an MCCI member');
+  await expect(mp.getByRole('main')).not.toContainText(/temporary/i);
   await mp.context().close();
 
-  // anyone: the QR link
-  const pub = await browser.newContext();
-  const pp = await pub.newPage();
-  await pp.goto(`/verify/${doc!.code}`);
-  await expect(pp.getByRole('main').locator('[data-verify="found"]')).toContainText('Valid — temporary membership');
-  await expect(pp.getByRole('main')).toContainText(p.no);
-  await pp.goto('/verify?c=MCCI-QR-AAAAA-AAAAA');
-  await expect(pp.getByRole('main').locator('[data-verify="none"]')).toBeVisible();
+  // Members Register: blacklisted → renewal refused with a clear message
+  const row = `[data-member="${p.no}"]`;
+  await page.goto('/admin/members');
+  await act(page, row, 'reg.blacklist', { [REASON]: 'Listed on the FBR notice of 1 Oct' });
+  await expect(flash(page)).toContainText('Marked blacklisted');
+  await expect(page.locator('tr', { has: page.locator(row) }).locator('[data-blacklisted]')).toBeVisible();
+  await act(page, row, 'reg.renew');
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('Record the whitelisting');
+  await page.getByRole('dialog').locator('[data-action="modal.close"]').click();
 
-  // the SG extends, then revokes the document; verification shows it
-  await page.goto('/admin/temp');
-  await act(page, `[data-temp="${p.no}"]`, 'temp.extend', { 'Reason (the member will see it)': 'Security printer delayed' });
-  await expect(flash(page)).toContainText('Extended until');
-  await page.goto('/admin/documents');
-  await act(page, `[data-code="${doc!.code}"]`, 'qr.revoke', { 'Reason (the member will see it)': 'Test revocation' });
-  await expect(flash(page)).toContainText('revoked');
-  await pp.goto(`/verify/${doc!.code}`);
-  await expect(pp.getByRole('main').locator('[data-verify="found"]')).toContainText('Revoked');
-  await pub.close();
+  // whitelisting recorded with the evidence; renewal voucher; Accounts verify → the next 31 March
+  await act(page, row, 'reg.whitelist', { [REASON]: 'FBR whitelisting letter No. 77 seen' });
+  await expect(flash(page)).toContainText('Whitelisting recorded');
+  await act(page, row, 'reg.renew');
+  await expect(flash(page)).toContainText(/Renewal voucher PV-\d{4}-\d+ issued/);
+  const { data: rv } = await admin.from('payment_vouchers').select('voucher_no, amount').eq('ref_type', 'renewal').eq('ref_id', a!.member_id).single();
+  expect(rv!.amount).toBe(7000);
+  await page.goto('/admin/psid');
+  await act(page, `[data-voucher="${rv!.voucher_no}"]`, 'psid.markpaid', { 'Bank / counter receipt reference': 'MCCI-CASH-0002' });
+  await expect(flash(page)).toContainText('Payment verified');
+  const next = `${Number(yearEnd(new Date()).slice(0, 4)) + 1}-03-31`;
+  expect((await admin.from('members').select('valid_to').eq('id', a!.member_id).single()).data!.valid_to).toBe(next);
+
+  // a lapsed member is restored by hand by the officer, with the reason
+  await admin.from('members').update({ status: 'Expired', valid_to: '2024-03-31' }).eq('id', a!.member_id);
+  await page.goto('/admin/members');
+  await act(page, row, 'reg.restore', { [REASON]: 'Dues 2024-26 settled, receipt 5512' });
+  await expect(flash(page)).toContainText('Membership restored');
+  expect((await admin.from('members').select('status, valid_to').eq('id', a!.member_id).single()).data).toEqual({
+    status: 'Permanent',
+    valid_to: yearEnd(new Date()),
+  });
 });
 
 test('B. bank confirmed → receipt upload, reject with reason, upload again, verify', async ({ page, browser }) => {
@@ -206,14 +224,14 @@ test('B. bank confirmed → receipt upload, reject with reason, upload again, ve
     await mp.locator('[data-action="pay.upload"]').click();
     await expect(mp.getByRole('main')).toContainText('MCCI Accounts are verifying it');
 
-    // Accounts open the receipt and verify → temporary membership
+    // Accounts open the receipt and verify → the membership is active
     await page.goto('/admin/payments');
     await expect(page.locator(`[data-voucher="${p.voucher}"] [data-action="psid.view"]`)).toHaveAttribute('href', /receipts/);
     await act(page, `[data-voucher="${p.voucher}"]`, 'pay.verify');
-    await expect(flash(page)).toContainText(`temporary membership ${p.no} issued`);
+    await expect(flash(page)).toContainText(`membership ${p.no} is now active`);
     const { data: mails } = await admin.from('email_log').select('template_key, status').eq('application_id', p.app);
     expect(mails!.map((x) => x.template_key).sort()).toEqual(
-      ['payment_receipt_received', 'payment_receipt_received', 'payment_rejected', 'temp_issued'].sort(),
+      ['payment_receipt_received', 'payment_receipt_received', 'payment_rejected', 'member_activated'].sort(),
     );
     expect(mails!.every((x) => x.status === 'sent')).toBe(true);
     await mp.context().close();

@@ -118,17 +118,9 @@ export const both = (path: string, vars?: Record<string, string>) => ({
   ur: msg('ur', path, vars),
 });
 
-/** the member's 8-step journey (prototype steps(a, big)) */
-export function Journey({
-  stage,
-  big = false,
-  printing = false,
-}: {
-  stage: AppStage;
-  big?: boolean;
-  printing?: boolean;
-}) {
-  const cur = journeyIndex(stage, printing);
+/** the member's journey (prototype steps(a, big)) */
+export function Journey({ stage, big = false }: { stage: AppStage; big?: boolean }) {
+  const cur = journeyIndex(stage);
   return (
     <div className={`steps8 ${big ? 'big' : ''}`} role="list" aria-label={msg('en', 'membership.home.journey')}>
       {JOURNEY.map((s, i) => {

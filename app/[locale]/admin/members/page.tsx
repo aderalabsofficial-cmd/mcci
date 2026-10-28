@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
+import { ActionButton } from '@/components/admin/action-button';
+import { FlashProvider } from '@/components/admin/flash';
 import { NoAccess } from '@/components/admin/no-access';
 import { AddMember } from '@/components/members/add-member';
 import { DemoCard, type DemoRow, type MarkableRow } from '@/components/members/demo-card';
@@ -45,7 +47,7 @@ export default async function MembersPage({ params }: Props) {
   const supabase = await createClient();
   const { data: members } = await supabase
     .from('members')
-    .select('id, member_no, class, women, status, rep_name, valid_to, company_id, companies!inner(name, demo)')
+    .select('id, member_no, class, women, status, rep_name, valid_to, company_id, blacklisted, blacklist_note, companies!inner(name, demo)')
     .eq('companies.demo', false)
     .order('member_no');
   const { data: invites } = await supabase.from('invitations').select('company_id, status, email').eq('kind', 'company_user');
@@ -73,10 +75,12 @@ export default async function MembersPage({ params }: Props) {
     label: [a.company, a.token, a.owner_email].filter(Boolean).join(' · '),
   }));
   const invited = new Map((invites ?? []).map((i) => [i.company_id, i.status]));
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
   const rows = members ?? [];
 
   return (
     <div className="proto">
+      <FlashProvider>
       <div className="ph">
         <div>
           <h1>{m('title')}</h1>
@@ -86,8 +90,9 @@ export default async function MembersPage({ params }: Props) {
       </div>
       <div className="kg">
         <Kpi label={m('kMembers')} value={rows.length} sub={m('kMembersSub')} icon="users" color="#7c3aed" />
-        <Kpi label={m('kPermanent')} value={rows.filter((r) => r.status === 'Permanent').length} icon="check" color="#1fa34a" />
-        <Kpi label={m('kTemporary')} value={rows.filter((r) => r.status === 'Temporary').length} icon="hourglass" color="#14b8a6" />
+        <Kpi label={m('kCorporate')} value={rows.filter((r) => r.status === 'Permanent' && r.class === 'Corporate').length} icon="check" color="#1fa34a" />
+        <Kpi label={m('kAssociate')} value={rows.filter((r) => r.status === 'Permanent' && r.class === 'Associate').length} icon="check" color="#14b8a6" />
+        <Kpi label={m('kBlacklisted')} value={rows.filter((r) => r.blacklisted).length} sub={m('kBlacklistedSub')} icon="flag" color="#ef4444" />
       </div>
       <div className="card">
         <div className="ch">
@@ -102,6 +107,7 @@ export default async function MembersPage({ params }: Props) {
                     {m(`cols.${c}`)}
                   </th>
                 ))}
+                {level >= 2 && <th scope="col">{m('cols.actions')}</th>}
               </tr>
             </thead>
             <tbody>
@@ -120,12 +126,35 @@ export default async function MembersPage({ params }: Props) {
                   <td>{m(`owner_${invited.get(r.company_id) ?? 'none'}`)}</td>
                   <td>
                     <span className={`bd ${r.status === 'Permanent' ? 'green' : r.status === 'Temporary' ? 'blue' : 'red'}`}>{m(`status.${r.status}`)}</span>
+                    {r.blacklisted && (
+                      <span className="bd red" title={r.blacklist_note ?? undefined} data-blacklisted>
+                        {m('life.mustWhitelist')}
+                      </span>
+                    )}
                   </td>
+                  {level >= 2 && (
+                    <td>
+                      <div className="pb" data-member={r.member_no}>
+                        {r.status === 'Permanent' || r.status === 'Expired' ? (
+                          <ActionButton locale={locale} action="reg.renew" target={r.id} subject={r.member_no} />
+                        ) : null}
+                        {r.status !== 'Permanent' || r.valid_to < today ? (
+                          <ActionButton locale={locale} action="reg.restore" target={r.id} subject={r.member_no} />
+                        ) : null}
+                        <ActionButton
+                          locale={locale}
+                          action={r.blacklisted ? 'reg.whitelist' : 'reg.blacklist'}
+                          target={r.id}
+                          subject={r.member_no}
+                        />
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
               {!rows.length && (
                 <tr className="st">
-                  <td colSpan={7} className="em">
+                  <td colSpan={level >= 2 ? 8 : 7} className="em">
                     {m('none')}
                   </td>
                 </tr>
@@ -135,6 +164,7 @@ export default async function MembersPage({ params }: Props) {
         </div>
       </div>
       <DemoCard locale={locale} rows={demoRows} canManage={level >= 3} markable={markable} />
+      </FlashProvider>
     </div>
   );
 }

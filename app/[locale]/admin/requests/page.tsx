@@ -56,7 +56,7 @@ export default async function PipelinePage({ params }: Props) {
     ['proposer', ['proposer'], '#3b82f6'],
     ['committee', ['committee'], '#c8963e'],
     ['payment', ['payment'], '#14b8a6'],
-    ['temp', ['temp'], '#1fa34a'],
+    ['permanent', ['permanent', 'temp'], '#1fa34a'],
   ];
   const date = (iso: string | null) =>
     iso

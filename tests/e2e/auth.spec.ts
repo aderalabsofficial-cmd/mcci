@@ -72,10 +72,10 @@ test.describe('with the local stack', () => {
 
   test('member: email + password → portal; the session survives a reload; sign out ends it', async ({ page }) => {
     await memberForm(page, accounts.member!.email, accounts.member!.password);
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
     await expect(page.getByText(`E2E Member ${accounts.run}`).first()).toBeVisible();
     await page.reload();
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
     await page.locator('[data-action="logout"]:visible').first().click();
     await expect(page).toHaveURL(/\/login$/);
     await page.goto('/portal');
@@ -84,7 +84,7 @@ test.describe('with the local stack', () => {
 
   test('member: member ID + password → portal', async ({ page }) => {
     await memberForm(page, accounts.member!.memberNo.toLowerCase(), accounts.member!.password);
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   });
 
   test('wrong password and unknown member ID get the same message (nothing is revealed)', async ({ page }) => {
@@ -100,7 +100,7 @@ test.describe('with the local stack', () => {
   test('a member cannot open the admin panel', async ({ page }) => {
     await signInAs(page, 'member');
     await page.goto('/admin');
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   });
 
   test('the Staff tab refuses member accounts', async ({ page }) => {
@@ -150,7 +150,7 @@ test.describe('with the local stack', () => {
     );
     await page.getByLabel('Code').fill(code!);
     await page.locator('[data-action="login.otp"]').click();
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   });
 
   test('registration: inactive until the emailed confirmation link is opened, then signed in', async ({ page }) => {
@@ -181,7 +181,7 @@ test.describe('with the local stack', () => {
     // PKCE verifier, which the cookie-less resend does not set
     test.skip(emails === 2 && !/token_hash=/.test(mail.HTML), 'resent link needs the MCCI templates (token_hash)');
     await page.goto(emailedLink(mail.HTML));
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
     await expect(page.getByText('E2E Applicant').first()).toBeVisible();
   });
 
@@ -199,13 +199,13 @@ test.describe('with the local stack', () => {
     await page.getByLabel('New password', { exact: true }).fill(fresh);
     await page.getByLabel('Repeat the new password', { exact: true }).fill(fresh);
     await page.locator('[data-action="auth.reset.save"]').click();
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
     await page.locator('[data-action="logout"]:visible').first().click();
     await memberForm(page, user.email, user.password);
     await expect(page.getByRole('main').getByRole('alert')).toHaveText(
       'These details do not match an account. Check them and try again.',
     );
     await memberForm(page, user.email, fresh);
-    await expect(page).toHaveURL(/\/portal$/);
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   });
 });

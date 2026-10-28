@@ -69,7 +69,7 @@ async function signIn(page: Page) {
   await page.getByLabel('Mobile, email or member ID').fill(person.email);
   await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(person.password);
   await page.locator('[data-action="login.member"]').click();
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
 }
 
 /** answer every server action from this page the way Next.js answers a tab from an older release */

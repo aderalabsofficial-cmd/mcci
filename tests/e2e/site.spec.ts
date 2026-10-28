@@ -41,7 +41,7 @@ test('home: counters, services and journey; the live panel shows tokens, never c
   await page.goto('/');
   await expect(page.locator('.xstat')).not.toHaveCount(0);
   await expect(page.locator('.sc[href^="/service?s="]')).toHaveCount(7);
-  await expect(page.locator('.steps8 [role="listitem"]')).toHaveCount(8);
+  await expect(page.locator('.steps8 [role="listitem"]')).toHaveCount(6);
   await expect(page.locator('.xlive')).not.toContainText('Company A');
   await expect(page.locator('.xlive')).not.toContainText('DEMO');
   // verify box goes to /verify

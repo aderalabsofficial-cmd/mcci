@@ -56,7 +56,7 @@ function fail(locale: Locale, error: unknown, what: string): PayResult {
   return { ok: false, message: t('generic') };
 }
 
-/** the email the database queued: payment_receipt_received / payment_rejected / payment_verified / temp_issued */
+/** the email the database queued: payment_receipt_received / payment_rejected / payment_verified / member_activated */
 async function deliver(template: string, row: Mailed | undefined, extra: Record<string, string> = {}): Promise<boolean> {
   if (!row?.email_id || !row.to_email) return false;
   const supabase = await createClient();
@@ -72,7 +72,7 @@ async function deliver(template: string, row: Mailed | undefined, extra: Record<
     payment_receipt_received: { subject: 'pay.email.receivedSubject', paragraphs: ['pay.email.receivedBody'], path: '/portal/payments', label: 'pay.email.openPayments' },
     payment_rejected: { subject: 'pay.email.rejectedSubject', paragraphs: ['pay.email.rejectedBody'], path: '/portal/payments', label: 'pay.email.openPayments' },
     payment_verified: { subject: 'pay.email.verifiedSubject', paragraphs: ['pay.email.verifiedBody'], path: '/portal/payments', label: 'pay.email.openPayments' },
-    temp_issued: { subject: 'pay.email.tempSubject', paragraphs: ['pay.email.verifiedBody', 'pay.email.tempBody'], path: '/portal/documents', label: 'pay.email.openDocuments' },
+    member_activated: { subject: 'pay.email.activeSubject', paragraphs: ['pay.email.verifiedBody', 'pay.email.activeBody'], path: '/portal/membership', label: 'pay.email.openMembership' },
   };
   const s = spec[template]!;
   try {
@@ -148,8 +148,10 @@ export async function verifyPayment(locale: Locale, voucher: string): Promise<Pa
     if (error) throw error;
     refresh();
     const row = data?.[0] as Mailed | undefined;
-    const sent = await deliver(row?.temp_code ? 'temp_issued' : 'payment_verified', row);
-    return done(locale, row?.temp_code ? 'verifiedTemp' : 'verified', sent, { voucher, no: row?.member_no ?? '' });
+    // a membership fee activates the membership at once (no temporary membership since 0440)
+    const active = Boolean(row?.member_no);
+    const sent = await deliver(active ? 'member_activated' : 'payment_verified', row);
+    return done(locale, active ? 'verifiedActive' : 'verified', sent, { voucher, no: row?.member_no ?? '' });
   } catch (error) {
     return fail(locale, error, 'pay.verify');
   }
@@ -169,8 +171,10 @@ export async function counterPayment(locale: Locale, voucher: string, ref: strin
     if (error) throw error;
     refresh();
     const row = data?.[0] as Mailed | undefined;
-    const sent = await deliver(row?.temp_code ? 'temp_issued' : 'payment_verified', row);
-    return done(locale, row?.temp_code ? 'verifiedTemp' : 'verified', sent, { voucher, no: row?.member_no ?? '' });
+    // a membership fee activates the membership at once (no temporary membership since 0440)
+    const active = Boolean(row?.member_no);
+    const sent = await deliver(active ? 'member_activated' : 'payment_verified', row);
+    return done(locale, active ? 'verifiedActive' : 'verified', sent, { voucher, no: row?.member_no ?? '' });
   } catch (error) {
     return fail(locale, error, 'psid.markpaid');
   }

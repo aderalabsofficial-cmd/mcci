@@ -311,8 +311,9 @@ export function Wizard({
       stamp_path: app.stamp ? 'x' : null,
       docs: docs.map((d) => ({ key: d.key, status: d.status })),
       partners: app.partners.length,
+      partnerContactsMissing: app.partners.some((p) => !p.email?.trim() || !p.address?.trim()),
     }),
-    [f, s.jurisdiction_ok, s.women, s.decl1, s.decl2, app.sign, app.stamp, docs, app.partners.length],
+    [f, s.jurisdiction_ok, s.women, s.decl1, s.decl2, app.sign, app.stamp, docs, app.partners],
   );
   const missingNow = missing(state, app.requirements, rules);
   const reqs = applicableDocs(app.requirements, f);

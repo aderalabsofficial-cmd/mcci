@@ -9,8 +9,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export interface SiteStats {
   members: number;
-  temporary: number;
-  converted: number;
+  corporate: number;
+  associate: number;
   services_issued: number;
   services_open: number;
   applications_open: number;
@@ -35,7 +35,7 @@ export interface Tracked {
 
 export const TOKEN = /^MCCI-\d{4}-(M-)?\d{4,6}$/;
 
-const EMPTY: SiteStats = { members: 0, temporary: 0, converted: 0, services_issued: 0, services_open: 0, applications_open: 0 };
+const EMPTY: SiteStats = { members: 0, corporate: 0, associate: 0, services_issued: 0, services_open: 0, applications_open: 0 };
 
 export const siteStats = cache(async (): Promise<SiteStats> => {
   const { data, error } = await createAdminClient().schema('api').rpc('site_stats');

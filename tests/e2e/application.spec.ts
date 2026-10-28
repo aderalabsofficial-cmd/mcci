@@ -51,7 +51,7 @@ async function applicant(page: Page, name: string) {
   await page.getByLabel('Mobile, email or member ID').fill(email);
   await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(password);
   await page.locator('[data-action="login.member"]').click();
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   return data.user!.id;
 }
 

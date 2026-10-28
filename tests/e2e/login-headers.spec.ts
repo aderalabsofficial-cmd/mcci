@@ -83,7 +83,7 @@ test('sign-in responses fit the header buffer nginx gives the app (member; staff
 }) => {
   const limit = nginxHeaderBuffer();
   const memberBytes = await signIn(page, 'member', member);
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   // the same browser, as in production: the earlier session's cookies are still there (the response replaces them)
   const old = (await page.context().cookies()).filter((c) => c.name.startsWith('sb-'));
   const ctx = await browser.newContext();

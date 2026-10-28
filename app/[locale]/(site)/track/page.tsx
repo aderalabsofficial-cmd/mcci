@@ -39,7 +39,7 @@ function Result({ locale, result, services }: { locale: Locale; result: TrackRes
       </p>
       {r.kind === 'membership' && (
         <div style={{ marginTop: 14 }}>
-          <Journey stage={r.status as AppStage} printing={r.printing} />
+          <Journey stage={r.status as AppStage} />
         </div>
       )}
       <p style={{ marginTop: 12 }}>

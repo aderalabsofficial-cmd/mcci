@@ -64,12 +64,12 @@ select throws_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'update public.applications set member_no = ''C-1'' where id = tests.id(''app_a_review'')') $$, '42501', null, 'nobody changes the number from the browser');
 select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.app_forward(tests.id(''app_a_review''), ''C-502'')') $$, 'P0001', null, 'an approved file is not forwarded again');
 
--- decline: reason required, final, the number is released
+-- decline: reason required, final, the number stays reserved unless MCCI allows re-use
 update public.applications set class = 'Corporate', stage = 'committee', member_no = 'C-502' where id = tests.id('app_b_draft');
 select throws_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(tests.id(''app_b_draft''), ''Rejected'', '''')') $$, 'P0001', null, 'declining needs the reason');
 select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(tests.id(''app_b_draft''), ''Rejected'', ''Outside the Chamber''''s jurisdiction'')') $$, 'the Convener declines with a reason');
 select results_eq($$ select stage::text, reject_note, member_no from public.applications where id = tests.id('app_b_draft') $$,
-  $$ values ('rejected', 'Outside the Chamber''s jurisdiction', null::text) $$, 'declined, reason kept, number released');
+  $$ values ('rejected', 'Outside the Chamber''s jurisdiction', 'C-502') $$, 'declined, reason kept, number kept reserved (MCCI policy default, 0440)');
 
 -- Women rates and an extra partner card
 insert into public.applications (id, company_id, created_by, stage, class, women, member_no, form)

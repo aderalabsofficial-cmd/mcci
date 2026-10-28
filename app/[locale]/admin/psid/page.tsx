@@ -43,7 +43,7 @@ export default async function PsidPage({ params }: Props) {
     ['landmark', 'pays'],
     ['upload', 'uploaded'],
     ['check', 'verify'],
-    ['hourglass', 'temp'],
+    ['award', 'active'],
   ];
   return (
     <div className="proto">

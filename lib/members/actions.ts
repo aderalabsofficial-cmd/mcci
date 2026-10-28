@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { asLocale } from '@/i18n/locale';
+import type { Locale } from '@/i18n/routing';
 import { sendInvitation } from '@/lib/invitations/email';
 import { msg } from '@/lib/nav/model';
 import { PermissionError, requirePermission } from '@/lib/permissions/server';
@@ -93,5 +94,69 @@ export async function addMember(form: FormData): Promise<MemberAddResult> {
   } catch (error) {
     if (error instanceof PermissionError) return { ok: false, message: msg(locale, 'register.errors.notAllowed') };
     throw error;
+  }
+}
+
+// ───────── member lifecycle (0440, docs/22 §3): renew, restore, blacklist / whitelist ─────────
+
+const memberId = z.string().uuid();
+const why = z.string().trim().min(3).max(1000);
+
+function lifecycleFail(locale: Locale, error: unknown, what: string): MemberAddResult {
+  if (error instanceof PermissionError) return { ok: false, message: msg(locale, 'register.errors.notAllowed') };
+  if (error instanceof z.ZodError) return { ok: false, message: msg(locale, 'register.life.errors.reason_required') };
+  const e = error as { code?: string; hint?: string; message?: string };
+  if (e?.code === '42501') return { ok: false, message: msg(locale, 'register.errors.notAllowed') };
+  const known = ['reason_required', 'not_found', 'demo', 'not_whitelisted', 'wrong_status', 'already_renewed', 'open_voucher', 'not_blacklisted', 'fees'];
+  if (e?.code === 'P0001' && e.hint && known.includes(e.hint)) {
+    return { ok: false, message: msg(locale, `register.life.errors.${e.hint}`) };
+  }
+  console.error(`${what} failed`, e?.code, e?.message);
+  return { ok: false, message: msg(locale, 'register.errors.generic') };
+}
+
+/** reg.renew: the renewal voucher (subscription); Accounts verify it, then the year runs to the next 31 March */
+export async function renewMember(locale: Locale, id: string): Promise<MemberAddResult> {
+  try {
+    await requirePermission('reg', 2);
+    const supabase = await createClient();
+    const { data, error } = await supabase.schema('api').rpc('member_renew_start', { p_member: memberId.parse(id) });
+    if (error) throw error;
+    revalidatePath('/[locale]/admin/members', 'page');
+    return { ok: true, message: msg(locale, 'register.life.done.renew', { voucher: data ?? '' }) };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'reg.renew');
+  }
+}
+
+/** reg.restore: a lapsed member restored by hand by the Membership Officer, with the reason */
+export async function restoreMember(locale: Locale, id: string, reason: string): Promise<MemberAddResult> {
+  try {
+    await requirePermission('reg', 2);
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .schema('api')
+      .rpc('member_restore', { p_member: memberId.parse(id), p_reason: why.parse(reason) });
+    if (error) throw error;
+    revalidatePath('/[locale]/admin/members', 'page');
+    return { ok: true, message: msg(locale, 'register.life.done.restore', { until: data ?? '' }) };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'reg.restore');
+  }
+}
+
+/** reg.blacklist / reg.whitelist: recorded with the source or the evidence; whitelisting is needed before renewal */
+export async function setBlacklist(locale: Locale, id: string, on: boolean, reason: string): Promise<MemberAddResult> {
+  try {
+    await requirePermission('reg', 2);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .schema('api')
+      .rpc('member_blacklist', { p_member: memberId.parse(id), p_on: on, p_note: why.parse(reason) });
+    if (error) throw error;
+    revalidatePath('/[locale]/admin/members', 'page');
+    return { ok: true, message: msg(locale, on ? 'register.life.done.blacklist' : 'register.life.done.whitelist') };
+  } catch (error) {
+    return lifecycleFail(locale, error, on ? 'reg.blacklist' : 'reg.whitelist');
   }
 }

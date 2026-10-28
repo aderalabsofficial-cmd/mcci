@@ -24,8 +24,8 @@ export default async function LivePage({ params }: Props) {
   const [stats, feed, services] = await Promise.all([siteStats(), siteFeed(12), loadServices()]);
   const tiles = [
     [stats.services_issued, 'issued'],
-    [stats.temporary, 'temp'],
-    [stats.converted, 'converted'],
+    [stats.corporate, 'corporate'],
+    [stats.associate, 'associate'],
     [stats.services_open + stats.applications_open, 'open'],
   ] as const;
   return (

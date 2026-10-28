@@ -169,22 +169,10 @@ export function HomeNext({ app, locale, member = null }: { app: MyApplication | 
       );
     }
     case 'temp':
-    case 'permanent': {
-      const k = app.stage;
+    case 'permanent':
+      // an active member (no temporary membership since 0440; a legacy "temp" file reads the same)
       return (
-        <NextCard
-          tone={k === 'temp' ? 'teal' : 'green'}
-          icon={k === 'temp' ? 'hourglass' : 'check'}
-          title={both(`membership.next.${k}.t`)}
-          body={
-            k === 'temp' && app.temp
-              ? t(app.temp.status === 'expired' ? 'tempExpired' : 'tempUntil', {
-                  no: app.member_no ?? '',
-                  until: voucherDate(app.temp.expires_at, locale),
-                })
-              : t(`${k}.d`)
-          }
-        >
+        <NextCard tone="green" icon="check" title={both('membership.next.permanent.t')} body={t('permanent.d')}>
           {app.temp?.code && (
             <Link className="btn btn-gold btn-big" href={`/portal/documents?code=${app.temp.code}`} data-action="doc.view">
               <Ic name="file" /> <L {...both('membership.next.certificate')} />
@@ -195,7 +183,6 @@ export function HomeNext({ app, locale, member = null }: { app: MyApplication | 
           </Link>
         </NextCard>
       );
-    }
     default:
       return (
         <NextCard

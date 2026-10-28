@@ -229,12 +229,13 @@ describe('nature of business and journey', () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  it('places each stage on the 8-step journey', () => {
+  it('places each stage on the 6-step journey (no temporary membership)', () => {
     expect(journeyIndex('draft')).toBe(-1);
     expect(journeyIndex('submitted')).toBe(0);
     expect(journeyIndex('returned')).toBe(1);
     expect(journeyIndex('committee')).toBe(3);
-    expect(journeyIndex('temp', true)).toBe(6);
-    expect(journeyIndex('permanent')).toBe(7);
+    expect(journeyIndex('payment')).toBe(4);
+    expect(journeyIndex('permanent')).toBe(5);
+    expect(journeyIndex('temp')).toBe(5);
   });
 });

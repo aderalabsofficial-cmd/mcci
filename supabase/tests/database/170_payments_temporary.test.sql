@@ -1,11 +1,11 @@
--- Release 5 payments and temporary membership (migration 0340): receipt upload only once the bank account is
--- confirmed, Accounts verify / reject / counter payment, automatic temporary membership (member, certificate with QR,
--- print queue, company particulars), extend / revoke / expiry job, public verification, QR revoke, voucher cancel /
--- reissue / expiry, and who may do what.
+-- Payments (0340) and activation without temporary membership (0440): receipt upload only once the bank account is
+-- confirmed, Accounts verify / reject / counter payment, the membership active at once (Permanent, the officer's
+-- number, enrolled on the approval day, valid to 31 March, company particulars), no temporary membership or
+-- certificate, QR revoke, voucher cancel / reissue / expiry, and who may do what.
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(56);
+select plan(48);
 
 -- an approved application of company A (through the committee functions of 0330)
 create temp table t_x on commit drop as select (now() at time zone 'Asia/Karachi')::date as d;
@@ -59,53 +59,39 @@ select is((select count(*) from public.notifications where company_id = tests.id
 insert into storage.objects (bucket_id, name) select 'receipts', company_id || '/vouchers/' || id || '/r2.jpg' from t_v;
 select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.pay_upload((select voucher_no from t_v), (select company_id || ''/vouchers/'' || id || ''/r2.jpg'' from t_v))') $$, 'a clear receipt again');
 select throws_ok($$ select tests.exec_as_aal1(tests.id('accounts_staff'), 'select * from api.pay_verify((select voucher_no from t_v))') $$, '42501', null, 'verifying needs the 2-step login');
-select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_verify((select voucher_no from t_v)) r where r.temp_code ~ ''^MCCI-QR-'' and r.member_no = ''C-701'''), 1::bigint, 'verified: temporary membership issued in the same request');
-select results_eq($$ select a.stage::text, m.status::text, m.member_no = a.member_no, m.valid_to = private.membership_year_end()
+select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_verify((select voucher_no from t_v)) r where r.temp_code is null and r.member_no = ''C-701'' and r.expires_at is not null'), 1::bigint, 'verified: the membership is active in the same request (no temporary code)');
+select results_eq($$ select a.stage::text, m.status::text, m.member_no = a.member_no, m.since = (a.decided_at at time zone 'Asia/Karachi')::date,
+                            m.valid_to = private.year_end_of((a.decided_at at time zone 'Asia/Karachi')::date)
                      from public.applications a join public.members m on m.id = a.member_id where a.id = tests.id('app_a_review') $$,
-  $$ values ('temp', 'Temporary', true, true) $$, 'member Temporary with the committee''s number, valid to 31 March');
-select results_eq($$ select t.status::text, t.expires_at between now() + interval '59 days' and now() + interval '61 days', d.status::text, d.kind::text,
-                       (select count(*) from public.print_items p where p.member_id = t.member_id and p.status = 'queued')::int
-                     from public.temp_memberships t join public.documents d on d.id = t.certificate_doc
-                     where t.member_id = (select member_id from public.applications where id = tests.id('app_a_review')) $$,
-  $$ values ('active', true, 'Temporary', 'temp_certificate', 1) $$, '60-day temporary membership, certificate with QR, queued for printing');
+  $$ values ('permanent', 'Permanent', true, true, true) $$, 'member Permanent with the officer''s number, enrolled on the approval day, valid to 31 March');
+select is((select count(*) from public.temp_memberships t join public.applications a on a.member_id = t.member_id where a.id = tests.id('app_a_review')), 0::bigint, 'no temporary membership');
+select is((select count(*) from public.documents d join public.applications a on a.member_id = d.member_id where a.id = tests.id('app_a_review') and d.kind = 'temp_certificate'), 0::bigint, 'no temporary certificate');
 select is((select name from public.companies where id = tests.id('company_a')), 'A Industries (Pvt) Ltd', 'the company record takes the approved particulars');
-select is((select count(*) from public.email_log where application_id = tests.id('app_a_review') and template_key = 'temp_issued'), 1::bigint, 'temp_issued email queued');
+select is((select count(*) from public.email_log where application_id = tests.id('app_a_review') and template_key = 'member_activated'), 1::bigint, 'member_activated email queued');
 select throws_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select * from api.pay_verify((select voucher_no from t_v))') $$, 'P0001', null, 'no second verification');
+select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select * from api.temp_issue(tests.id(''app_a_review''))') $$, '42501', null, 'temporary membership cannot be issued any more');
+
+-- tenure: always 1 April – 31 March, never 12 months from a date
+select results_eq($$ select private.year_end_of('2026-03-31'), private.year_end_of('2026-04-01'), private.year_end_of('2027-01-15') $$,
+  $$ values ('2026-03-31'::date, '2027-03-31'::date, '2027-03-31'::date) $$, 'enrolled to 31 March: that year; from 1 April: the next 31 March');
+
+-- a certificate document of the member (R4 adds the scan) for the QR checks below
+insert into public.documents (kind, company_id, member_id, title, status)
+select 'certificate', tests.id('company_a'), member_id, 'Membership Certificate', 'Valid' from public.applications where id = tests.id('app_a_review');
 create temp table t_c on commit drop as
-  select d.code, t.id as temp_id from public.temp_memberships t join public.documents d on d.id = t.certificate_doc
-  where t.member_id = (select member_id from public.applications where id = tests.id('app_a_review'));
+  select d.code from public.documents d join public.applications a on a.member_id = d.member_id
+  where a.id = tests.id('app_a_review') and d.kind = 'certificate';
 grant select on t_c to authenticated, service_role;
-
--- ───────── certificate and public verification ─────────
-select is(tests.num_as(tests.id('owner_a'), 'select count(*) from api.cert_view((select code from t_c)) c where c.company = ''A Industries (Pvt) Ltd'' and c.temp_status = ''active'''), 1::bigint, 'the member opens the certificate');
-select throws_ok($$ select tests.exec_as(tests.id('owner_b'), 'select * from api.cert_view((select code from t_c))') $$, '42501', null, 'other companies cannot');
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.doc_verify((select code from t_c))') $$, '42501', null, 'browsers do not call the verification directly');
-select results_eq($$ select status, company, member_no is not null from api.doc_verify((select code from t_c)) $$,
-  $$ values ('Temporary', 'A Industries (Pvt) Ltd', true) $$, 'public verification: Temporary, company, number');
-select is((select scans from public.documents where code = (select code from t_c)), 1, 'the scan is counted');
+select results_eq($$ select status, company, member_no from api.doc_verify((select code from t_c)) $$,
+  $$ values ('Valid', 'A Industries (Pvt) Ltd', 'C-701') $$, 'public verification: valid, company, number');
 select is((select count(*) from api.doc_verify('MCCI-QR-AAAAA-AAAAA')), 0::bigint, 'an unknown code shows nothing');
-
--- ───────── extend, expire, revoke ─────────
-select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select * from api.temp_extend((select temp_id from t_c), ''Printer late'')') $$, '42501', null, 'only temp level 3 (SG) extends');
-update public.temp_memberships set expires_at = now() - interval '1 hour' where id = (select temp_id from t_c);
-select ok((select count(*) from api.temp_jobs() j where j.kind = 'expired') >= 1, 'the job expires it');
-select results_eq($$ select t.status::text, m.status::text, d.status::text from public.temp_memberships t join public.members m on m.id = t.member_id
-                     join public.documents d on d.id = t.certificate_doc where t.id = (select temp_id from t_c) $$,
-  $$ values ('expired', 'TempExpired', 'Expired') $$, 'temp, member and QR show expired');
-select lives_ok($$ select tests.exec_as(tests.id('sg'), 'select * from api.temp_extend((select temp_id from t_c), ''Security printer delayed'')') $$, 'the SG extends it');
-select results_eq($$ select t.status::text, t.extensions::int, m.status::text, d.status::text from public.temp_memberships t join public.members m on m.id = t.member_id
-                     join public.documents d on d.id = t.certificate_doc where t.id = (select temp_id from t_c) $$,
-  $$ values ('active', 1, 'Temporary', 'Temporary') $$, 'active again for 30 days');
-select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select * from api.temp_extend((select temp_id from t_c), ''Again'')') $$, 'P0001', null, 'not beyond the maximum extensions');
-update public.temp_memberships set expires_at = now() + interval '10 days', alerts_sent = '{}' where id = (select temp_id from t_c);
-select ok((select count(*) from api.temp_jobs() j where j.kind = 'alert_15') >= 1, '15-day alert sent');
-select is((select count(*) from api.temp_jobs() j where j.kind = 'alert_15'), 0::bigint, 'only once');
 
 -- ───────── counter payment (company B) and voucher cancel / reissue / expiry ─────────
 update public.applications set class = 'Corporate', stage = 'committee', member_no = 'C-702', form = '{"biz":"pvt","rep":"Owner B","name":"B Traders"}' where id = tests.id('app_b_draft');
 select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(tests.id(''app_b_draft''), ''Approved'')') $$, 'B approved');
 select throws_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select * from api.pay_counter((select voucher_no from public.payment_vouchers where ref_id = tests.id(''app_b_draft'')), '' '')') $$, 'P0001', null, 'a counter payment needs the receipt reference');
-select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_counter((select voucher_no from public.payment_vouchers where ref_id = tests.id(''app_b_draft'')), ''MCCI-CASH-0007'') r where r.temp_code is not null'), 1::bigint, 'paid at the counter: temporary membership issued');
+select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from api.pay_counter((select voucher_no from public.payment_vouchers where ref_id = tests.id(''app_b_draft'')), ''MCCI-CASH-0007'') r where r.member_no = ''C-702'''), 1::bigint, 'paid at the counter: the membership is active');
 select is((select method from public.payment_receipts where voucher_id = (select id from public.payment_vouchers where ref_id = tests.id('app_b_draft'))), 'counter', 'recorded as a counter payment');
 select lives_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select api.voucher_cancel((select voucher_no from public.payment_vouchers where id = tests.id(''voucher_a_unpaid'')), ''Duplicate test voucher'')') $$, 'Accounts cancel an unpaid voucher');
 select throws_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select api.voucher_reissue((select voucher_no from public.payment_vouchers where id = tests.id(''voucher_a_unpaid'')))') $$, 'P0001', null, 'no reissue while the membership is paid');
@@ -119,6 +105,7 @@ select lives_ok($$ select tests.exec_as(tests.id('sg'), 'select api.qr_revoke((s
 select ok(not has_function_privilege('anon', 'api.pay_upload(text,text,text,text)', 'execute')
       and not has_function_privilege('authenticated', 'api.doc_verify(text)', 'execute')
       and not has_function_privilege('authenticated', 'api.temp_jobs()', 'execute')
+      and not has_function_privilege('authenticated', 'api.temp_extend(uuid,text)', 'execute')
       and not has_function_privilege('authenticated', 'private.temp_issue(uuid)', 'execute')
       and has_function_privilege('service_role', 'api.doc_verify(text)', 'execute'), 'grants: browsers get the api functions only; jobs and verification are server-side');
 select ok(not has_function_privilege('anon', 'private.voucher_accepts_receipt(uuid,uuid)', 'execute')

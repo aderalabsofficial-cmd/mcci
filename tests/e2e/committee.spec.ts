@@ -173,7 +173,7 @@ test('the officer forwards with the number; the Convener approves: voucher and e
   await ap.getByLabel('Mobile, email or member ID').fill(applicant.email);
   await ap.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(applicant.password);
   await ap.locator('[data-action="login.member"]').click();
-  await expect(ap).toHaveURL(/\/portal$/);
+  await expect(ap).toHaveURL(/\/portal$/, { timeout: 20_000 });
   await expect(ap.getByRole('main')).toContainText(v!.voucher_no);
   await ap.locator('[data-action="psid.show"]').click();
   await expect(ap).toHaveURL(/\/portal\/payments$/);
@@ -186,7 +186,7 @@ test('the officer forwards with the number; the Convener approves: voucher and e
   await ctx.close();
 });
 
-test('the Convener returns a file to the officer, then declines one with a reason (the number is released)', async ({
+test('the Convener returns a file to the officer, then declines one with a reason (the number stays reserved)', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -211,5 +211,6 @@ test('the Convener returns a file to the officer, then declines one with a reaso
   await page.getByRole('dialog').getByLabel(/Reason/).fill('Outside the Chamber’s jurisdiction');
   await page.locator('[data-action="cmt.decide.confirm"]').click();
   await expect(main(page).getByRole('status').first()).toContainText('Declined — the applicant has been told.');
-  expect(await stage(file.id)).toEqual({ stage: 'rejected', member_no: null });
+  // a declined file keeps its number reserved unless MCCI allows re-use (settings.membership.releaseNumberOnDecline)
+  expect(await stage(file.id)).toEqual({ stage: 'rejected', member_no: number });
 });

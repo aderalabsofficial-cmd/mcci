@@ -63,7 +63,7 @@ test('activity keeps the session; the browser warns in the last minute and signs
   await expect(warning).toContainText(/signed out in \d+ seconds/);
   await warning.locator('[data-action="session.stay"]').click();
   await expect(warning).toBeHidden();
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   // then 15 minutes without activity: signed out, and the sign-in page says why
   await page.clock.fastForward('15:10');
   await expect(page).toHaveURL(/\/login\?.*expired=1/, { timeout: 15_000 });

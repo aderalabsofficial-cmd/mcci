@@ -38,7 +38,7 @@ select tests.id('app_a_review'), k, 'a/applications/r/' || k, k || '.pdf'
   from unnest(array['cnic','ntn','addr','bank','deed','auth','photo','pphoto']) k;
 delete from public.application_partners where application_id = tests.id('app_a_review');
 insert into public.application_partners (application_id, position, name, email, address)
-values (tests.id('app_a_review'), 1, 'Partner One', 'one@test.local', 'Multan'), (tests.id('app_a_review'), 2, 'Partner Two', null, null);
+values (tests.id('app_a_review'), 1, 'Partner One', 'one@test.local', 'Multan'), (tests.id('app_a_review'), 2, 'Partner Two', 'two@old.local', 'Multan');
 
 select is(private.app_missing(tests.id('app_a_review')), array['category', 'aopReg', 'field:repEmail', 'field:repAddress'],
   'the main category, registered / unregistered AOP and the representative''s email and address are required');

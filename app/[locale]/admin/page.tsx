@@ -44,7 +44,7 @@ export default async function AdminHomePage({ params }: Props) {
   const soon = new Date(Date.now() + 15 * 86_400_000).toISOString();
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-  const [review, committee, receipts, expiring, paidThisMonth, members, temps, history] = await Promise.all([
+  const [review, committee, receipts, expiring, paidThisMonth, corporate, associate, history] = await Promise.all([
     lv('mem') >= 1
       ? count(supabase.from('applications').select('id, companies!inner(demo)', head).in('stage', ['submitted', 'review']).eq('companies.demo', false))
       : 0,
@@ -59,10 +59,13 @@ export default async function AdminHomePage({ params }: Props) {
       ? supabase.from('payment_vouchers').select('amount').eq('status', 'Paid').gte('paid_at', monthStart)
       : Promise.resolve({ data: [] as { amount: number }[] }),
     // official members only: demo members (0350) are never counted
+    // Corporate and Associate members counted apart (docs/21 point 34)
     lv('reg') >= 1
-      ? count(supabase.from('members').select('id, companies!inner(demo)', head).in('status', ['Permanent', 'Temporary']).eq('companies.demo', false))
+      ? count(supabase.from('members').select('id, companies!inner(demo)', head).eq('status', 'Permanent').eq('class', 'Corporate').eq('companies.demo', false))
       : 0,
-    lv('temp') >= 1 ? count(supabase.from('temp_memberships').select('id', head).eq('status', 'active')) : 0,
+    lv('reg') >= 1
+      ? count(supabase.from('members').select('id, companies!inner(demo)', head).eq('status', 'Permanent').eq('class', 'Associate').eq('companies.demo', false))
+      : 0,
     lv('mem') >= 1
       ? supabase
           .from('application_history')
@@ -98,8 +101,8 @@ export default async function AdminHomePage({ params }: Props) {
         </div>
       </div>
       <div className="kg">
-        <Kpi label={m('kMembers')} value={members} sub={m('kMembersSub')} icon="users" color="#7c3aed" />
-        <Kpi label={m('kTemp')} value={temps} sub={m('kTempSub')} icon="hourglass" color="#14b8a6" />
+        <Kpi label={m('kCorporate')} value={corporate} sub={m('kMembersSub')} icon="users" color="#7c3aed" />
+        <Kpi label={m('kAssociate')} value={associate} sub={m('kMembersSub')} icon="users" color="#14b8a6" />
         <Kpi label={m('kCollected')} value={pkr(collected)} sub={m('kCollectedSub')} icon="card" color="#1fa34a" />
         <Kpi label={m('kCommittee')} value={committee} sub={m('kCommitteeSub')} icon="award" color="#c8963e" />
       </div>

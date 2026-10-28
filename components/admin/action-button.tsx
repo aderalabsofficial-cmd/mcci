@@ -6,6 +6,7 @@ import { useFlash } from '@/components/admin/flash';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
+import { renewMember, restoreMember, setBlacklist } from '@/lib/members/actions';
 import { cancelVoucher, counterPayment, reissueVoucher, rejectPayment, verifyPayment } from '@/lib/payments/actions';
 import { extendTemp, issueTemp, revokeDocument, revokeTemp } from '@/lib/temp/actions';
 import { callAction } from '@/lib/client/call-action';
@@ -20,7 +21,11 @@ export type StaffAction =
   | 'temp.issue'
   | 'temp.extend'
   | 'temp.revoke'
-  | 'qr.revoke';
+  | 'qr.revoke'
+  | 'reg.renew'
+  | 'reg.restore'
+  | 'reg.blacklist'
+  | 'reg.whitelist';
 
 type Field = 'reason' | 'ref' | 'note';
 const FIELDS: Record<StaffAction, Field[]> = {
@@ -33,8 +38,12 @@ const FIELDS: Record<StaffAction, Field[]> = {
   'temp.extend': ['reason'],
   'temp.revoke': ['reason'],
   'qr.revoke': ['reason'],
+  'reg.renew': [],
+  'reg.restore': ['reason'],
+  'reg.blacklist': ['reason'],
+  'reg.whitelist': ['reason'],
 };
-const DANGER: StaffAction[] = ['pay.reject', 'psid.cancel', 'temp.revoke', 'qr.revoke'];
+const DANGER: StaffAction[] = ['pay.reject', 'psid.cancel', 'temp.revoke', 'qr.revoke', 'reg.blacklist'];
 
 /**
  * A button that opens a short confirmation (with a reason or reference where the action needs one), runs the server
@@ -84,7 +93,13 @@ export function ActionButton({
                     ? extendTemp(locale, target, v.reason)
                     : action === 'temp.revoke'
                       ? revokeTemp(locale, target, v.reason)
-                      : revokeDocument(locale, target, v.reason),
+                      : action === 'reg.renew'
+                        ? renewMember(locale, target)
+                        : action === 'reg.restore'
+                          ? restoreMember(locale, target, v.reason)
+                          : action === 'reg.blacklist' || action === 'reg.whitelist'
+                            ? setBlacklist(locale, target, action === 'reg.blacklist', v.reason)
+                            : revokeDocument(locale, target, v.reason),
     );
     setBusy(false);
     if (!r.ok) return setError(r.message);
