@@ -23,7 +23,7 @@ select is((select file_size_limit from storage.buckets where id = 'application-d
 -- NT-70: company isolation
 select is(tests.num_as(tests.id('owner_a'), 'select count(*) from storage.objects where bucket_id = ''application-docs'''), 1::bigint, 'applicant reads own application files');
 select is(tests.num_as(tests.id('owner_b'), 'select count(*) from storage.objects where bucket_id = ''application-docs'''), 1::bigint, 'NT-70 company B reads only its own');
-select is(tests.num_as(tests.id('mo'), 'select count(*) from storage.objects where bucket_id = ''application-docs'''), 2::bigint, 'officer (mem >= 1) reads all application files');
+select is(tests.num_as(tests.id('mo'), 'select count(*) from storage.objects where bucket_id = ''application-docs'''), 0::bigint, 'officer: no direct storage read of application files (0460: views go through the logged file route)');
 
 -- NT-71 / NT-72: uploads only under own company prefix, only while draft/returned
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into storage.objects (bucket_id, name) values (''application-docs'', ''b0000000-0000-0000-0000-00000000000b/applications/b2000000-0000-0000-0000-0000000000d1/x.pdf'')') $$, '42501', null, 'NT-71 no upload into another company');
