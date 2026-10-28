@@ -73,7 +73,7 @@ select throws_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_
 select lives_ok($$ select tests.exec_as(tests.id('cs'), 'select * from api.cmt_decide_direct(tests.id(''app_a_review''), ''Approved'')') $$,
   'the Convener approves');
 select results_eq($$ select a.stage::text, a.decided_at::date = current_date, a.member_no,
-                            (select count(*) from public.payment_vouchers v where v.ref_id = a.id and v.ref_type = 'membership' and v.created_at = now())
+                            (select count(*) from public.payment_vouchers v where v.ref_id = a.id and v.ref_type = 'membership' and v.id not in (tests.id('voucher_a_unpaid'), tests.id('voucher_a_paid')))
                        from public.applications a where a.id = tests.id('app_a_review') $$,
   $$ values ('payment', true, 'C-201', 1::bigint) $$, 'fee voucher issued; date of enrollment = today; the typed number is kept');
 
