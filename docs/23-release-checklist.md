@@ -16,6 +16,9 @@ below. Local results are local results — production verification is in §5 onc
 | `9edf9b1` | R4 — security-press certificate intake with QR (0450); docs/24 |
 | `7da0ad7` | R5 — confidential files and the register for the IT Convener only (0460) |
 | `4a0d094` | Mobile pass (no sideways scrolling) and wording without temporary membership |
+| `281dc99`, `2e5a576` | database test updates for R3 / R5 rules; this checklist |
+| `d16c408` | fix: "Reset to defaults" keeps the three new designations' limits (0465) — found by the full browser run |
+| `02f38ea` | test fixture uses a fictional company name (the sample certificate's company name remains in the history of `9edf9b1`) |
 
 The parked M8 engagement work (0410 and its pages) and `deploy/web/mcci-jobs.*` are **not** in any commit; the
 release diff `f766054..4a0d094` (113 files) contains none of them.
@@ -31,6 +34,7 @@ release diff `f766054..4a0d094` (113 files) contains none of them.
 | 20261103000440_activation_no_temp | `0a8d61251a0dded4` |
 | 20261104000450_certificate_intake | `5460233fa626c4ec` |
 | 20261105000460_confidential_files | `136de3f7d16c332c` |
+| 20261105000465_role_defaults_new_designations | `2036674b593ac168` |
 
 ## 3. Tests on the exact final commit (local)
 
@@ -68,4 +72,15 @@ downloads** (officer / SG refused, IT Convener allowed, all logged); phone layou
    AI_EXTRACTION on, no jobs unit; row counts compared.
 
 ## 6. Results
-(filled in as each step completes)
+
+**Local (not production):**
+- Fresh throwaway database, final migrations (`d16c408`): **859 ok, 0 not ok**; every test file leaves no rows.
+- Unit 276 / 276; typecheck and lint clean.
+- Full browser suite on a clean checkout of `2e5a576` (desktop, mobile-360, app-shell): **874 passed, 3 failed** —
+  two from the "Reset to defaults" bug (fixed in `d16c408`), one service submission under load; rerun on `d16c408`
+  of those specs plus the reset spec: **15 / 15 passed**; certificate spec on `02f38ea`: **4 / 4**.
+- Phone layout: 102 routes × 360 / 390 / 412 px × EN / UR without page or section sideways scroll; tap targets in the
+  app shell ≥ 44 px.
+
+**Production:** (below, after deployment)
+
