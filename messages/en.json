@@ -3658,5 +3658,32 @@
       "reason_required": "Please write the reason.",
       "path": "Upload failed. Please try again."
     }
+  },
+  "audit": {
+    "title": "Audit Trail",
+    "sub": "Every change, who made it, when and why.",
+    "log": "Audit log",
+    "search": "Search the audit log…",
+    "period": "Period",
+    "show": "Show",
+    "export": "Export CSV",
+    "system": "System",
+    "none": "Nothing recorded in this period.",
+    "changed": "{n} field(s) changed",
+    "showing": "Showing the newest {n} entries (up to 200).",
+    "cols": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "object": "Object",
+      "detail": "Detail",
+      "result": "Result"
+    },
+    "periods": {
+      "1": "Last 24 hours",
+      "7": "Last 7 days",
+      "30": "Last 30 days",
+      "365": "Last 12 months"
+    }
   }
 }

@@ -80,6 +80,11 @@ export type Database = {
 "app_withdraw":
 { Args: { "p_app": string,"p_reason"?: string }; Returns: undefined
                            },
+"audit_export":
+{ Args: { "p_days"?: number,"p_q"?: string }; Returns: {
+              "action": string,"at": string,"new_value": Json,"object": string,"object_id": string,"old_value": Json,"reason": string,"result": string,"user_name": string
+            }[]
+                           },
 "cert_file":
 { Args: { "p_code": string }; Returns: {
               "member_no": string,"path": string,"status": string
