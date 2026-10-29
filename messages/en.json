@@ -3685,5 +3685,49 @@
       "30": "Last 30 days",
       "365": "Last 12 months"
     }
+  },
+  "memberRecord": {
+    "title": "Member Record",
+    "choose": "Choose a member in the Members Register to see their record.",
+    "toRegister": "Open the register",
+    "notFound": "This member is not in the register (or is outside your limits).",
+    "none": "Nothing here yet.",
+    "message": "Email the member",
+    "uploadScan": "Upload certificate scan",
+    "sections": "Sections of the record",
+    "view": "View",
+    "verify": "Verify",
+    "validTo": "valid to {d}",
+    "partnerPhoto": "Photo of partner / director {n}",
+    "tabs": {
+      "particulars": "Particulars",
+      "partners": "Partners",
+      "documents": "Documents",
+      "certificates": "Certificates",
+      "payments": "Payments",
+      "history": "History"
+    },
+    "f": {
+      "name": "Name of Business",
+      "rep": "Name of Authorized Representative",
+      "mobile": "Mobile No.",
+      "email": "Business Email ID",
+      "sector": "Sector",
+      "biz": "Type of business",
+      "address": "Business Address",
+      "ntn": "NTN",
+      "gst": "GST",
+      "tel": "Telephone",
+      "since": "Member since",
+      "validTo": "Valid to",
+      "particulars": "Particulars of business"
+    },
+    "pay": {
+      "voucher": "Voucher",
+      "for": "For",
+      "amount": "Amount",
+      "status": "Status",
+      "paid": "Paid"
+    }
   }
 }

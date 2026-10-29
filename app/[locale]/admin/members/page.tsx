@@ -7,6 +7,7 @@ import { AddMember } from '@/components/members/add-member';
 import { DemoCard, type DemoRow, type MarkableRow } from '@/components/members/demo-card';
 import { Kpi } from '@/components/review/kpi';
 import { PageHeader } from '@/components/shared/page-header';
+import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
@@ -121,7 +122,9 @@ export default async function MembersPage({ params }: Props) {
               {rows.map((r) => (
                 <tr className="st" key={r.id}>
                   <td>
-                    <b>{r.member_no}</b>
+                    <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
+                      <b>{r.member_no}</b>
+                    </Link>
                   </td>
                   <td>{(r.companies as unknown as { name: string } | null)?.name ?? '—'}</td>
                   <td>{r.rep_name}</td>

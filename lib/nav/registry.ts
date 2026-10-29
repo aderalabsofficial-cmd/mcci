@@ -135,7 +135,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'certs', '/admin/certs', 'M6b', 'printer'),
   s('admin', 'serials', '/admin/serials', 'M6b', 'database'),
   s('admin', 'members', '/admin/members', 'M4', 'users'),
-  s('admin', 'member', '/admin/member', 'M8', 'idCard'),
+  s('admin', 'member', '/admin/member', 'M8a', 'idCard'),
   s('admin', 'import', '/admin/import', 'M6', 'upload'),
   s('admin', 'applications', '/admin/applications', 'M7', 'file'),
   s('admin', 'review', '/admin/review', 'M7', 'shield'),

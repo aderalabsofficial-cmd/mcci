@@ -753,3 +753,12 @@
 /* Audit Trail: changed fields of one entry */
 .proto .audit-ch {margin:6px 0 0;padding-left:16px;font-size:12px;color:var(--mut,#64748b);word-break:break-word}
 .proto .muted.block {display:block}
+
+/* Member Record: particulars as labelled boxes, section pills */
+.proto .mr-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.proto .mr-f {background:var(--card2);border:1px solid var(--b);border-radius:12px;padding:10px 12px;display:grid;gap:2px}
+.proto .mr-f small {font-size:12px;color:var(--mut,#64748b)}
+.proto .mr-f b {font-weight:700;word-break:break-word}
+.proto .pills {display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.proto .pills .pill {min-height:40px;display:inline-flex;align-items:center;padding:0 16px;border-radius:999px;border:1px solid var(--b);background:var(--card);font-weight:700;font-size:14px}
+.proto .pills .pill.on {background:var(--gold,#c8963e);border-color:var(--gold,#c8963e);color:#fff}
