@@ -371,8 +371,14 @@ export type Database = {
 "settings_bank_save":
 { Args: { "p_bank": string,"p_branch": string,"p_confirmed": boolean,"p_iban": string,"p_title": string }; Returns: undefined
                            },
+"settings_editable":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "settings_for_server":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"settings_save":
+{ Args: { "p_key": string,"p_reason"?: string,"p_value": Json }; Returns: Json
                            },
 "site_contact":
 { Args: { "p_body": string,"p_category": string,"p_contact": string,"p_kind": string,"p_name": string,"p_ref": string,"p_subject": string }; Returns: {

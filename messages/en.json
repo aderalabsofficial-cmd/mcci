@@ -3729,5 +3729,77 @@
       "status": "Status",
       "paid": "Paid"
     }
+  },
+  "settings": {
+    "title": "Platform Settings",
+    "sub": "What MCCI can change without a new release. Every change is recorded with its reason.",
+    "readOnly": "You can read these settings; changing them needs Platform level 2.",
+    "reason": "Reason for the change (for the audit log)",
+    "reasonHint": "e.g. decided by the Executive Committee on …",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved. The change is in the audit log.",
+    "errors": {
+      "invalid": "Please check the values and try again.",
+      "field": "Please check this value: {f}"
+    },
+    "chamber": {
+      "title": "Chamber details",
+      "intro": "Printed on the application form, vouchers and certificates.",
+      "name": "Name",
+      "addr": "Address",
+      "tel": "Telephone",
+      "fax": "Fax",
+      "email": "Email",
+      "web": "Website"
+    },
+    "bank": {
+      "title": "MCCI bank account (shown on vouchers)",
+      "intro": "The bank account is saved on the Payments screen, where the IBAN is checked before vouchers use it.",
+      "open": "Open Payments"
+    },
+    "fees": {
+      "title": "Membership fees (PKR)",
+      "intro": "Used for new vouchers; vouchers already issued keep their amount.",
+      "admission": "Admission",
+      "subscription": "Annual subscription",
+      "card": "Card",
+      "extraCard": "Extra card (partner / director)"
+    },
+    "sla": {
+      "title": "Process time",
+      "intro": "Shown to applicants and on the form (membership year: 1 April – 31 March).",
+      "processDays": "Membership process (working days)",
+      "hours": "Service reply time (hours)"
+    },
+    "voucher": {
+      "title": "Vouchers",
+      "dueDays": "Days to pay a voucher"
+    },
+    "endorse": {
+      "title": "Proposer & seconder rules",
+      "days": "Days to respond",
+      "remindDay": "Reminder on day",
+      "maxPerYear": "Endorsements per member per year",
+      "sameClass": "Endorser must be of the same membership class",
+      "sameClassHint": "Corporate ↔ Corporate, Associate ↔ Associate",
+      "preferSector": "Show members of the same sector first",
+      "preferSectorHint": "Helps the applicant find someone who knows the trade",
+      "needCode": "Ask for a one-time email code when approving",
+      "needCodeHint": "Stronger proof of who approved"
+    },
+    "membership": {
+      "title": "Membership decisions",
+      "intro": "Open decisions MCCI may change at any time (defaults are in docs/14 and docs/23).",
+      "releaseNumberOnDecline": "Re-use the membership number of a declined application",
+      "releaseNumberOnDeclineHint": "Off: the number stays reserved and is never given again.",
+      "stampRequiredForProprietor": "A proprietorship must add a company stamp",
+      "certificateLowConfidence": "Certificate scan: confidence below which a field is checked by hand (%)",
+      "certificateLowConfidenceHint": "Nothing is ever saved without a person confirming it.",
+      "qrRight": "Certificate QR: right edge (share of width)",
+      "qrTop": "Certificate QR: top (share of height)",
+      "qrSize": "Certificate QR: size (share of width)",
+      "qrHint": "Measured on the sample certificate; applies to scans stamped from now on."
+    }
   }
 }

@@ -155,7 +155,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'audit', '/admin/audit', 'M8a', 'clock'),
   s('admin', 'services', '/admin/services', 'M7', 'gear'),
   s('admin', 'integrations', '/admin/integrations', 'M9', 'plug'),
-  s('admin', 'settings', '/admin/settings', 'M9', 'gear'),
+  s('admin', 'settings', '/admin/settings', 'M8a', 'gear'),
 ];
 
 export function screen(area: Area, key: string): Screen {

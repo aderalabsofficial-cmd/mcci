@@ -762,3 +762,10 @@
 .proto .pills {display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .proto .pills .pill {min-height:40px;display:inline-flex;align-items:center;padding:0 16px;border-radius:999px;border:1px solid var(--b);background:var(--card);font-weight:700;font-size:14px}
 .proto .pills .pill.on {background:var(--gold,#c8963e);border-color:var(--gold,#c8963e);color:#fff}
+
+/* Platform Settings */
+.proto .st-cards {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px}
+.proto .st-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:12px;border:0;padding:0;margin:0;min-width:0}
+.proto .st-grid .st-wide {grid-column:1/-1}
+.proto .st-bool {grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;min-height:44px}
+.proto .st-bool input {width:20px;height:20px;margin-top:2px;flex:none}
