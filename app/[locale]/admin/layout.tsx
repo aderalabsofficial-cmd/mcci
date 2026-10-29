@@ -1,9 +1,11 @@
+import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { AreaShell } from '@/components/shell/area-shell';
 import { IdleGuard } from '@/components/shell/idle-guard';
 import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
+import { staffLoginPath } from '@/lib/auth/staff-path';
 import { getSession } from '@/lib/permissions/server';
 import { IDLE_MS } from '@/lib/session/idle';
 import '@/app/styles/proto.css';
@@ -12,8 +14,9 @@ import '@/app/styles/mobile.css';
 import { MobileTables } from '@/components/shared/mobile-tables';
 
 /**
- * Admin panel: active staff only, with a TOTP-verified session (docs/09). Members are sent to their portal, staff
- * without the second step to /login/verify. Each admin action checks its own module level (requirePermission).
+ * Admin panel: active staff only, with a TOTP-verified session (docs/09). Nobody signed in: "not found" (the panel
+ * points to no sign-in page; staff use the staff sign-in page, lib/auth/staff-path.ts). Members are sent to their
+ * portal, staff without the second step to /login/verify. Each admin action checks its own module level (requirePermission).
  * TODO(M1+): hide menu items above the person's designation limits.
  */
 export default async function AdminLayout({
@@ -26,7 +29,7 @@ export default async function AdminLayout({
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const session = await getSession();
-  if (!session) redirect({ href: '/login?next=/admin', locale });
+  if (!session) notFound();
   if (!session!.access.staff) redirect({ href: '/portal', locale });
   if (session!.aal !== 'aal2') redirect({ href: '/login/verify', locale });
   return (
@@ -37,7 +40,7 @@ export default async function AdminLayout({
     >
       {children}
       <MobileTables />
-      <IdleGuard locale={locale} idleMs={IDLE_MS} />
+      <IdleGuard locale={locale} idleMs={IDLE_MS} loginPath={staffLoginPath()} />
     </AreaShell>
   );
 }

@@ -257,8 +257,7 @@
     "tagline": "One login for membership, services, documents and payments.",
     "tabs": {
       "member": "Member login",
-      "applicant": "New applicant",
-      "staff": "Staff"
+      "applicant": "New applicant"
     },
     "identifier": "Mobile, email or member ID",
     "password": "Password",
@@ -277,9 +276,10 @@
       "unconfirmed": "Please confirm your email address first — open the link we emailed to you.",
       "rateLimited": "Too many attempts. Please wait a few minutes and try again.",
       "emailForCode": "To receive a code, type your email address.",
-      "notStaff": "This is not a staff account. Please use the Member login tab.",
+      "notStaff": "This is not a staff account. Members sign in on the member login page.",
       "unavailable": "Sign-in is not available right now. Please try again shortly.",
-      "codeInvalid": "That code is not valid or has expired. Request a new one."
+      "codeInvalid": "That code is not valid or has expired. Request a new one.",
+      "staffAccount": "This is a staff account. Staff sign in on the staff sign-in page; for a member account, use a separate email."
     },
     "code": {
       "title": "Enter the 6-digit code",
@@ -339,6 +339,10 @@
       "warn": "You will be signed out in {s} seconds",
       "stay": "Stay signed in",
       "help": "For your security, MCCI Digital signs you out after 15 minutes without activity."
+    },
+    "staffPage": {
+      "title": "Staff sign-in",
+      "intro": "For MCCI staff only. Sign in with your staff email and password, then the code from your authenticator app. Attempts are limited and recorded."
     }
   },
   "access": {
@@ -1070,7 +1074,10 @@
         "partnersAop": "Managing Partner / Partners",
         "partnersCo": "Directors",
         "partnersLlp": "Partners",
-        "repPhoto": "The passport-size photo of the authorized representative is uploaded in step 2."
+        "repPhoto": "The passport-size photo of the authorized representative is uploaded in step 2.",
+        "managingPartner": "Managing Partner",
+        "partner": "Partner",
+        "director": "Director"
       },
       "endorse": {
         "kicker": "Proposed and seconded by valid members",

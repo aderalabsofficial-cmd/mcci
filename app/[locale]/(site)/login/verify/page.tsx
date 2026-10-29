@@ -5,6 +5,7 @@ import { SignOutButton } from '@/components/auth/sign-out-button';
 import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
+import { staffLoginPath } from '@/lib/auth/staff-path';
 import { getSession } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -26,7 +27,7 @@ export default async function VerifyPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const session = await getSession();
-  if (!session) redirect({ href: '/login', locale });
+  if (!session) redirect({ href: staffLoginPath(), locale });
   if (!session!.access.staff) redirect({ href: '/portal', locale });
   if (session!.aal === 'aal2') redirect({ href: '/admin', locale });
 

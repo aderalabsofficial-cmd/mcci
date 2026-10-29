@@ -77,6 +77,8 @@ export default defineConfig({
         MCCI_E2E: '1',
         // as behind nginx in production: tests that need their own rate-limit bucket send X-Real-IP (site.spec contact)
         TRUST_PROXY_CLIENT_IP: '1',
+        // the suite signs staff in many times from one address (lib/auth/admin/staff-throttle.ts)
+        STAFF_LOGIN_ATTEMPTS: '500',
         AI_EXTRACTION: 'on',
         OPENAI_API_KEY: 'sk-e2e-fake-key-not-a-real-one-000000000000',
         OPENAI_BASE_URL: 'http://127.0.0.1:3998/v1',

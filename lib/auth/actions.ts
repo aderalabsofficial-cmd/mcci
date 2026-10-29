@@ -10,7 +10,9 @@ import { msg } from '@/lib/nav/model';
 import { trustedClientIp } from '@/lib/net/client-ip';
 import { createClient } from '@/lib/supabase/server';
 import { resolveLoginEmail } from './admin/resolve-login';
+import { staffAttemptAllowed } from './admin/staff-throttle';
 import { classifyIdentifier, safeNext } from './identifier';
+import { staffLoginPath } from './staff-path';
 
 /**
  * Sign-in, email code, 2-step login and sign-out (actions login.member, login.otp, login.staff — docs/catalogue).
@@ -58,21 +60,33 @@ export async function signInMember(_: AuthFormState, form: FormData): Promise<Au
   const { error } = await supabase.auth.signInWithPassword({ email, password: parsed.data.password });
   if (error) return { error: errorText(locale, error) };
 
-  const access = await myAccess(supabase);
-  const next = safeNext(
-    form.get('next')?.toString(),
-    access.staff && !access.companies.length ? '/login/verify' : '/portal',
-  );
-  redirect({ href: next, locale });
+  if ((await myAccess(supabase)).staff) return refuseStaff(locale, supabase);
+  redirect({ href: safeNext(form.get('next')?.toString(), '/portal'), locale });
   return {};
 }
 
-/** Staff tab: staff email + password, then the 2-step page. Member accounts are signed out again. */
+/**
+ * A staff account on the members' page: signed out again (owner's request, 29 Oct 2026: staff use only the admin panel,
+ * through their own sign-in page; a member account for themselves is a separate account with another email).
+ */
+async function refuseStaff(locale: Locale, supabase: Awaited<ReturnType<typeof createClient>>): Promise<AuthFormState> {
+  await supabase.auth.signOut({ scope: 'local' });
+  return { error: msg(locale, 'auth.errors.staffAccount') };
+}
+
+/**
+ * Staff sign-in page (lib/auth/staff-path.ts): staff email + password, then the 2-step page. Member accounts are signed
+ * out again. Attempts are limited per visitor address and per email (lib/auth/admin/staff-throttle.ts) before the
+ * password is even tried, and the answer never says which part was wrong.
+ */
 export async function signInStaff(_: AuthFormState, form: FormData): Promise<AuthFormState> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));
   const parsed = signInSchema.safeParse({ identifier: form.get('email'), password: form.get('password') });
   const id = parsed.success ? classifyIdentifier(parsed.data.identifier) : null;
   if (!parsed.success || id?.kind !== 'email') return { error: msg(locale, 'auth.errors.required') };
+  if (!(await staffAttemptAllowed(id.value, trustedClientIp(await headers())))) {
+    return { error: msg(locale, 'auth.errors.rateLimited') };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email: id.value, password: parsed.data.password });
@@ -118,14 +132,8 @@ export async function verifyEmailCode(_: AuthFormState, form: FormData): Promise
     const text = error.status === 429 ? errorText(locale, error) : msg(locale, 'auth.errors.codeInvalid');
     return { step: 'code', email: parsed.data.email, error: text };
   }
-  const access = await myAccess(supabase);
-  redirect({
-    href: safeNext(
-      form.get('next')?.toString(),
-      access.staff && !access.companies.length ? '/login/verify' : '/portal',
-    ),
-    locale,
-  });
+  if ((await myAccess(supabase)).staff) return refuseStaff(locale, supabase);
+  redirect({ href: safeNext(form.get('next')?.toString(), '/portal'), locale });
   return {};
 }
 
@@ -147,10 +155,11 @@ export async function verifyTotp(_: MfaFormState, form: FormData): Promise<MfaFo
   return {};
 }
 
-/** Signs out of this browser and returns to the login page. */
+/** Signs out of this browser and returns to the sign-in page: staff to theirs, everyone else to the members' page. */
 export async function signOut(form: FormData): Promise<void> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));
   const supabase = await createClient();
+  const staff = await myAccess(supabase).then((a) => Boolean(a.staff), () => false);
   await supabase.auth.signOut({ scope: 'local' });
-  redirect({ href: '/login', locale });
+  redirect({ href: staff ? staffLoginPath() : '/login', locale });
 }

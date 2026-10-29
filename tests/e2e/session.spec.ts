@@ -24,13 +24,17 @@ test('the server signs out a session idle for more than 15 minutes, and it canno
   context,
 }) => {
   await signIn(page);
+  // the first page load after signing in records the activity
+  await page.goto('/portal');
   const session = (await context.cookies()).filter((c) => c.name !== 'mcci_seen');
   const seen = (await context.cookies()).find((c) => c.name === 'mcci_seen');
   expect(seen, 'the server records the last activity').toBeTruthy();
   // as if the last activity was 16 minutes ago
   // replace the cookie (not a second one beside it): delete, then set the old time
+  // the cookie is "<time>.<session id>": keep this session's id
   await context.clearCookies({ name: 'mcci_seen' });
-  await context.addCookies([{ name: 'mcci_seen', value: String(Date.now() - 16 * 60_000), url: page.url() }]);
+  const owner = seen!.value.split('.')[1];
+  await context.addCookies([{ name: 'mcci_seen', value: `${Date.now() - 16 * 60_000}.${owner}`, url: page.url() }]);
   await page.goto('/portal/membership');
   await expect(page).toHaveURL(/\/login\?.*expired=1/);
   await expect(page.getByRole('main')).toContainText('You were signed out after 15 minutes without activity');
@@ -70,4 +74,31 @@ test('activity keeps the session; the browser warns in the last minute and signs
   await expect(page.getByRole('main')).toContainText('You were signed out after 15 minutes without activity');
   await page.goto('/portal');
   await expect(page).toHaveURL(/\/login/);
+});
+
+test('signing in again after an idle sign-out works at once (no cache clearing)', async ({ page, context }) => {
+  // 29 Oct 2026: after being signed out for inactivity, signing in again did not work until the browser's data was
+  // cleared — the old "last activity" cookie outlived the session and signed the new one straight out again.
+  let owner = '';
+  const stale = async () => {
+    owner = (await context.cookies()).find((c) => c.name === 'mcci_seen')?.value.split('.')[1] ?? owner;
+    await context.clearCookies({ name: 'mcci_seen' });
+    await context.addCookies([{ name: 'mcci_seen', value: `${Date.now() - 16 * 60_000}.${owner}`, url: page.url() }]);
+  };
+  // 1. the server signs the session out after 15 idle minutes, then the person signs in again
+  await signIn(page);
+  await page.goto('/portal');
+  await stale();
+  await page.goto('/portal/membership');
+  await expect(page).toHaveURL(/\/login\?.*expired=1/);
+  await signIn(page);
+  await page.goto('/portal/membership');
+  await expect(page).toHaveURL(/\/portal\/membership/);
+  // 2. the browser signed the session out (its own 15-minute clock) and the person comes back later
+  await context.clearCookies();
+  await page.goto('/login');
+  await stale();
+  await signIn(page);
+  await page.goto('/portal/membership');
+  await expect(page).toHaveURL(/\/portal\/membership/);
 });

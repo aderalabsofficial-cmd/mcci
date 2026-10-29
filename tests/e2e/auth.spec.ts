@@ -26,10 +26,9 @@ async function memberForm(page: Page, identifier: string, password: string) {
 }
 
 async function staffForm(page: Page, email: string, password: string) {
-  await page.goto('/login');
-  await page.getByRole('tab', { name: 'Staff' }).click();
+  await page.goto('/staff/login');
   await page.getByLabel('Staff email').fill(email);
-  await page.getByRole('tabpanel', { name: 'Staff' }).getByLabel('Password').fill(password);
+  await page.getByLabel('Password').fill(password);
   await page.locator('[data-action="login.staff"]').click();
 }
 
@@ -60,11 +59,14 @@ function emailedLink(html: string): string {
   return link;
 }
 
-test('protected areas send visitors to the login page, keeping where they wanted to go', async ({ page }) => {
+test('the portal sends visitors to the login page, keeping where they wanted to go; the admin panel is not found', async ({
+  page,
+}) => {
   await page.goto('/portal');
   await expect(page).toHaveURL(/\/login\?next=(%2F|\/)portal$/);
-  await page.goto('/ur/admin');
-  await expect(page).toHaveURL(/\/ur\/login\?next=(%2F|\/)admin$/);
+  // the admin panel points to no sign-in page (staff use their own page, lib/auth/staff-path.ts)
+  expect((await page.goto('/ur/admin'))?.status()).toBe(404);
+  await expect(page).toHaveURL(/\/ur\/admin$/);
 });
 
 test.describe('with the local stack', () => {
@@ -103,11 +105,36 @@ test.describe('with the local stack', () => {
     await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   });
 
-  test('the Staff tab refuses member accounts', async ({ page }) => {
+  test('the staff sign-in page refuses member accounts', async ({ page }) => {
     await staffForm(page, accounts.member!.email, accounts.member!.password);
     await expect(page.getByRole('main').getByRole('alert')).toHaveText(
-      'This is not a staff account. Please use the Member login tab.',
+      'This is not a staff account. Members sign in on the member login page.',
     );
+  });
+
+  test('staff and members sign in on separate pages (owner, 29 Oct 2026)', async ({ page }) => {
+    // the members' page has no staff tab and links to no staff page
+    await page.goto('/login');
+    await expect(page.getByRole('tab')).toHaveText(['Member login', 'New applicant']);
+    await expect(page.locator('a[href*="staff"]')).toHaveCount(0);
+    // a staff account on the members' page is refused and signed out again
+    await memberForm(page, accounts.staff!.email, accounts.staff!.password);
+    await expect(page.getByRole('main').getByRole('alert')).toContainText('This is a staff account');
+    await page.goto('/portal');
+    await expect(page).toHaveURL(/\/login\?next=%2Fportal$/);
+    // the admin panel does not exist for someone signed out (no pointer to any sign-in page)
+    const admin = await page.goto('/admin');
+    expect(admin?.status()).toBe(404);
+    expect((await page.request.get('/admin/committee', { maxRedirects: 0 })).status()).toBe(404);
+    // the staff page is not indexed
+    await page.goto('/staff/login');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  });
+
+  test('a signed-in staff member never gets the member portal', async ({ page }) => {
+    await signInAs(page, 'staff');
+    await page.goto('/portal');
+    await expect(page).toHaveURL(/\/admin$/);
   });
 
   test('staff: password, then 2-step code; a wrong code is refused; admin needs the second step', async ({ page }) => {

@@ -25,7 +25,16 @@ const shared = () => {
  * the server hears about it every few minutes (keepAlive), so its own 15-minute rule (middleware) agrees. In the last
  * minute a dialog offers "Stay signed in"; at the limit the session is signed out and the sign-in page says why.
  */
-export function IdleGuard({ locale, idleMs }: { locale: Locale; idleMs: number }) {
+export function IdleGuard({
+  locale,
+  idleMs,
+  loginPath = '/login',
+}: {
+  locale: Locale;
+  idleMs: number;
+  /** where the person signs in again: the members' page, or the staff sign-in page in the admin panel */
+  loginPath?: string;
+}) {
   const last = useRef(Date.now());
   const pinged = useRef(Date.now());
   const [left, setLeft] = useState<number | null>(null);
@@ -54,7 +63,7 @@ export function IdleGuard({ locale, idleMs }: { locale: Locale; idleMs: number }
           await endIdle();
         } catch {}
         const here = window.location.pathname.replace(/^\/ur(?=\/|$)/, '') || '/';
-        window.location.assign(`${locale === 'ur' ? '/ur' : ''}/login?expired=1&next=${encodeURIComponent(here)}`);
+        window.location.assign(`${locale === 'ur' ? '/ur' : ''}${loginPath}?expired=1&next=${encodeURIComponent(here)}`);
         return;
       }
       setLeft(idle >= idleMs - WARN_MS ? Math.ceil((idleMs - idle) / 1000) : null);
@@ -70,7 +79,7 @@ export function IdleGuard({ locale, idleMs }: { locale: Locale; idleMs: number }
       clearInterval(tick);
       events.forEach((e) => window.removeEventListener(e, mark, { capture: true }));
     };
-  }, [idleMs, locale]);
+  }, [idleMs, locale, loginPath]);
 
   const stay = async () => {
     last.current = Date.now();

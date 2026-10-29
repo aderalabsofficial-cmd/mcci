@@ -8,7 +8,7 @@ import type { Locale } from '@/i18n/routing';
 import { requestEmailCode, signInMember, signInStaff, verifyEmailCode, type AuthFormState } from '@/lib/auth/actions';
 
 export interface LoginText {
-  tabs: { member: string; applicant: string; staff: string };
+  tabs: { member: string; applicant: string };
   identifier: string;
   password: string;
   signIn: string;
@@ -16,15 +16,13 @@ export interface LoginText {
   forgot: string;
   applicantIntro: string;
   startApplication: string;
-  staffEmail: string;
-  openAdmin: string;
   working: string;
   code: { title: string; sent: string; label: string; verify: string; other: string };
 }
 
-type Tab = 'member' | 'applicant' | 'staff';
+type Tab = 'member' | 'applicant';
 
-function Alert({ text }: { text?: string }) {
+export function Alert({ text }: { text?: string }) {
   if (!text) return null;
   return (
     <p
@@ -37,8 +35,9 @@ function Alert({ text }: { text?: string }) {
 }
 
 /**
- * The three tabs of the prototype's login card (site/login): Member login, New applicant, Staff. Each form posts to a
- * server action; nothing is decided in the browser.
+ * The prototype's login card (site/login): Member login and New applicant. Staff sign in on their own page
+ * (StaffLoginForm below, owner's request of 29 Oct 2026). Each form posts to a server action; nothing is decided in the
+ * browser.
  */
 export function LoginPanel({
   locale,
@@ -58,7 +57,6 @@ export function LoginPanel({
     guardForm(locale, verifyEmailCode),
     {},
   );
-  const [staff, staffAction, staffPending] = useActionState<AuthFormState, FormData>(guardForm(locale, signInStaff), {});
   const [showCode, setShowCode] = useState(true);
   const ids = { tabs: useId(), panel: useId() };
 
@@ -73,7 +71,6 @@ export function LoginPanel({
   const tabs: [Tab, string][] = [
     ['member', text.tabs.member],
     ['applicant', text.tabs.applicant],
-    ['staff', text.tabs.staff],
   ];
 
   return (
@@ -184,25 +181,52 @@ export function LoginPanel({
         </Link>
       </div>
 
-      <div role="tabpanel" id={`${ids.panel}-staff`} aria-labelledby={`${ids.tabs}-staff`} hidden={tab !== 'staff'}>
-        <form action={staffAction} className="grid gap-[14px]">
-          {hidden}
-          <label className="form-field">
-            {text.staffEmail}
-            <input name="email" type="email" autoComplete="username" required maxLength={254} />
-          </label>
-          <label className="form-field">
-            {text.password}
-            <input name="password" type="password" autoComplete="current-password" required maxLength={200} />
-          </label>
-          <Alert text={staff.error} />
-          <div className="mt-1">
-            <button className="btn btn-primary btn-big" data-action="login.staff" disabled={staffPending}>
-              {staffPending ? text.working : text.openAdmin}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
+  );
+}
+
+/** The staff sign-in page's form (app/[locale]/staff/login): staff email + password, then the 2-step page. */
+export function StaffLoginForm({
+  locale,
+  text,
+  notice,
+}: {
+  locale: Locale;
+  text: { staffEmail: string; password: string; openAdmin: string; working: string; forgot: string };
+  notice?: string;
+}) {
+  const [staff, staffAction, staffPending] = useActionState<AuthFormState, FormData>(guardForm(locale, signInStaff), {});
+  return (
+    <form action={staffAction} className="grid gap-[14px]" data-staff-login>
+      <input type="hidden" name="locale" value={locale} />
+      {notice && (
+        <p
+          role="alert"
+          className="rounded-[10px] border border-[#f3d9a8] bg-[#fdf5e3] px-3 py-2 text-[14px] text-[#6b4a0e]"
+        >
+          {notice}
+        </p>
+      )}
+      <label className="form-field">
+        {text.staffEmail}
+        <input name="email" type="email" autoComplete="username" required maxLength={254} />
+      </label>
+      <label className="form-field">
+        {text.password}
+        <input name="password" type="password" autoComplete="current-password" required maxLength={200} />
+      </label>
+      <Alert text={staff.error} />
+      <div className="mt-1">
+        <button className="btn btn-primary btn-big" data-action="login.staff" disabled={staffPending}>
+          {staffPending ? text.working : text.openAdmin}
+        </button>
+      </div>
+      <Link
+        href="/login/forgot"
+        className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline"
+      >
+        {text.forgot}
+      </Link>
+    </form>
   );
 }

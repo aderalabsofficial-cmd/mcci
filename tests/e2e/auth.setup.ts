@@ -127,10 +127,9 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
     const a = accounts[who]!;
     const ctx = await browser.newContext();
     const sp = await ctx.newPage();
-    await sp.goto('/login');
-    await sp.getByRole('tab', { name: 'Staff' }).click();
+    await sp.goto('/staff/login');
     await sp.getByLabel('Staff email').fill(a.email);
-    await sp.getByRole('tabpanel', { name: 'Staff' }).getByLabel('Password').fill(a.password);
+    await sp.getByLabel('Password').fill(a.password);
     await sp.locator('[data-action="login.staff"]').click();
     await expect(sp).toHaveURL(/\/login\/verify$/);
     await sp.getByLabel('6-digit code').fill(totp(a.totpSecret));

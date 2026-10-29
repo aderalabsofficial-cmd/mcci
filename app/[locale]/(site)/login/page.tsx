@@ -13,15 +13,18 @@ export async function generateMetadata({ params }: Props) {
   return { title: msg(asLocale((await params).locale), 'auth.title') };
 }
 
-/** Login (prototype site/login): member password or email code, new applicant, staff. Signed-in people move on. */
+/**
+ * Login (prototype site/login): member password or email code, and new applicant. Staff sign in on their own page
+ * (lib/auth/staff-path.ts), linked from nowhere here. Signed-in people move on.
+ */
 export default async function LoginPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const { next, notice, expired } = await searchParams;
   const session = await getSession();
   if (session) {
-    const staffOnly = session.access.staff && !session.access.companies.length;
-    if (staffOnly) redirect({ href: session.aal === 'aal2' ? '/admin' : '/login/verify', locale });
+    // staff accounts never use the member portal (owner's request, 29 Oct 2026)
+    if (session.access.staff) redirect({ href: session.aal === 'aal2' ? '/admin' : '/login/verify', locale });
     else redirect({ href: safeNext(next, '/portal'), locale });
   }
 
@@ -33,7 +36,7 @@ export default async function LoginPage({ params, searchParams }: Props) {
         next={next ? safeNext(next, '/portal') : undefined}
         notice={notice === 'link' ? t('link.invalid') : expired === '1' ? t('idleSignedOut') : undefined}
         text={{
-          tabs: { member: t('tabs.member'), applicant: t('tabs.applicant'), staff: t('tabs.staff') },
+          tabs: { member: t('tabs.member'), applicant: t('tabs.applicant') },
           identifier: t('identifier'),
           password: t('password'),
           signIn: t('signIn'),
@@ -41,8 +44,6 @@ export default async function LoginPage({ params, searchParams }: Props) {
           forgot: t('forgot'),
           applicantIntro: t('applicantIntro'),
           startApplication: t('startApplication'),
-          staffEmail: t('staffEmail'),
-          openAdmin: t('openAdmin'),
           working: t('working'),
           code: {
             title: t('code.title'),

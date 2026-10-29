@@ -11,7 +11,11 @@ import '@/app/styles/proto-app.css';
 import '@/app/styles/mobile.css';
 import { MobileTables } from '@/components/shared/mobile-tables';
 
-/** Member portal: a signed-in person (middleware redirects earlier; this is the server-side check). */
+/**
+ * Member portal: a signed-in person (middleware redirects earlier; this is the server-side check). Staff accounts never
+ * use the portal (owner's request, 29 Oct 2026): they go to the admin panel, and a staff member who also wants a member
+ * account makes one with another email. The database agrees (migration 0470: staff see no company's data).
+ */
 export default async function PortalLayout({
   children,
   params,
@@ -23,6 +27,7 @@ export default async function PortalLayout({
   setRequestLocale(locale);
   const session = await getSession();
   if (!session) redirect({ href: '/login?next=/portal', locale });
+  if (session!.access.staff) redirect({ href: session!.aal === 'aal2' ? '/admin' : '/login/verify', locale });
   const company = session!.access.companies[0];
   return (
     <AreaShell

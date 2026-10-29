@@ -63,16 +63,16 @@ const headerBytes = async (r: Response) =>
   (await r.headersArray()).reduce((n, h) => n + h.name.length + 2 + Buffer.byteLength(h.value) + 2, 17 + 2);
 
 async function signIn(page: Page, tab: 'member' | 'staff', who: { email: string; password: string }): Promise<number> {
-  await page.goto('/login');
+  await page.goto(tab === 'staff' ? '/staff/login' : '/login');
   if (tab === 'staff') {
-    await page.getByRole('tab', { name: 'Staff' }).click();
     await page.getByLabel('Staff email').fill(who.email);
-    await page.getByRole('tabpanel', { name: 'Staff' }).getByLabel('Password').fill(who.password);
+    await page.getByLabel('Password').fill(who.password);
   } else {
     await page.getByLabel('Mobile, email or member ID').fill(who.email);
     await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(who.password);
   }
-  const posted = page.waitForResponse((r) => r.request().method() === 'POST' && new URL(r.url()).pathname === '/login');
+  const page_ = tab === 'staff' ? '/staff/login' : '/login';
+  const posted = page.waitForResponse((r) => r.request().method() === 'POST' && new URL(r.url()).pathname === page_);
   await page.locator(`[data-action="login.${tab}"]`).click();
   return headerBytes(await posted);
 }
