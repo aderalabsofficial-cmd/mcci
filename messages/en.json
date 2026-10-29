@@ -849,7 +849,10 @@
       "whyCorporateBody": "A body corporate registered with SECP (Pvt / Public Ltd, Multinational, LLP) is a Corporate Member.",
       "whyMfg": "A sales-tax-registered manufacturer is a Corporate Member.",
       "whyTurnover": "A sales-tax-registered non-manufacturer with turnover of Rs. 50 million or more is a Corporate Member.",
-      "whyAssociate": "Not a body corporate, and not sales-tax-registered with manufacturing or Rs. 50 million turnover, so Associate Member."
+      "whyAssociate": "Not a body corporate, and not sales-tax-registered with manufacturing or Rs. 50 million turnover, so Associate Member.",
+      "hintFirm": "A partnership registered with the Registrar of Firms (Form C) is a registered firm, not a body corporate — only companies and LLPs registered with SECP are Corporate without sales tax.",
+      "hintGst": "Registered for sales tax? Answer \"Yes\" above: a sales-tax-registered manufacturer is a Corporate Member.",
+      "hintGstTurnover": "Registered for sales tax with a turnover of Rs. 50 million or more? Answer \"Yes\" above: that is a Corporate Member."
     },
     "home": {
       "whatNow": "What to do now",

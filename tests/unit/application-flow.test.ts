@@ -5,6 +5,7 @@ import {
   applicableDocs,
   askClass,
   askTurnover,
+  classHints,
   classOf,
   classWhy,
   type DocRequirement,
@@ -237,5 +238,21 @@ describe('nature of business and journey', () => {
     expect(journeyIndex('payment')).toBe(4);
     expect(journeyIndex('permanent')).toBe(5);
     expect(journeyIndex('temp')).toBe(5);
+  });
+});
+
+describe('why a registered AOP is not Corporate without sales tax (owner question, 29 Oct 2026)', () => {
+  it('a registered manufacturing AOP without GST is Associate, and the form says why and what would change it', () => {
+    const f = { biz: 'aop', aopRegistered: true, manufacturing: true, salesTax: false } as const;
+    expect(classOf(f)).toBe('Associate');
+    expect(classHints(f)).toEqual(['hintFirm', 'hintGst']);
+    expect(classOf({ ...f, salesTax: true })).toBe('Corporate');
+    expect(classHints({ ...f, salesTax: true })).toEqual([]);
+  });
+  it('a non-manufacturer is pointed at GST + turnover; body corporates get no hints', () => {
+    expect(classHints({ biz: 'prop', manufacturing: false })).toEqual(['hintGstTurnover']);
+    expect(classHints({ biz: 'aop', aopRegistered: false, manufacturing: true })).toEqual(['hintGst']);
+    expect(classHints({ biz: 'pvt', manufacturing: true })).toEqual([]);
+    expect(classHints({ biz: 'prop', manufacturing: false, salesTax: true, turnover50: false })).toEqual([]);
   });
 });

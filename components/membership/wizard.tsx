@@ -26,6 +26,7 @@ import {
   applicableDocs,
   askClass,
   askTurnover,
+  classHints,
   classOf,
   classWhy,
   type DocRequirement,
@@ -335,6 +336,11 @@ export function Wizard({
           {s.women ? ` · ${m('fee.women')}` : ''}
         </b>
         <p className="muted">{m(`fee.${classWhy(f)}`)}</p>
+        {classHints(f).map((h) => (
+          <p className="muted" key={h} data-class-hint={h}>
+            {m(`fee.${h}`)}
+          </p>
+        ))}
       </div>
       <table className="fee-t">
         <tbody>

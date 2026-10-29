@@ -101,6 +101,20 @@ export function classWhy(f: AppForm): 'whyCorporateBody' | 'whyMfg' | 'whyTurnov
   return 'whyAssociate';
 }
 
+/**
+ * Why an Associate is not Corporate, in the applicant's terms (owner's question of 29 Oct 2026: "a manufacturing AOP
+ * registered with the Registrar of Firms — why not Corporate?"). Registration with the Registrar of Firms (Form C) makes
+ * a partnership a registered FIRM, not a body corporate (only companies and LLPs registered with SECP are, docs/21 §8),
+ * so a proprietorship / AOP is Corporate only through sales tax: manufacturing + GST, or GST + Rs 50 million turnover.
+ */
+export function classHints(f: AppForm): ('hintFirm' | 'hintGst' | 'hintGstTurnover')[] {
+  if (classOf(f) === 'Corporate' || !askClass(f)) return [];
+  const out: ('hintFirm' | 'hintGst' | 'hintGstTurnover')[] = [];
+  if (f.biz === 'aop' && f.aopRegistered === true) out.push('hintFirm');
+  if (f.salesTax !== true) out.push(f.manufacturing === false ? 'hintGstTurnover' : 'hintGst');
+  return out;
+}
+
 /** the class questions are shown only to a proprietorship / AOP, and turnover only where it changes the class */
 export const askClass = (f: AppForm) => Boolean(f.biz) && !isBodyCorporate(f.biz);
 export const askTurnover = (f: AppForm) => askClass(f) && f.manufacturing === false && f.salesTax === true;
