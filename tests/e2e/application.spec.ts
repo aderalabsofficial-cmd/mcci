@@ -221,8 +221,9 @@ test('Pvt Ltd shows 11 documents; submitting with missing items lists them in pl
   await expect(page.locator('[data-action="wiz.flag"]')).toHaveCount(2);
   await saved(page);
   await page.locator('[data-action="wiz.step"]').nth(1).click();
-  await expect(page.locator('[data-doc]')).toHaveCount(11);
-  await expect(page.locator('[data-doc="pphoto"]')).toBeVisible();
+  // each director's photo is on their own row in step 3 (0480), not a document here
+  await expect(page.locator('[data-doc]')).toHaveCount(10);
+  await expect(page.locator('[data-doc="pphoto"]')).toHaveCount(0);
   await page.locator('[data-action="wiz.step"]').nth(5).click();
   const missing = page.getByTestId('missing');
   await expect(missing).toContainText('Main business category');
@@ -261,6 +262,70 @@ test('LLP is Corporate; a registered AOP asks Form C, an unregistered one does n
   await page.locator('[data-action="wiz.step"]').nth(1).click();
   await expect(page.locator('[data-doc="st"]')).toBeVisible();
   await expect(page.getByLabel(/Sales tax registered w\.e\.f\./)).toBeVisible();
+});
+
+test('partners / directors: rows open (Managing Partner first), each with their own photo, shown on the official form', async ({
+  page,
+}) => {
+  // 29 Oct 2026: "Add partner" crashed the page (missing role labels); photos moved from one document to each row
+  test.setTimeout(120_000);
+  const crashes: string[] = [];
+  page.on('pageerror', (e) => crashes.push(e.message));
+  await applicant(page, 'Bilal Ahmed');
+  await startApplication(page);
+  await page.getByTestId('category').getByRole('button', { name: /^Manufacturing/ }).click();
+  await page.getByRole('button', { name: /^Partnership \/ AOP/ }).click();
+  await page.getByRole('button', { name: /^Registered AOP/ }).click();
+  await saved(page);
+  await page.locator('[data-action="wiz.step"]').nth(1).click();
+  await expect(page.locator('[data-doc="pphoto"]')).toHaveCount(0);
+  await page.locator('[data-action="wiz.step"]').nth(2).click();
+  // the representative's email and address share one row (29 Oct 2026)
+  const repEmail = await page.getByLabel(/Email of Authorized Representative/).boundingBox();
+  const repAddress = await page.getByLabel(/Address of Authorized Representative/).boundingBox();
+  expect(Math.abs(repEmail!.y - repAddress!.y)).toBeLessThan(2);
+  await page.locator('[data-action="wiz.partner.add"]').click();
+  await expect(page.locator('.prow')).toHaveCount(1);
+  await expect(page.locator('.prow .prole')).toHaveText('Managing Partner');
+  await page.locator('[data-action="wiz.partner.add"]').click();
+  await expect(page.locator('.prow')).toHaveCount(2);
+  await expect(page.locator('.prow').nth(1).locator('.prole')).toHaveText('Partner');
+  await page.getByLabel('Name 1', { exact: true }).fill('Bilal Ahmed');
+  await page.getByLabel('CNIC 1', { exact: true }).fill('36302-1234567-1');
+  await saved(page);
+  // partner 1's own photo, through the same 35 × 45 mm crop as the representative's
+  await choose(
+    page,
+    () => page.locator('.prow').first().locator('[data-action="wiz.partner.photo"]').click(),
+    'p1.jpg',
+    'image/jpeg',
+    await photo(),
+  );
+  await page.locator('[data-action="photo.save"]').click();
+  await expect(page.locator('.prow').first().locator('.pph')).toHaveClass(/\bon\b/, { timeout: 20_000 });
+  await expect(page.locator('.prow').nth(1).locator('.pph')).not.toHaveClass(/\bon\b/);
+  // a large stamp photo stays inside its box (29 Oct 2026: it overflowed the box on this step)
+  await page.locator('[data-action="wiz.step"]').nth(4).click();
+  const bigStamp = await sharp({ create: { width: 1600, height: 1600, channels: 3, background: '#ffffff' } })
+    .composite([{ input: { create: { width: 1200, height: 1200, channels: 3, background: '#3b3bd6' } }, top: 200, left: 200 }])
+    .png()
+    .toBuffer();
+  await choose(page, () => page.locator('[data-action="wiz.stamp.upload"]').click(), 'stamp.png', 'image/png', bigStamp);
+  const stampBox = page.locator('.sigbox').nth(1);
+  await expect(stampBox.locator('img')).toBeVisible({ timeout: 20_000 });
+  const [box, img] = [await stampBox.boundingBox(), await stampBox.locator('img').boundingBox()];
+  expect(img!.height).toBeLessThanOrEqual(box!.height);
+  expect(img!.width).toBeLessThanOrEqual(box!.width);
+  // partner 2 has no photo yet: listed as missing before submitting
+  await page.locator('[data-action="wiz.step"]').nth(5).click();
+  await expect(page.getByTestId('missing')).toContainText('A photo of every partner / director');
+  // the official form shows each partner's photo on its annex page
+  await page.goto('/portal/form');
+  const annex = page.locator('[data-annex="partners"]');
+  await expect(annex.locator('[data-partner]')).toHaveCount(2);
+  await expect(annex.locator('[data-partner="1"] img')).toHaveAttribute('alt', 'Photograph of Bilal Ahmed');
+  await expect(annex.locator('[data-partner="2"] img')).toHaveCount(0);
+  expect(crashes).toEqual([]);
 });
 
 test('a returned application shows only the rejected document; re-upload and resubmit', async ({ page }) => {

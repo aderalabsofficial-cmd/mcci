@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from 'react';
 import type { Locale } from '@/i18n/routing';
 import { removeDocument, savePhoto, uploadDocument } from '@/lib/membership/actions';
 import { msg } from '@/lib/nav/model';
-import { type CropText, PhotoCrop } from './photo-crop';
+import { cropTextFor, PhotoCrop, toUploadable } from './photo-crop';
 import { callAction } from '@/lib/client/call-action';
 
 /**
@@ -31,15 +31,6 @@ export interface SlotRequirement {
 }
 
 const ACCEPT = 'application/pdf,image/jpeg,image/png,image/heic,image/heif,.heic,.heif';
-
-async function toUploadable(file: File): Promise<File> {
-  const heic = /image\/hei[cf]/.test(file.type) || /\.hei[cf]$/i.test(file.name);
-  if (!heic) return file;
-  const { default: heic2any } = await import('heic2any');
-  const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-  const blob = Array.isArray(out) ? out[0]! : out;
-  return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
-}
 
 export function DocSlots({
   locale,
@@ -127,21 +118,7 @@ export function DocSlots({
     else start(() => router.refresh());
   };
 
-  const cropText: CropText = {
-    title: msg(locale, 'membership.wiz.photo.title'),
-    intro: msg(locale, 'membership.wiz.photo.help'),
-    zoom: msg(locale, 'membership.wiz.photo.zoom'),
-    brightness: msg(locale, 'membership.wiz.photo.brightness'),
-    retake: msg(locale, 'membership.wiz.photo.retake'),
-    save: msg(locale, 'membership.wiz.photo.save'),
-    close: msg(locale, 'common.close'),
-    resolutionOk: msg(locale, 'membership.wiz.photo.resolutionOk'),
-    resolutionLow: msg(locale, 'membership.wiz.photo.resolutionLow'),
-    brightFixed: msg(locale, 'membership.wiz.photo.brightFixed'),
-    brightOk: msg(locale, 'membership.wiz.photo.brightOk'),
-    face: msg(locale, 'membership.wiz.photo.face'),
-    working: msg(locale, 'membership.wiz.working'),
-  };
+  const cropText = cropTextFor(locale);
 
   return (
     <>

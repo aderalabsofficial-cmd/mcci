@@ -68,6 +68,8 @@ export interface AppState {
   partners: number;
   /** a listed partner / director without email or address (0440) */
   partnerContactsMissing?: boolean;
+  /** a listed partner / director without their own photo (0480) */
+  partnerPhotosMissing?: boolean;
 }
 
 export interface MembershipRules {
@@ -179,6 +181,7 @@ export function missing(app: AppState, requirements: DocRequirement[], rules: Me
   }
   if (biz !== 'prop' && app.partners < 2) out.push('partners');
   if (app.partnerContactsMissing) out.push('partnerContacts');
+  if (app.partnerPhotosMissing) out.push('partnerPhotos');
   if (!app.sign_path) out.push('sign');
   if (!app.stamp_path && (biz !== 'prop' || rules.stampRequiredForProprietor)) out.push('stamp');
   if (!(app.decl1 && app.decl2)) out.push('decl');

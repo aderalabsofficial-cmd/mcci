@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Camera,
   Check,
   Eye,
   Flag,
@@ -44,6 +45,7 @@ import {
   removePartner,
   saveDraft,
   saveInk,
+  savePartnerPhoto,
   submitApplication,
   updatePartner,
 } from '@/lib/membership/actions';
@@ -62,6 +64,7 @@ import { ACTION_TIMEOUT_MS, type ActionFailure, classifyActionError, failureMess
 import { msg } from '@/lib/nav/model';
 import type { SlotEndorsement } from '@/components/endorse/slots';
 import { DocSlots, type SlotDoc } from './doc-slots';
+import { cropTextFor, PhotoCrop, toUploadable } from './photo-crop';
 import { type PadText, SignaturePad } from './signature-pad';
 import { Ic } from './ui';
 
@@ -94,6 +97,8 @@ export interface WizardApp {
     email: string | null;
     address: string | null;
     extra_card: boolean;
+    /** signed URL of the partner's own photo (0480) */
+    photoUrl: string | null;
   }[];
   requirements: DocRequirement[];
   endorsements: SlotEndorsement[];
@@ -312,6 +317,7 @@ export function Wizard({
       docs: docs.map((d) => ({ key: d.key, status: d.status })),
       partners: app.partners.length,
       partnerContactsMissing: app.partners.some((p) => !p.email?.trim() || !p.address?.trim()),
+      partnerPhotosMissing: app.partners.some((p) => !p.photoUrl),
     }),
     [f, s.jurisdiction_ok, s.women, s.decl1, s.decl2, app.sign, app.stamp, docs, app.partners],
   );
@@ -855,7 +861,8 @@ export function Wizard({
         <h4 className="jg">
           {msg('en', 'membership.wiz.details.rep')} · {msg('ur', 'membership.wiz.details.rep')}
         </h4>
-        <div className="fg">{REP_FIELDS.map((k) => field(k, k === 'repAddress'))}</div>
+        {/* email and address side by side (owner, 29 Oct 2026: no empty half row) */}
+        <div className="fg">{REP_FIELDS.map((k) => field(k, false))}</div>
         <p className="muted">{m('wiz.details.repPhoto')}</p>
         <h4 className="jg">
           {msg('en', `membership.wiz.details.${partnersKey}`)} · {msg('ur', `membership.wiz.details.${partnersKey}`)}{' '}
@@ -887,6 +894,14 @@ export function Wizard({
               )
             }
             onRemove={() => void run(`p-${p.id}`, () => removePartner(locale, app.id, p.id))}
+            onPhoto={async (jpeg) => {
+              const fd = new FormData();
+              fd.set('locale', locale);
+              fd.set('app', app.id);
+              fd.set('partner', p.id);
+              fd.set('file', new File([jpeg], 'photo.jpg', { type: 'image/jpeg' }));
+              return (await run(`pp-${p.id}`, () => savePartnerPhoto(fd))).ok;
+            }}
           />
         ))}
         {app.partners.length < MAX_PARTNERS && (
@@ -1247,6 +1262,7 @@ function PartnerRow({
   fee: cardFee,
   onChange,
   onRemove,
+  onPhoto,
 }: {
   locale: Locale;
   n: number;
@@ -1259,6 +1275,7 @@ function PartnerRow({
     email: string | null;
     address: string | null;
     extra_card: boolean;
+    photoUrl: string | null;
   };
   fee: number;
   onChange: (patch: {
@@ -1270,7 +1287,12 @@ function PartnerRow({
     extra_card?: boolean;
   }) => void;
   onRemove: () => void;
+  /** saves the cropped photo of this partner; true when saved */
+  onPhoto: (jpeg: Blob) => Promise<boolean>;
 }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [crop, setCrop] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
   const [v, setV] = useState({
     name: p.name,
     cnic: p.cnic ?? '',
@@ -1282,17 +1304,74 @@ function PartnerRow({
   const m = (k: string, vars?: Record<string, string>) => msg(locale, `membership.wiz.details.${k}`, vars);
   const valid = (k: keyof typeof v, value: string) =>
     k !== 'email' || value.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  // fields typed in quick succession are saved together (one timer used to drop all but the last field)
+  const pending = useRef<Partial<typeof v>>({});
   const edit = (k: keyof typeof v, value: string) => {
     setV((x) => ({ ...x, [k]: value }));
     if (t.current) clearTimeout(t.current);
-    if (!valid(k, value)) return;
-    t.current = setTimeout(() => onChange({ [k]: value }), 600);
+    if (valid(k, value)) pending.current = { ...pending.current, [k]: value };
+    else delete pending.current[k];
+    if (!Object.keys(pending.current).length) return;
+    t.current = setTimeout(() => {
+      const patch = pending.current;
+      pending.current = {};
+      onChange(patch);
+    }, 600);
   };
   return (
     <div className="prow">
-      <span className="pn" title={role ? msg(locale, role) : undefined}>
-        {n}
-      </span>
+      {/* the partner's own photo (owner, 29 Oct 2026), cropped like the representative's */}
+      <button
+        type="button"
+        className={`pph ${role ? 'r3' : ''} ${p.photoUrl ? 'on' : ''}`}
+        data-action="wiz.partner.photo"
+        aria-label={m(p.photoUrl ? 'partnerPhotoChange' : 'partnerPhotoAdd', { n: String(n) })}
+        title={m(p.photoUrl ? 'partnerPhotoChange' : 'partnerPhotoAdd', { n: String(n) })}
+        onClick={() => {
+          if (!input.current) return;
+          input.current.value = '';
+          input.current.click();
+        }}
+      >
+        {p.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- signed URL of a private file
+          <img src={p.photoUrl} alt="" />
+        ) : (
+          <>
+            <Camera size={18} aria-hidden />
+            <small>{m('partnerPhoto')}</small>
+          </>
+        )}
+        <span className="pn">{n}</span>
+      </button>
+      <input
+        ref={input}
+        type="file"
+        hidden
+        aria-hidden="true"
+        tabIndex={-1}
+        accept="image/jpeg,image/png,image/heic,.heic"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void toUploadable(f).then(setCrop);
+        }}
+      />
+      <PhotoCrop
+        file={crop}
+        text={cropTextFor(locale)}
+        busy={saving}
+        onCancel={() => setCrop(null)}
+        onRetake={() => {
+          setCrop(null);
+          input.current?.click();
+        }}
+        onSave={(jpeg) => {
+          setSaving(true);
+          void onPhoto(jpeg)
+            .then((ok) => ok && setCrop(null))
+            .finally(() => setSaving(false));
+        }}
+      />
       {role && <small className="prole">{msg(locale, role)}</small>}
       <input
         value={v.name}

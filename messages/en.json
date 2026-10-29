@@ -805,7 +805,8 @@
       "notFound": "Application not found",
       "category": "Main business category (manufacturing / non-manufacturing)",
       "aopReg": "Registered or unregistered AOP",
-      "partnerContacts": "Email and address of every partner / director"
+      "partnerContacts": "Email and address of every partner / director",
+      "partnerPhotos": "A photo of every partner / director"
     },
     "journey": {
       "submitted": {
@@ -1077,7 +1078,10 @@
         "repPhoto": "The passport-size photo of the authorized representative is uploaded in step 2.",
         "managingPartner": "Managing Partner",
         "partner": "Partner",
-        "director": "Director"
+        "director": "Director",
+        "partnerPhoto": "Photo",
+        "partnerPhotoAdd": "Add the photo of partner / director {n}",
+        "partnerPhotoChange": "Change the photo of partner / director {n}"
       },
       "endorse": {
         "kicker": "Proposed and seconded by valid members",
@@ -1405,7 +1409,9 @@
       "verifyBlockedDocs": "Accept every document first.",
       "verifyBlockedChecks": "Tick the officer checklist first.",
       "sgOnly": "Secretary General only",
-      "downloadOriginal": "Download original"
+      "downloadOriginal": "Download original",
+      "partnerPhoto": "Photo of partner / director {n}",
+      "partnerNoPhoto": "No photo yet"
     },
     "done": {
       "opened": "Review started.",

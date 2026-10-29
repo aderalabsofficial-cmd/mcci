@@ -32,6 +32,8 @@ export interface AppPartner {
   email: string | null;
   address: string | null;
   extra_card: boolean;
+  /** the partner's own passport photo (0480) */
+  photo_path: string | null;
 }
 
 export interface AppHistory {
@@ -197,7 +199,7 @@ export const loadMyApplication = cache(async (): Promise<MyApplication | null> =
       .eq('application_id', row.id),
     supabase
       .from('application_partners')
-      .select('id, position, name, cnic, mobile, email, address, extra_card')
+      .select('id, position, name, cnic, mobile, email, address, extra_card, photo_path')
       .eq('application_id', row.id)
       .order('position'),
     supabase

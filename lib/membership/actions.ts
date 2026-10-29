@@ -355,6 +355,44 @@ export async function savePhoto(form: FormData): Promise<WizResult> {
   }
 }
 
+/**
+ * wiz.partner.photo: a partner's / director's own passport photo (0480), cropped in the browser like the representative's
+ * and normalised here; stored under the partner's folder (the database accepts no other path for it).
+ */
+export async function savePartnerPhoto(form: FormData): Promise<WizResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  try {
+    const appId = String(form.get('app') ?? '');
+    const partnerId = uuid.parse(String(form.get('partner') ?? ''));
+    const app = await editable(appId);
+    const file = await readFile(form);
+    if (!file) return uploadProblem(locale, 'empty');
+    const check = checkUpload(file.bytes, IMAGE_KINDS);
+    if ('problem' in check) return uploadProblem(locale, check.problem);
+    const supabase = await createClient();
+    const { data: partner } = await supabase
+      .from('application_partners')
+      .select('id')
+      .eq('id', partnerId)
+      .eq('application_id', appId)
+      .maybeSingle();
+    if (!partner) throw new PermissionError('not-in-company');
+    const jpeg = await passportPhoto(file.bytes);
+    const path = `${app.companyId}/applications/${appId}/partners/${partnerId}/${randomUUID()}.jpg`;
+    await store(path, jpeg, 'image/jpeg');
+    const { error } = await supabase
+      .from('application_partners')
+      .update({ photo_path: path })
+      .eq('id', partnerId)
+      .eq('application_id', appId);
+    if (error) throw error;
+    refresh();
+    return { ok: true, message: msg(locale, 'membership.done.photo') };
+  } catch (error) {
+    return failure(locale, error, 'wiz.partner.photo');
+  }
+}
+
 /** sign.save (drawn on screen, already transparent) or wiz.sign.upload / wiz.stamp.upload (photo on paper) */
 export async function saveInk(form: FormData): Promise<WizResult> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));

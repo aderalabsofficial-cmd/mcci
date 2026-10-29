@@ -25,6 +25,7 @@ export async function wizardApp(app: MyApplication): Promise<WizardApp> {
     app.sign_path,
     app.stamp_path,
     ...app.endorsements.map((e) => e.signature_path),
+    ...app.partners.map((p) => p.photo_path),
   ]);
   return {
     id: app.id,
@@ -48,7 +49,10 @@ export async function wizardApp(app: MyApplication): Promise<WizardApp> {
       reject_reason: d.reject_reason,
       url: urls.get(d.path) ?? null,
     })),
-    partners: app.partners,
+    partners: app.partners.map(({ photo_path, ...p }) => ({
+      ...p,
+      photoUrl: photo_path ? (urls.get(photo_path) ?? null) : null,
+    })),
     requirements: app.requirements,
     endorsements: app.endorsements.map((e): SlotEndorsement => ({
       id: e.id,
@@ -99,7 +103,7 @@ export function officialFormProps(
   return {
     blank: !app,
     form: app?.form ?? {},
-    partners: app?.partners ?? [],
+    partners: w?.partners.map((p) => ({ ...p, photo: p.photoUrl })) ?? app?.partners ?? [],
     photo: w?.photoUrl ?? null,
     sign: w?.signUrl ?? null,
     stamp: w?.stampUrl ?? null,

@@ -709,14 +709,14 @@ isOneToOne: false
                   ]
                 },"application_partners": {
                   Row: {
-                    "address": string | null,"application_id": string,"cnic": string | null,"email": string | null,"extra_card": boolean,"id": string,"mobile": string | null,"name": string,"position": number
+                    "address": string | null,"application_id": string,"cnic": string | null,"email": string | null,"extra_card": boolean,"id": string,"mobile": string | null,"name": string,"photo_path": string | null,"position": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "address"?: string | null,"application_id": string,"cnic"?: string | null,"email"?: string | null,"extra_card"?: boolean,"id"?: string,"mobile"?: string | null,"name": string,"position": number
+                    "address"?: string | null,"application_id": string,"cnic"?: string | null,"email"?: string | null,"extra_card"?: boolean,"id"?: string,"mobile"?: string | null,"name": string,"photo_path"?: string | null,"position": number
                   }
                   Update: {
-                    "address"?: string | null,"application_id"?: string,"cnic"?: string | null,"email"?: string | null,"extra_card"?: boolean,"id"?: string,"mobile"?: string | null,"name"?: string,"position"?: number
+                    "address"?: string | null,"application_id"?: string,"cnic"?: string | null,"email"?: string | null,"extra_card"?: boolean,"id"?: string,"mobile"?: string | null,"name"?: string,"photo_path"?: string | null,"position"?: number
                   }
                   Relationships: [
                     {

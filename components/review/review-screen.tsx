@@ -56,7 +56,15 @@ export interface ReviewData {
   bizLabel: string;
   particulars: { key: FormField; label: string; value: string; check: boolean }[];
   docs: ReviewDoc[];
-  partners: { name: string; cnic: string | null; mobile: string | null; card: boolean }[];
+  /** photo: the partner's own photo through the logged file route (0480, 0460) */
+  partners: {
+    name: string;
+    cnic: string | null;
+    mobile: string | null;
+    email: string | null;
+    card: boolean;
+    photo: string | null;
+  }[];
   checks: { key: string; label: string; on: boolean }[];
   history: { title: string; sub: string }[];
   emails: { label: string; status: string; statusLabel: string; at: string }[];
@@ -570,12 +578,22 @@ export function ReviewScreen({
           </div>
           {data.partners.length ? (
             data.partners.map((p, i) => (
-              <div className="li st" key={i}>
-                <i style={{ background: '#14b8a622', color: '#14b8a6' }}>{i + 1}</i>
+              <div className="li st" key={i} data-partner={i + 1}>
+                {p.photo ? (
+                  <a href={p.photo} target="_blank" rel="noreferrer" className="pphoto" data-action="review.partner.photo">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- watermarked copy from the file route */}
+                    <img src={p.photo} alt={m('partnerPhoto', { n: String(i + 1) })} />
+                  </a>
+                ) : (
+                  <i style={{ background: '#14b8a622', color: '#14b8a6' }} title={m('partnerNoPhoto')}>
+                    {i + 1}
+                  </i>
+                )}
                 <div>
                   <b>{p.name || '—'}</b>
                   <small>
                     {p.cnic || '—'} · {p.mobile || '—'}
+                    {p.email ? ` · ${p.email}` : ''}
                   </small>
                 </div>
               </div>

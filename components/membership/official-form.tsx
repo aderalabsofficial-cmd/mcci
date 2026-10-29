@@ -31,7 +31,8 @@ export interface Endorser {
 export interface OfficialFormProps {
   blank?: boolean;
   form: AppForm;
-  partners: { name: string; cnic: string | null; mobile: string | null; email?: string | null }[];
+  /** photo: URL of the partner's own photo (0480), shown on the annex page */
+  partners: { name: string; cnic: string | null; mobile: string | null; email?: string | null; photo?: string | null }[];
   photo?: string | null;
   sign?: string | null;
   stamp?: string | null;
@@ -513,6 +514,35 @@ export function OfficialForm(p: OfficialFormProps) {
           <li>Normal Membership Process Time – {p.processDays} Working Days.</li>
         </ol>
       </Page>
+      {P.length > 0 && (
+        // each partner's / director's own photograph (owner, 29 Oct 2026; migration 0480), after the four form pages
+        <section className="of-page of-annex" data-annex="partners">
+          <Header c={p.chamber} />
+          <h2 className="of-title">ANNEX — PHOTOGRAPHS OF PARTNERS / DIRECTORS</h2>
+          <div className="of-sub">Name of Business: {v(f.name)}</div>
+          <div className="of-pgrid">
+            {P.map((x, i) => (
+              <figure key={i} data-partner={i + 1}>
+                <div className="of-photo">
+                  {x.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- the partner's photo (signed or logged URL)
+                    <img src={x.photo} alt={`Photograph of ${x.name || `partner ${i + 1}`}`} />
+                  ) : (
+                    <span>Photograph</span>
+                  )}
+                </div>
+                <figcaption>
+                  <b>
+                    {i + 1}. {x.name || ' '}
+                  </b>
+                  <small>CNIC: {v(x.cnic)}</small>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <div className="of-pn">Annex to the Application Form</div>
+        </section>
+      )}
     </div>
   );
 }

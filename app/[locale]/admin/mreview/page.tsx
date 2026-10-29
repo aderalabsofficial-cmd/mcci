@@ -76,7 +76,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     file.sign_path,
     file.stamp_path,
     ...ends.map((e) => e.signature_path),
+    ...file.partners.map((p) => p.photo_path),
   ]);
+  const partnerPhoto = (p: { photo_path: string | null }) => (p.photo_path ? (urls.get(p.photo_path) ?? null) : null);
   const endorsements: SlotEndorsement[] = ends.map((e) => ({
     id: e.id,
     role: e.role,
@@ -149,7 +151,14 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         reuploaded: file.reuploaded.includes(r.key),
       };
     }),
-    partners: file.partners.map((p) => ({ name: p.name, cnic: p.cnic, mobile: p.mobile, card: p.extra_card })),
+    partners: file.partners.map((p) => ({
+      name: p.name,
+      cnic: p.cnic,
+      mobile: p.mobile,
+      email: p.email,
+      card: p.extra_card,
+      photo: partnerPhoto(p),
+    })),
     checks: (['docs', 'identity', 'ntn', 'address'] as const).map((k) => ({
       key: k,
       label: m(`checks.${k}`),
@@ -190,7 +199,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const form = (
     <OfficialForm
       form={f}
-      partners={file.partners}
+      partners={file.partners.map((p) => ({ ...p, photo: partnerPhoto(p) }))}
       photo={data.photoUrl}
       sign={file.sign_path ? (urls.get(file.sign_path) ?? null) : null}
       stamp={file.stamp_path ? (urls.get(file.stamp_path) ?? null) : null}

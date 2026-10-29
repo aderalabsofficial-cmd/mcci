@@ -3,6 +3,8 @@
 import { Check, Sparkles, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Modal } from '@/components/shared/modal';
+import type { Locale } from '@/i18n/routing';
+import { msg } from '@/lib/nav/model';
 
 /**
  * Passport photo crop to the form's 35 × 45 mm box (prototype M.cropper, docs/08): drag to move, zoom and brightness
@@ -13,6 +15,36 @@ const OW = 350;
 const OH = 450;
 
 type Check = { ok: 'tick' | 'x' | 'spark'; text: string };
+
+/** the crop dialog's labels (membership.wiz.photo.*) */
+export function cropTextFor(locale: Locale): CropText {
+  const t = (k: string) => msg(locale, `membership.wiz.photo.${k}`);
+  return {
+    title: t('title'),
+    intro: t('help'),
+    zoom: t('zoom'),
+    brightness: t('brightness'),
+    retake: t('retake'),
+    save: t('save'),
+    close: msg(locale, 'common.close'),
+    resolutionOk: t('resolutionOk'),
+    resolutionLow: t('resolutionLow'),
+    brightFixed: t('brightFixed'),
+    brightOk: t('brightOk'),
+    face: t('face'),
+    working: msg(locale, 'membership.wiz.working'),
+  };
+}
+
+/** a HEIC / HEIF photo from an iPhone becomes a JPEG before it is cropped or sent */
+export async function toUploadable(file: File): Promise<File> {
+  const heic = /image\/hei[cf]/.test(file.type) || /\.hei[cf]$/i.test(file.name);
+  if (!heic) return file;
+  const { default: heic2any } = await import('heic2any');
+  const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  const blob = Array.isArray(out) ? out[0]! : out;
+  return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+}
 
 export interface CropText {
   title: string;

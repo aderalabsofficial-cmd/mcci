@@ -371,9 +371,16 @@
 .proto .ai-cta>div {flex:1;min-width:200px}
 .proto .ai-cta b {display:block}
 .proto .ai-cta small {color:var(--m)}
-.proto .prow {display:grid;grid-template-columns:30px 1.4fr 1.2fr 1fr 1.3fr auto auto;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--b)}
+.proto .prow {display:grid;grid-template-columns:58px 1.4fr 1.2fr 1fr 1.3fr auto auto;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--b)}
 .proto .prow .prole {grid-column:2/-1;order:-1;font-size:12px;font-weight:700;color:var(--gt,#a8741e);text-transform:uppercase;letter-spacing:.06em}
-.proto .prow .pn {order:-2}
+.proto .prow .pph {order:-2;grid-row:span 2;align-self:start;position:relative;width:54px;height:68px;border:1.5px dashed var(--b);border-radius:10px;background:var(--card2);display:grid;place-items:center;align-content:center;gap:2px;color:#94a3b8;overflow:hidden;cursor:pointer}
+.proto .prow .pph.r3 {grid-row:span 3}
+.proto .prow .pph.on {border-style:solid;border-color:#16a34a}
+.proto .prow .pph img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.proto .prow .pph small {font-size:10px;font-weight:700}
+.proto .prow .pph .pn {position:absolute;top:3px;left:3px;min-width:18px;height:18px;border-radius:6px;background:var(--nv,#0b2a5b);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.proto .rv .li .pphoto, .proto .li .pphoto {flex:none;width:40px;height:50px;border-radius:8px;overflow:hidden;border:1px solid var(--b)}
+.proto .li .pphoto img {width:100%;height:100%;object-fit:cover}
 .proto .prow input.pa {grid-column:2/-1}
 .proto .prow input {background:var(--card2);border:1px solid var(--b);border-radius:10px;padding:9px 10px;width:100%}
 .proto .pn {width:28px;height:28px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-weight:800}
@@ -387,8 +394,9 @@
 .proto .found {display:flex;gap:10px;align-items:center;margin-top:10px;padding:10px;border-radius:12px;background:rgba(31,163,74,.1)}
 .proto .found small {display:block;color:var(--m)}
 .proto .err {color:#ef4444;font-weight:700;margin-top:8px}
-.proto .sigbox {height:120px;border:2px dashed var(--b);border-radius:14px;display:grid;place-items:center;margin-bottom:10px;background:#fff;padding:8px}
-.proto .sigbox img {max-height:100%;max-width:100%}
+.proto .sigbox {height:120px;border:2px dashed var(--b);border-radius:14px;display:grid;place-items:center;margin-bottom:10px;background:#fff;padding:8px;overflow:hidden}
+/* a fixed limit: a percentage of a grid row did not hold, and a large stamp photo overflowed the box (29 Oct 2026) */
+.proto .sigbox img {max-height:100px;max-width:100%;width:auto;height:auto;object-fit:contain}
 .proto .sigpad {width:100%;height:auto;border:2px dashed var(--b);border-radius:14px;background:#fff;touch-action:none;cursor:crosshair}
 .proto .decl {display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border:1px solid var(--b);border-radius:14px;margin-bottom:10px;background:var(--card2);cursor:pointer;font:inherit;color:var(--t);line-height:1.5}
 .proto .decl i {width:26px;height:26px;border-radius:8px;border:2px solid var(--b);flex:none;display:grid;place-items:center;font-style:normal;font-weight:800;background:var(--card)}
@@ -465,6 +473,10 @@
 .proto .of-wrap {display:flex;flex-direction:column;gap:18px;align-items:center}
 .proto .of-page {width:8.5in;min-height:11in;background:#fff;color:#000;padding:.55in .7in .5in;position:relative;font:10.5pt/1.35 Arial,Helvetica,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.25);flex:none}
 .proto .of-pn {position:absolute;right:.7in;bottom:.35in;font-size:9pt}
+.proto .of-pgrid {display:grid;grid-template-columns:repeat(3,1.9in);justify-content:space-between;row-gap:.35in;margin-top:.3in}
+.proto .of-pgrid figure {margin:0;display:grid;justify-items:center;gap:6px;text-align:center}
+.proto .of-pgrid figcaption {display:grid;font-size:9.5pt}
+.proto .of-pgrid figcaption small {font-size:8.5pt}
 .proto .of-hd {text-align:center;line-height:1.3}
 .proto .of-hd img {height:76px;display:block;margin:0 auto 4px}
 .proto .of-hd b {font-size:13pt;display:block}
@@ -582,8 +594,9 @@
 .proto .pfs {grid-template-columns:1fr}
   .proto .wz-steps {grid-template-columns:repeat(2,1fr)}
   .proto .wz-steps span {display:none}
-  .proto .prow {grid-template-columns:24px 1fr 1fr;}
+  .proto .prow {grid-template-columns:58px 1fr 1fr;}
   .proto .prow input:nth-of-type(n+3) {grid-column:2/4}
+  .proto .prow .pph, .proto .prow .pph.r3 {grid-row:span 2}
   .proto .cert-meta {grid-template-columns:1fr 1fr}
   .proto .next {padding:18px}
   .proto .next-b h2 {font-size:20px}

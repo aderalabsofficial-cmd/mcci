@@ -15,11 +15,11 @@ select results_eq($$ select private.class_of('{"biz":"llp"}')::text,
   'LLP is a body corporate; AOP manufacturing + GST is Corporate; non-manufacturing needs GST + Rs 50 M; no GST is Associate');
 
 -- checklists
-select is((select count(*) from public.document_requirements where biz_type = 'llp'), 11::bigint, 'LLP has its own checklist (11 documents)');
+select is((select count(*) from public.document_requirements where biz_type = 'llp'), 10::bigint, 'LLP has its own checklist (10 documents)');
 select is((select required from public.document_requirements where biz_type = 'aop' and key = 'formc'), false,
   'Form C is not asked by default (only from a registered AOP)');
-select is((select count(*) from public.document_requirements where key = 'pphoto'), 5::bigint,
-  'photos of all partners / directors for every type except proprietorship');
+select is((select count(*) from public.document_requirements where key = 'pphoto'), 0::bigint,
+  'no single "photos of all partners" document any more: each partner has their own photo (0480)');
 select ok(not exists (select 1 from public.document_requirements where key = 'st' and label_en ilike '%and sales tax return%'),
   'no sales tax return is asked any more');
 select is((select count(*) from public.document_requirements where key = 'bank' and short_en <> 'Bank Maintenance Certificate'), 0::bigint,
@@ -35,10 +35,14 @@ update public.applications set stage = 'draft', jurisdiction_ok = true, decl1 = 
 delete from public.application_documents where application_id = tests.id('app_a_review');
 insert into public.application_documents (application_id, key, path, file_name)
 select tests.id('app_a_review'), k, 'a/applications/r/' || k, k || '.pdf'
-  from unnest(array['cnic','ntn','addr','bank','deed','auth','photo','pphoto']) k;
+  from unnest(array['cnic','ntn','addr','bank','deed','auth','photo']) k;
 delete from public.application_partners where application_id = tests.id('app_a_review');
 insert into public.application_partners (application_id, position, name, email, address)
 values (tests.id('app_a_review'), 1, 'Partner One', 'one@test.local', 'Multan'), (tests.id('app_a_review'), 2, 'Partner Two', 'two@old.local', 'Multan');
+-- each partner's own photo (0480; pgTAP 290 tests the rule)
+update public.application_partners p
+   set photo_path = a.company_id || '/applications/' || a.id || '/partners/' || p.id || '/' || gen_random_uuid() || '.jpg'
+  from public.applications a where a.id = p.application_id and p.application_id = tests.id('app_a_review');
 
 select is(private.app_missing(tests.id('app_a_review')), array['category', 'aopReg', 'field:repEmail', 'field:repAddress'],
   'the main category, registered / unregistered AOP and the representative''s email and address are required');
