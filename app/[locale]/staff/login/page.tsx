@@ -27,7 +27,11 @@ export default async function StaffLoginPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const session = await getSession();
-  if (session) redirect({ href: session.access.staff ? (session.aal === 'aal2' ? '/admin' : '/login/verify') : '/portal', locale });
+  if (session)
+    redirect({
+      href: session.access.staff ? (session.aal === 'aal2' ? '/admin' : '/login/verify') : '/portal',
+      locale,
+    });
 
   const t = (k: string) => msg(locale, `auth.${k}`);
   return (

@@ -3366,7 +3366,8 @@
       "urdu": "Messages in Urdu",
       "urduSub": "Your preferred language for messages",
       "save": "Save",
-      "goTo": "Go to the page"
+      "goTo": "Go to the page",
+      "allRead": "Everything is read"
     },
     "events": {
       "title": "Events",
@@ -3462,7 +3463,11 @@
         "In progress": "In progress",
         "Resolved": "Resolved",
         "Closed": "Closed"
-      }
+      },
+      "search": "Search tickets…",
+      "statusFilter": "Status",
+      "allStatuses": "All statuses",
+      "filter": "Show"
     },
     "content": {
       "title": "Website Content (CMS)",

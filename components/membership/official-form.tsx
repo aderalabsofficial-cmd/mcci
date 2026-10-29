@@ -32,7 +32,13 @@ export interface OfficialFormProps {
   blank?: boolean;
   form: AppForm;
   /** photo: URL of the partner's own photo (0480), shown on the annex page */
-  partners: { name: string; cnic: string | null; mobile: string | null; email?: string | null; photo?: string | null }[];
+  partners: {
+    name: string;
+    cnic: string | null;
+    mobile: string | null;
+    email?: string | null;
+    photo?: string | null;
+  }[];
   photo?: string | null;
   sign?: string | null;
   stamp?: string | null;

@@ -63,7 +63,9 @@ export function IdleGuard({
           await endIdle();
         } catch {}
         const here = window.location.pathname.replace(/^\/ur(?=\/|$)/, '') || '/';
-        window.location.assign(`${locale === 'ur' ? '/ur' : ''}${loginPath}?expired=1&next=${encodeURIComponent(here)}`);
+        window.location.assign(
+          `${locale === 'ur' ? '/ur' : ''}${loginPath}?expired=1&next=${encodeURIComponent(here)}`,
+        );
         return;
       }
       setLeft(idle >= idleMs - WARN_MS ? Math.ceil((idleMs - idle) / 1000) : null);

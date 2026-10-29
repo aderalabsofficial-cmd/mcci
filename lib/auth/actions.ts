@@ -159,7 +159,10 @@ export async function verifyTotp(_: MfaFormState, form: FormData): Promise<MfaFo
 export async function signOut(form: FormData): Promise<void> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));
   const supabase = await createClient();
-  const staff = await myAccess(supabase).then((a) => Boolean(a.staff), () => false);
+  const staff = await myAccess(supabase).then(
+    (a) => Boolean(a.staff),
+    () => false,
+  );
   await supabase.auth.signOut({ scope: 'local' });
   redirect({ href: staff ? staffLoginPath() : '/login', locale });
 }

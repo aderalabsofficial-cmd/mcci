@@ -19,9 +19,17 @@ teardown('remove e2e accounts', async () => {
       await step('member', () => admin.from('members').delete().eq('id', accounts.memberRowId!));
     if (accounts.companyId)
       await step('change requests', () => admin.from('change_requests').delete().eq('company_id', accounts.companyId!));
-    if (accounts.companyId) await step('company', () => admin.from('companies').delete().eq('id', accounts.companyId!));
     // a committee the tests assigned (it refers to the staff rows below)
     const staffIds = (['staff', 'sg', 'president', 'convener', 'itconv'] as const).map((w) => accounts[w]?.id).filter((x): x is string => !!x);
+    // support tickets and event bookings of the tests (engagement.spec): they refer to the company and the accounts
+    const people = [accounts.member?.id, ...staffIds].filter((x): x is string => !!x);
+    await step('ticket messages', () => admin.from('ticket_messages').delete().in('by_user', people));
+    if (accounts.companyId) {
+      await step('tickets', () => admin.from('tickets').delete().eq('company_id', accounts.companyId!));
+      await step('event bookings', () => admin.from('event_registrations').delete().eq('company_id', accounts.companyId!));
+    }
+    await step('tickets assigned', () => admin.from('tickets').update({ assigned_to: null }).in('assigned_to', people));
+    if (accounts.companyId) await step('company', () => admin.from('companies').delete().eq('id', accounts.companyId!));
     if (staffIds.length) {
       await step('committee', () => admin.from('committee_assignments').delete().in('proposed_by', staffIds));
       await step('committee (convener)', () => admin.from('committee_assignments').delete().in('convener', staffIds));

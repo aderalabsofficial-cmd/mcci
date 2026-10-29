@@ -15,17 +15,22 @@ describe('nav model', () => {
     const nav = siteNavModel('en');
     expect(nav[0]).toMatchObject({ id: 'home', href: '/', reason: null });
     // M2 (public website) is built: every public page is a link
-    expect(nav.find((i) => i.id === 'membership')).toMatchObject({ id: 'membership', href: '/membership', reason: null });
+    expect(nav.find((i) => i.id === 'membership')).toMatchObject({
+      id: 'membership',
+      href: '/membership',
+      reason: null,
+    });
     expect(nav.every((i) => i.href !== null)).toBe(true);
     const reports = sidebarModel('admin', 'en')
       .flatMap((s) => s.items)
       .find((i) => i.id === 'reports')!;
     expect(reports).toMatchObject({ href: null, reason: 'Being built — milestone M9' });
     expect(loginModel('ur')).toMatchObject({ href: '/login', reason: null }); // M1 is built
-    const events = sidebarModel('portal', 'ur')
-      .flatMap((s) => s.items)
-      .find((i) => i.id === 'events')!;
-    expect(events).toMatchObject({ href: null, reason: 'تیاری میں — مرحلہ M8' });
+    const portal = sidebarModel('portal', 'ur').flatMap((s) => s.items);
+    // engagement part 1 (M8a) is built; the AI assistant (M8) is not yet
+    expect(portal.find((i) => i.id === 'events')).toMatchObject({ href: '/portal/events', reason: null });
+    const assistant = portal.find((i) => i.id === 'assistant');
+    if (assistant) expect(assistant).toMatchObject({ href: null, reason: 'تیاری میں — مرحلہ M8' });
   });
 
   it('gives every item both languages', () => {

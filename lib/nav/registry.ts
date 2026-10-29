@@ -8,11 +8,24 @@
  */
 
 export type Area = 'site' | 'portal' | 'admin';
-// M5 = staff review (Release 2), M5c = committee desk and meetings (Release 4)
-export type Milestone = 'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M6b' | 'M7' | 'M8' | 'M9' | 'MA';
+// M5 = staff review (Release 2), M5c = committee desk and meetings (Release 4), M8a = engagement part 1 (messages,
+// events, support tickets, website content, notices — migration 0490); the rest of M8 follows
+export type Milestone =
+  'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M6b' | 'M7' | 'M8a' | 'M8' | 'M9' | 'MA';
 
 /** Milestones whose screens exist. Add a milestone here when its pages ship. */
-export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>(['M0', 'M1', 'M2', 'M3', 'M4', 'M5', 'M5c', 'M6', 'M7']);
+export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
+  'M0',
+  'M1',
+  'M2',
+  'M3',
+  'M4',
+  'M5',
+  'M5c',
+  'M6',
+  'M7',
+  'M8a',
+]);
 
 export type IconName =
   | 'home'
@@ -105,10 +118,10 @@ export const SCREENS: readonly Screen[] = [
   s('portal', 'application', '/portal/application', 'M7', 'file'),
   s('portal', 'documents', '/portal/documents', 'M6', 'folder'),
   s('portal', 'payments', '/portal/payments', 'M5c', 'card'),
-  s('portal', 'support', '/portal/support', 'M8', 'help'),
+  s('portal', 'support', '/portal/support', 'M8a', 'help'),
   s('portal', 'assistant', '/portal/assistant', 'M8', 'sparkles'),
-  s('portal', 'notifications', '/portal/notifications', 'M8', 'bell'),
-  s('portal', 'events', '/portal/events', 'M8', 'calendar'),
+  s('portal', 'notifications', '/portal/notifications', 'M8a', 'bell'),
+  s('portal', 'events', '/portal/events', 'M8a', 'calendar'),
   s('portal', 'opportunities', '/portal/opportunities', 'M8', 'globe'),
   s('portal', 'profile', '/portal/profile', 'M1', 'building'), // colleagues + change requests (M1); cards and partners arrive with M3
   s('portal', 'endorse', '/portal/endorse', 'M4', 'sign'),
@@ -131,11 +144,11 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'documents', '/admin/documents', 'M6', 'qr'),
   s('admin', 'payments', '/admin/payments', 'M6', 'card'),
   s('admin', 'psid', '/admin/psid', 'M6', 'receipt'),
-  s('admin', 'events', '/admin/events', 'M8', 'calendar'),
+  s('admin', 'events', '/admin/events', 'M8a', 'calendar'),
   s('admin', 'meetings', '/admin/meetings', 'M5c', 'mic'),
-  s('admin', 'complaints', '/admin/complaints', 'M8', 'help'),
-  s('admin', 'content', '/admin/content', 'M8', 'globe'),
-  s('admin', 'notify', '/admin/notify', 'M8', 'mail'),
+  s('admin', 'complaints', '/admin/complaints', 'M8a', 'help'),
+  s('admin', 'content', '/admin/content', 'M8a', 'globe'),
+  s('admin', 'notify', '/admin/notify', 'M8a', 'mail'),
   s('admin', 'reports', '/admin/reports', 'M9', 'chart'),
   s('admin', 'ai', '/admin/ai', 'M9', 'sparkles'),
   s('admin', 'staff', '/admin/staff', 'M1', 'team'),

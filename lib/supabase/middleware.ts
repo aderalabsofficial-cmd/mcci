@@ -69,7 +69,9 @@ export async function updateSession(
 /** the session id inside the (already verified) access token; '' if there is none */
 function sessionId(token: string | undefined): string {
   try {
-    const payload = JSON.parse(atob(token!.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/'))) as { session_id?: unknown };
+    const payload = JSON.parse(atob(token!.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/'))) as {
+      session_id?: unknown;
+    };
     return typeof payload.session_id === 'string' ? payload.session_id : '';
   } catch {
     return '';
