@@ -808,3 +808,14 @@ extraction and MFA on; jobs timer absent. Full evidence: docs/23 §6.
 Rollback: `scripts/deploy/release.sh f766054` brings back the old app, but the 0406–0465 schema stays, and with it
 the closed paths (`cmt_decide`, `cmt_approve_all`, `end_sign`, staff reading storage directly) — so those old screens
 would refuse. The full rollback is restoring `mcci-20261028T211204Z`, which loses everything written after it.
+
+### Owner's changes of 29 Oct 2026 and the remaining pages (migrations 0470–0510, release d024343)
+
+Deployed 29 Oct 2026 with the full gate: backup `mcci-20261029T091547Z` (verify OK) → restore drill PASS (full log kept,
+`/root/drill-d024343.log`) → row-count baseline → migrations 0470–0510 one at a time (0 pending) → grants / policy checks
+→ `release.sh d024343` (`662da8b` kept for rollback) → smoke tests. Row-count change exactly as expected (five `pphoto`
+checklist rows removed and audited; `notification_reads` new). Evidence: docs/25 §6.
+
+Rollback: `scripts/deploy/release.sh 662da8b` brings back the previous app; 0470–0510 stay (additive except the removed
+`pphoto` checklist rows and the staff / company separation), so the old app keeps working with them. The full rollback
+is restoring `mcci-20261029T091547Z`, which loses everything written after it.
