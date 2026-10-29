@@ -150,11 +150,11 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'content', '/admin/content', 'M8a', 'globe'),
   s('admin', 'notify', '/admin/notify', 'M8a', 'mail'),
   s('admin', 'reports', '/admin/reports', 'M9', 'chart'),
-  s('admin', 'ai', '/admin/ai', 'M9', 'sparkles'),
+  s('admin', 'ai', '/admin/ai', 'M8a', 'sparkles'),
   s('admin', 'staff', '/admin/staff', 'M1', 'team'),
   s('admin', 'audit', '/admin/audit', 'M8a', 'clock'),
   s('admin', 'services', '/admin/services', 'M7', 'gear'),
-  s('admin', 'integrations', '/admin/integrations', 'M9', 'plug'),
+  s('admin', 'integrations', '/admin/integrations', 'M8a', 'plug'),
   s('admin', 'settings', '/admin/settings', 'M8a', 'gear'),
 ];
 

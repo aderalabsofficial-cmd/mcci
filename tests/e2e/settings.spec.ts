@@ -39,3 +39,23 @@ test('staff without platform access do not see the settings', async ({ page }) =
   await page.goto('/admin/settings');
   await expect(page.locator('[data-settings]')).toHaveCount(0);
 });
+
+test('Connections shows what is connected and what waits on the bank or courier, with no secret on screen', async ({
+  page,
+}) => {
+  await signInAs(page, 'sg');
+  await page.goto('/admin/integrations');
+  await expect(page.locator('[data-integration="ai"]')).toHaveAttribute('data-state', 'on');
+  await expect(page.locator('[data-integration="portal"]')).toHaveAttribute('data-state', 'included');
+  await expect(page.locator('[data-integration="bank"]')).toHaveAttribute('data-state', 'awaitBank');
+  await expect(page.locator('[data-integration="courier"]')).toHaveAttribute('data-state', 'awaitApi');
+  await expect(page.getByRole('main')).not.toContainText('sk-');
+});
+
+test('AI Insights shows how document reading performs and its guardrails (counts only)', async ({ page }) => {
+  await signInAs(page, 'sg');
+  await page.goto('/admin/ai');
+  await expect(page.getByRole('heading', { name: 'AI Insights' })).toBeVisible();
+  await expect(page.locator('.ai-guard li')).toHaveCount(5);
+  await expect(page.locator('.kg')).toContainText('Documents read');
+});

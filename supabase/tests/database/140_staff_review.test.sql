@@ -14,6 +14,10 @@ update public.applications set stage = 'submitted', created_by = tests.id('owner
  where id = tests.id('app_a_review');
 -- partners / directors give email and address (0440)
 update public.application_partners set email = 'p1@test.local', address = 'Multan' where application_id = tests.id('app_a_review');
+-- and each their own photo (0480)
+update public.application_partners p
+   set photo_path = a.company_id || '/applications/' || a.id || '/partners/' || p.id || '/' || gen_random_uuid() || '.jpg'
+  from public.applications a where a.id = p.application_id and p.application_id = tests.id('app_a_review');
 delete from public.application_documents where application_id = tests.id('app_a_review');
 insert into public.application_documents (application_id, key, path, file_name)
 select tests.id('app_a_review'), k, 'a/applications/r/' || k, k || '.pdf' from unnest(array['cnic','ntn','addr','bank','photo']) k;

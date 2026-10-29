@@ -3801,5 +3801,63 @@
       "qrSize": "Certificate QR: size (share of width)",
       "qrHint": "Measured on the sample certificate; applies to scans stamped from now on."
     }
+  },
+  "integrations": {
+    "title": "Connections",
+    "sub": "What is connected in this build, and what is waiting on MCCI’s bank or courier partner.",
+    "included": "Included in this build",
+    "waiting": "Depends on MCCI’s partners",
+    "onServer": "Connection settings are kept on the server, never on this screen. Ask the IT Convener to change them.",
+    "test": "Send a test",
+    "state": {
+      "on": "Connected",
+      "off": "Not set up",
+      "included": "Included",
+      "awaitBank": "Awaiting bank",
+      "awaitApi": "Awaiting API from MCCI"
+    },
+    "items": {
+      "email": {
+        "name": "Email (SMTP)",
+        "what": "Receipts, vouchers, certificates, notifications"
+      },
+      "ai": {
+        "name": "AI document reading",
+        "what": "Fills the application form and reads certificate scans; a person always checks"
+      },
+      "portal": {
+        "name": "In-portal messages",
+        "what": "Every notification also shown in the portal"
+      },
+      "bank": {
+        "name": "Bank payment confirmation (1Bill PSID / card)",
+        "what": "Needs integration from MCCI’s bank. Until then: voucher + receipt upload, verified by Accounts."
+      },
+      "courier": {
+        "name": "Courier booking & tracking",
+        "what": "Needs a courier API from MCCI. Until then: staff enter tracking numbers manually."
+      }
+    }
+  },
+  "aiInsights": {
+    "title": "AI Insights",
+    "sub": "How the AI document reading performs, and the rules it always follows.",
+    "last30": "Last 30 days",
+    "kReads": "Documents read",
+    "kDone": "Read successfully",
+    "kDoneSub": "{n} could not be read",
+    "kFields": "Fields filled per document",
+    "kFieldsSub": "Average; the applicant checks each one",
+    "kScans": "Certificate scans read",
+    "kScansSub": "{n} with a conflict a person resolved",
+    "byDoc": "Documents read, by type",
+    "none": "Nothing read in the last 30 days.",
+    "model": "Model: {m}",
+    "guardrails": "Guardrails",
+    "g1": "AI only suggests: nothing it reads is saved until a person checks and confirms it.",
+    "g2": "Fields it is unsure about are highlighted for the person to check.",
+    "g3": "At most 15 readings per application per day.",
+    "g4": "A certificate scan that does not match the register is never saved without an approver and a reason.",
+    "g5": "Blacklisting and other decisions are never made by AI."
   }
 }

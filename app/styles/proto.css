@@ -769,3 +769,6 @@
 .proto .st-grid .st-wide {grid-column:1/-1}
 .proto .st-bool {grid-column:1/-1;display:flex;gap:10px;align-items:flex-start;min-height:44px}
 .proto .st-bool input {width:20px;height:20px;margin-top:2px;flex:none}
+
+/* AI Insights: guardrails */
+.proto .ai-guard {display:grid;gap:8px;padding-left:18px;margin:0}
