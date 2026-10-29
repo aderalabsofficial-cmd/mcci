@@ -775,3 +775,36 @@ kept, `56e2331` removed by the release script); public pages 200, Members Regist
 nginx unchanged (`7cbb0f72…`), AI extraction on, no jobs unit, no app errors. Both self-registered applicants on
 production can be marked (checked read-only). Not done by Claude: the marking itself (it needs the Secretary
 General's signed-in session, and is the owner's decision per applicant).
+
+### Owner's decisions of 27–28 Oct 2026: R0–R5 and the mobile pass (migrations 0406–0465, release 662da8b)
+
+What changed: docs/21 (decisions), docs/22 (requirement matrix), docs/23 (release checklist), docs/24 (staff roles
+and onboarding). Commits `e319a86` … `662da8b`; parked M8 (0410 and its pages) and `deploy/web/mcci-jobs.*` excluded.
+
+**Backup and restore (28–29 Oct 2026):** tooling `/opt/mcci-deploy-662da8b` at `662da8b`, clean; the eight migration
+sha256 values equal the tested files (docs/23 §2); 0410 not in the release. Backup `mcci-20261028T211204Z`: verify OK
+(7 ciphertext checksums, every archive decrypts).
+
+Restore drills of that backup, in order:
+1. First drill (about 21:12 UTC): **result `drill: FAIL`**. Its output was shown only through `| tail -5`, which
+   kept the last five lines — `functions identical (166)`, `row counts identical in all 106 tables (2768 rows)`, the
+   Vault check and the negative control, all PASS — and was not written anywhere; the script removes its container,
+   volumes and folder on exit, and Docker keeps no event history from that time. So the failing check is **not
+   known**: it was one of the nine printed before "functions identical" (cluster start, WAL consistency, no ports,
+   server version, roles, databases, schemas, extensions, policies). The data-integrity checks of that same run
+   (functions, row counts, Vault decryption, negative control) passed. Classification: **unexplained; not
+   reproduced** — not called harmless.
+2. Second drill `mcci-restore-drill-20261028T211253Z` (log kept, `/tmp/drill-662da8b.log`): PASS, 13 PASS lines.
+3. Three further drills with full logs and exit codes (`/root/drill-repro-{1,2,3}.log`): exit 0, 13 PASS lines each,
+   `drill: PASS`, 106 tables / 2,768 rows identical, Vault secret decrypts, negative control holds.
+After every run: no drill container, volume or folder left.
+Follow-up: the drill should keep its full output with the backup set, so a failure is always readable.
+
+**Deployed 29 Oct 2026, release `662da8b`.** Migrations 0406 → 0465 applied one at a time (0 pending); grants,
+storage policies, settings and sequences checked; row-count change exactly as expected; `release.sh` switched
+`f766054` → `662da8b` (`f766054` kept for rollback); smoke tests passed; nginx, DNS and other sites untouched; AI
+extraction and MFA on; jobs timer absent. Full evidence: docs/23 §6.
+
+Rollback: `scripts/deploy/release.sh f766054` brings back the old app, but the 0406–0465 schema stays, and with it
+the closed paths (`cmt_decide`, `cmt_approve_all`, `end_sign`, staff reading storage directly) — so those old screens
+would refuse. The full rollback is restoring `mcci-20261028T211204Z`, which loses everything written after it.

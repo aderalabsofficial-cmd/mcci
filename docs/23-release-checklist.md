@@ -1,7 +1,7 @@
 # 23 · Release checklist — R0–R5 and the mobile pass (28 Oct 2026)
 
-Production today: release `f766054` (migrations through 0405). This release takes production to the final commit
-below. Local results are local results — production verification is in §5 once deployed.
+Production since 29 Oct 2026: release `662da8b` (migrations through 0465); `f766054` kept for rollback. Local
+results are local results — production verification is in §6.
 
 ## 1. Commits (branch `db/schema-proposal`)
 
@@ -19,6 +19,7 @@ below. Local results are local results — production verification is in §5 onc
 | `281dc99`, `2e5a576` | database test updates for R3 / R5 rules; this checklist |
 | `d16c408` | fix: "Reset to defaults" keeps the three new designations' limits (0465) — found by the full browser run |
 | `02f38ea` | test fixture uses a fictional company name (the sample certificate's company name remains in the history of `9edf9b1`) |
+| `662da8b` | local results in this checklist — **the commit deployed** |
 
 The parked M8 engagement work (0410 and its pages) and `deploy/web/mcci-jobs.*` are **not** in any commit; the
 release diff `f766054..4a0d094` (113 files) contains none of them.
@@ -66,7 +67,7 @@ downloads** (officer / SG refused, IT Convener allowed, all logged); phone layou
 ## 5. Production steps
 1. Tooling clone at the final commit; compare each migration's sha256 with §2.
 2. Backup (`scripts/selfhost/backup.sh`) → restore drill (`restore-drill.sh`) → row-count snapshot.
-3. `migrate.sh --dry-run`, then `--apply-next` seven times (each in its own transaction); grants check.
+3. `migrate.sh --dry-run`, then `--apply-next` eight times (each in its own transaction); grants check.
 4. `scripts/deploy/release.sh <commit>` (atomic switch; the previous release stays for rollback).
 5. Smoke tests: public pages, verify, login, admin and portal pages, file route refusals, nginx config hash unchanged,
    AI_EXTRACTION on, no jobs unit; row counts compared.
@@ -82,5 +83,38 @@ downloads** (officer / SG refused, IT Convener allowed, all logged); phone layou
 - Phone layout: 102 routes × 360 / 390 / 412 px × EN / UR without page or section sideways scroll; tap targets in the
   app shell ≥ 44 px.
 
-**Production:** (below, after deployment)
+**Final commit `662da8b`, clean worktree (local, not production):** dry run of a fresh throwaway database
+**859 ok, 0 not ok**; unit **276 / 276**; typecheck and lint clean; full browser suite (desktop, mobile-360,
+app-shell) **880 passed, 0 failed, 406 skipped** (skips are project-limited specs, e.g. desktop-only ones).
+
+**Production (28–29 Oct 2026):**
+- Tooling `/opt/mcci-deploy-662da8b`, clean; the eight sha256 values equal §2; 0410 not present.
+- Backup `mcci-20261028T211204Z`: verify OK. Restore drills: the first **FAILED with its output lost** (cause
+  unknown, see docs/20); the second and three further drills with full logs PASS (106 tables / 2,768 rows identical,
+  Vault decrypts, negative control holds). No drill leftovers.
+- Row counts before migrating equal the backup's.
+- Migrations 0406 → 0465 applied one at a time, each in its own transaction; `migrate.sh --dry-run` afterwards:
+  **0 pending**.
+- Checks after migrating: 13 new `api.*` functions executable by `authenticated` only (0 by `anon`); retired paths
+  (`cmt_decide`, `cmt_approve_all`, `end_sign`) closed; storage SELECT policies use `is_it_convener`, and
+  `certificates_read` covers the member's own company only; 3 new designations, limits and defaults 13 / 13; `llp`
+  in `biz_type`; `releaseNumberOnDecline` false, `certificateQr` set, `needCode` false; sequences unchanged.
+- Row-count change exactly as expected: role_permissions +13, role_permission_defaults +13, designations 9 → 12,
+  document_requirements 50 → 65, audit_log +51; certificate_scans, committee_assignments, file_access_log new and
+  empty. No member, application or payment row changed.
+- `release.sh 662da8b`: switched `f766054` → `662da8b` atomically; `f766054` (and `ddcbd24`) kept for rollback.
+- Smoke tests on https://app.mcci.aderalabs.tech:
+  - Public pages 200: `/`, `/ur`, `/membership`, `/ur/membership`, `/services`, `/verify`, `/directory`, `/live`,
+    `/track`, `/login`, `/resources`; `/api/health` 200.
+  - Signed out, `/portal`, `/portal/join`, `/admin`, `/admin/committee`, `/admin/temp`, `/admin/members` → 307 to
+    `/login?next=…`.
+  - Signed out, `/api/files/…` (view and `?download=1`) 403, `/api/register/export` 403,
+    `/api/certificates/scan/<id>` 403; unknown certificate / verify codes 404.
+  - `/live` shows Corporate and Associate members; `api.site_stats()` returns 0 for everything, which is right: the
+    only members are the two demo members (`DEMO-A-01`, `DEMO-A-02`), which the public counts exclude.
+  - nginx config hash unchanged (`7cbb0f7242ce4277`), `nginx -t` OK; `AI_EXTRACTION=on`; TOTP enrol and verify on;
+    no `mcci-jobs` unit; `mcci-web` active, no errors in its log since the release; the other sites on the server still
+    answer 200.
+- No real member imported and no staff account created. The President, Membership Committee Convener and IT Convener
+  accounts are still to be invited by the SG (docs/24) — the acceptance tests in §4 wait for them.
 
