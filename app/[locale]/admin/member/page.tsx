@@ -78,7 +78,7 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
         <div className="card">
           <p className="em">
             {m('choose')}{' '}
-            <Link href="/admin/members" data-action="nav">
+            <Link href="/admin/members" className="btn" data-action="nav">
               {m('toRegister')}
             </Link>
           </p>

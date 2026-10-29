@@ -11,7 +11,9 @@ test.describe('desktop shells', () => {
     const menu = page.getByRole('complementary', { name: 'Main menu' });
     await expect(menu).toBeVisible();
     await expect(menu.getByRole('link', { name: /Home/ })).toHaveAttribute('aria-current', 'page');
-    await expect(menu.getByRole('button', { name: /Help & Support/ })).toHaveAttribute('title', /milestone M8/);
+    // Help & Support is built (M8a, 29 Oct 2026); items still being built are buttons that say why
+    await expect(menu.getByRole('link', { name: /Help & Support/ })).toHaveAttribute('href', '/portal/support');
+    for (const later of await menu.getByRole('button').all()) await expect(later).toHaveAttribute('title', /milestone/);
     await expect(bottomNav(page)).toBeHidden();
   });
 

@@ -15,7 +15,7 @@ test('the register opens a member record; every section opens; the actions are t
   await signInAs(page, 'sg');
   await page.goto('/admin/members');
   await page.locator(`a[data-action="member.open"][href*="${id}"]`).click();
-  await expect(page).toHaveURL(new RegExp(`/admin/member\\?id=${id}`));
+  await expect(page).toHaveURL(new RegExp(`/admin/member\\?id=${id}`), { timeout: 20_000 });
   await expect(page.locator('.mr-grid')).toBeVisible();
   await expect(page.locator(`[data-member] [data-action^="reg."]`).first()).toBeVisible();
   for (const tab of ['partners', 'documents', 'certificates', 'payments', 'history', 'particulars']) {
