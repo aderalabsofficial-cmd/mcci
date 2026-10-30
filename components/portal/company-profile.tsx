@@ -261,19 +261,23 @@ export function CompanyProfile({
                     role="switch"
                     aria-checked={urduFirst}
                     aria-label={t('urduFirst')}
-                    className={cn(
-                      'relative h-7 w-12 shrink-0 rounded-full border border-line transition-colors',
-                      urduFirst ? 'bg-ok' : 'bg-card2',
-                    )}
+                    className="flex h-11 w-12 shrink-0 items-center"
                     data-action="setting.toggle"
                     disabled={busy}
                   >
                     <span
                       className={cn(
-                        'absolute top-0.5 size-[22px] rounded-full bg-white shadow transition-[inset-inline-start]',
-                        urduFirst ? 'start-[22px]' : 'start-0.5',
+                        'relative block h-7 w-12 rounded-full border border-line transition-colors',
+                        urduFirst ? 'bg-ok' : 'bg-card2',
                       )}
-                    />
+                    >
+                      <span
+                        className={cn(
+                          'absolute top-0.5 size-[22px] rounded-full bg-white shadow transition-[inset-inline-start]',
+                          urduFirst ? 'start-[22px]' : 'start-0.5',
+                        )}
+                      />
+                    </span>
                   </button>
                 </>
               )}
