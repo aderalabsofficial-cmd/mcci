@@ -1,0 +1,21 @@
+{
+  "name": "mcci-digital-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCCI Digital Android app: a Capacitor 7 shell around the live web app (docs/15-mobile-app.md)",
+  "scripts": {
+    "sync": "cap sync android",
+    "add": "cap add android"
+  },
+  "dependencies": {
+    "@capacitor/android": "7.6.10",
+    "@capacitor/app": "7.1.2",
+    "@capacitor/core": "7.6.10",
+    "@capacitor/splash-screen": "7.0.5",
+    "@capacitor/status-bar": "7.0.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.10",
+    "typescript": "~5.9.3"
+  }
+}
