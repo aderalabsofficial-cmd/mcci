@@ -10,7 +10,7 @@ select is((select count(*) from public.designations
   'three new designations');
 -- "Reset to defaults" (api.role_permissions_reset) restores private.role_permission_defaults: it has their limits (0465)
 select is((select count(*) from private.role_permission_defaults
-            where designation in ('Membership Committee Convener', 'Membership Committee Member', 'IT Convener')), 13::bigint,
+            where designation in ('Membership Committee Convener', 'Membership Committee Member', 'IT Convener')), 14::bigint,
   'reset to defaults keeps the new designations'' limits');
 
 

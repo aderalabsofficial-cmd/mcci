@@ -11,7 +11,7 @@ export type Area = 'site' | 'portal' | 'admin';
 // M5 = staff review (Release 2), M5c = committee desk and meetings (Release 4), M8a = engagement part 1 (messages,
 // events, support tickets, website content, notices — migration 0490); the rest of M8 follows
 export type Milestone =
-  'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M6b' | 'M7' | 'M8a' | 'M8' | 'M9' | 'MA';
+  'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M6b' | 'M7' | 'M8a' | 'M8' | 'M9' | 'MA' | 'MB';
 
 /** Milestones whose screens exist. Add a milestone here when its pages ship. */
 export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
@@ -28,6 +28,7 @@ export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
   'M8',
   'M9',
   'MA',
+  'MB',
 ]);
 
 export type IconName =
@@ -159,6 +160,10 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'services', '/admin/services', 'M7', 'gear'),
   s('admin', 'integrations', '/admin/integrations', 'M8a', 'plug'),
   s('admin', 'settings', '/admin/settings', 'M8a', 'gear'),
+  s('admin', 'bizdir', '/admin/business-directory', 'MB', 'building'),
+  s('admin', 'bizprofile', '/admin/business-directory/profile', 'MB', 'idCard'),
+  s('admin', 'segments', '/admin/business-directory/segments', 'MB', 'list'),
+  s('admin', 'bizexports', '/admin/business-directory/exports', 'MB', 'upload'),
 ];
 
 export function screen(area: Area, key: string): Screen {
@@ -232,6 +237,10 @@ export const SIDEBAR: Record<'portal' | 'admin', NavSection[]> = {
       ],
     },
     {
+      section: 'intelligence',
+      items: [{ label: 'businessDirectory', key: 'bizdir', color: '#8fd3ff' }],
+    },
+    {
       section: 'insights',
       items: [
         { label: 'reportsAi', key: 'reports', color: '#c9a8ff' },
@@ -263,6 +272,7 @@ export const PAGE_TABS: Record<'portal' | 'admin', string[][]> = {
     ['reports', 'ai'],
     ['staff', 'audit'],
     ['services', 'integrations'],
+    ['bizdir', 'bizprofile', 'segments', 'bizexports'],
   ],
 };
 

@@ -34,7 +34,7 @@ const officer: Access = {
   staff: {
     designation: 'Membership Officer',
     seniority: 3,
-    levels: { dash: 1, mem: 2, cmt: 1, temp: 1, reg: 1, svc: 0, docs: 1, pay: 0, eng: 0, rep: 1, staff: 0, plat: 0 },
+    levels: { dash: 1, mem: 2, cmt: 1, temp: 1, reg: 1, svc: 0, docs: 1, pay: 0, eng: 0, rep: 1, staff: 0, plat: 0, biz: 1, out: 0 },
   },
   companies: [],
   mfa: { totp_verified: true },

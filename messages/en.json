@@ -71,7 +71,8 @@
       "reportsAi": "Reports & AI",
       "staffAudit": "Staff & Audit",
       "servicesIntegrations": "Services & Integrations",
-      "settings": "Settings"
+      "settings": "Settings",
+      "businessDirectory": "Business Directory"
     },
     "sections": {
       "membership": "MEMBERSHIP",
@@ -81,7 +82,8 @@
       "servicesDesk": "SERVICES DESK",
       "finance": "FINANCE",
       "engagement": "ENGAGEMENT",
-      "insights": "INSIGHTS & PLATFORM"
+      "insights": "INSIGHTS & PLATFORM",
+      "intelligence": "BUSINESS INTELLIGENCE"
     }
   },
   "bottom": {
@@ -171,7 +173,11 @@
       "audit": "Audit Trail",
       "services": "Services Setup",
       "integrations": "Integrations",
-      "settings": "Settings"
+      "settings": "Settings",
+      "bizdir": "Business Directory",
+      "bizprofile": "Business Profile",
+      "segments": "Segments",
+      "bizexports": "Exports"
     }
   },
   "tabs": {
@@ -214,7 +220,11 @@
       "staff": "Staff & Roles",
       "audit": "Audit Trail",
       "services": "Services Setup",
-      "integrations": "Integrations"
+      "integrations": "Integrations",
+      "bizdir": "Directory",
+      "bizprofile": "Profile",
+      "segments": "Segments",
+      "bizexports": "Exports"
     }
   },
   "footer": {
@@ -375,7 +385,9 @@
       "eng": "Events, complaints & content",
       "rep": "Reports & AI",
       "staff": "Staff & audit",
-      "plat": "Services setup & settings"
+      "plat": "Services setup & settings",
+      "biz": "Business directory",
+      "out": "Outreach & consent"
     },
     "designations": {
       "Secretary General": "Senior management — full control incl. staff, settings and final approvals",
@@ -4074,6 +4086,316 @@
       "service": "Service",
       "voucher": "Voucher",
       "ticket": "Help request"
+    }
+  },
+  "biz": {
+    "title": "Business Directory",
+    "columns": {
+      "business_name": "Business name",
+      "member_no": "Membership no.",
+      "member_class": "Class",
+      "member_status": "Status",
+      "business_category": "Category",
+      "nature": "Nature of business",
+      "sector": "Industry sector",
+      "registration": "Registration",
+      "city": "City",
+      "district": "District",
+      "rep_name": "Representative",
+      "member_since": "Member since",
+      "valid_to": "Valid to",
+      "consent": "WhatsApp consent",
+      "tags": "Internal tags",
+      "tel": "Telephone",
+      "email": "Email",
+      "whatsapp": "WhatsApp number",
+      "address": "Address",
+      "ntn": "NTN"
+    },
+    "fields": {
+      "business_category": "Business category",
+      "nature": "Nature of business",
+      "sector": "Industry sector",
+      "member_class": "Membership class",
+      "member_status": "Membership status",
+      "renewal": "Renewal",
+      "member_since": "Member since",
+      "valid_to": "Valid to",
+      "valid_year": "Validity year",
+      "city": "City",
+      "district": "District",
+      "registration": "Registration type",
+      "whatsapp_available": "WhatsApp contact available",
+      "consent": "WhatsApp consent",
+      "opted_out": "Opted out",
+      "incomplete": "Incomplete profile",
+      "tags": "Internal tags"
+    },
+    "values": {
+      "business_category": {
+        "manufacturing": "Manufacturing",
+        "non_manufacturing": "Non-manufacturing"
+      },
+      "member_class": {
+        "Corporate": "Corporate",
+        "Associate": "Associate"
+      },
+      "member_status": {
+        "Active": "Active",
+        "Temporary": "Temporary",
+        "Expired": "Expired",
+        "Suspended": "Suspended",
+        "Revoked": "Revoked"
+      },
+      "renewal": {
+        "current": "Current",
+        "due": "Due soon",
+        "lapsed": "Lapsed"
+      },
+      "registration": {
+        "prop": "Proprietorship",
+        "aop": "AOP / partnership",
+        "pvt": "Private limited",
+        "mnc": "Multinational",
+        "public": "Public limited"
+      },
+      "consent": {
+        "granted": "Granted",
+        "withdrawn": "Withdrawn",
+        "not_recorded": "Not recorded",
+        "no_contact": "No contact"
+      }
+    },
+    "filter": {
+      "title": "Find businesses",
+      "search": "Search by name or membership number",
+      "searchHint": "Name or number",
+      "group": "Group {n}",
+      "match": "Businesses must match",
+      "matchAll": "All of these",
+      "matchAny": "Any of these",
+      "exclude": "Exclude businesses that match",
+      "excludeShort": "Excluded",
+      "field": "Field",
+      "condition": "Condition",
+      "value": "Value",
+      "values": "Choose values",
+      "noValues": "No values recorded yet.",
+      "from": "From",
+      "to": "To",
+      "yes": "Yes",
+      "no": "No",
+      "addRule": "Add condition",
+      "removeRule": "Remove condition",
+      "addGroup": "Add filter group",
+      "maxGroups": "Up to 10 groups",
+      "applied": "Filters",
+      "apply": "Apply filters",
+      "clear": "Clear",
+      "saveSegment": "Save as segment",
+      "saveChanges": "Save segment changes",
+      "saveNeedsRule": "Add a complete condition first",
+      "saveConfirm": "Save segment",
+      "segmentName": "Segment name",
+      "segmentDescription": "Description (optional)",
+      "nameNeeded": "Enter a name",
+      "dynamicNote": "A segment is dynamic: it saves these filters, not a list, so its businesses change as records change.",
+      "segmentOpen": "Segment: {name}",
+      "matching": "{n} businesses match",
+      "countWhatsapp": "{n} with a WhatsApp contact",
+      "countConsent": "{n} consent granted",
+      "countOpted": "{n} opted out",
+      "countEligible": "{n} could be contacted",
+      "counting": "Counting…",
+      "countFailed": "The count is not available right now. Try again.",
+      "ops": {
+        "in": "is",
+        "not_in": "is not",
+        "contains": "contains",
+        "empty": "is empty",
+        "not_empty": "is not empty",
+        "eq": "equals",
+        "gte": "from",
+        "lte": "up to",
+        "between": "between",
+        "is": "is",
+        "any": "includes any of",
+        "none": "includes none of"
+      }
+    },
+    "table": {
+      "title": "Registered businesses",
+      "total": "{n} in total",
+      "selected": "{n} selected",
+      "selectMatching": "Select all {n} matching",
+      "clearSelection": "Clear selection",
+      "export": "Export",
+      "empty": "No businesses match. Change the filters or clear them.",
+      "selectPage": "Select this page",
+      "selectRow": "Select {name}",
+      "incomplete": "Incomplete",
+      "optedOut": "Opted out",
+      "pages": "Pages",
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {p} of {n}"
+    },
+    "directory": {
+      "title": "Business Directory",
+      "sub": "Registered members from the official register. Demo records are left out.",
+      "segments": "Segments",
+      "exports": "Exports",
+      "quality": "Data quality",
+      "incomplete": "Show incomplete profiles",
+      "noDuplicates": "No likely duplicates found.",
+      "dup_name": "Same name",
+      "dup_ntn": "Same NTN",
+      "dup_phone": "Same WhatsApp number"
+    },
+    "profile": {
+      "back": "Back to directory",
+      "pickOne": "Open a business from the directory.",
+      "notFound": "This business was not found.",
+      "official": "Official membership record",
+      "readOnly": "Read only",
+      "officialNote": "This comes from the Members Register and cannot be changed here.",
+      "outreach": "Outreach details",
+      "internal": "MCCI internal",
+      "notes": "Internal note",
+      "saveDetails": "Save details",
+      "working": "Please wait…",
+      "tags": "Internal tags",
+      "noTags": "No tags yet.",
+      "removeTag": "Remove tag",
+      "existingTag": "Existing tag",
+      "newTagOption": "New tag…",
+      "newTag": "New tag name",
+      "addTag": "Add tag",
+      "consent": "WhatsApp contact and consent",
+      "consentStatus": "Consent",
+      "optedOut": "Opted out",
+      "whatsappNumber": "WhatsApp number",
+      "contactName": "Contact person",
+      "numberHint": "International format, such as +923001234567. A new number starts with no consent recorded. Leave empty to remove.",
+      "saveContact": "Save contact",
+      "consentChange": "Record",
+      "consentGrant": "Consent given",
+      "consentWithdraw": "Consent withdrawn",
+      "consentMethod": "How it was given",
+      "consentEvidence": "Evidence (form number, email date)",
+      "consentSave": "Record consent",
+      "suppress": "Do not contact this number",
+      "suppressReason": "Reason for not contacting",
+      "suppressedSince": "Not to be contacted since",
+      "liftReason": "Reason for lifting",
+      "lift": "Lift the block",
+      "consentHistory": "Consent history",
+      "numberCurrent": "Current number",
+      "numberOld": "Earlier number",
+      "contactsHidden": "Contact details are outside your limits.",
+      "history": "Membership history",
+      "historyCreated": "Membership recorded",
+      "historyChanged": "Membership updated",
+      "incomplete": "Some details are missing: nature of business, city, address, a phone or email, or a WhatsApp contact.",
+      "methods": {
+        "written": "Signed form",
+        "event_form": "Event sign-up",
+        "email": "Email from the business",
+        "recipient": "Reply from the recipient",
+        "member_portal": "Member portal"
+      },
+      "consentCols": {
+        "date": "Date",
+        "status": "Consent",
+        "method": "How",
+        "evidence": "Evidence",
+        "number": "Number"
+      },
+      "consentState": {
+        "granted": "Given",
+        "withdrawn": "Withdrawn"
+      }
+    },
+    "segments": {
+      "title": "Segments",
+      "sub": "Saved filters you can use again. Build one in the directory, then save it.",
+      "back": "Back to directory",
+      "empty": "No segments yet. Apply filters in the directory and choose Save as segment.",
+      "dynamic": "Dynamic",
+      "count": "{n} businesses today",
+      "countFailed": "Count not available",
+      "open": "Open in directory",
+      "export": "Export",
+      "delete": "Delete",
+      "deleteTitle": "Delete {name}?",
+      "deleteIntro": "The segment is removed. No business records change.",
+      "deleteConfirm": "Delete segment"
+    },
+    "exports": {
+      "pageTitle": "Exports",
+      "sub": "Choose businesses and columns, check the sample, then download. Every download is recorded.",
+      "back": "Back to directory",
+      "title": "Export",
+      "fileTitle": "MCCI Business Directory",
+      "scope": "Which businesses",
+      "scopeFilter": "All matching the filters above",
+      "scopeSelected": "Selected in the directory ({n})",
+      "noSelection": "Nothing selected in the directory",
+      "columns": "Columns",
+      "sensitive": "Sensitive",
+      "lockedHint": "Needs Approve level on Business directory",
+      "format": "Format",
+      "pdf": "PDF (English only)",
+      "reason": "Reason (optional)",
+      "reasonRequired": "Reason (required for sensitive columns)",
+      "preview": "Preview",
+      "download": "Download",
+      "working": "Please wait…",
+      "pickField": "Choose at least one column",
+      "reasonNeeded": "Enter a reason of at least 5 characters",
+      "pdfFields": "A PDF can hold up to 8 columns",
+      "previewFirst": "Preview first",
+      "previewTotal": "{n} businesses.",
+      "previewSample": "First rows:",
+      "done": "Downloaded, and recorded in the log below.",
+      "logMine": "Your recent exports",
+      "logAll": "Recent exports by all staff",
+      "logEmpty": "No exports yet.",
+      "logCols": {
+        "when": "When",
+        "who": "Who",
+        "format": "Format",
+        "count": "Businesses",
+        "fields": "Columns",
+        "reason": "Reason"
+      }
+    },
+    "errors": {
+      "notAllowed": "This is outside your limits.",
+      "fields": "Please check the details and try again.",
+      "filter": "One of the filters could not be read. Change it and try again.",
+      "duplicate": "That name is already in use.",
+      "phone": "Enter the number in international format, such as +923001234567.",
+      "nocontact": "Save a WhatsApp number first.",
+      "evidence": "Enter the evidence for this consent.",
+      "suppressed": "This number is blocked. The block must be lifted first.",
+      "reason": "Enter a reason.",
+      "toomany": "Too many businesses for one export. Narrow the filters.",
+      "approval": "An export this large needs Approve level. Ask an approver or narrow the filters.",
+      "limited": "Too many exports in the last hour. Try again later.",
+      "pdffields": "A PDF can hold up to 8 columns.",
+      "generic": "That did not work. Please try again."
+    },
+    "done": {
+      "segmentSaved": "Segment saved.",
+      "segmentDeleted": "Segment deleted.",
+      "details": "Details saved.",
+      "tagAdded": "Tag added.",
+      "tagRemoved": "Tag removed.",
+      "contact": "Contact saved.",
+      "consent": "Consent recorded.",
+      "suppressed": "This number will not be contacted.",
+      "lifted": "The block was lifted."
     }
   }
 }

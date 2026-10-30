@@ -18,6 +18,8 @@ export const STAFF_MODULES = [
   'rep',
   'staff',
   'plat',
+  'biz',
+  'out',
 ] as const;
 export const COMPANY_AREAS = ['mship', 'svc', 'docs', 'pay', 'events', 'profile'] as const;
 export type StaffModule = (typeof STAFF_MODULES)[number];

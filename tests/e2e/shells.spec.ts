@@ -25,6 +25,7 @@ test.describe('desktop shells', () => {
       'SERVICES DESK',
       'FINANCE',
       'ENGAGEMENT',
+      'BUSINESS INTELLIGENCE',
       'INSIGHTS & PLATFORM',
     ]);
     await expect(page.locator('[data-action="theme.toggle"]:visible')).toHaveCount(1);

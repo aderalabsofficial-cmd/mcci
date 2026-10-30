@@ -162,3 +162,43 @@
 @media (max-width:640px) {
   .proto .stamp-grid, .proto .stamp-ctl {grid-template-columns:1fr}
 }
+
+/* business directory (docs/29) */
+.proto .biz-filter, .proto .biz-export, .proto .biz-form {display:grid;gap:12px}
+.proto .biz-form {grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px}
+.proto .biz-wide {grid-column:1 / -1}
+.proto .biz-group {border:1px solid var(--b);border-radius:12px;padding:10px 12px;display:grid;gap:10px;min-width:0}
+.proto .biz-group legend {font-size:13px;font-weight:800;padding:0 6px}
+.proto .biz-group-head {display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.proto .biz-rule {display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.proto .biz-values {border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:4px 14px;grid-column:1 / -1;min-width:0}
+.proto .biz-values legend {font-size:13px;font-weight:700;padding:0;margin-bottom:4px}
+.proto .biz-check {display:inline-flex;align-items:center;gap:8px;min-height:44px;font-weight:600;font-size:14px}
+.proto .biz-check input {width:20px;height:20px;flex:none}
+.proto .biz-remove {min-height:44px;min-width:44px;justify-content:center;justify-self:start}
+.proto .biz-chips {display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.proto .biz-chips .chip {cursor:default;min-height:44px}
+.proto .biz-chip-ex {border-color:#ef4444}
+.proto .biz-count {display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;font-size:14px}
+.proto .biz-count b {font-size:17px}
+.proto .biz-selbar {display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.proto .biz-pick {width:44px}
+.proto .biz-pick input {width:22px;height:22px;display:block;margin:11px}
+.proto .biz-sort {display:inline-flex;align-items:center;gap:4px;min-height:44px;color:inherit;font-weight:inherit}
+.proto .biz-tags {display:block;opacity:.8}
+.proto .biz-empty {padding:12px 0}
+.proto .biz-pages {align-items:center;margin-top:12px}
+.proto .biz-inline {display:inline-flex}
+.proto .biz-x {display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;background:none;border:0;color:inherit;cursor:pointer}
+.proto .biz-history {margin:10px 0 0;padding-inline-start:18px;display:grid;gap:4px}
+.proto .biz-filter select, .proto .biz-filter input[type=search], .proto .biz-filter input[type=text], .proto .biz-filter input[type=date], .proto .biz-filter input[type=number],
+.proto .biz-export select, .proto .biz-export input:not([type=checkbox]):not([type=radio]), .proto .biz-form input, .proto .biz-form select, .proto .biz-form textarea
+  {width:100%;min-height:44px;border:1px solid var(--b);border-radius:10px;padding:8px 10px;background:var(--card2);color:var(--t);font:inherit}
+@media (max-width:640px) {
+  /* docs/15 §8: every control is a 44 px tap target on phones */
+  .proto .biz-check input, .proto .biz-pick input {width:44px;height:44px;margin:0}
+  .proto .biz-form {grid-template-columns:1fr}
+  .proto .biz-rule {grid-template-columns:1fr}
+}
+.proto .biz-filter .ch h3, .proto [data-quality] .ch h3 {display:inline-flex;align-items:center;gap:8px}
+.proto [data-quality] a {text-decoration:underline;display:inline-flex;align-items:center;min-height:44px}

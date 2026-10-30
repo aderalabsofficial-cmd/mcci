@@ -85,6 +85,45 @@ export type Database = {
               "action": string,"at": string,"new_value": Json,"object": string,"object_id": string,"old_value": Json,"reason": string,"result": string,"user_name": string
             }[]
                            },
+"biz_consent_record":
+{ Args: { "p_company": string,"p_evidence": string,"p_method": string,"p_status": string }; Returns: undefined
+                           },
+"biz_contact_save":
+{ Args: { "p_company": string,"p_name": string,"p_phone": string }; Returns: undefined
+                           },
+"biz_count":
+{ Args: { "p_def": Json,"p_q": string }; Returns: Json
+                           },
+"biz_duplicates":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"biz_export":
+{ Args: { "p_def": Json,"p_excluded": (string)[],"p_fields": (string)[],"p_format": string,"p_ids": (string)[],"p_log": boolean,"p_q": string,"p_reason": string }; Returns: Json
+                           },
+"biz_facets":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"biz_meta_save":
+{ Args: { "p_city": string,"p_company": string,"p_district": string,"p_notes": string }; Returns: undefined
+                           },
+"biz_profile":
+{ Args: { "p_member": string }; Returns: Json
+                           },
+"biz_search":
+{ Args: { "p_def": Json,"p_dir": string,"p_page": number,"p_q": string,"p_size": number,"p_sort": string }; Returns: Json
+                           },
+"biz_suppress":
+{ Args: { "p_company": string,"p_reason": string }; Returns: undefined
+                           },
+"biz_tag_create":
+{ Args: { "p_name": string }; Returns: string
+                           },
+"biz_tag_set":
+{ Args: { "p_company": string,"p_on": boolean,"p_tag": string }; Returns: undefined
+                           },
+"biz_unsuppress":
+{ Args: { "p_company": string,"p_reason": string }; Returns: undefined
+                           },
 "cert_file":
 { Args: { "p_code": string }; Returns: {
               "member_no": string,"path": string,"status": string
@@ -403,6 +442,12 @@ export type Database = {
                            },
 "role_permissions_save":
 { Args: { "p_designation": string,"p_levels": Json }; Returns: number
+                           },
+"seg_delete":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"seg_save":
+{ Args: { "p_def": Json,"p_description": string,"p_id": string,"p_name": string }; Returns: string
                            },
 "settings_bank":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -971,6 +1016,38 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"company_tags": {
+                  Row: {
+                    "added_at": string,"added_by": string | null,"company_id": string,"tag_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "added_at"?: string,"added_by"?: string | null,"company_id": string,"tag_id": string
+                  }
+                  Update: {
+                    "added_at"?: string,"added_by"?: string | null,"company_id"?: string,"tag_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "company_tags_added_by_fkey"
+      columns: ["added_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "company_tags_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "company_tags_tag_id_fkey"
+      columns: ["tag_id"]
+isOneToOne: false
+      referencedRelation: "outreach_tags"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"company_users": {
                   Row: {
                     "company_id": string,"created_at": string,"role": Database["public"]['Enums']["company_role"],"status": Database["public"]['Enums']["invite_status"],"user_id": string
@@ -1220,6 +1297,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"export_log": {
+                  Row: {
+                    "at": string,"fields": (string)[],"filters": NonNullable<Json>,"format": string,"id": number,"reason": string | null,"record_count": number,"sensitive": boolean,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"fields": (string)[],"filters": NonNullable<Json>,"format": string,"id"?: never,"reason"?: string | null,"record_count": number,"sensitive": boolean,"user_id"?: string | null
+                  }
+                  Update: {
+                    "at"?: string,"fields"?: (string)[],"filters"?: NonNullable<Json>,"format"?: string,"id"?: never,"reason"?: string | null,"record_count"?: number,"sensitive"?: boolean,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "export_log_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"file_access_log": {
                   Row: {
@@ -1545,6 +1642,130 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"outreach_consents": {
+                  Row: {
+                    "company_id": string,"evidence": string | null,"id": number,"method": string,"phone": string,"recorded_at": string,"recorded_by": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"evidence"?: string | null,"id"?: never,"method": string,"phone": string,"recorded_at"?: string,"recorded_by"?: string | null,"status": string
+                  }
+                  Update: {
+                    "company_id"?: string,"evidence"?: string | null,"id"?: never,"method"?: string,"phone"?: string,"recorded_at"?: string,"recorded_by"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_consents_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_consents_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_contacts": {
+                  Row: {
+                    "company_id": string,"name": string | null,"phone": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"name"?: string | null,"phone": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "company_id"?: string,"name"?: string | null,"phone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_contacts_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: true
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_contacts_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_profiles": {
+                  Row: {
+                    "city": string | null,"company_id": string,"district": string | null,"notes": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "city"?: string | null,"company_id": string,"district"?: string | null,"notes"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "city"?: string | null,"company_id"?: string,"district"?: string | null,"notes"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_profiles_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: true
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_profiles_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_suppressions": {
+                  Row: {
+                    "active": boolean,"created_at": string,"created_by": string | null,"id": string,"lifted_at": string | null,"lifted_by": string | null,"lifted_reason": string | null,"phone": string,"reason": string,"source": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"created_at"?: string,"created_by"?: string | null,"id"?: string,"lifted_at"?: string | null,"lifted_by"?: string | null,"lifted_reason"?: string | null,"phone": string,"reason": string,"source": string
+                  }
+                  Update: {
+                    "active"?: boolean,"created_at"?: string,"created_by"?: string | null,"id"?: string,"lifted_at"?: string | null,"lifted_by"?: string | null,"lifted_reason"?: string | null,"phone"?: string,"reason"?: string,"source"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_suppressions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_suppressions_lifted_by_fkey"
+      columns: ["lifted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_tags": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_tags_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"payment_receipts": {
                   Row: {
                     "bank_ref": string | null,"company_id": string,"decided_at": string | null,"decided_by": string | null,"id": string,"method": string,"path": string | null,"reason": string | null,"sha256": string | null,"status": Database["public"]['Enums']["receipt_status"],"uploaded_at": string,"uploaded_by": string | null,"voucher_id": string
@@ -1753,6 +1974,26 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "designations"
       referencedColumns: ["name"]
+    }
+                  ]
+                },"segments": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"definition": NonNullable<Json>,"description": string | null,"id": string,"kind": string,"name": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"definition": NonNullable<Json>,"description"?: string | null,"id"?: string,"kind"?: string,"name": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"definition"?: NonNullable<Json>,"description"?: string | null,"id"?: string,"kind"?: string,"name"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "segments_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
     }
                   ]
                 },"serial_spoilage": {
