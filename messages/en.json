@@ -3675,7 +3675,7 @@
     },
     "done": {
       "uploaded": "{n} scan(s) uploaded and read.",
-      "confirmed": "Confirmed for {no}: QR {code} printed on the certificate.",
+      "confirmed": "Confirmed for {no}: reference {code} created. Now place the QR on a copy.",
       "rejected": "Scan rejected."
     },
     "errors": {
@@ -3695,6 +3695,38 @@
       "reason_required": "Please write the reason.",
       "path": "Upload failed. Please try again.",
       "noSigningKey": "Certificates cannot be issued yet: the QR signing key is not set on the server. Ask the IT Convener to set QR_SIGNING_KEY (docs/26)."
+    },
+    "stamp": {
+      "placeTitle": "Place the QR on a copy",
+      "placeHelp": "The original scan stays untouched. The QR goes where the green stamp used to be (bottom centre). Check the preview, adjust if the scan differs, then save.",
+      "open": "Place QR",
+      "adjust": "Adjust QR",
+      "notSaved": "QR copy not saved — members cannot see this certificate yet",
+      "isSaved": "QR copy saved",
+      "original": "Original scan",
+      "proposed": "Proposed QR copy",
+      "qr": "Large QR",
+      "reference": "Reference",
+      "verification": "Verification status",
+      "across": "Across the page (%)",
+      "down": "Down the page (%)",
+      "size": "QR size on paper (mm)",
+      "sizeHelp": "About 25–30 mm. Confirm by printing and scanning a test copy.",
+      "preview": "Update preview",
+      "save": "Save QR copy",
+      "saveAgain": "Replace QR copy",
+      "reset": "Back to the default position",
+      "working": "Please wait…",
+      "dlOriginal": "Download original",
+      "dlStamped": "Download QR copy",
+      "dlPng": "QR as PNG",
+      "dlSvg": "QR as SVG",
+      "print": "Print-ready copy",
+      "saved": "QR copy saved for {code}. The member can now see it.",
+      "previewAlt": "The certificate with the QR at the chosen position",
+      "originalAlt": "The original scan, unchanged",
+      "qrAlt": "Large QR for {code}",
+      "close": "Close"
     }
   },
   "audit": {

@@ -36,7 +36,11 @@ export default async function CertificatesPage({ params }: Props) {
   if (level < 1) {
     return (
       <>
-        <PageHeader locale={locale} title={{ en: msg('en', 'certs.title'), ur: msg('ur', 'certs.title') }} bilingual={false} />
+        <PageHeader
+          locale={locale}
+          title={{ en: msg('en', 'certs.title'), ur: msg('ur', 'certs.title') }}
+          bilingual={false}
+        />
         <NoAccess locale={locale} designation={session.access.staff?.designation ?? ''} module="temp" />
       </>
     );
@@ -45,7 +49,9 @@ export default async function CertificatesPage({ params }: Props) {
   const [{ data: scans }, { data: members }, { data: docs }] = await Promise.all([
     supabase
       .from('certificate_scans')
-      .select('id, file_name, status, uploaded_at, extracted, conflicts, match_member, document_id, stamped_path, review_note, log')
+      .select(
+        'id, file_name, status, uploaded_at, extracted, conflicts, match_member, document_id, stamped_path, review_note, log',
+      )
       .order('uploaded_at', { ascending: false })
       .limit(100),
     supabase
@@ -55,13 +61,14 @@ export default async function CertificatesPage({ params }: Props) {
       .in('status', ['Permanent', 'Temporary'])
       .order('member_no')
       .limit(2000),
-    supabase.from('documents').select('id, code').eq('kind', 'certificate'),
+    supabase.from('documents').select('id, code, status').eq('kind', 'certificate'),
   ]);
   const label = (x: { member_no: string; companies: unknown }) =>
     `${x.member_no} · ${(x.companies as { name: string } | null)?.name ?? ''}`;
   const memberOpts = (members ?? []).map((x) => ({ id: x.id, label: label(x) }));
   const byId = new Map(memberOpts.map((x) => [x.id, x]));
   const codes = new Map((docs ?? []).map((x) => [x.id, x.code]));
+  const docStatus = new Map((docs ?? []).map((x) => [x.id, x.status as string]));
   const rows: ScanRow[] = (scans ?? []).map((s) => {
     const ex = (s.extracted ?? {}) as Record<string, { value: string | null; confidence: number }>;
     return {
@@ -69,11 +76,16 @@ export default async function CertificatesPage({ params }: Props) {
       fileName: s.file_name ?? s.id,
       status: s.status as ScanRow['status'],
       uploadedAt: voucherDate(s.uploaded_at, locale),
-      fields: CERT_FIELDS.filter((k) => ex[k]).map((k) => ({ key: k, value: ex[k]!.value, confidence: ex[k]!.confidence })),
+      fields: CERT_FIELDS.filter((k) => ex[k]).map((k) => ({
+        key: k,
+        value: ex[k]!.value,
+        confidence: ex[k]!.confidence,
+      })),
       conflicts: s.conflicts ?? [],
       matched: s.match_member ? (byId.get(s.match_member) ?? { id: s.match_member, label: '—' }) : null,
       code: s.document_id ? (codes.get(s.document_id) ?? null) : null,
       stamped: Boolean(s.stamped_path),
+      docStatus: s.document_id ? (docStatus.get(s.document_id) ?? null) : null,
       note: s.review_note,
       log: ((s.log ?? []) as { step: string }[]).map((x) => x.step),
     };
@@ -94,8 +106,20 @@ export default async function CertificatesPage({ params }: Props) {
         </div>
       </div>
       <div className="kg">
-        <Kpi label={m('kReview')} value={count(['extracted', 'uploaded'])} sub={m('kReviewSub')} icon="scan" color="#f59e0b" />
-        <Kpi label={m('kConflicts')} value={rows.filter((r) => r.status === 'extracted' && r.conflicts.length).length} sub={m('kConflictsSub')} icon="flag" color="#ef4444" />
+        <Kpi
+          label={m('kReview')}
+          value={count(['extracted', 'uploaded'])}
+          sub={m('kReviewSub')}
+          icon="scan"
+          color="#f59e0b"
+        />
+        <Kpi
+          label={m('kConflicts')}
+          value={rows.filter((r) => r.status === 'extracted' && r.conflicts.length).length}
+          sub={m('kConflictsSub')}
+          icon="flag"
+          color="#ef4444"
+        />
         <Kpi label={m('kConfirmed')} value={count(['confirmed'])} sub={m('kConfirmedSub')} icon="qr" color="#1fa34a" />
         <Kpi label={m('kFailed')} value={count(['failed'])} sub={m('kFailedSub')} icon="x" color="#64748b" />
       </div>

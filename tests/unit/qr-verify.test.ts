@@ -2,7 +2,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import QRCode from 'qrcode';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
-import { qrTile, stampQr } from '@/lib/certificates/stamp';
+import { DEFAULT_PLACEMENT, normalPlacement, pxPerMm, qrTile, stampQr, standaloneQr } from '@/lib/certificates/stamp';
 import { rosette } from '@/lib/qr/rosette';
 import { checkSignature, signingConfigured, signReference } from '@/lib/qr/sign';
 import { verifyBase, verifyUrl } from '@/lib/qr/svg';
@@ -92,7 +92,9 @@ describe('stamped certificate (lib/certificates/stamp.ts)', () => {
       .toBuffer();
     const url = `https://app.mcci.aderalabs.tech/verify/${REF}`;
     const out = await stampQr(scan, REF, url);
-    const t = qrTile(width, height);
+    const modules = QRCode.create(url, { errorCorrectionLevel: 'M' }).modules.size;
+    const t = qrTile(width, height, DEFAULT_PLACEMENT, pxPerMm(width, undefined), modules);
+    expect(t.quiet).toBeGreaterThanOrEqual((4 * t.size) / modules); // a full 4-module quiet zone
     const raw = await sharp(out).removeAlpha().raw().toBuffer();
     const px = (x: number, y: number): [number, number, number] => [
       raw[(y * width + x) * 3]!,
@@ -142,5 +144,32 @@ describe('stamped certificate (lib/certificates/stamp.ts)', () => {
       [t.left + 5, t.top + t.tileH + 2],
     ] as const)
       expect(px(x, y)).toEqual([grey.r, grey.g, grey.b]);
+  });
+});
+
+describe('QR placement (lib/certificates/stamp.ts)', () => {
+  it('defaults to the former green-stamp position, 27 mm, relative to the scan and sized from its resolution', () => {
+    expect(DEFAULT_PLACEMENT).toEqual({ cx: 0.5, cy: 0.83, mm: 27 });
+    const at300dpi = qrTile(3000, 2800, DEFAULT_PLACEMENT, pxPerMm(3000, 300));
+    expect(at300dpi.size).toBe(Math.round((27 * 300) / 25.4));
+    const small = qrTile(1600, 1480, { cx: 0.5, cy: 0.83, mm: 27 }, pxPerMm(1600, undefined, 280));
+    expect(small.size).toBe(Math.round((27 * 1600) / 280));
+    expect(small.left + small.tileW / 2).toBeCloseTo(800, 0);
+  });
+
+  it('keeps a placement on the page and within size limits', () => {
+    expect(normalPlacement({ cx: 5, cy: -1, mm: 500 })).toEqual({ cx: 0.96, cy: 0.04, mm: 45 });
+    expect(normalPlacement(null)).toEqual(DEFAULT_PLACEMENT);
+    const corner = qrTile(1000, 1000, { cx: 0.96, cy: 0.96, mm: 45 }, 4);
+    expect(corner.left + corner.tileW).toBeLessThanOrEqual(1000);
+    expect(corner.top + corner.tileH).toBeLessThanOrEqual(1000);
+  });
+
+  it('never stretches: the standalone QR is square, high resolution, and carries the same link', async () => {
+    const url = `https://app.mcci.aderalabs.tech/verify/${REF}?s=${'a'.repeat(86)}`;
+    const png = await sharp((await standaloneQr(url, 'png')) as Buffer).metadata();
+    expect(png.width).toBe(1200);
+    expect(png.height).toBe(1200);
+    expect(await standaloneQr(url, 'svg')).toContain('<svg');
   });
 });

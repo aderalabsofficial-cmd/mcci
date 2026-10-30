@@ -3,6 +3,7 @@
 import { Check, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { StampEditor } from '@/components/certificates/stamp-editor';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { type CertResult, confirmScan, rejectScan, uploadScans } from '@/lib/certificates/actions';
@@ -19,6 +20,7 @@ export interface ScanRow {
   matched: { id: string; label: string } | null;
   code: string | null;
   stamped: boolean;
+  docStatus: string | null;
   note: string | null;
   log: string[];
 }
@@ -125,7 +127,11 @@ export function ScanDesk({
         </div>
       )}
       {note && (
-        <div className={`banner ${note.ok ? 'green' : 'red'}`} role={note.ok ? 'status' : 'alert'} style={{ marginBottom: 12 }}>
+        <div
+          className={`banner ${note.ok ? 'green' : 'red'}`}
+          role={note.ok ? 'status' : 'alert'}
+          style={{ marginBottom: 12 }}
+        >
           <span>{note.message}</span>
         </div>
       )}
@@ -136,9 +142,18 @@ export function ScanDesk({
         {!rows.length && <p className="em">{m('none')}</p>}
         {rows.map((r) => (
           <div className="agenda" key={r.id} data-scan={r.fileName} data-status={r.status}>
-            <a className="ofphoto" href={`/api/certificates/scan/${r.id}${r.stamped ? '?v=stamped' : ''}`} target="_blank" rel="noreferrer" data-action="cert.view">
+            <a
+              className="ofphoto"
+              href={`/api/certificates/scan/${r.id}${r.stamped ? '?v=stamped' : ''}`}
+              target="_blank"
+              rel="noreferrer"
+              data-action="cert.view"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element -- private file through the permission-checked route */}
-              <img src={`/api/certificates/scan/${r.id}${r.stamped ? '?v=stamped' : ''}`} alt={m('scanOf', { name: r.fileName })} />
+              <img
+                src={`/api/certificates/scan/${r.id}${r.stamped ? '?v=stamped' : ''}`}
+                alt={m('scanOf', { name: r.fileName })}
+              />
             </a>
             <div>
               <b>
@@ -160,18 +175,44 @@ export function ScanDesk({
               {r.conflicts.length > 0 && (
                 <small role="note" data-conflicts>
                   <X size={12} color="#ef4444" aria-hidden />{' '}
-                  {r.conflicts.map((c) => m(`conflicts.${c.startsWith('low_confidence:') ? 'low_confidence' : c}`, { field: c.split(':')[1] ? m(`fields.${c.split(':')[1]}`) : '' })).join(' · ')}
+                  {r.conflicts
+                    .map((c) =>
+                      m(`conflicts.${c.startsWith('low_confidence:') ? 'low_confidence' : c}`, {
+                        field: c.split(':')[1] ? m(`fields.${c.split(':')[1]}`) : '',
+                      }),
+                    )
+                    .join(' · ')}
                 </small>
               )}
               {r.note && <small>{r.note}</small>}
             </div>
+            {r.status === 'confirmed' && r.code && (
+              <StampEditor
+                locale={locale}
+                scanId={r.id}
+                code={r.code}
+                stamped={r.stamped}
+                docStatus={r.docStatus}
+                canWork={canWork}
+              />
+            )}
             {canWork && ['extracted', 'failed', 'uploaded'].includes(r.status) && (
               <div className="pb">
-                <button type="button" className="btn btn-w btn-danger" data-action="cert.reject" onClick={() => open('reject', r)}>
+                <button
+                  type="button"
+                  className="btn btn-w btn-danger"
+                  data-action="cert.reject"
+                  onClick={() => open('reject', r)}
+                >
                   <X size={16} aria-hidden /> {m('reject')}
                 </button>
                 {r.status === 'extracted' && (
-                  <button type="button" className="btn btn-w btn-primary" data-action="cert.confirm" onClick={() => open('confirm', r)}>
+                  <button
+                    type="button"
+                    className="btn btn-w btn-primary"
+                    data-action="cert.confirm"
+                    onClick={() => open('confirm', r)}
+                  >
                     <Check size={16} aria-hidden /> {m('confirm')}
                   </button>
                 )}
@@ -200,7 +241,9 @@ export function ScanDesk({
                 title={d.kind === 'confirm' && needsOverride && !canOverride ? m('needApprover') : undefined}
                 onClick={() => void run()}
               >
-                {busy === 'dialog' ? msg(locale, 'membership.wiz.working') : m(d.kind === 'confirm' ? 'confirmOk' : 'reject')}
+                {busy === 'dialog'
+                  ? msg(locale, 'membership.wiz.working')
+                  : m(d.kind === 'confirm' ? 'confirmOk' : 'reject')}
               </button>
             </>
           )
@@ -226,7 +269,12 @@ export function ScanDesk({
             )}
             {needsOverride && canOverride && (
               <label className="flex min-h-11 items-center gap-2.5">
-                <input type="checkbox" className="size-5 shrink-0" checked={override} onChange={(e) => setOverride(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  className="size-5 shrink-0"
+                  checked={override}
+                  onChange={(e) => setOverride(e.target.checked)}
+                />
                 {m('override')}
               </label>
             )}

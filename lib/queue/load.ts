@@ -145,7 +145,7 @@ export async function loadQueue(session: Session): Promise<QueueGroup[]> {
         const { data, count } = await db
           .from('certificate_scans')
           .select('id, file_name, status, uploaded_at', { count: 'exact' })
-          .in('status', ['uploaded', 'extracted', 'failed'])
+          .or('status.in.(uploaded,extracted,failed),and(status.eq.confirmed,stamped_path.is.null)')
           .order('uploaded_at', { ascending: true })
           .limit(10);
         return {

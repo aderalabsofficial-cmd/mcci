@@ -1,6 +1,7 @@
 'use server';
 
 import { createHash, randomUUID } from 'node:crypto';
+import sharp from 'sharp';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { asLocale } from '@/i18n/locale';
@@ -8,7 +9,7 @@ import type { Locale } from '@/i18n/routing';
 import { aiEnabled } from '@/lib/ai/extract';
 import { readScan, removeScan, replaceScan, storeScan } from '@/lib/certificates/admin';
 import { readCertificate } from '@/lib/certificates/ai';
-import { DEFAULT_PLACEMENT, type QrPlacement, stampQr } from '@/lib/certificates/stamp';
+import { DEFAULT_PAGE_WIDTH_MM, normalPlacement, type QrPlacement, stampQr } from '@/lib/certificates/stamp';
 import { MAX_UPLOAD_BYTES, sniff } from '@/lib/files/sniff';
 import { msg } from '@/lib/nav/model';
 import { PermissionError, requirePermission } from '@/lib/permissions/server';
@@ -22,7 +23,8 @@ import type { Json } from '@/lib/supabase/types';
  * cert.reject, qr.revoke. Module 'temp' (the certificates module): upload / review ≥ 2, override a conflict ≥ 3,
  * revoke a QR: docs ≥ 3. Files are stored and read with the service role only after the permission check; every
  * record change is an api.* call under the staff member's own session (the database checks again and audits).
- * Nothing is saved from a reading until a person confirms it.
+ * Nothing is saved from a reading until a person confirms it. Confirming creates the certificate record and its QR
+ * reference; the QR copy is made in a second step (preview, adjust, save), always from the untouched original.
  */
 
 export interface CertResult {
@@ -123,24 +125,7 @@ export async function confirmScan(
     if (error) throw error;
     const row = data?.[0];
     if (!row?.code) return fail(locale, new Error('no code'), 'cert.confirm');
-    // stamp the QR on the scan (top-right) and keep the stamped copy beside the original
-    const { data: scan } = await supabase.from('certificate_scans').select('path').eq('id', scanId).single();
-    const original = await readScan(scan!.path);
-    // where the QR goes: settings.membership.certificateQr (MCCI can move it), else the measured default
-    const { data: rules } = await supabase
-      .from('public_settings')
-      .select('value')
-      .eq('key', 'membership')
-      .maybeSingle();
-    const at = {
-      ...DEFAULT_PLACEMENT,
-      ...(((rules?.value ?? {}) as { certificateQr?: Partial<QrPlacement> }).certificateQr ?? {}),
-    };
-    const stamped = await stampQr(original, row.code, verifyUrl(row.code), at);
-    const out = `scans/${scanId}/stamped.png`;
-    await replaceScan(out, stamped);
-    const { error: st } = await supabase.schema('api').rpc('cert_scan_stamped', { p_id: scanId, p_path: out });
-    if (st) throw st;
+    // the QR is placed in a separate step: the stamp editor shows the proposed copy, staff adjust and save it
     refresh();
     return { ok: true, message: msg(locale, 'certs.done.confirmed', { no: row.member_no ?? '', code: row.code }) };
   } catch (error) {
@@ -161,5 +146,89 @@ export async function rejectScan(locale: Locale, scanId: string, note: string): 
     return { ok: true, message: msg(locale, 'certs.done.rejected') };
   } catch (error) {
     return fail(locale, error, 'cert.reject');
+  }
+}
+
+// ───────── QR placement: preview, adjust, save (owner, 30 Oct 2026) ─────────
+
+export interface StampPreview extends CertResult {
+  image?: string;
+  placement?: QrPlacement;
+  code?: string;
+}
+
+/** the confirmed scan's certificate reference, its original file, and MCCI's default placement */
+async function stampInputs(scanId: string) {
+  const supabase = await createClient();
+  const { data: scan } = await supabase
+    .from('certificate_scans')
+    .select('id, path, status, document_id, qr_placement, documents(code)')
+    .eq('id', uuid.parse(scanId))
+    .maybeSingle();
+  const code = (scan?.documents as { code: string } | null)?.code;
+  if (!scan || scan.status !== 'confirmed' || !code) return null;
+  const { data: rules } = await supabase.from('public_settings').select('value').eq('key', 'membership').maybeSingle();
+  const r = (rules?.value ?? {}) as { certificateQr?: Partial<QrPlacement>; certificatePageWidthMm?: number };
+  return {
+    supabase,
+    scan,
+    code,
+    defaults: normalPlacement((scan.qr_placement as Partial<QrPlacement> | null) ?? r.certificateQr),
+    pageWidthMm: Number(r.certificatePageWidthMm) > 100 ? Number(r.certificatePageWidthMm) : DEFAULT_PAGE_WIDTH_MM,
+  };
+}
+
+/** cert.stamp.preview: the proposed QR copy at a placement (nothing is saved); without a placement, the default */
+export async function previewStamp(
+  locale: Locale,
+  scanId: string,
+  placement: Partial<QrPlacement> | null,
+): Promise<StampPreview> {
+  try {
+    await requirePermission('temp', 2);
+    if (!signingConfigured()) return { ok: false, message: msg(locale, 'certs.errors.noSigningKey') };
+    const x = await stampInputs(scanId);
+    if (!x) return { ok: false, message: msg(locale, 'certs.errors.wrong_stage') };
+    const at = placement ? normalPlacement(placement) : x.defaults;
+    const stamped = await stampQr(await readScan(x.scan.path), x.code, verifyUrl(x.code), at, x.pageWidthMm);
+    const small = await sharp(stamped)
+      .resize({ width: 1100, withoutEnlargement: true })
+      .jpeg({ quality: 82 })
+      .toBuffer();
+    return {
+      ok: true,
+      message: '',
+      image: `data:image/jpeg;base64,${small.toString('base64')}`,
+      placement: at,
+      code: x.code,
+    };
+  } catch (error) {
+    return fail(locale, error, 'cert.stamp.preview');
+  }
+}
+
+/**
+ * cert.stamp.save: makes the QR copy from the ORIGINAL scan at the confirmed placement and stores it as
+ * scans/<id>/stamped.png (the original stays). Repeating it replaces the copy — same certificate, same reference,
+ * same signed URL; every save is recorded in the audit trail (api.cert_scan_stamped).
+ */
+export async function saveStamp(locale: Locale, scanId: string, placement: Partial<QrPlacement>): Promise<CertResult> {
+  try {
+    await requirePermission('temp', 2);
+    if (!signingConfigured()) return { ok: false, message: msg(locale, 'certs.errors.noSigningKey') };
+    const x = await stampInputs(scanId);
+    if (!x) return { ok: false, message: msg(locale, 'certs.errors.wrong_stage') };
+    const at = normalPlacement(placement);
+    const stamped = await stampQr(await readScan(x.scan.path), x.code, verifyUrl(x.code), at, x.pageWidthMm);
+    const out = `scans/${x.scan.id}/stamped.png`;
+    await replaceScan(out, stamped);
+    const { error } = await x.supabase
+      .schema('api')
+      .rpc('cert_scan_stamped', { p_id: x.scan.id, p_path: out, p_placement: at as unknown as Json });
+    if (error) throw error;
+    refresh();
+    return { ok: true, message: msg(locale, 'certs.stamp.saved', { code: x.code }) };
+  } catch (error) {
+    return fail(locale, error, 'cert.stamp.save');
   }
 }

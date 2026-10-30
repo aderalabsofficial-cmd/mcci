@@ -16,14 +16,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     await requirePermission('temp', 1);
   } catch (error) {
-    if (error instanceof PermissionError) return NextResponse.json({ error: 'not_allowed' }, { status: 403, headers: NO_STORE });
+    if (error instanceof PermissionError)
+      return NextResponse.json({ error: 'not_allowed' }, { status: 403, headers: NO_STORE });
     throw error;
   }
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: 'not_found' }, { status: 404, headers: NO_STORE });
   const supabase = await createClient();
-  const { data: scan } = await supabase.from('certificate_scans').select('path, stamped_path').eq('id', id).maybeSingle();
-  const stamped = new URL(req.url).searchParams.get('v') === 'stamped';
+  const { data: scan } = await supabase
+    .from('certificate_scans')
+    .select('path, stamped_path')
+    .eq('id', id)
+    .maybeSingle();
+  const url = new URL(req.url);
+  const stamped = url.searchParams.get('v') === 'stamped';
+  const ext = (stamped ? scan?.stamped_path : scan?.path)?.split('.').pop() ?? 'png';
   const path = stamped ? scan?.stamped_path : scan?.path;
   if (!path) return NextResponse.json({ error: 'not_found' }, { status: 404, headers: NO_STORE });
   const { data: file } = await createAdminClient().storage.from('certificates').download(path);
@@ -32,7 +39,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     headers: {
       ...NO_STORE,
       'Content-Type': path.endsWith('.jpg') ? 'image/jpeg' : 'image/png',
-      'Content-Disposition': 'inline',
+      'Content-Disposition':
+        url.searchParams.get('download') === '1'
+          ? `attachment; filename="mcci-certificate-${stamped ? 'qr-copy' : 'original'}-${id.slice(0, 8)}.${ext}"`
+          : 'inline',
       'X-Content-Type-Options': 'nosniff',
     },
   });

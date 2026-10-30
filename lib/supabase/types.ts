@@ -107,7 +107,7 @@ export type Database = {
 { Args: { "p_id": string,"p_note": string }; Returns: undefined
                            },
 "cert_scan_stamped":
-{ Args: { "p_id": string,"p_path": string }; Returns: undefined
+{ Args: { "p_id": string,"p_path": string,"p_placement": Json }; Returns: undefined
                            },
 "cert_view":
 { Args: { "p_code": string }; Returns: {
@@ -825,14 +825,14 @@ isOneToOne: false
                   ]
                 },"certificate_scans": {
                   Row: {
-                    "conflicts": (string)[],"document_id": string | null,"extracted": NonNullable<Json>,"file_name": string | null,"id": string,"log": NonNullable<Json>,"match_member": string | null,"path": string,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"sha256": string,"stamped_path": string | null,"status": string,"uploaded_at": string,"uploaded_by": string | null
+                    "conflicts": (string)[],"document_id": string | null,"extracted": NonNullable<Json>,"file_name": string | null,"id": string,"log": NonNullable<Json>,"match_member": string | null,"path": string,"qr_placement": Json | null,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"sha256": string,"stamped_path": string | null,"status": string,"uploaded_at": string,"uploaded_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "conflicts"?: (string)[],"document_id"?: string | null,"extracted"?: NonNullable<Json>,"file_name"?: string | null,"id"?: string,"log"?: NonNullable<Json>,"match_member"?: string | null,"path": string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sha256": string,"stamped_path"?: string | null,"status"?: string,"uploaded_at"?: string,"uploaded_by"?: string | null
+                    "conflicts"?: (string)[],"document_id"?: string | null,"extracted"?: NonNullable<Json>,"file_name"?: string | null,"id"?: string,"log"?: NonNullable<Json>,"match_member"?: string | null,"path": string,"qr_placement"?: Json | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sha256": string,"stamped_path"?: string | null,"status"?: string,"uploaded_at"?: string,"uploaded_by"?: string | null
                   }
                   Update: {
-                    "conflicts"?: (string)[],"document_id"?: string | null,"extracted"?: NonNullable<Json>,"file_name"?: string | null,"id"?: string,"log"?: NonNullable<Json>,"match_member"?: string | null,"path"?: string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sha256"?: string,"stamped_path"?: string | null,"status"?: string,"uploaded_at"?: string,"uploaded_by"?: string | null
+                    "conflicts"?: (string)[],"document_id"?: string | null,"extracted"?: NonNullable<Json>,"file_name"?: string | null,"id"?: string,"log"?: NonNullable<Json>,"match_member"?: string | null,"path"?: string,"qr_placement"?: Json | null,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"sha256"?: string,"stamped_path"?: string | null,"status"?: string,"uploaded_at"?: string,"uploaded_by"?: string | null
                   }
                   Relationships: [
                     {

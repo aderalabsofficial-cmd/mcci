@@ -69,6 +69,9 @@ create temp table t_code on commit drop as
   select d.code from public.documents d join public.certificate_scans c on c.document_id = d.id where c.id = (select clean from t_ids);
 grant select on t_code to authenticated;
 select throws_ok(format($$ select tests.exec_as(tests.id('mo'), format('select api.cert_scan_reject(%%L, '''')', %L)) $$, (select broken from t_ids)), 'P0001', null, 'rejecting needs a reason');
+-- the member's access starts once the QR copy is saved (0550, tested in 350)
+select tests.exec_as(tests.id('mo'), format('select api.cert_scan_stamped(%L, %L, %L)', (select clean from t_ids),
+  format('scans/%s/stamped.png', (select clean from t_ids)), '{"cx":0.5,"cy":0.83,"mm":27}'));
 select is(tests.num_as(tests.id('owner_b'), 'select count(*) from api.cert_file((select code from t_code))'), 1::bigint, 'the member reads their own certificate file');
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select * from api.cert_file((select code from t_code))') $$, '42501', null, 'another company cannot');
 select is(tests.num_as(tests.id('owner_b'), 'select count(*) from public.certificate_scans'), 0::bigint, 'members never see the scan queue');

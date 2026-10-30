@@ -39,7 +39,10 @@ Demo records (`companies.demo`) never verify — they are not official.
 | Server: signature check before the database; per-address limits (references 30 / min; membership numbers 10 / min and 60 / hour); the address is stored only as a hash | `lib/verify/admin/index.ts` |
 | Signed links: Ed25519 over `MCCI-VERIFY:v1:<reference>`; `?s=` = base64url signature | `lib/qr/sign.ts`, `lib/qr/svg.ts` (`verifyUrl`, `verifyBase`) |
 | Security engraving v2: microtext ring with the fingerprint, interlaced guilloche rope band, two trochoid rosettes, eight-point star centre (generic geometry — the MCCI logo is not used); deterministic per reference; line weight scaled for print | `lib/qr/rosette.ts` |
-| Stamped certificate: the QR (unchanged size and white quiet zone) with the rosette in a band around it | `lib/certificates/stamp.ts` |
+| QR copy of the certificate: the QR (pure black on white, 4-module quiet zone) with the rosette in a band around it, at the green stamp's former place (bottom centre, 27 mm by default) | `lib/certificates/stamp.ts` |
+| Placement step: original, proposed copy and large QR side by side; staff adjust position and size, preview (nothing stored), save. Saving again replaces the copy: same record, same reference | `components/certificates/stamp-editor.tsx`, `previewStamp` / `saveStamp` in `lib/certificates/actions.ts` |
+| Access until the copy is saved: members cannot reach the document, its file or its QR, enforced in the database, not the screen | migration `20261108000550_cert_stamp_protection.sql` (`private.cert_copy_ready`, `documents_select`, `api.cert_file`, `api.cert_view`, `api.cert_scan_stamped`); pgTAP `350_cert_stamp_protection` |
+| Large QR on its own (PNG / SVG): the same signed link as on the copy, nothing else | `app/api/certificates/[code]/qr` |
 | Pages and API | `app/[locale]/(site)/verify/*`, `app/api/public/verify`, `app/api/verify/[code]`, `components/site/verify-view.tsx` |
 
 The signature proves a link was made by MCCI; whether the certificate is valid **always** comes from the database, so
@@ -50,7 +53,10 @@ A typed reference (no signature) is still looked up, behind the same limit. An a
 without a lookup ("This QR code has been altered").
 
 **Issuance needs the key:** confirming a certificate scan (Printing & Receiving) refuses with a clear message while
-`QR_SIGNING_KEY` is not set, before any QR document is created — so no unsigned certificate can be issued.
+`QR_SIGNING_KEY` is not set, before any QR document is created — so no unsigned certificate can be issued. Preview and
+save refuse the same way. Confirming creates the record and its reference; a member sees the certificate only after
+staff save the QR copy. The green stamp is never moved digitally: MCCI places it physically before scanning. The
+original scan is never changed and stays stored permanently.
 Known limit: the stamp's renderer (sharp / librsvg) does not draw the microtext ring; browsers draw it on the
 verification page.
 
@@ -82,9 +88,9 @@ Never cached (`Cache-Control: no-store`). Browsers on another site may read it o
    `lib/qr/svg.ts` before any certificate was issued (production had no documents on 30 Oct).
 
 **Key rotation:** a new key makes every older QR "altered". So rotate only if the key leaks: generate a new key, then
-the stamped copies must be made again from the kept original scans (`scans/<id>/original.*`). There is **no screen
-for re-stamping yet** — it would be a one-off server task, to be built if a rotation is ever needed. There is no key id
-in v1; a rotation scheme (`v2` with a key id) is a later change. Set the key **before** the first certificate is
+the QR copies must be made again from the kept original scans (`scans/<id>/original.*`): staff open each confirmed
+certificate and use "Replace QR copy", which signs with the current key (no bulk screen; a one-off server task if many
+are affected). There is no key id in v1; a rotation scheme (`v2` with a key id) is a later change. Set the key **before** the first certificate is
 stamped, so no unsigned QR is ever printed.
 
 ## 5. Tests
@@ -94,7 +100,12 @@ stamped, so no unsigned QR is ever printed.
   logged without addresses, log readable by Reports staff only.
 - Unit `qr-verify.test.ts`: signature valid / altered / other reference / other key / malformed / no key; verify links
   (bare site → `/verify`, signature appended); rosette determinism; the stamped QR is pixel-identical to a plain QR on
-  a white quiet zone, the band carries the pattern, the rest of the scan is unchanged.
+  a white quiet zone, the band carries the pattern, the rest of the scan is unchanged; default placement, limits, the
+  standalone QR is square and high resolution.
+- pgTAP `350_cert_stamp_protection` (15): no member access before the copy is saved (direct select, `cert_file`,
+  `cert_view`), staff access stays, placement validated, saving is logged.
+- e2e `certificates.spec.ts`: confirm creates no member access; preview, adjust, save; one record, one reference;
+  original byte-identical; QR at the chosen spot; PNG / SVG downloads.
 - e2e `verify.spec.ts`: signed link genuine; altered signature refused; random / malformed reference; membership
   number via the form; replaced certificate names the new one; demo member not verified; API fields, `no-store`, 404,
   429 after 10 membership checks from one address; no email, path, id or file link in the page.

@@ -150,3 +150,15 @@
 .proto .rep-table {width:100%;border-collapse:collapse}
 .proto .rep-table th, .proto .rep-table td {padding:7px 4px;border-bottom:1px solid var(--b);text-align:start;font-weight:500}
 .proto .rep-table td {text-align:end;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* certificate QR placement (admin/temp) */
+.proto .stamp-ed {grid-column:1 / -1;border-top:1px solid var(--b);margin-top:10px;padding-top:12px;display:grid;gap:12px}
+.proto .stamp-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.proto .stamp-grid figure {margin:0;border:1px solid var(--b);border-radius:12px;padding:8px;background:#fff;color:#0b2a5b;text-align:center}
+.proto .stamp-grid img {width:100%;height:auto;display:block}
+.proto .stamp-grid figcaption {font-size:13px;font-weight:700;margin-bottom:6px}
+.proto .stamp-ctl {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.proto .stamp-ctl input {width:100%;min-height:44px;border:1px solid var(--b);border-radius:10px;padding:8px 10px;background:var(--card2);color:var(--t);font:inherit}
+@media (max-width:640px) {
+  .proto .stamp-grid, .proto .stamp-ctl {grid-template-columns:1fr}
+}
