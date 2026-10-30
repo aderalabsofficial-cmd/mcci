@@ -343,7 +343,9 @@
     "staffPage": {
       "title": "Staff sign-in",
       "intro": "For MCCI staff only. Sign in with your staff email and password, then the code from your authenticator app. Attempts are limited and recorded."
-    }
+    },
+    "passwordShow": "Show password",
+    "passwordHide": "Hide password"
   },
   "access": {
     "levels": {

@@ -69,7 +69,7 @@ async function activate(browser: Browser, email: string): Promise<Page> {
   const page = await (await browser.newContext()).newPage();
   await page.goto(new URL(link).pathname);
   await page.getByLabel('Create password').fill(password);
-  await page.getByLabel('Confirm password').fill(password);
+  await page.getByLabel('Confirm password', { exact: true }).fill(password);
   await page.locator('[data-action="invite.activate"]').click();
   // account creation + first sign-in take several seconds when the laptop runs the whole suite
   await expect(page).toHaveURL(/\/portal/, { timeout: 20_000 });
@@ -181,7 +181,7 @@ test('a self-registered applicant marked as demo by the SG can choose the demo m
   const applicant = await (await browser.newContext()).newPage();
   await applicant.goto('/login');
   await applicant.getByLabel('Mobile, email or member ID').fill(email);
-  await applicant.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(password);
+  await applicant.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(password);
   await applicant.locator('[data-action="login.member"]').click();
   await expect(applicant).toHaveURL(/\/portal/, { timeout: 20_000 });
   await applicant.goto('/portal/join');

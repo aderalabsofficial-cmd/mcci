@@ -1,5 +1,6 @@
 'use client';
 
+import { PasswordField } from '@/components/shared/password-field';
 import { Mail } from 'lucide-react';
 import { useActionState, useId, useState } from 'react';
 import { guardForm } from '@/lib/client/call-action';
@@ -51,8 +52,14 @@ export function LoginPanel({
   notice?: string;
 }) {
   const [tab, setTab] = useState<Tab>('member');
-  const [member, memberAction, memberPending] = useActionState<AuthFormState, FormData>(guardForm(locale, signInMember), {});
-  const [codeReq, codeReqAction, codeReqPending] = useActionState<AuthFormState, FormData>(guardForm(locale, requestEmailCode), {});
+  const [member, memberAction, memberPending] = useActionState<AuthFormState, FormData>(
+    guardForm(locale, signInMember),
+    {},
+  );
+  const [codeReq, codeReqAction, codeReqPending] = useActionState<AuthFormState, FormData>(
+    guardForm(locale, requestEmailCode),
+    {},
+  );
   const [codeVerify, codeVerifyAction, codeVerifyPending] = useActionState<AuthFormState, FormData>(
     guardForm(locale, verifyEmailCode),
     {},
@@ -135,10 +142,13 @@ export function LoginPanel({
               {text.identifier}
               <input name="identifier" autoComplete="username" required maxLength={254} />
             </label>
-            <label className="form-field">
-              {text.password}
-              <input name="password" type="password" autoComplete="current-password" maxLength={200} />
-            </label>
+            <PasswordField
+              locale={locale}
+              label={text.password}
+              name="password"
+              autoComplete="current-password"
+              maxLength={200}
+            />
             <Alert text={member.error ?? codeReq.error} />
             <div className="mt-1 flex flex-wrap gap-2">
               <button className="btn btn-primary btn-big" data-action="login.member" disabled={memberPending}>
@@ -180,7 +190,6 @@ export function LoginPanel({
           {text.startApplication}
         </Link>
       </div>
-
     </div>
   );
 }
@@ -195,7 +204,10 @@ export function StaffLoginForm({
   text: { staffEmail: string; password: string; openAdmin: string; working: string; forgot: string };
   notice?: string;
 }) {
-  const [staff, staffAction, staffPending] = useActionState<AuthFormState, FormData>(guardForm(locale, signInStaff), {});
+  const [staff, staffAction, staffPending] = useActionState<AuthFormState, FormData>(
+    guardForm(locale, signInStaff),
+    {},
+  );
   return (
     <form action={staffAction} className="grid gap-[14px]" data-staff-login>
       <input type="hidden" name="locale" value={locale} />
@@ -211,10 +223,14 @@ export function StaffLoginForm({
         {text.staffEmail}
         <input name="email" type="email" autoComplete="username" required maxLength={254} />
       </label>
-      <label className="form-field">
-        {text.password}
-        <input name="password" type="password" autoComplete="current-password" required maxLength={200} />
-      </label>
+      <PasswordField
+        locale={locale}
+        label={text.password}
+        name="password"
+        autoComplete="current-password"
+        required
+        maxLength={200}
+      />
       <Alert text={staff.error} />
       <div className="mt-1">
         <button className="btn btn-primary btn-big" data-action="login.staff" disabled={staffPending}>

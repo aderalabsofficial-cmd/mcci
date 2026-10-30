@@ -21,14 +21,14 @@ test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'deskto
 async function memberForm(page: Page, identifier: string, password: string) {
   await page.goto('/login');
   await page.getByLabel('Mobile, email or member ID').fill(identifier);
-  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(password);
+  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(password);
   await page.locator('[data-action="login.member"]').click();
 }
 
 async function staffForm(page: Page, email: string, password: string) {
   await page.goto('/staff/login');
   await page.getByLabel('Staff email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  await page.getByLabel('Password', { exact: true }).fill(password);
   await page.locator('[data-action="login.staff"]').click();
 }
 
@@ -67,6 +67,35 @@ test('the portal sends visitors to the login page, keeping where they wanted to 
   // the admin panel points to no sign-in page (staff use their own page, lib/auth/staff-path.ts)
   expect((await page.goto('/ur/admin'))?.status()).toBe(404);
   await expect(page).toHaveURL(/\/ur\/admin$/);
+});
+
+test('every password field has a show / hide eye (mouse, keyboard, English and Urdu)', async ({ page }) => {
+  for (const [url, field] of [
+    ['/login', 'Password'],
+    ['/staff/login', 'Password'],
+    ['/register', 'Repeat the password'],
+  ] as const) {
+    await page.goto(url);
+    const input = page.getByLabel(field, { exact: true });
+    const eye = input.locator('xpath=following-sibling::button[@data-action="password.toggle"]');
+    await input.fill('not-a-real-secret');
+    await expect(input).toHaveAttribute('type', 'password');
+    await expect(eye).toHaveAccessibleName('Show password');
+    await eye.click();
+    await expect(input).toHaveAttribute('type', 'text');
+    await expect(eye).toHaveAttribute('aria-pressed', 'true');
+    await expect(eye).toHaveAccessibleName('Hide password');
+    await expect(input).toHaveValue('not-a-real-secret');
+    // keyboard: the eye is a real button
+    await eye.focus();
+    await page.keyboard.press('Enter');
+    await expect(input).toHaveAttribute('type', 'password');
+    // the field keeps what password managers need
+    await expect(input).toHaveAttribute('name', /password|confirm/);
+    await expect(input).toHaveAttribute('autocomplete', /password/);
+  }
+  await page.goto('/ur/login');
+  await expect(page.locator('[data-action="password.toggle"]').first()).toHaveAccessibleName('پاس ورڈ دکھائیں');
 });
 
 test.describe('with the local stack', () => {

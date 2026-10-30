@@ -1,5 +1,6 @@
 'use client';
 
+import { PasswordField } from '@/components/shared/password-field';
 import { useActionState } from 'react';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
@@ -79,14 +80,24 @@ export function ResetForm({
     <form action={action} className="grid gap-[14px]">
       <input type="hidden" name="locale" value={locale} />
       <Heading title={text.title} help={text.help} />
-      <label className="form-field">
-        {text.password}
-        <input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={200} required />
-      </label>
-      <label className="form-field">
-        {text.confirm}
-        <input name="confirm" type="password" autoComplete="new-password" minLength={10} maxLength={200} required />
-      </label>
+      <PasswordField
+        locale={locale}
+        label={text.password}
+        name="password"
+        autoComplete="new-password"
+        minLength={10}
+        maxLength={200}
+        required
+      />
+      <PasswordField
+        locale={locale}
+        label={text.confirm}
+        name="confirm"
+        autoComplete="new-password"
+        minLength={10}
+        maxLength={200}
+        required
+      />
       <Alert text={state.error} />
       <div>
         <button className="btn btn-primary btn-big" data-action="auth.reset.save" disabled={pending}>
@@ -132,14 +143,24 @@ export function RegisterForm({
           {text.email}
           <input name="email" type="email" autoComplete="email" required maxLength={254} />
         </label>
-        <label className="form-field">
-          {text.password}
-          <input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={200} required />
-        </label>
-        <label className="form-field">
-          {text.confirm}
-          <input name="confirm" type="password" autoComplete="new-password" minLength={10} maxLength={200} required />
-        </label>
+        <PasswordField
+          locale={locale}
+          label={text.password}
+          name="password"
+          autoComplete="new-password"
+          minLength={10}
+          maxLength={200}
+          required
+        />
+        <PasswordField
+          locale={locale}
+          label={text.confirm}
+          name="confirm"
+          autoComplete="new-password"
+          minLength={10}
+          maxLength={200}
+          required
+        />
         <Alert text={state.error} />
         <div>
           <button className="btn btn-gold btn-big" data-action="register.start" disabled={pending}>

@@ -40,7 +40,7 @@ async function activate(page: Page, path: string) {
   await page.goto(path);
   await expect(page.getByRole('heading', { name: 'Accept your invitation' })).toBeVisible();
   await page.getByLabel('Create password').fill('e2e-Password-123!');
-  await page.getByLabel('Confirm password').fill('e2e-Password-123!');
+  await page.getByLabel('Confirm password', { exact: true }).fill('e2e-Password-123!');
   await page.locator('[data-action="invite.activate"]').click();
 }
 

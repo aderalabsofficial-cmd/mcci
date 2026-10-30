@@ -67,7 +67,7 @@ const formName = async () =>
 async function signIn(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Mobile, email or member ID').fill(person.email);
-  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(person.password);
+  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(person.password);
   await page.locator('[data-action="login.member"]').click();
   await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
 }

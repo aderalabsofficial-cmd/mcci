@@ -1,5 +1,6 @@
 'use client';
 
+import { PasswordField } from '@/components/shared/password-field';
 import { useActionState } from 'react';
 import { guardForm } from '@/lib/client/call-action';
 import { acceptAsSignedIn, activateInvitedAccount, type InviteFormState } from '@/lib/invitations/actions';
@@ -29,32 +30,38 @@ export function ActivateForm({
   email: string;
   text: { password: string; confirm: string; rule: string; activate: string; working: string };
 }) {
-  const [state, action, pending] = useActionState<InviteFormState, FormData>(guardForm(locale, activateInvitedAccount), {});
+  const [state, action, pending] = useActionState<InviteFormState, FormData>(
+    guardForm(locale, activateInvitedAccount),
+    {},
+  );
   return (
     <form action={action} className="grid gap-[14px]">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="token" value={token} />
       {/* lets password managers save the new credential under the right address */}
       <input type="email" name="username" value={email} autoComplete="username" readOnly hidden />
-      <label className="form-field">
-        {text.password}
-        <input
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          minLength={10}
-          maxLength={200}
-          required
-          aria-describedby="pw-rule"
-        />
-      </label>
+      <PasswordField
+        locale={locale}
+        label={text.password}
+        name="password"
+        autoComplete="new-password"
+        minLength={10}
+        maxLength={200}
+        required
+        aria-describedby="pw-rule"
+      />
       <p id="pw-rule" className="-mt-2 text-[13px] text-muted">
         {text.rule}
       </p>
-      <label className="form-field">
-        {text.confirm}
-        <input name="confirm" type="password" autoComplete="new-password" minLength={10} maxLength={200} required />
-      </label>
+      <PasswordField
+        locale={locale}
+        label={text.confirm}
+        name="confirm"
+        autoComplete="new-password"
+        minLength={10}
+        maxLength={200}
+        required
+      />
       <Alert text={state.error} />
       <div>
         <button className="btn btn-primary btn-big" data-action="invite.activate" disabled={pending}>

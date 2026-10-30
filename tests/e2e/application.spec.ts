@@ -49,7 +49,7 @@ async function applicant(page: Page, name: string) {
   people.push({ id: data.user!.id, email, password });
   await page.goto('/login');
   await page.getByLabel('Mobile, email or member ID').fill(email);
-  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(password);
+  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(password);
   await page.locator('[data-action="login.member"]').click();
   await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   return data.user!.id;

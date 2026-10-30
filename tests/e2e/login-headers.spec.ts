@@ -66,10 +66,10 @@ async function signIn(page: Page, tab: 'member' | 'staff', who: { email: string;
   await page.goto(tab === 'staff' ? '/staff/login' : '/login');
   if (tab === 'staff') {
     await page.getByLabel('Staff email').fill(who.email);
-    await page.getByLabel('Password').fill(who.password);
+    await page.getByLabel('Password', { exact: true }).fill(who.password);
   } else {
     await page.getByLabel('Mobile, email or member ID').fill(who.email);
-    await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(who.password);
+    await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(who.password);
   }
   const page_ = tab === 'staff' ? '/staff/login' : '/login';
   const posted = page.waitForResponse((r) => r.request().method() === 'POST' && new URL(r.url()).pathname === page_);

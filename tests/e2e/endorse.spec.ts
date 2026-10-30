@@ -109,7 +109,7 @@ test.afterAll(async () => {
 async function login(page: Page, who: Person) {
   await page.goto('/login');
   await page.getByLabel('Mobile, email or member ID').fill(who.email);
-  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(who.password);
+  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(who.password);
   await page.locator('[data-action="login.member"]').click();
   await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
 }

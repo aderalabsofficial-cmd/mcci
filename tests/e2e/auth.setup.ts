@@ -117,7 +117,7 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
   const mp = await member.newPage();
   await mp.goto('/login');
   await mp.getByLabel('Mobile, email or member ID').fill(accounts.member!.email);
-  await mp.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(accounts.member!.password);
+  await mp.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(accounts.member!.password);
   await mp.locator('[data-action="login.member"]').click();
   await expect(mp).toHaveURL(/\/portal$/);
   await member.storageState({ path: STATE.member });
@@ -129,7 +129,7 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
     const sp = await ctx.newPage();
     await sp.goto('/staff/login');
     await sp.getByLabel('Staff email').fill(a.email);
-    await sp.getByLabel('Password').fill(a.password);
+    await sp.getByLabel('Password', { exact: true }).fill(a.password);
     await sp.locator('[data-action="login.staff"]').click();
     await expect(sp).toHaveURL(/\/login\/verify$/);
     await sp.getByLabel('6-digit code').fill(totp(a.totpSecret));

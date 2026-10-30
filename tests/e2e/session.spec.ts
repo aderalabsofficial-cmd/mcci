@@ -14,7 +14,7 @@ async function signIn(page: Page) {
   test.skip(!accounts.backend, NO_BACKEND);
   await page.goto('/login');
   await page.getByLabel('Mobile, email or member ID').fill(accounts.member!.email);
-  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(accounts.member!.password);
+  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(accounts.member!.password);
   await page.locator('[data-action="login.member"]').click();
   await expect(page).toHaveURL(/\/portal/, { timeout: 20_000 });
 }

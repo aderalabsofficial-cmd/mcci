@@ -72,7 +72,7 @@ async function asOwner(browser: Browser): Promise<Page> {
   const p = await ctx.newPage();
   await p.goto('/login');
   await p.getByLabel('Mobile, email or member ID').fill(owner.email);
-  await p.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(owner.password);
+  await p.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(owner.password);
   await p.locator('[data-action="login.member"]').click();
   await expect(p).toHaveURL(/\/portal$/, { timeout: 20_000 });
   return p;

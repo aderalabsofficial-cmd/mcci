@@ -1,5 +1,6 @@
 'use client';
 
+import { PasswordField } from '@/components/shared/password-field';
 import { RefreshCw } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { ActionForm, Hidden } from '@/components/shared/action-form';
@@ -39,8 +40,10 @@ export function LimitsCard({
   const [failure, setFailure] = useState<ActionResult | null>(null);
   const saved = (d: string, m: string): Level => limits[d]?.[m] ?? 0;
   const level = (d: string, m: string): Level => draft[d]?.[m] ?? saved(d, m);
-  const changes = (d: string) => STAFF_MODULES.filter((m) => draft[d]?.[m] !== undefined && draft[d]![m] !== saved(d, m));
-  const cycle = (d: string, m: string) => setDraft((x) => ({ ...x, [d]: { ...x[d], [m]: ((level(d, m) + 1) % 4) as Level } }));
+  const changes = (d: string) =>
+    STAFF_MODULES.filter((m) => draft[d]?.[m] !== undefined && draft[d]![m] !== saved(d, m));
+  const cycle = (d: string, m: string) =>
+    setDraft((x) => ({ ...x, [d]: { ...x[d], [m]: ((level(d, m) + 1) % 4) as Level } }));
   const undo = (d: string) =>
     setDraft((x) => {
       const next = { ...x };
@@ -100,8 +103,12 @@ export function LimitsCard({
                 >
                   <th scope="row" className="px-1.5 py-2 text-start align-top text-[13px]">
                     <b>{d.name}</b>
-                    <small className="block font-normal text-muted">{msg(locale, `access.designations.${d.name}`)}</small>
-                    {n > 0 && <small className="block font-bold text-[#8a5f12]">{t('unsaved', { n: String(n) })}</small>}
+                    <small className="block font-normal text-muted">
+                      {msg(locale, `access.designations.${d.name}`)}
+                    </small>
+                    {n > 0 && (
+                      <small className="block font-bold text-[#8a5f12]">{t('unsaved', { n: String(n) })}</small>
+                    )}
                   </th>
                   <td className="px-1.5 py-2 text-center text-[12px]">L{d.seniority}</td>
                   {STAFF_MODULES.map((m) => {
@@ -111,7 +118,11 @@ export function LimitsCard({
                       <td key={m} className="px-1.5 py-2 text-center">
                         <button
                           type="button"
-                          className={cn('lvl max-sm:min-h-11 max-sm:min-w-11', `l${v}`, isChanged && 'outline outline-2 outline-offset-1 outline-[#c8963e]')}
+                          className={cn(
+                            'lvl max-sm:min-h-11 max-sm:min-w-11',
+                            `l${v}`,
+                            isChanged && 'outline outline-2 outline-offset-1 outline-[#c8963e]',
+                          )}
                           data-action="perm.cycle"
                           data-module={m}
                           disabled={fixed || !canManage}
@@ -119,7 +130,11 @@ export function LimitsCard({
                             fixed
                               ? msg(locale, 'access.staff.sgFixed')
                               : canManage
-                                ? t('cellTitle', { designation: d.name, module: msg(locale, `access.modules.${m}`), level: lv(v) })
+                                ? t('cellTitle', {
+                                    designation: d.name,
+                                    module: msg(locale, `access.modules.${m}`),
+                                    level: lv(v),
+                                  })
                                 : msg(locale, 'access.staff.readOnly')
                           }
                           aria-label={`${d.name} · ${msg(locale, `access.modules.${m}`)}: ${lv(v)}${
@@ -200,14 +215,20 @@ export function LimitsCard({
                 values={{
                   locale,
                   ...(row
-                    ? { designation: row, levels: JSON.stringify(Object.fromEntries(changes(row).map((m) => [m, level(row, m)]))) }
+                    ? {
+                        designation: row,
+                        levels: JSON.stringify(Object.fromEntries(changes(row).map((m) => [m, level(row, m)]))),
+                      }
                     : {}),
                 }}
               />
-              <label className="form-field">
-                {t('yourPassword')}
-                <input name="password" type="password" autoComplete="current-password" required />
-              </label>
+              <PasswordField
+                locale={locale}
+                label={t('yourPassword')}
+                name="password"
+                autoComplete="current-password"
+                required
+              />
               {failure && <FormMessage result={failure} />}
               <div className="flex justify-end gap-2.5">
                 <button type="button" className="btn" data-action="modal.close" onClick={() => setConfirm(null)}>

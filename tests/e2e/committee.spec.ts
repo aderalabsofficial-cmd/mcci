@@ -185,7 +185,7 @@ test('the officer forwards with the number; the Convener approves: voucher and e
   const ap = await ctx.newPage();
   await ap.goto('/login');
   await ap.getByLabel('Mobile, email or member ID').fill(applicant.email);
-  await ap.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password').fill(applicant.password);
+  await ap.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(applicant.password);
   await ap.locator('[data-action="login.member"]').click();
   await expect(ap).toHaveURL(/\/portal$/, { timeout: 20_000 });
   await expect(ap.getByRole('main')).toContainText(v!.voucher_no);
