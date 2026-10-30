@@ -71,6 +71,13 @@ contacted, delivery history.
 
 WhatsApp numbers are kept out of `audit_log` (the audit log is readable by more staff than contacts are).
 
+## Released 30 Oct 2026 (owner approved)
+
+`2f71d59` is live; previous release `5fb267a` kept for rollback. Backup `mcci-20261030T145030Z` verified, restore drill
+13/13 PASS, migration 0570 applied (companies and members unchanged; 12 audit rows for the new default limits and
+setting). Signed-out live checks passed; signed-in screens not checked live. Production has 0 non-demo members, so the
+directory is empty until the register is imported.
+
 ## Tests
 
 pgTAP `370_business_directory` (38), unit `business-filters`, e2e `business-directory`.
