@@ -73,6 +73,14 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Business Profile | `admin/bizprofile/` | `/admin/business-directory/profile` | Official record, outreach details, tags, contact and consent |
 | Segments | `admin/segments/` | `/admin/business-directory/segments` | Saved dynamic segments with live counts |
 | Exports | `admin/bizexports/` | `/admin/business-directory/exports` | Controlled, logged CSV, Excel and PDF exports |
+| WhatsApp | `admin/wadash/` | `/admin/whatsapp` | Connection state and aggregate figures (docs/30; no prototype screen) |
+| WhatsApp Inbox | `admin/wainbox/` | `/admin/whatsapp/inbox` | Replies, history, assignment, notes, linking unmatched numbers |
+| WhatsApp Campaigns | `admin/wacampaigns/` | `/admin/whatsapp/campaigns` | Campaign history |
+| New Campaign | `admin/wanew/` | `/admin/whatsapp/campaigns/new` | Audience, message, preview with reasons, draft |
+| Campaign | `admin/wacampaign/` | `/admin/whatsapp/campaigns/view` | Approval, launch, pause, cancel, results per recipient |
+| Message Templates | `admin/watemplates/` | `/admin/whatsapp/templates` | Sync status from the provider, record wording and variables |
+| Consent Management | `admin/waconsent/` | `/admin/whatsapp/consent` | Consent per number, suppression list |
+| WhatsApp Settings | `admin/wasettings/` | `/admin/whatsapp/settings` | Connection test, masked credentials, limits |
 | AI Insights | `admin/ai/` | `/admin/ai` | How document reading performs; guardrails |
 | Staff & Roles | `admin/staff/` | `/admin/staff` | Invite staff by email, designations with seniority levels, editable limits per module (No access / View / Edit / Approve), view the panel as anyone |
 | Audit Trail | `admin/audit/` | `/admin/audit` | Every action, who and when; export |

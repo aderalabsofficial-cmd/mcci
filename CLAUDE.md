@@ -119,6 +119,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 | Spec defects and missing features (fix A1–A6 before M1) | `docs/16-gap-review.md` (A1–A6 fixed in `docs/17` migrations) |
 | Staging security review: test evidence, findings, backups, open gates | `docs/18-staging-security-review.md` |
 | Business directory, segments, exports; WhatsApp integration assessment | `docs/29-business-directory.md`, `docs/28-outreach-integration-assessment.md` |
+| WhatsApp messaging, campaigns, inbox, consent; onboarding, provider remediation, deployment | `docs/30-whatsapp.md` |
 | Every screen / every action / reference data | `docs/catalogue/*` |
 
 ## 6. Conventions
