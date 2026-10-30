@@ -1,19 +1,15 @@
-import { NextResponse } from 'next/server';
 import { trustedClientIp } from '@/lib/net/client-ip';
-import { verifyDocument } from '@/lib/verify/admin';
+import { verifyByReference } from '@/lib/verify/admin';
+import { answer } from '@/lib/verify/answer';
 
-/**
- * GET /api/verify/{code} (action verify.go, docs/08): public, rate-limited per address, minimal projection —
- * title, holder company, membership number, status, valid to, superseded-by. Every lookup is counted.
- */
+/** GET /api/verify/{reference}[?s=]: the same minimal answer as /api/public/verify?ref= (kept for existing links). */
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const r = await verifyDocument(decodeURIComponent(code), trustedClientIp(req.headers) ?? 'unknown');
-  const headers = { 'Cache-Control': 'no-store' };
-  if (r.kind === 'limited') return NextResponse.json({ error: 'too_many' }, { status: 429, headers });
-  if (r.kind === 'invalid') return NextResponse.json({ error: 'invalid_code' }, { status: 400, headers });
-  if (r.kind === 'none') return NextResponse.json({ found: false }, { status: 404, headers });
-  return NextResponse.json({ found: true, document: r.doc }, { headers });
+  const sig = new URL(req.url).searchParams.get('s')?.slice(0, 100) || null;
+  return answer(
+    req,
+    await verifyByReference(decodeURIComponent(code).slice(0, 40), sig, trustedClientIp(req.headers) ?? 'unknown'),
+  );
 }

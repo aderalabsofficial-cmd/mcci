@@ -342,6 +342,19 @@ export type Database = {
 "post_save":
 { Args: { "p_body": string,"p_body_ur": string,"p_category": string,"p_id": string,"p_status": string,"p_title": string,"p_title_ur": string }; Returns: string
                            },
+"public_verify_code":
+{ Args: { "p_channel": string,"p_client": string,"p_code": string }; Returns: {
+              "business_name": string,"category": string,"certificate_ref": string,"certificate_status": string,"checked_on": string,"class": string,"member_no": string,"member_since": string,"member_status": string,"replaced_by": string,"valid_to": string
+            }[]
+                           },
+"public_verify_log":
+{ Args: { "p_channel": string,"p_client": string,"p_outcome": string }; Returns: undefined
+                           },
+"public_verify_member":
+{ Args: { "p_client": string,"p_no": string }; Returns: {
+              "business_name": string,"category": string,"certificate_ref": string,"certificate_status": string,"checked_on": string,"class": string,"member_no": string,"member_since": string,"member_status": string,"replaced_by": string,"valid_to": string
+            }[]
+                           },
 "qr_revoke":
 { Args: { "p_code": string,"p_reason": string }; Returns: undefined
                            },
@@ -2013,6 +2026,20 @@ isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
+                  ]
+                },"verify_attempts": {
+                  Row: {
+                    "at": string,"channel": string,"client": string | null,"id": number,"outcome": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"channel": string,"client"?: string | null,"id"?: never,"outcome": string
+                  }
+                  Update: {
+                    "at"?: string,"channel"?: string,"client"?: string | null,"id"?: never,"outcome"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 }
           }

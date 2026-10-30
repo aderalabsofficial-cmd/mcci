@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { qrTestKey } from './tests/e2e/qr-key';
 
 // E2E_HOST / E2E_PORT: run on Auth's site_url origin (local: 127.0.0.1:3000) so emailed links may redirect back here
 const PORT = Number(process.env.E2E_PORT ?? 3100);
@@ -82,6 +83,8 @@ export default defineConfig({
         AI_EXTRACTION: 'on',
         OPENAI_API_KEY: 'sk-e2e-fake-key-not-a-real-one-000000000000',
         OPENAI_BASE_URL: 'http://127.0.0.1:3998/v1',
+        // signed QR links with a test-only key (tests/e2e/qr-key.ts; verify.spec checks valid and altered signatures)
+        QR_SIGNING_KEY: qrTestKey(),
       },
     },
   ],

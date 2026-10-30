@@ -225,3 +225,25 @@
 .site .tabs button {min-height:44px}
 /* on Urdu pages the English line under the title follows the Urdu text (right), away from the words in the photo */
 .site[lang=ur] .xurl[dir=ltr] {text-align:right}
+
+/* public verification (components/site/verify-view.tsx; docs/26): two lookup forms, result with the security pattern */
+.proto .vf-forms {display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.proto .vf-forms .card {margin:0}
+.proto .vf-result {display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:22px;align-items:start}
+.proto .vf-banner {display:flex;gap:12px;align-items:flex-start;border-radius:14px;padding:14px 16px;border:1px solid}
+.proto .vf-banner.ok {background:#e9f8f1;border-color:#bfe8d6;color:#0f5b3c}
+.proto .vf-banner.bad {background:#fdecec;border-color:#f3c7c7;color:#9b1c1c}
+.proto .vf-banner small {display:block;margin-top:2px;font-size:14px;opacity:.95}
+.proto .vf-sig {display:flex;gap:6px;align-items:center;margin-top:10px;font-size:14px;font-weight:700;color:#0f5b3c}
+.proto .vf-pattern {margin:0;text-align:center;background:#fff;border:1px solid var(--b);border-radius:14px;padding:10px}
+.proto .vf-pattern svg {width:100%;height:auto;display:block}
+.proto .vf-pattern figcaption {margin-top:6px;font-size:12.5px;color:#55687f}
+.proto .vf-pattern figcaption b {display:block;font-family:ui-monospace,Consolas,monospace;font-size:15px;letter-spacing:.12em;color:#0e1b33}
+.dark .proto .vf-banner.ok {background:rgba(31,163,74,.14);border-color:rgba(31,163,74,.4);color:#86efac}
+.dark .proto .vf-banner.bad {background:rgba(239,68,68,.13);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.dark .proto .vf-sig {color:#86efac}
+@media (max-width:640px) {
+  .proto .vf-forms {grid-template-columns:1fr;gap:10px}
+  .proto .vf-result {grid-template-columns:1fr}
+  .proto .vf-pattern {max-width:240px;margin:0 auto}
+}

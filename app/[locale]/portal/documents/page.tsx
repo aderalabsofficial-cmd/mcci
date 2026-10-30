@@ -10,6 +10,7 @@ import { voucherDate } from '@/lib/committee/voucher';
 import { loadPublicSettings } from '@/lib/membership/load';
 import { msg } from '@/lib/nav/model';
 import { requireUser } from '@/lib/permissions/server';
+import { rosette } from '@/lib/qr/rosette';
 import { qrSvg, verifyUrl } from '@/lib/qr/svg';
 import { createClient } from '@/lib/supabase/server';
 
@@ -21,7 +22,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic';
 
-const TONE: Record<string, string> = { Valid: 'green', Temporary: 'blue', Superseded: 'orange', Expired: 'red', Revoked: 'red' };
+const TONE: Record<string, string> = {
+  Valid: 'green',
+  Temporary: 'blue',
+  Superseded: 'orange',
+  Expired: 'red',
+  Revoked: 'red',
+};
 
 /**
  * My Documents (prototype member/documents): everything MCCI issued to the company — the membership certificate (the
@@ -36,13 +43,20 @@ export default async function DocumentsPage({ params, searchParams }: Props) {
   const supabase = await createClient();
   const code = (await searchParams).code;
   const [{ data: docs }, settings] = await Promise.all([
-    supabase.from('documents').select('code, kind, title, status, valid_to, created_at, path').order('created_at', { ascending: false }),
+    supabase
+      .from('documents')
+      .select('code, kind, title, status, valid_to, created_at, path')
+      .order('created_at', { ascending: false }),
     loadPublicSettings(),
   ]);
   let cert: CertData | null = null;
   // a scanned certificate (security press, 0450): the stamped scan and the same QR, larger
-  const scanned = code ? (docs ?? []).find((d) => d.code === code && d.kind === 'certificate' && d.path?.startsWith('scans/')) : undefined;
+  const scanned = code
+    ? (docs ?? []).find((d) => d.code === code && d.kind === 'certificate' && d.path?.startsWith('scans/'))
+    : undefined;
   const bigQr = scanned ? await qrSvg(verifyUrl(scanned.code)) : null;
+  // the same security pattern as on the stamped scan and the public verification page (lib/qr/rosette.ts)
+  const pattern = scanned ? rosette(scanned.code, 240) : null;
   if (code && !scanned) {
     const { data } = await supabase.schema('api').rpc('cert_view', { p_code: code });
     cert = (data?.[0] as CertData | undefined) ?? null;
@@ -73,7 +87,14 @@ export default async function DocumentsPage({ params, searchParams }: Props) {
             {/* eslint-disable-next-line @next/next/no-img-element -- the member's own certificate through the permission-checked route */}
             <img src={`/api/certificates/${scanned.code}`} alt={msg(locale, 'docs.admin.kinds.certificate')} />
             <div className="cert-qr">
-              <div className="cert-qr-svg" dangerouslySetInnerHTML={{ __html: bigQr }} />
+              <div className="cert-qr-rosette" data-fingerprint={pattern?.fingerprint}>
+                <span
+                  className="cert-qr-pattern"
+                  aria-hidden
+                  dangerouslySetInnerHTML={{ __html: pattern?.svg ?? '' }}
+                />
+                <div className="cert-qr-svg" dangerouslySetInnerHTML={{ __html: bigQr }} />
+              </div>
               <b>{scanned.code}</b>
               <small>{m('scanToVerify')}</small>
             </div>
@@ -106,7 +127,9 @@ export default async function DocumentsPage({ params, searchParams }: Props) {
                   <b>{msg(locale, `docs.admin.kinds.${d.kind}`)}</b>
                   <small>
                     {d.code} · {m('issuedOn', { date: voucherDate(d.created_at, locale) })}
-                    {d.valid_to ? ` · ${m('validTo', { date: voucherDate(`${d.valid_to}T12:00:00+05:00`, locale) })}` : ''}
+                    {d.valid_to
+                      ? ` · ${m('validTo', { date: voucherDate(`${d.valid_to}T12:00:00+05:00`, locale) })}`
+                      : ''}
                   </small>
                 </div>
                 <span className={`bd ${TONE[d.status] ?? 'gray'}`}>{msg(locale, `verify.status.${d.status}`)}</span>

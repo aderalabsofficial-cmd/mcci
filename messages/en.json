@@ -2325,7 +2325,7 @@
   },
   "verify": {
     "title": "Verify a Document",
-    "sub": "Genuine MCCI documents carry a QR code and a unique code. Scan the QR or type the code to check it.",
+    "sub": "Check an MCCI membership certificate by its QR code or reference, or a business by its membership number.",
     "check": "Check authenticity",
     "codeLabel": "Code under the QR",
     "go": "Verify",
@@ -2353,7 +2353,42 @@
     "result": {
       "none": "No MCCI document has this code. Check the code, or contact MCCI.",
       "invalid": "That is not an MCCI code. Codes look like MCCI-QR-ABCDE-23456.",
-      "limited": "Too many checks from this connection. Please wait a minute."
+      "limited": "Too many checks from this connection. Please wait a minute.",
+      "tampered": "This QR code has been altered: its signature does not match. Do not rely on it — contact MCCI."
+    },
+    "byMember": "Check a membership number",
+    "memberLabel": "Membership number",
+    "goMember": "Check membership",
+    "genuine": "Genuine — current MCCI member",
+    "genuineHelp": "These details come from the MCCI register as of today.",
+    "notCurrentHelp": "This record exists in the MCCI register but is not current. Contact MCCI if you need confirmation.",
+    "replacedBy": "This certificate was replaced by {ref}. Check the newer certificate.",
+    "signed": "The QR code carries MCCI’s digital signature and it matches.",
+    "category": "Category",
+    "categories": {
+      "Manufacturing": "Manufacturing",
+      "Non-manufacturing": "Non-manufacturing"
+    },
+    "class": "Class",
+    "memberStatus": "Membership status",
+    "memberStatuses": {
+      "Active": "Active",
+      "Temporary": "Temporary membership (valid)",
+      "Expired": "Expired",
+      "Suspended": "Suspended",
+      "Revoked": "Revoked"
+    },
+    "period": "Membership period",
+    "certStatus": "Certificate",
+    "noCertificate": "No certificate issued yet",
+    "checkedOn": "Checked on",
+    "pattern": "Security pattern of this certificate — compare it with the paper copy. Fingerprint: ",
+    "statusTitle": {
+      "Superseded": "Certificate replaced",
+      "Revoked": "Certificate revoked",
+      "Expired": "Membership not current",
+      "Suspended": "Membership suspended",
+      "CertExpired": "Certificate expired"
     }
   },
   "certificate": {
