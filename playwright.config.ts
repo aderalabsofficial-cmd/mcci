@@ -81,6 +81,7 @@ export default defineConfig({
         // the suite signs staff in many times from one address (lib/auth/admin/staff-throttle.ts)
         STAFF_LOGIN_ATTEMPTS: '500',
         AI_EXTRACTION: 'on',
+        AI_ASSISTANT: 'on',
         OPENAI_API_KEY: 'sk-e2e-fake-key-not-a-real-one-000000000000',
         OPENAI_BASE_URL: 'http://127.0.0.1:3998/v1',
         // signed QR links with a test-only key (tests/e2e/qr-key.ts; verify.spec checks valid and altered signatures)

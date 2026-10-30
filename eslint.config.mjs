@@ -59,6 +59,8 @@ const SERVICE_ROLE_PATHS = [
   'lib/certificates/admin/**',
   'lib/demo/admin/**',
   'lib/site/admin/**',
+  // Ask MCCI AI: the per-person question limit (api.rate_limit_take), after requireUser()
+  'lib/assistant/admin/**',
 ];
 
 const config = [

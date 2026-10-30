@@ -50,7 +50,10 @@ const ANSWERS = {
   service_request: { f0: f('ACME GmbH', 94), f1: f('Germany', 96), f2: f('6302.10', 88), f3: f('12000', 90) },
   // a PDF member directory (lib/import/ai.ts): one clear row, one the "AI" was unsure of
   member_directory: {
-    members: [member('MCCI-A-0050', 'Scanned Traders', 'Rep Scan', '31 March 2027', 'Permanent'), member('MCCI-A-0051', 'Blurry & Co', 'Rep Blur', '31-03-2027', 'Active', 55)],
+    members: [
+      member('MCCI-A-0050', 'Scanned Traders', 'Rep Scan', '31 March 2027', 'Permanent'),
+      member('MCCI-A-0051', 'Blurry & Co', 'Rep Blur', '31-03-2027', 'Active', 55),
+    ],
     more_than_limit: false,
   },
   ntn: {
@@ -91,8 +94,35 @@ createServer((req, res) => {
     }
     const parsed = JSON.parse(body);
     const name = parsed?.text?.format?.name ?? '';
+    // Ask MCCI AI (lib/assistant): a plain-text answer that shows what context the server sent
+    if (String(parsed?.instructions ?? '').includes('MCCI-ASSISTANT')) {
+      const all = JSON.stringify(parsed.input ?? []);
+      const file = all.match(/FILE:(MCCI-\d{4}-M-\d{4})/)?.[1];
+      const text = `FAKE-ASSISTANT${all.includes('Membership fees') ? ' knowledge-ok' : ''}${file ? ` file ${file}` : ''}`;
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          id: 'resp_ai',
+          object: 'response',
+          created_at: Math.floor(Date.now() / 1000),
+          status: 'completed',
+          model: 'fake',
+          output: [
+            {
+              id: 'msg_ai',
+              type: 'message',
+              role: 'assistant',
+              status: 'completed',
+              content: [{ type: 'output_text', text, annotations: [] }],
+            },
+          ],
+        }),
+      );
+    }
     const answer =
-      name === 'mcci_certificate' ? (CERTIFICATES[pngWidth(parsed?.input)] ?? {}) : (ANSWERS[name.replace(/^mcci_/, '')] ?? {});
+      name === 'mcci_certificate'
+        ? (CERTIFICATES[pngWidth(parsed?.input)] ?? {})
+        : (ANSWERS[name.replace(/^mcci_/, '')] ?? {});
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(
       JSON.stringify({

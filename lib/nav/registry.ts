@@ -119,7 +119,7 @@ export const SCREENS: readonly Screen[] = [
   s('portal', 'documents', '/portal/documents', 'M6', 'folder'),
   s('portal', 'payments', '/portal/payments', 'M5c', 'card'),
   s('portal', 'support', '/portal/support', 'M8a', 'help'),
-  s('portal', 'assistant', '/portal/assistant', 'M8', 'sparkles'),
+  s('portal', 'assistant', '/portal/assistant', 'M8a', 'sparkles'),
   s('portal', 'notifications', '/portal/notifications', 'M8a', 'bell'),
   s('portal', 'events', '/portal/events', 'M8a', 'calendar'),
   s('portal', 'opportunities', '/portal/opportunities', 'M8', 'globe'),
