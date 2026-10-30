@@ -324,6 +324,27 @@ export type Database = {
 "note_read_all":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"opp_close":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"opp_decide":
+{ Args: { "p_id": string,"p_publish": boolean,"p_reason": string }; Returns: undefined
+                           },
+"opp_interest":
+{ Args: { "p_body": string,"p_company": string,"p_id": string }; Returns: undefined
+                           },
+"opp_post":
+{ Args: { "p_body": string,"p_company": string,"p_days": number,"p_market": string,"p_sector": string,"p_title": string }; Returns: string
+                           },
+"opp_share":
+{ Args: { "p_body": string,"p_days": number,"p_market": string,"p_sector": string,"p_title": string }; Returns: string
+                           },
+"opp_withdraw_interest":
+{ Args: { "p_company": string,"p_id": string }; Returns: undefined
+                           },
+"opp_withdraw_post":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "pay_counter":
 { Args: { "p_note"?: string,"p_ref": string,"p_voucher": string }; Returns: {
               "amount": number,"app_id": string,"email_id": number,"expires_at": string,"lang": string,"member_no": string,"name": string,"ref_type": string,"temp_code": string,"to_email": string,"voucher_no": string
@@ -1462,14 +1483,14 @@ isOneToOne: false
                   ]
                 },"opportunities": {
                   Row: {
-                    "body": string,"company_id": string | null,"created_at": string,"created_by": string | null,"id": string,"kind": string,"sector": string | null,"status": string,"title": string
+                    "body": string,"company_id": string | null,"created_at": string,"created_by": string | null,"decided_at": string | null,"decided_by": string | null,"expires_at": string,"id": string,"kind": string,"market": string | null,"reject_reason": string | null,"sector": string | null,"status": string,"title": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"company_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind": string,"sector"?: string | null,"status"?: string,"title": string
+                    "body": string,"company_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"decided_at"?: string | null,"decided_by"?: string | null,"expires_at"?: string,"id"?: string,"kind": string,"market"?: string | null,"reject_reason"?: string | null,"sector"?: string | null,"status"?: string,"title": string
                   }
                   Update: {
-                    "body"?: string,"company_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"kind"?: string,"sector"?: string | null,"status"?: string,"title"?: string
+                    "body"?: string,"company_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"decided_at"?: string | null,"decided_by"?: string | null,"expires_at"?: string,"id"?: string,"kind"?: string,"market"?: string | null,"reject_reason"?: string | null,"sector"?: string | null,"status"?: string,"title"?: string
                   }
                   Relationships: [
                     {
@@ -1484,18 +1505,24 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "opportunities_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
     }
                   ]
                 },"opportunity_replies": {
                   Row: {
-                    "body": string,"company_id": string,"created_at": string,"created_by": string | null,"id": string,"opportunity_id": string
+                    "body": string,"company_id": string,"created_at": string,"created_by": string | null,"id": string,"opportunity_id": string,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"company_id": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"opportunity_id": string
+                    "body": string,"company_id": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"opportunity_id": string,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "body"?: string,"company_id"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"opportunity_id"?: string
+                    "body"?: string,"company_id"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"opportunity_id"?: string,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {

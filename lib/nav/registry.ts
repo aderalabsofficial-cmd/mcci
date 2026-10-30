@@ -122,7 +122,7 @@ export const SCREENS: readonly Screen[] = [
   s('portal', 'assistant', '/portal/assistant', 'M8a', 'sparkles'),
   s('portal', 'notifications', '/portal/notifications', 'M8a', 'bell'),
   s('portal', 'events', '/portal/events', 'M8a', 'calendar'),
-  s('portal', 'opportunities', '/portal/opportunities', 'M8', 'globe'),
+  s('portal', 'opportunities', '/portal/opportunities', 'M8a', 'globe'),
   s('portal', 'profile', '/portal/profile', 'M1', 'building'), // colleagues + change requests (M1); cards and partners arrive with M3
   s('portal', 'endorse', '/portal/endorse', 'M4', 'sign'),
 

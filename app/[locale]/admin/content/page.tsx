@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { PostForm } from '@/components/engagement/forms';
+import { OpportunityDesk } from '@/components/engagement/opportunities';
 import { guardStaff } from '@/components/services/staff-page';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
 import { requireUser } from '@/lib/permissions/server';
+import { loadOpportunities } from '@/lib/opportunities/load';
 import { createClient } from '@/lib/supabase/server';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -31,6 +33,29 @@ export default async function AdminContentPage({ params }: Props) {
     .select('id, category, title, title_ur, body, body_ur, status, published_at')
     .order('published_at', { ascending: false, nullsFirst: true });
   const rows = data ?? [];
+  const opps = (await loadOpportunities(locale)).all;
+  const OPP_KEYS = [
+    'desk',
+    'share',
+    'waiting',
+    'noneWaiting',
+    'published',
+    'noneOpen',
+    'publish',
+    'reject',
+    'reason',
+    'reasonNeeded',
+    'close',
+    'title',
+    'details',
+    'sector',
+    'market',
+    'days',
+    'submit',
+    'until',
+    'interested',
+    'noRight',
+  ];
   const canEdit = g.level >= 2;
   const date = (iso: string | null) =>
     iso
@@ -106,6 +131,13 @@ export default async function AdminContentPage({ params }: Props) {
           <p className="em">{m('none')}</p>
         )}
       </section>
+      <OpportunityDesk
+        locale={locale}
+        canEdit={canEdit}
+        pending={opps.filter((x) => x.raw.status === 'Pending').map((x) => x.opp)}
+        open={opps.filter((x) => x.open).map((x) => x.opp)}
+        t={Object.fromEntries(OPP_KEYS.map((k) => [k, msg(locale, `opp.${k}`)]))}
+      />
     </div>
   );
 }
