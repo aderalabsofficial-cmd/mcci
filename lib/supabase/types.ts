@@ -177,6 +177,11 @@ export type Database = {
               "company": string,"company_id": string,"created_at": string,"owner_email": string,"stage": Database["public"]['Enums']["app_stage"],"token": string
             }[]
                            },
+"demo_purge":
+{ Args: { "p_apply"?: boolean,"p_companies": (string)[] }; Returns: {
+              "item": string,"kind": string,"n": number
+            }[]
+                           },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
                            },
