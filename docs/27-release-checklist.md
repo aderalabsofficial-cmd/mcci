@@ -62,6 +62,12 @@ The cleanup tool ships but is not run (`api.demo_purge`, `scripts/ops/demo-purge
 demo-tool members endorsed the other two applications, so it refuses to purge them alone). Any future purge needs a
 new explicit approval, a fresh backup and a dry run first. Inventory: `/root/mcci-part2/inventory-*.txt`.
 
+**Update, found 30 Oct at the WhatsApp release:** these records are no longer in production. The audit log shows one
+request at 14:58 UTC, signed in as the Secretary General account, reason "demo data removed": 5 companies (DEMO — Demo
+Company 1 and 2, AMIR KHAN, DEMO — Adera Official, DEMO — Adera Labs), 2 members, 3 applications and their linked rows.
+The audit rows are kept. It did not come from a release step. The owner has not yet confirmed it was intended. Backup
+`mcci-20261030T145030Z` predates it and must be kept until they do; restoring anything needs separate approval.
+
 ## 3a. Deployed 30 Oct 2026 (owner approved)
 
 `5fb267a` is live; previous release `d024343` kept for rollback. Backup `mcci-20261030T121931Z` verified, restore drill

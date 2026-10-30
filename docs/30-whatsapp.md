@@ -148,6 +148,14 @@ circular (Utility if administrative); event invitation, general announcement (Ma
 Rollback: `scripts/deploy/release.sh --rollback` for code. The migration is additive; the older release ignores the new
 tables. It does change two default limits (Deputy Secretary `out` 3, Membership Officer `out` 2).
 
+### Released 30 Oct 2026 (owner approved)
+
+`b06f5b9` is live; rollback target `2f71d59`. Backup `mcci-20261030T204744Z` verified, restore drill 13/13 PASS, migration
+0580 applied (companies, members and applications unchanged). Sending is off, consent is closed, no timer exists, the
+media bucket is private, and there are 0 campaigns, messages and webhook events. Signed-out checks passed: health, public
+pages, admin screens 404, unsigned webhook 503 `not_configured`, cron 401, attachment and export 403. Not checked live:
+the screens signed in, and anything that needs the provider.
+
 ## 8. Acceptance (brief §19), tested against the stand-in provider
 
 | # | Criterion | Evidence |
