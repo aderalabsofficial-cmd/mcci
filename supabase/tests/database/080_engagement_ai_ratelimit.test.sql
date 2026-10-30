@@ -32,12 +32,12 @@ select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public
 select throws_ok($$ select tests.exec_as(tests.id('manager_a'), 'insert into public.change_requests (company_id, field, new_value) values (tests.id(''company_a''), ''address'', ''x'')') $$, '42501', null, 'Manager (profile 1) cannot');
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public.change_requests (company_id, field, new_value, status) values (tests.id(''company_a''), ''address'', ''x'', ''Approved'')') $$, '42501', null, 'cannot self-approve');
 
--- trade opportunities: member posts start Pending (decision D-M17)
-select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public.opportunities (kind, company_id, title, body) values (''requirement'', tests.id(''company_a''), ''Need cotton'', ''100 bales'')') $$, 'member posts a requirement');
+-- trade opportunities: member posts start Pending (decision D-M17); since 0540 posting goes through api.opp_post
+select lives_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.opp_post(tests.id(''company_a''), ''Need cotton'', ''100 bales of raw cotton'', null, null, 30)') $$, 'member posts a requirement');
 select is(tests.num_as(tests.id('owner_b'), 'select count(*) from public.opportunities'), 0::bigint, 'a pending post is not visible to other members');
 update public.opportunities set status = 'Published';
 select is(tests.num_as(tests.id('owner_b'), 'select count(*) from public.opportunities'), 1::bigint, 'once published it is visible');
-select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public.opportunities (kind, company_id, title, body) values (''inquiry'', tests.id(''company_a''), ''x'', ''y'')') $$, '42501', null, 'members cannot post MCCI buyer inquiries');
+select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.opp_share(''Buyer wants towels'', ''A buyer wants terry towels.'', null, null, 30)') $$, '42501', null, 'members cannot post MCCI buyer inquiries');
 
 -- events: unpublished events are invisible
 insert into public.events (id, title, starts_at) values ('e7000000-0000-0000-0000-000000000001', 'Draft event', now() + interval '10 days');
