@@ -4,7 +4,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 select plan(38);
 
--- two businesses with known details ('mo' = Membership Officer biz 2 out 1; 'sg' = biz 3 out 3)
+-- two businesses with known details ('mo' = Membership Officer biz 2 out 2; 'sg' = biz 3 out 3)
 create temp table t_m on commit drop as
   select m.id as member_id, m.company_id, m.member_no from public.members m join public.companies c on c.id = m.company_id
    where not c.demo order by m.member_no limit 2;
@@ -50,7 +50,7 @@ select lives_ok($$ select pg_temp.cnt('{"groups":[{"match":"all","rules":[{"fiel
 select ok((select count(*) from public.members) >= 2, 'and nothing happened');
 
 -- ── contact, consent, suppression
-select throws_ok(format($$ select tests.exec_as(tests.id('mo'), %L) $$, format('select api.biz_contact_save(%L, ''A'', ''+923001234567'')', (select c1 from t_ids))), '42501', null, 'biz 2 cannot manage contacts');
+select throws_ok(format($$ select tests.exec_as(tests.id('president'), %L) $$, format('select api.biz_contact_save(%L, ''A'', ''+923001234567'')', (select c1 from t_ids))), '42501', null, 'view-only staff cannot manage contacts');
 select lives_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_contact_save(%L, ''A'', ''+92 300 1234567'')', (select c1 from t_ids))), 'contact saved and normalised');
 select throws_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_contact_save(%L, ''A'', ''0300-123'')', (select c1 from t_ids))), 'P0001', null, 'a bad number is refused');
 select is((select coalesce(new_value, '{}'::jsonb) ? 'phone' from public.audit_log where object = 'outreach_contacts' order by id desc limit 1), false, 'the number stays out of the audit log');

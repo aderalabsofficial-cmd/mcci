@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ConsentPanel, OutreachDetails, TagPanel } from '@/components/business/profile-panels';
 import { guardStaff } from '@/components/services/staff-page';
+import { BusinessWhatsappPanel } from '@/components/whatsapp/business-panel';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { loadFacets, loadProfile } from '@/lib/business/load';
@@ -137,6 +138,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Prop
           <ConsentPanel locale={locale} p={p} canManage={out >= 2} canLift={out >= 3} />
         </div>
       )}
+      {out >= 2 && <BusinessWhatsappPanel locale={locale} p={p} />}
       <div className="card" data-section="history">
         <div className="ch">
           <h3>{m('history')}</h3>

@@ -598,6 +598,93 @@ export type Database = {
 { Args: { "p_voucher": string }; Returns: {
               "amount": number,"bank": Json,"company": string,"created_at": string,"due_at": string,"lines": Json,"member_no": string,"ref_type": string,"status": string,"token": string,"voucher_no": string
             }[]
+                           },
+"wa_audience_preview":
+{ Args: { "p_category": string,"p_def": Json,"p_excluded": (string)[],"p_ids": (string)[],"p_kind": string,"p_q": string,"p_template": string }; Returns: Json
+                           },
+"wa_campaign_control":
+{ Args: { "p_action": string,"p_id": string }; Returns: undefined
+                           },
+"wa_campaign_create":
+{ Args: { "p_attachment": string,"p_body": string,"p_category": string,"p_def": Json,"p_excluded": (string)[],"p_ids": (string)[],"p_kind": string,"p_mode": string,"p_name": string,"p_purpose": string,"p_q": string,"p_segment": string,"p_template": string }; Returns: string
+                           },
+"wa_campaign_decide":
+{ Args: { "p_approve": boolean,"p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"wa_campaign_options":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"wa_campaign_start":
+{ Args: { "p_at": string,"p_confirm": number,"p_id": string }; Returns: undefined
+                           },
+"wa_campaign_stats":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"wa_campaign_submit":
+{ Args: { "p_id": string }; Returns: string
+                           },
+"wa_claim":
+{ Args: { "p_limit": number }; Returns: Json
+                           },
+"wa_consent_overview":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"wa_consent_record":
+{ Args: { "p_categories": (string)[],"p_company": string,"p_evidence": string,"p_method": string,"p_status": string }; Returns: undefined
+                           },
+"wa_contact_language":
+{ Args: { "p_company": string,"p_language": string }; Returns: undefined
+                           },
+"wa_conversation_link":
+{ Args: { "p_company": string,"p_id": string }; Returns: undefined
+                           },
+"wa_conversation_update":
+{ Args: { "p_assigned": string,"p_id": string,"p_status": string }; Returns: undefined
+                           },
+"wa_dashboard":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"wa_health_mark":
+{ Args: { "p_error": string,"p_status": string,"p_steps": Json }; Returns: undefined
+                           },
+"wa_member_consent":
+{ Args: { "p_categories": (string)[],"p_company": string,"p_grant": boolean,"p_name": string,"p_phone": string }; Returns: undefined
+                           },
+"wa_my_consent":
+{ Args: { "p_company": string }; Returns: Json
+                           },
+"wa_note_add":
+{ Args: { "p_body": string,"p_id": string }; Returns: undefined
+                           },
+"wa_reconcile":
+{ Args: { "p_code": string,"p_detail": string,"p_id": string,"p_state": string,"p_wa_id": string }; Returns: undefined
+                           },
+"wa_reconcile_list":
+{ Args: { "p_limit": number }; Returns: Json
+                           },
+"wa_result":
+{ Args: { "p_code": string,"p_detail": string,"p_id": string,"p_outcome": string,"p_provider_id": string,"p_wa_id": string }; Returns: undefined
+                           },
+"wa_send_prepare":
+{ Args: { "p_attachment": string,"p_body": string,"p_category": string,"p_company": string,"p_kind": string,"p_template": string }; Returns: string
+                           },
+"wa_settings_read":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"wa_settings_save":
+{ Args: { "p_values": Json }; Returns: undefined
+                           },
+"wa_template_save":
+{ Args: { "p_body": string,"p_footer": string,"p_header": string,"p_header_type": string,"p_id": string,"p_var_map": Json }; Returns: undefined
+                           },
+"wa_templates_sync":
+{ Args: { "p_rows": Json }; Returns: number
+                           },
+"wa_webhook":
+{ Args: { "p_data": Json,"p_event_id": string,"p_type": string }; Returns: string
+                           },
+"wa_webhook_reject":
+{ Args: { "p_reason": string }; Returns: undefined
                            }
           }
           Enums: {
@@ -1644,14 +1731,14 @@ isOneToOne: false
                   ]
                 },"outreach_consents": {
                   Row: {
-                    "company_id": string,"evidence": string | null,"id": number,"method": string,"phone": string,"recorded_at": string,"recorded_by": string | null,"status": string
+                    "categories": (string)[],"company_id": string,"evidence": string | null,"id": number,"method": string,"phone": string,"recorded_at": string,"recorded_by": string | null,"status": string,"wording_version": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"evidence"?: string | null,"id"?: never,"method": string,"phone": string,"recorded_at"?: string,"recorded_by"?: string | null,"status": string
+                    "categories"?: (string)[],"company_id": string,"evidence"?: string | null,"id"?: never,"method": string,"phone": string,"recorded_at"?: string,"recorded_by"?: string | null,"status": string,"wording_version"?: string | null
                   }
                   Update: {
-                    "company_id"?: string,"evidence"?: string | null,"id"?: never,"method"?: string,"phone"?: string,"recorded_at"?: string,"recorded_by"?: string | null,"status"?: string
+                    "categories"?: (string)[],"company_id"?: string,"evidence"?: string | null,"id"?: never,"method"?: string,"phone"?: string,"recorded_at"?: string,"recorded_by"?: string | null,"status"?: string,"wording_version"?: string | null
                   }
                   Relationships: [
                     {
@@ -1670,14 +1757,14 @@ isOneToOne: false
                   ]
                 },"outreach_contacts": {
                   Row: {
-                    "company_id": string,"name": string | null,"phone": string,"updated_at": string,"updated_by": string | null
+                    "company_id": string,"language": string | null,"name": string | null,"phone": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"name"?: string | null,"phone": string,"updated_at"?: string,"updated_by"?: string | null
+                    "company_id": string,"language"?: string | null,"name"?: string | null,"phone": string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "company_id"?: string,"name"?: string | null,"phone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "company_id"?: string,"language"?: string | null,"name"?: string | null,"phone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -2310,6 +2397,286 @@ isOneToOne: false
                   }
                   Update: {
                     "at"?: string,"channel"?: string,"client"?: string | null,"id"?: never,"outcome"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"whatsapp_attachments": {
+                  Row: {
+                    "bytes": number,"created_at": string,"file_name": string,"id": string,"kind": string,"mime": string,"path": string,"uploaded_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bytes": number,"created_at"?: string,"file_name": string,"id"?: string,"kind": string,"mime": string,"path": string,"uploaded_by"?: string | null
+                  }
+                  Update: {
+                    "bytes"?: number,"created_at"?: string,"file_name"?: string,"id"?: string,"kind"?: string,"mime"?: string,"path"?: string,"uploaded_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_attachments_uploaded_by_fkey"
+      columns: ["uploaded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_campaign_recipients": {
+                  Row: {
+                    "business_name": string,"campaign_id": string,"company_id": string | null,"id": string,"member_no": string | null,"message_id": string | null,"phone": string | null,"reason": string | null,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_name": string,"campaign_id": string,"company_id"?: string | null,"id"?: string,"member_no"?: string | null,"message_id"?: string | null,"phone"?: string | null,"reason"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "business_name"?: string,"campaign_id"?: string,"company_id"?: string | null,"id"?: string,"member_no"?: string | null,"message_id"?: string | null,"phone"?: string | null,"reason"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_campaign_recipients_campaign_id_fkey"
+      columns: ["campaign_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_campaigns"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_campaign_recipients_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_campaigns": {
+                  Row: {
+                    "approved_at": string | null,"approved_by": string | null,"attachment_id": string | null,"body": string | null,"category": string,"created_at": string,"created_by": string | null,"filter": NonNullable<Json>,"finished_at": string | null,"id": string,"message_kind": string,"mode": string,"name": string,"purpose": string | null,"reject_reason": string | null,"scheduled_at": string | null,"segment_id": string | null,"started_at": string | null,"status": string,"template_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"attachment_id"?: string | null,"body"?: string | null,"category": string,"created_at"?: string,"created_by"?: string | null,"filter"?: NonNullable<Json>,"finished_at"?: string | null,"id"?: string,"message_kind": string,"mode"?: string,"name": string,"purpose"?: string | null,"reject_reason"?: string | null,"scheduled_at"?: string | null,"segment_id"?: string | null,"started_at"?: string | null,"status"?: string,"template_id"?: string | null
+                  }
+                  Update: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"attachment_id"?: string | null,"body"?: string | null,"category"?: string,"created_at"?: string,"created_by"?: string | null,"filter"?: NonNullable<Json>,"finished_at"?: string | null,"id"?: string,"message_kind"?: string,"mode"?: string,"name"?: string,"purpose"?: string | null,"reject_reason"?: string | null,"scheduled_at"?: string | null,"segment_id"?: string | null,"started_at"?: string | null,"status"?: string,"template_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_campaigns_approved_by_fkey"
+      columns: ["approved_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_campaigns_attachment_id_fkey"
+      columns: ["attachment_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_attachments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_campaigns_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_campaigns_segment_id_fkey"
+      columns: ["segment_id"]
+isOneToOne: false
+      referencedRelation: "segments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_campaigns_template_id_fkey"
+      columns: ["template_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_conversations": {
+                  Row: {
+                    "assigned_to": string | null,"company_id": string | null,"created_at": string,"id": string,"last_inbound_at": string | null,"last_outbound_at": string | null,"phone": string,"profile_name": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assigned_to"?: string | null,"company_id"?: string | null,"created_at"?: string,"id"?: string,"last_inbound_at"?: string | null,"last_outbound_at"?: string | null,"phone": string,"profile_name"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "assigned_to"?: string | null,"company_id"?: string | null,"created_at"?: string,"id"?: string,"last_inbound_at"?: string | null,"last_outbound_at"?: string | null,"phone"?: string,"profile_name"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_conversations_assigned_to_fkey"
+      columns: ["assigned_to"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_conversations_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_health": {
+                  Row: {
+                    "checked_at": string | null,"id": boolean,"last_auth_failure_at": string | null,"last_error": string | null,"last_ok_at": string | null,"status": string,"steps": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "checked_at"?: string | null,"id"?: boolean,"last_auth_failure_at"?: string | null,"last_error"?: string | null,"last_ok_at"?: string | null,"status"?: string,"steps"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "checked_at"?: string | null,"id"?: boolean,"last_auth_failure_at"?: string | null,"last_error"?: string | null,"last_ok_at"?: string | null,"status"?: string,"steps"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"whatsapp_message_events": {
+                  Row: {
+                    "at": string,"id": number,"message_id": string,"source": string,"state": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"id"?: never,"message_id": string,"source": string,"state": string
+                  }
+                  Update: {
+                    "at"?: string,"id"?: never,"message_id"?: string,"source"?: string,"state"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_message_events_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_messages"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_messages": {
+                  Row: {
+                    "attachment_id": string | null,"attempts": number,"body": string | null,"campaign_id": string | null,"category": string | null,"company_id": string | null,"conversation_id": string | null,"created_at": string,"created_by": string | null,"delivered_at": string | null,"direction": string,"failure_code": string | null,"failure_detail": string | null,"id": string,"idempotency_key": string | null,"kind": string,"next_attempt_at": string | null,"phone": string,"provider_id": string | null,"read_at": string | null,"recipient_id": string | null,"sent_at": string | null,"state": string,"submitted_at": string | null,"template_id": string | null,"template_payload": Json | null,"wa_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attachment_id"?: string | null,"attempts"?: number,"body"?: string | null,"campaign_id"?: string | null,"category"?: string | null,"company_id"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"delivered_at"?: string | null,"direction": string,"failure_code"?: string | null,"failure_detail"?: string | null,"id"?: string,"idempotency_key"?: string | null,"kind": string,"next_attempt_at"?: string | null,"phone": string,"provider_id"?: string | null,"read_at"?: string | null,"recipient_id"?: string | null,"sent_at"?: string | null,"state": string,"submitted_at"?: string | null,"template_id"?: string | null,"template_payload"?: Json | null,"wa_id"?: string | null
+                  }
+                  Update: {
+                    "attachment_id"?: string | null,"attempts"?: number,"body"?: string | null,"campaign_id"?: string | null,"category"?: string | null,"company_id"?: string | null,"conversation_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"delivered_at"?: string | null,"direction"?: string,"failure_code"?: string | null,"failure_detail"?: string | null,"id"?: string,"idempotency_key"?: string | null,"kind"?: string,"next_attempt_at"?: string | null,"phone"?: string,"provider_id"?: string | null,"read_at"?: string | null,"recipient_id"?: string | null,"sent_at"?: string | null,"state"?: string,"submitted_at"?: string | null,"template_id"?: string | null,"template_payload"?: Json | null,"wa_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_messages_attachment_id_fkey"
+      columns: ["attachment_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_attachments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_messages_campaign_id_fkey"
+      columns: ["campaign_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_campaigns"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_messages_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_messages_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_conversations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_messages_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_messages_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_campaign_recipients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_messages_template_id_fkey"
+      columns: ["template_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_templates"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_notes": {
+                  Row: {
+                    "author": string | null,"body": string,"conversation_id": string,"created_at": string,"id": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author"?: string | null,"body": string,"conversation_id": string,"created_at"?: string,"id"?: never
+                  }
+                  Update: {
+                    "author"?: string | null,"body"?: string,"conversation_id"?: string,"created_at"?: string,"id"?: never
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_notes_author_fkey"
+      columns: ["author"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_notes_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "whatsapp_conversations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_pending_status": {
+                  Row: {
+                    "at": string,"code": string | null,"detail": string | null,"state": string,"wa_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"code"?: string | null,"detail"?: string | null,"state": string,"wa_id": string
+                  }
+                  Update: {
+                    "at"?: string,"code"?: string | null,"detail"?: string | null,"state"?: string,"wa_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"whatsapp_templates": {
+                  Row: {
+                    "body": string | null,"buttons": NonNullable<Json>,"category": string | null,"footer": string | null,"header": string | null,"header_type": string,"id": string,"language": string,"name": string,"provider_id": string | null,"status": string,"synced_at": string | null,"updated_at": string,"updated_by": string | null,"var_map": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body"?: string | null,"buttons"?: NonNullable<Json>,"category"?: string | null,"footer"?: string | null,"header"?: string | null,"header_type"?: string,"id"?: string,"language": string,"name": string,"provider_id"?: string | null,"status"?: string,"synced_at"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"var_map"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "body"?: string | null,"buttons"?: NonNullable<Json>,"category"?: string | null,"footer"?: string | null,"header"?: string | null,"header_type"?: string,"id"?: string,"language"?: string,"name"?: string,"provider_id"?: string | null,"status"?: string,"synced_at"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"var_map"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_templates_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_webhook_events": {
+                  Row: {
+                    "event_id": string,"outcome": string,"received_at": string,"type": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "event_id": string,"outcome"?: string,"received_at"?: string,"type"?: string | null
+                  }
+                  Update: {
+                    "event_id"?: string,"outcome"?: string,"received_at"?: string,"type"?: string | null
                   }
                   Relationships: [
                     

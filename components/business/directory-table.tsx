@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDown, ArrowUp, Download } from 'lucide-react';
+import { ArrowDown, ArrowUp, Download, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
@@ -54,6 +54,7 @@ export function DirectoryTable({
   q,
   segment,
   canExport,
+  canMessage = false,
 }: {
   locale: Locale;
   rows: DirectoryRow[];
@@ -66,6 +67,7 @@ export function DirectoryTable({
   q: string;
   segment?: string;
   canExport: boolean;
+  canMessage?: boolean;
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `biz.table.${k}`, v);
   const key = directoryQuery({ f: filter, q });
@@ -140,6 +142,15 @@ export function DirectoryTable({
           >
             {m('clearSelection')}
           </button>
+        )}
+        {canMessage && (
+          <Link
+            className="btn btn-w"
+            href={`/admin/whatsapp/campaigns/new${directoryQuery({ f: filter, q })}`}
+            data-action="wa.compose.open"
+          >
+            <MessageCircle size={15} aria-hidden /> {m('sendWhatsapp')}
+          </Link>
         )}
         {canExport && (
           <Link

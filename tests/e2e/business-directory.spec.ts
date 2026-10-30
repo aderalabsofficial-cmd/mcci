@@ -239,7 +239,7 @@ test('exports: preview, three formats, formula protection, and a log entry', asy
   await expect(page.locator('[data-export-log] tbody tr').first()).toBeVisible();
 });
 
-test('permission boundaries: officer without sensitive columns, members refused', async ({ page, browser }) => {
+test('permission boundaries: officer without sensitive columns, view-only staff without contacts, members refused', async ({ page, browser }) => {
   await signInAs(page, 'staff');
   const filter = { groups: [] };
   await page.goto('/admin/business-directory/exports');
@@ -249,10 +249,13 @@ test('permission boundaries: officer without sensitive columns, members refused'
   });
   expect(refused.status()).toBe(403);
 
-  await page.goto(`/admin/business-directory/profile?id=${members[TEXTILE]}`);
-  await expect(page.locator('[data-contacts-hidden]')).toBeVisible();
-  await expect(page.locator('[data-section="consent"]')).toHaveCount(0);
-  await expect(page.getByText('061-1')).toHaveCount(0);
+  const view = await browser.newPage();
+  await signInAs(view, 'president');
+  await view.goto(`/admin/business-directory/profile?id=${members[TEXTILE]}`);
+  await expect(view.locator('[data-contacts-hidden]')).toBeVisible();
+  await expect(view.locator('[data-section="consent"]')).toHaveCount(0);
+  await expect(view.getByText('061-1')).toHaveCount(0);
+  await view.close();
 
   const member = await browser.newPage();
   await signInAs(member, 'member');

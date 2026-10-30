@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ActionForm, Hidden } from '@/components/shared/action-form';
 import { FormMessage } from '@/components/shared/modal';
+import { StaffConsentForm } from '@/components/whatsapp/forms';
 import type { Locale } from '@/i18n/routing';
 import type { ActionResult } from '@/lib/access/result';
 import {
   addTag,
   liftSuppression,
-  recordConsent,
   removeTag,
   saveContact,
   saveOutreachDetails,
@@ -225,6 +225,16 @@ export function ConsentPanel({
                 data-field="contact-phone"
               />
             </label>
+            {canManage && (
+              <label className="form-field">
+                {m('language')}
+                <select name="language" defaultValue={p.whatsapp?.language ?? ''} data-field="contact-language">
+                  <option value="">{m('languageDefault')}</option>
+                  <option value="en">English</option>
+                  <option value="ur">اردو</option>
+                </select>
+              </label>
+            )}
             <small className="muted biz-wide">{m('numberHint')}</small>
             <div className="pb biz-wide">
               <button
@@ -240,46 +250,7 @@ export function ConsentPanel({
         )}
       </ActionForm>
 
-      {canManage && phone && !p.opted_out && (
-        <ActionForm action={recordConsent} onDone={onDone} className="biz-form" data-consent-form>
-          {(busy) => (
-            <>
-              <Hidden values={{ locale, company: p.company_id }} />
-              <label className="form-field">
-                {m('consentChange')}
-                <select name="status" defaultValue="granted" data-field="consent-status">
-                  <option value="granted">{m('consentGrant')}</option>
-                  <option value="withdrawn">{m('consentWithdraw')}</option>
-                </select>
-              </label>
-              <label className="form-field">
-                {m('consentMethod')}
-                <select name="method" defaultValue="written" data-field="consent-method">
-                  {['written', 'event_form', 'email'].map((k) => (
-                    <option key={k} value={k}>
-                      {m(`methods.${k}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="form-field biz-wide">
-                {m('consentEvidence')}
-                <input name="evidence" maxLength={500} data-field="consent-evidence" />
-              </label>
-              <div className="pb biz-wide">
-                <button
-                  className="btn btn-primary"
-                  data-action="biz.consent.save"
-                  disabled={busy}
-                  title={busy ? m('working') : undefined}
-                >
-                  <Save size={15} aria-hidden /> {m('consentSave')}
-                </button>
-              </div>
-            </>
-          )}
-        </ActionForm>
-      )}
+      {canManage && phone && !p.opted_out && <StaffConsentForm locale={locale} company={p.company_id} />}
 
       {canManage && phone && !p.opted_out && (
         <ActionForm action={suppressNumber} onDone={onDone} className="biz-form">

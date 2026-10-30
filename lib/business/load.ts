@@ -30,6 +30,7 @@ export interface Facets {
   city: string[];
   district: string[];
   tags: { id: string; name: string }[];
+  campaigns: { id: string; name: string }[];
 }
 export interface DuplicateGroup {
   why: 'name' | 'ntn' | 'phone';
@@ -47,7 +48,7 @@ export interface BusinessProfile extends DirectoryRow {
   };
   can_see_contacts: boolean;
   contacts: { address: string | null; tel: string | null; email: string | null } | null;
-  whatsapp: { name: string | null; phone: string } | null;
+  whatsapp: { name: string | null; phone: string; language: string | null } | null;
   outreach: { city: string | null; district: string | null; notes: string | null; updated_at: string } | null;
   tags: { id: string; name: string }[];
   memberships: { member_no: string; class: string; status: string; since: string; valid_to: string }[];
@@ -86,9 +87,12 @@ export async function searchDirectory(
 
 export async function loadFacets(): Promise<Facets> {
   const db = await createClient();
-  const { data, error } = await db.schema('api').rpc('biz_facets');
+  const [{ data, error }, { data: campaigns }] = await Promise.all([
+    db.schema('api').rpc('biz_facets'),
+    db.schema('api').rpc('wa_campaign_options'),
+  ]);
   if (error) throw new Error(`facets: ${error.message}`);
-  return data as unknown as Facets;
+  return { ...(data as unknown as Omit<Facets, 'campaigns'>), campaigns: (campaigns ?? []) as unknown as Facets['campaigns'] };
 }
 
 export async function loadDuplicates(): Promise<DuplicateGroup[]> {

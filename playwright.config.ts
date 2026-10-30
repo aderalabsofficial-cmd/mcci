@@ -66,6 +66,15 @@ export default defineConfig({
       stderr: 'pipe',
     },
     {
+      // stand-in for the IQPigeon WhatsApp API (nothing is ever really sent)
+      command: 'node tests/e2e/fake-iqpigeon.mjs',
+      url: 'http://127.0.0.1:3997/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    {
       command: `pnpm build && pnpm start --port ${PORT}`,
       url: `http://${HOST}:${PORT}`,
       reuseExistingServer: !process.env.CI,
@@ -86,6 +95,14 @@ export default defineConfig({
         OPENAI_BASE_URL: 'http://127.0.0.1:3998/v1',
         // signed QR links with a test-only key (tests/e2e/qr-key.ts; verify.spec checks valid and altered signatures)
         QR_SIGNING_KEY: qrTestKey(),
+        // WhatsApp goes to tests/e2e/fake-iqpigeon.mjs
+        IQPIGEON_API_URL: 'http://127.0.0.1:3997',
+        IQPIGEON_API_KEY: 'test-iqpigeon-key',
+        IQPIGEON_CONNECTION_ID: '11111111-2222-4333-8444-555555555555',
+        IQPIGEON_PHONE_NUMBER_ID: '100200300',
+        IQPIGEON_WEBHOOK_SECRET: 'test-webhook-secret-not-a-real-one',
+        APP_URL: `http://${HOST}:${PORT}`,
+        CRON_SECRET: 'test-cron-secret-not-a-real-one-0000000000',
       },
     },
   ],

@@ -9,6 +9,7 @@ import { asLocale } from '@/i18n/locale';
 import { decodeFilter, directoryQuery } from '@/lib/business/filters';
 import { loadDuplicates, loadFacets, loadSegments, searchDirectory } from '@/lib/business/load';
 import { msg } from '@/lib/nav/model';
+import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 
 type Props = {
@@ -99,6 +100,7 @@ export default async function BusinessDirectoryPage({ params, searchParams }: Pr
         q={q}
         segment={sp.segment}
         canExport={g.level >= 2}
+        canMessage={staffLevel(session.access, 'out') >= 2}
       />
       <div className="card" data-quality>
         <div className="ch">

@@ -11,7 +11,7 @@ export type Area = 'site' | 'portal' | 'admin';
 // M5 = staff review (Release 2), M5c = committee desk and meetings (Release 4), M8a = engagement part 1 (messages,
 // events, support tickets, website content, notices — migration 0490); the rest of M8 follows
 export type Milestone =
-  'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M6b' | 'M7' | 'M8a' | 'M8' | 'M9' | 'MA' | 'MB';
+  'M0' | 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M5c' | 'M6' | 'M6b' | 'M7' | 'M8a' | 'M8' | 'M9' | 'MA' | 'MB' | 'MC';
 
 /** Milestones whose screens exist. Add a milestone here when its pages ship. */
 export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
@@ -29,6 +29,7 @@ export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
   'M9',
   'MA',
   'MB',
+  'MC',
 ]);
 
 export type IconName =
@@ -164,6 +165,14 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'bizprofile', '/admin/business-directory/profile', 'MB', 'idCard'),
   s('admin', 'segments', '/admin/business-directory/segments', 'MB', 'list'),
   s('admin', 'bizexports', '/admin/business-directory/exports', 'MB', 'upload'),
+  s('admin', 'wadash', '/admin/whatsapp', 'MC', 'chart'),
+  s('admin', 'wainbox', '/admin/whatsapp/inbox', 'MC', 'inbox'),
+  s('admin', 'wacampaigns', '/admin/whatsapp/campaigns', 'MC', 'mail'),
+  s('admin', 'wanew', '/admin/whatsapp/campaigns/new', 'MC', 'pen'),
+  s('admin', 'wacampaign', '/admin/whatsapp/campaigns/view', 'MC', 'list'),
+  s('admin', 'watemplates', '/admin/whatsapp/templates', 'MC', 'file'),
+  s('admin', 'waconsent', '/admin/whatsapp/consent', 'MC', 'shield'),
+  s('admin', 'wasettings', '/admin/whatsapp/settings', 'MC', 'plug'),
 ];
 
 export function screen(area: Area, key: string): Screen {
@@ -238,7 +247,10 @@ export const SIDEBAR: Record<'portal' | 'admin', NavSection[]> = {
     },
     {
       section: 'intelligence',
-      items: [{ label: 'businessDirectory', key: 'bizdir', color: '#8fd3ff' }],
+      items: [
+        { label: 'businessDirectory', key: 'bizdir', color: '#8fd3ff' },
+        { label: 'whatsapp', key: 'wadash', color: '#8be3a5' },
+      ],
     },
     {
       section: 'insights',
@@ -273,6 +285,7 @@ export const PAGE_TABS: Record<'portal' | 'admin', string[][]> = {
     ['staff', 'audit'],
     ['services', 'integrations'],
     ['bizdir', 'bizprofile', 'segments', 'bizexports'],
+    ['wadash', 'wainbox', 'wacampaigns', 'wanew', 'wacampaign', 'watemplates', 'waconsent', 'wasettings'],
   ],
 };
 

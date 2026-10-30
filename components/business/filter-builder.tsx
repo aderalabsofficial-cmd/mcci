@@ -122,6 +122,7 @@ export function FilterBuilder({
 
   const optionLabel = (f: FieldKey, v: string) => {
     if (f === 'tags') return facets.tags.find((t) => t.id === v)?.name ?? v;
+    if (f === 'campaigns') return facets.campaigns.find((t) => t.id === v)?.name ?? v;
     return (FIELDS[f] as { options?: readonly string[] }).options ? msg(locale, `biz.values.${f}.${v}`) : v;
   };
   const chip = (r: Rule) => {
@@ -376,7 +377,9 @@ function RuleValue({
     const options =
       rule.field === 'tags'
         ? facets.tags.map((t) => t.id)
-        : (def.options ?? (def.facet ? (facets[def.facet] as string[]) : []));
+        : rule.field === 'campaigns'
+          ? facets.campaigns.map((t) => t.id)
+          : (def.options ?? (def.facet ? (facets[def.facet] as string[]) : []));
     const chosen = (rule.value as string[]) ?? [];
     if (options.length === 0) return <p className="muted biz-values">{m('noValues')}</p>;
     return (

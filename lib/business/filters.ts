@@ -5,7 +5,7 @@ import { z } from 'zod';
  * exclude what it matches. Pure, used on both sides. This schema gives friendly errors; the database
  * (private.biz_where, migration 0570) is the authority and refuses anything outside its own fixed lists.
  */
-export type FieldType = 'enum' | 'text' | 'date' | 'number' | 'bool' | 'tags';
+export type FieldType = 'enum' | 'text' | 'free' | 'date' | 'number' | 'bool' | 'tags';
 export type Op =
   'in' | 'not_in' | 'contains' | 'empty' | 'not_empty' | 'eq' | 'gte' | 'lte' | 'between' | 'is' | 'any' | 'none';
 
@@ -27,6 +27,9 @@ export const FIELDS = {
   opted_out: { type: 'bool' },
   incomplete: { type: 'bool' },
   tags: { type: 'tags' },
+  previously_contacted: { type: 'bool' },
+  campaigns: { type: 'tags' },
+  rep_name: { type: 'free' },
 } as const satisfies Record<string, { type: FieldType; options?: readonly string[]; facet?: string }>;
 export type FieldKey = keyof typeof FIELDS;
 export const FIELD_KEYS = Object.keys(FIELDS) as FieldKey[];
@@ -34,6 +37,7 @@ export const FIELD_KEYS = Object.keys(FIELDS) as FieldKey[];
 export const OPS: Record<FieldType, Op[]> = {
   enum: ['in', 'not_in'],
   text: ['in', 'not_in', 'contains', 'empty', 'not_empty'],
+  free: ['contains', 'empty', 'not_empty'],
   date: ['gte', 'lte', 'between'],
   number: ['eq', 'gte', 'lte', 'between'],
   bool: ['is'],

@@ -194,29 +194,17 @@ export async function saveContact(_: ActionResult | null, form: FormData): Promi
       p_phone: text(form, 'phone'),
     });
     if (error) throw error;
+    if (form.has('language')) {
+      const { error: lang } = await supabase.schema('api').rpc('wa_contact_language', {
+        p_company: uuid.parse(text(form, 'company')),
+        p_language: text(form, 'language'),
+      });
+      if (lang) throw lang;
+    }
     refresh();
     return done(locale, 'contact');
   } catch (error) {
     return fail(locale, error, 'biz.contact');
-  }
-}
-
-export async function recordConsent(_: ActionResult | null, form: FormData): Promise<ActionResult> {
-  const locale = localeOf(form);
-  try {
-    await requirePermission('out', 2);
-    const supabase = await createClient();
-    const { error } = await supabase.schema('api').rpc('biz_consent_record', {
-      p_company: uuid.parse(text(form, 'company')),
-      p_status: text(form, 'status'),
-      p_method: text(form, 'method'),
-      p_evidence: text(form, 'evidence'),
-    });
-    if (error) throw error;
-    refresh();
-    return done(locale, 'consent');
-  } catch (error) {
-    return fail(locale, error, 'biz.consent');
   }
 }
 

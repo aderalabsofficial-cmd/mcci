@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { CompanyProfile, type Person } from '@/components/portal/company-profile';
+import { MemberConsentForm } from '@/components/whatsapp/forms';
 import { WhatNowCard } from '@/components/portal/what-now-card';
 import { PageHeader } from '@/components/shared/page-header';
 import { asLocale } from '@/i18n/locale';
@@ -48,6 +49,8 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   }
 
   const canManage = company.levels.profile >= 3;
+  const { data: whatsappData } = await (await createClient()).schema('api').rpc('wa_my_consent', { p_company: company.id });
+  const whatsapp = whatsappData as unknown as { open: boolean; name: string | null; phone: string | null; status: string | null; categories: string[] | null } | null;
   const supabase = await createClient();
   const [details, people, invites, changes, me] = await Promise.all([
     supabase.from('companies').select(PARTICULAR_FIELDS.join(', ')).eq('id', company.id).single(),
@@ -124,6 +127,12 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         title={both('access.company.whatNowTitle')}
         body={msg(locale, 'access.company.whatNowBody')}
       />
+      {whatsapp?.open && (
+        <section className="card mb-4" data-section="whatsapp-consent">
+          <h2 className="font-bold">{msg(locale, 'wa.member.title')}</h2>
+          <MemberConsentForm locale={locale} company={company.id} current={whatsapp} />
+        </section>
+      )}
       <CompanyProfile
         locale={locale}
         companyId={company.id}
