@@ -3693,7 +3693,8 @@
       "demo": "Demo members never get a certificate.",
       "conflicts": "This scan has conflicts: tick the override and write the reason.",
       "reason_required": "Please write the reason.",
-      "path": "Upload failed. Please try again."
+      "path": "Upload failed. Please try again.",
+      "noSigningKey": "Certificates cannot be issued yet: the QR signing key is not set on the server. Ask the IT Convener to set QR_SIGNING_KEY (docs/26)."
     }
   },
   "audit": {

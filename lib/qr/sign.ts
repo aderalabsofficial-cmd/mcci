@@ -33,6 +33,11 @@ function signingKey(env: NodeJS.ProcessEnv = process.env): KeyObject | null {
   return cached.key;
 }
 
+/** whether a valid signing key is configured (certificate stamping refuses to issue without one) */
+export function signingConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
+  return signingKey(env) !== null;
+}
+
 /** the signature for a reference, or null when no key is configured */
 export function signReference(reference: string, env: NodeJS.ProcessEnv = process.env): string | null {
   const key = signingKey(env);

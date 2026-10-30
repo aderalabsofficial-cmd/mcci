@@ -12,6 +12,7 @@ import { DEFAULT_PLACEMENT, type QrPlacement, stampQr } from '@/lib/certificates
 import { MAX_UPLOAD_BYTES, sniff } from '@/lib/files/sniff';
 import { msg } from '@/lib/nav/model';
 import { PermissionError, requirePermission } from '@/lib/permissions/server';
+import { signingConfigured } from '@/lib/qr/sign';
 import { verifyUrl } from '@/lib/qr/svg';
 import { createClient } from '@/lib/supabase/server';
 import type { Json } from '@/lib/supabase/types';
@@ -52,7 +53,8 @@ export async function uploadScans(form: FormData): Promise<CertResult & { added?
     await requirePermission('temp', 2);
     const files = form.getAll('files').filter((f): f is File => f instanceof File && f.size > 0);
     if (!files.length) return { ok: false, message: msg(locale, 'certs.errors.noFile') };
-    if (files.length > MAX_FILES) return { ok: false, message: msg(locale, 'certs.errors.tooMany', { n: String(MAX_FILES) }) };
+    if (files.length > MAX_FILES)
+      return { ok: false, message: msg(locale, 'certs.errors.tooMany', { n: String(MAX_FILES) }) };
     const supabase = await createClient();
     const problems: string[] = [];
     let added = 0;
@@ -84,7 +86,9 @@ export async function uploadScans(form: FormData): Promise<CertResult & { added?
       }
       // the reading (or "unreadable" when AI is off or fails); the database matches the member and lists conflicts
       const reading = aiEnabled() ? await readCertificate(bytes, kind) : null;
-      const { error: ex } = await supabase.schema('api').rpc('cert_scan_extracted', { p_id: id, p_data: (reading ?? null) as unknown as Json });
+      const { error: ex } = await supabase
+        .schema('api')
+        .rpc('cert_scan_extracted', { p_id: id, p_data: (reading ?? null) as unknown as Json });
       if (ex) throw ex;
       added++;
     }
@@ -106,6 +110,9 @@ export async function confirmScan(
 ): Promise<CertResult> {
   try {
     await requirePermission('temp', 2);
+    // every issued certificate carries a signed QR (docs/26): without the server's signing key nothing is issued —
+    // checked before the QR document is created, so no unsigned certificate can exist
+    if (!signingConfigured()) return { ok: false, message: msg(locale, 'certs.errors.noSigningKey') };
     const supabase = await createClient();
     const { data, error } = await supabase.schema('api').rpc('cert_scan_confirm', {
       p_id: uuid.parse(scanId),
@@ -120,8 +127,15 @@ export async function confirmScan(
     const { data: scan } = await supabase.from('certificate_scans').select('path').eq('id', scanId).single();
     const original = await readScan(scan!.path);
     // where the QR goes: settings.membership.certificateQr (MCCI can move it), else the measured default
-    const { data: rules } = await supabase.from('public_settings').select('value').eq('key', 'membership').maybeSingle();
-    const at = { ...DEFAULT_PLACEMENT, ...(((rules?.value ?? {}) as { certificateQr?: Partial<QrPlacement> }).certificateQr ?? {}) };
+    const { data: rules } = await supabase
+      .from('public_settings')
+      .select('value')
+      .eq('key', 'membership')
+      .maybeSingle();
+    const at = {
+      ...DEFAULT_PLACEMENT,
+      ...(((rules?.value ?? {}) as { certificateQr?: Partial<QrPlacement> }).certificateQr ?? {}),
+    };
     const stamped = await stampQr(original, row.code, verifyUrl(row.code), at);
     const out = `scans/${scanId}/stamped.png`;
     await replaceScan(out, stamped);

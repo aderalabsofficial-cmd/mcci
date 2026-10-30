@@ -16,14 +16,20 @@ export const dynamic = 'force-dynamic';
 const NO_STORE = { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' };
 const BUCKETS = new Set(['application-docs', 'receipts', 'service-docs', 'form-snapshots']);
 
-const TYPE: Record<string, string> = { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png' };
+const TYPE: Record<string, string> = {
+  pdf: 'application/pdf',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+};
 
 export async function GET(req: Request, { params }: { params: Promise<{ bucket: string; path: string[] }> }) {
   const { bucket, path: parts } = await params;
   const path = parts.map(decodeURIComponent).join('/');
   const download = new URL(req.url).searchParams.get('download') === '1';
   const session = await getSession();
-  if (!session || !BUCKETS.has(bucket)) return NextResponse.json({ error: 'not_allowed' }, { status: 403, headers: NO_STORE });
+  if (!session || !BUCKETS.has(bucket))
+    return NextResponse.json({ error: 'not_allowed' }, { status: 403, headers: NO_STORE });
   const supabase = await createClient();
   const { data: ok, error } = await supabase
     .schema('api')
@@ -36,7 +42,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ bucket: 
   const name = path.split('/').pop() ?? 'file';
   const marked = !download && (type === 'image/jpeg' || type === 'image/png');
   const raw = Buffer.from(await file.arrayBuffer());
-  const body = marked ? await watermark(raw, session.access.full_name ?? session.access.email ?? 'MCCI staff') : raw;
+  const who = session.access.full_name ?? session.access.email ?? 'MCCI staff';
+  const role = session.access.staff?.designation ?? session.access.companies[0]?.role ?? '';
+  const body = marked ? await watermark(raw, role ? `${who} (${role})` : who) : raw;
   return new NextResponse(new Uint8Array(body), {
     headers: {
       ...NO_STORE,
@@ -51,15 +59,21 @@ async function watermark(bytes: Buffer, who: string): Promise<Buffer> {
   const img = sharp(bytes).rotate();
   const { width = 1000, height = 1400 } = await img.metadata();
   const when = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' });
-  const text = `${who} · ${when} · MCCI confidential`.replace(/[<>&"]/g, '');
+  const text = `${who} · ${when} · Confidential — MCCI`.replace(/[<>&"]/g, '');
   const size = Math.max(14, Math.round(width / 40));
   const svg = Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
       `<g fill="#c0392b" fill-opacity="0.28" font-family="Arial, sans-serif" font-size="${size}" font-weight="700">` +
       [0.2, 0.5, 0.8]
-        .map((y) => `<text x="50%" y="${Math.round(height * y)}" text-anchor="middle" transform="rotate(-20 ${width / 2} ${Math.round(height * y)})">${text}</text>`)
+        .map(
+          (y) =>
+            `<text x="50%" y="${Math.round(height * y)}" text-anchor="middle" transform="rotate(-20 ${width / 2} ${Math.round(height * y)})">${text}</text>`,
+        )
         .join('') +
       `</g></svg>`,
   );
-  return img.composite([{ input: svg, left: 0, top: 0 }]).jpeg({ quality: 80 }).toBuffer();
+  return img
+    .composite([{ input: svg, left: 0, top: 0 }])
+    .jpeg({ quality: 80 })
+    .toBuffer();
 }

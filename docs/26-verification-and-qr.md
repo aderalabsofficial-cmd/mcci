@@ -38,7 +38,7 @@ Demo records (`companies.demo`) never verify — they are not official.
 | Database: `verify_attempts` log; `api.public_verify_code`, `api.public_verify_member`, `api.public_verify_log` (service role only); minimal projection; demo excluded; `api.doc_verify` excludes demo | migration `20261108000520_public_verification.sql`; pgTAP `320_public_verification` |
 | Server: signature check before the database; per-address limits (references 30 / min; membership numbers 10 / min and 60 / hour); the address is stored only as a hash | `lib/verify/admin/index.ts` |
 | Signed links: Ed25519 over `MCCI-VERIFY:v1:<reference>`; `?s=` = base64url signature | `lib/qr/sign.ts`, `lib/qr/svg.ts` (`verifyUrl`, `verifyBase`) |
-| Security rosette: guilloche pattern + 8-hex fingerprint drawn from the reference (deterministic) | `lib/qr/rosette.ts` |
+| Security engraving v2: microtext ring with the fingerprint, interlaced guilloche rope band, two trochoid rosettes, eight-point star centre (generic geometry — the MCCI logo is not used); deterministic per reference; line weight scaled for print | `lib/qr/rosette.ts` |
 | Stamped certificate: the QR (unchanged size and white quiet zone) with the rosette in a band around it | `lib/certificates/stamp.ts` |
 | Pages and API | `app/[locale]/(site)/verify/*`, `app/api/public/verify`, `app/api/verify/[code]`, `components/site/verify-view.tsx` |
 
@@ -48,6 +48,11 @@ anti-counterfeiting and comparison aid only; authenticity comes from the signatu
 
 A typed reference (no signature) is still looked up, behind the same limit. An altered or foreign signature is refused
 without a lookup ("This QR code has been altered").
+
+**Issuance needs the key:** confirming a certificate scan (Printing & Receiving) refuses with a clear message while
+`QR_SIGNING_KEY` is not set, before any QR document is created — so no unsigned certificate can be issued.
+Known limit: the stamp's renderer (sharp / librsvg) does not draw the microtext ring; browsers draw it on the
+verification page.
 
 ## 3. API for the future website (mcci.org.pk landing page)
 
@@ -70,7 +75,7 @@ Never cached (`Cache-Control: no-store`). Browsers on another site may read it o
    ```
    Put it in `/etc/mcci-web/env` as `QR_SIGNING_KEY=` followed by the PEM base64-encoded on one line
    (`base64 -w0 /root/mcci-qr-signing-key.pem`), then `systemctl restart mcci-web`. Keep an encrypted copy with the
-   backups. Without a key everything still works by reference; links simply carry no signature.
+   backups. Without a key, verification still works by reference, but **no certificate can be issued**.
 2. **`PUBLIC_API_ORIGINS`** — only when the new website calls the API from the browser, e.g. `https://mcci.org.pk`.
 3. `VERIFY_BASE_URL` may be the site (`https://app.mcci.aderalabs.tech`) or the page (`…/verify`); a bare site gets
    `/verify` added. Production had the bare site, which made QR links `https://host/<reference>` (404) — fixed in

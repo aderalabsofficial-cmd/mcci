@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { qrTile, stampQr } from '@/lib/certificates/stamp';
 import { rosette } from '@/lib/qr/rosette';
-import { checkSignature, signReference } from '@/lib/qr/sign';
+import { checkSignature, signingConfigured, signReference } from '@/lib/qr/sign';
 import { verifyBase, verifyUrl } from '@/lib/qr/svg';
 
 /** Signed QR links, the security rosette and the stamped certificate (docs/26). */
@@ -38,6 +38,10 @@ describe('QR signature (lib/qr/sign.ts)', () => {
     expect(checkSignature(REF, null, k)).toBe('absent');
     expect(checkSignature(REF, signReference(REF, k), env({}))).toBe('unconfigured');
     expect(signReference(REF, env({ QR_SIGNING_KEY: 'garbage' }))).toBeNull();
+    // certificate stamping refuses to issue when this is false (lib/certificates/actions.ts confirmScan)
+    expect(signingConfigured(env({}))).toBe(false);
+    expect(signingConfigured(env({ QR_SIGNING_KEY: 'garbage' }))).toBe(false);
+    expect(signingConfigured(k)).toBe(true);
   });
 });
 
