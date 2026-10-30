@@ -62,6 +62,18 @@ The cleanup tool ships but is not run (`api.demo_purge`, `scripts/ops/demo-purge
 demo-tool members endorsed the other two applications, so it refuses to purge them alone). Any future purge needs a
 new explicit approval, a fresh backup and a dry run first. Inventory: `/root/mcci-part2/inventory-*.txt`.
 
+## 3a. Deployed 30 Oct 2026 (owner approved)
+
+`5fb267a` is live; previous release `d024343` kept for rollback. Backup `mcci-20261030T121931Z` verified, restore drill
+13/13 PASS, migrations 0520–0560 applied one at a time (0 pending; companies and audit rows unchanged). Nginx, DNS,
+firewall, Supabase stack and other sites not touched; jobs stay off; no data deleted.
+
+Live checks passed, signed out: public pages 200; unknown reference "not found"; portal redirects to login; admin 404
+(by design); queue, reports, certificate and file routes refuse; demo 401 (its Basic Auth); no `mcci-web` errors.
+
+Still open: signed-in pages not checked live (needs the owner or staff); `QR_SIGNING_KEY` not set, so certificates
+cannot be issued yet and altered QR signatures are not yet refused; print-and-scan test on the real paper.
+
 ## 4. Deployment (docs/20, docs/25 §4 — needs the owner's approval)
 
 1. Fresh backup + verify + restore drill.
