@@ -25,6 +25,9 @@ export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
   'M6',
   'M7',
   'M8a',
+  'M8',
+  'M9',
+  'MA',
 ]);
 
 export type IconName =

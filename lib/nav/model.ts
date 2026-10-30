@@ -104,6 +104,13 @@ export function loginModel(locale: Locale): NavItem {
   return screenItem(locale, 'site', 'login', 'common.memberLogin');
 }
 
+/** where the admin bottom-bar features open (My queue also lists the person's unread notifications) */
+const FEATURE_HREF: Record<string, string> = {
+  queue: '/admin/queue',
+  search: '/admin/search',
+  notifications: '/admin/queue#notifications',
+};
+
 export function bottomTabsModel(area: Area, locale: Locale): NavItem[] {
   return BOTTOM_TABS[area].map((tab) => {
     const label = both(`bottom.${area}.${tab.id}`);
@@ -114,7 +121,7 @@ export function bottomTabsModel(area: Area, locale: Locale): NavItem[] {
         id: tab.id,
         label,
         icon: tab.icon,
-        href: null,
+        href: built ? (FEATURE_HREF[tab.id] ?? null) : null,
         reason: built ? null : msg(locale, 'common.notYet', { milestone: tab.milestone }),
         match: [],
       };

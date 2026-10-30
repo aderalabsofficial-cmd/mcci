@@ -24,7 +24,7 @@ describe('nav model', () => {
     const reports = sidebarModel('admin', 'en')
       .flatMap((s) => s.items)
       .find((i) => i.id === 'reports')!;
-    expect(reports).toMatchObject({ href: null, reason: 'Being built — milestone M9' });
+    expect(reports).toMatchObject({ href: '/admin/reports', reason: null }); // M9 is built
     expect(loginModel('ur')).toMatchObject({ href: '/login', reason: null }); // M1 is built
     const portal = sidebarModel('portal', 'ur').flatMap((s) => s.items);
     // engagement part 1 (M8a) is built; the AI assistant (M8) is not yet
@@ -53,9 +53,11 @@ describe('nav model', () => {
     expect(isCurrent(home, '/portal/documents')).toBe(false);
   });
 
-  it('keeps unbuilt feature tabs disabled (staff My queue is built with the app)', () => {
-    const queue = bottomTabsModel('admin', 'en')[0]!;
-    expect(queue).toMatchObject({ id: 'queue', href: null, reason: 'Being built — milestone MA' });
+  it('links the staff bottom-bar features: My queue, search, notifications', () => {
+    const tabs = bottomTabsModel('admin', 'en');
+    expect(tabs[0]).toMatchObject({ id: 'queue', href: '/admin/queue', reason: null });
+    expect(tabs.find((t) => t.id === 'search')).toMatchObject({ href: '/admin/search', reason: null });
+    expect(tabs.find((t) => t.id === 'notifications')).toMatchObject({ href: '/admin/queue#notifications' });
     expect(bottomTabsModel('admin', 'en').at(-1)).toMatchObject({ id: 'more', href: null, reason: null });
   });
 

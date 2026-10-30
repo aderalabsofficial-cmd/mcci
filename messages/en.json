@@ -3988,5 +3988,60 @@
       "rejected": "Not published; the member is told why.",
       "closed": "Closed."
     }
+  },
+  "reports": {
+    "title": "Reports",
+    "sub": "Aggregate figures for the chosen period. No personal data. Demo records are not counted.",
+    "from": "From",
+    "to": "To",
+    "apply": "Show",
+    "csv": "Download CSV",
+    "note": "Figures follow your designation’s limits: a section you cannot open shows zero.",
+    "sections": {
+      "membership": "Members by class and status (now)",
+      "pipeline": "Membership applications by stage (now)",
+      "payments": "Vouchers in the period",
+      "services": "Service requests in the period",
+      "committee": "Committee decisions in the period",
+      "verification": "Public verification checks in the period"
+    },
+    "items": {
+      "submittedInRange": "Submitted in the period",
+      "collectedPkr": "Collected (Rs)",
+      "found": "Found",
+      "none": "Not found",
+      "invalid": "Invalid code",
+      "tampered": "Altered QR",
+      "limited": "Rate-limited"
+    }
+  },
+  "queue": {
+    "title": "My queue",
+    "sub": "What is waiting for you, within your limits.",
+    "empty": "Nothing waiting.",
+    "groups": {
+      "applications": "Applications to review",
+      "committee": "At the Membership Committee",
+      "payments": "Receipts to verify",
+      "services": "Service requests",
+      "complaints": "Help requests",
+      "certificates": "Certificate scans to check",
+      "notifications": "Unread notifications"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "sub": "Member numbers, company names, application and service references, vouchers and help requests — only what your designation may open.",
+    "label": "Search for",
+    "go": "Search",
+    "short": "Type at least 2 characters.",
+    "none": "Nothing found.",
+    "kinds": {
+      "member": "Member",
+      "application": "Application",
+      "service": "Service",
+      "voucher": "Voucher",
+      "ticket": "Help request"
+    }
   }
 }
