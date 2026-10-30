@@ -39,7 +39,7 @@ UI (≤ 640 px) for web and app. Spec: `15-mobile-app.md`. iOS is not in this ph
 
 | Item | Why | What we do instead |
 |---|---|---|
-| WhatsApp messages | Not in this phase | Email + portal notifications |
+| WhatsApp messages outside Outreach | Member and service notifications stay as they are | Email + portal notifications. Campaigns go through Business Intelligence & Outreach only (owner, 30 Oct 2026; `docs/28`) |
 | 1Bill PSID / card payment gateway | Depends on MCCI's bank integration | Voucher PDF + receipt upload + Accounts verification. Keep a `payment_provider` setting = `manual`. |
 | Courier booking & tracking API | Depends on MCCI providing a courier API | Staff enter courier + tracking number; member sees it |
 | iOS app | Not in this phase | Mobile web; the Capacitor project allows iOS later |

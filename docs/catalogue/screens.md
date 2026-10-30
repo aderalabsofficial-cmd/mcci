@@ -69,6 +69,10 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Website Content | `admin/content/` | `/admin/content` | News, notices, AI brief drafts for the public site |
 | Notification Center | `admin/notify/` | `/admin/notify` | Email + portal message templates for every stage incl. payment verification and temporary membership alerts |
 | Reports | `admin/reports/` | `/admin/reports` | Generate and download reports |
+| Business Directory | `admin/bizdir/` | `/admin/business-directory` | Search, filter, select and review registered businesses (docs/29; no prototype screen) |
+| Business Profile | `admin/bizprofile/` | `/admin/business-directory/profile` | Official record, outreach details, tags, contact and consent |
+| Segments | `admin/segments/` | `/admin/business-directory/segments` | Saved dynamic segments with live counts |
+| Exports | `admin/bizexports/` | `/admin/business-directory/exports` | Controlled, logged CSV, Excel and PDF exports |
 | AI Insights | `admin/ai/` | `/admin/ai` | How document reading performs; guardrails |
 | Staff & Roles | `admin/staff/` | `/admin/staff` | Invite staff by email, designations with seniority levels, editable limits per module (No access / View / Edit / Approve), view the panel as anyone |
 | Audit Trail | `admin/audit/` | `/admin/audit` | Every action, who and when; export |

@@ -19,6 +19,8 @@ server actions (`requirePermission(mod, level)`), and UI (hide or lock with an e
 | rep | Reports & AI | reports, ai |
 | staff | Staff & audit | staff, audit |
 | plat | Services setup & settings | services, integrations, settings |
+| biz | Business directory | bizdir, bizprofile, segments, bizexports (`docs/29`) |
+| out | Outreach & consent | consent and suppression on the business profile; campaigns later (`docs/29`) |
 
 ## Designations (seniority L1–L5) and default limits
 

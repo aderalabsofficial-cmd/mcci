@@ -13,7 +13,8 @@ Read this file fully at the start of every session. Then read the doc for the mi
 ## 1. Golden rules
 
 1. **This phase only.** Build what `docs/00-scope.md` lists. Never build or expose:
-   WhatsApp messaging, bank payment APIs (1Bill PSID / card gateway), courier APIs, or anything labelled "phase 2".
+   bank payment APIs (1Bill PSID / card gateway), courier APIs, or anything labelled "phase 2". WhatsApp messaging is
+   allowed only through the Business Intelligence & Outreach module (owner, 30 Oct 2026; `docs/28`, `docs/29`).
    Payment = voucher + receipt upload + Accounts verification. Courier = staff type the tracking number.
    The Android app is in scope (`docs/15-mobile-app.md`); iOS is not.
 2. **Match the prototype** (content, wording, order — on phones use the compact layout in `docs/15-mobile-app.md` §5,
@@ -117,6 +118,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 | Android app, compact mobile UI, Play release | `docs/15-mobile-app.md` |
 | Spec defects and missing features (fix A1–A6 before M1) | `docs/16-gap-review.md` (A1–A6 fixed in `docs/17` migrations) |
 | Staging security review: test evidence, findings, backups, open gates | `docs/18-staging-security-review.md` |
+| Business directory, segments, exports; WhatsApp integration assessment | `docs/29-business-directory.md`, `docs/28-outreach-integration-assessment.md` |
 | Every screen / every action / reference data | `docs/catalogue/*` |
 
 ## 6. Conventions
