@@ -113,7 +113,8 @@ There is no separate "communication staff" designation: give someone `out` 2 wit
 - [ ] Check the number appears on exactly one provider connection (§6 item 1).
 - [ ] Create an API key with `messages.send`, `messages.read`, `connections.read`, `templates.read`, `webhooks.read`.
 - [ ] Register the webhook `https://<app host>/api/webhooks/whatsapp` for event `messages`, with a generated secret.
-- [ ] Put the five `IQPIGEON_*` values in `/etc/mcci-web/env`, restart `mcci-web`.
+- [ ] Put the five `IQPIGEON_*` values in `/etc/mcci-web/env`, restart `mcci-web`: fill in the git-ignored
+      `.env.iqpigeon.local`, then run `bash scripts/ops/whatsapp-env.sh`. Never commit these values.
 - [ ] WhatsApp Settings → Test connection shows Connected.
 - [ ] Create templates in Meta and wait for approval, then Synchronise, record the wording and map the variables.
 - [ ] MCCI approves the consent wording (`wa.member.wording`), sets the version, opens member opt-in.
