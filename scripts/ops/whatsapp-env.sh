@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copies the five IQPIGEON_* values from the git-ignored .env.iqpigeon.local to the live server's /etc/mcci-web/env, then
+# Copies the IQPIGEON_* values from the git-ignored .env.iqpigeon.local to the live server's /etc/mcci-web/env, then
 # restarts mcci-web only. Prints names, never values. The owner runs it, so the values never pass through chat or the repo.
 #   bash scripts/ops/whatsapp-env.sh           check the file, change the server
 #   bash scripts/ops/whatsapp-env.sh --check   check the file only
@@ -15,12 +15,20 @@ lines=""
 bad=0
 for k in $KEYS; do
   v=$(sed -n "s/^$k=//p" "$FILE" | tail -n 1 | tr -d '\r')
-  if [ -z "$v" ]; then echo "Empty: $k"; bad=1; continue; fi
+  if [ -z "$v" ]; then
+    # both exist only once MCCI's number is connected; until then the app reports "incomplete" and sends nothing
+    case "$k" in
+      IQPIGEON_CONNECTION_ID | IQPIGEON_PHONE_NUMBER_ID) echo "Left for later: $k"; continue ;;
+    esac
+    echo "Empty: $k"; bad=1; continue
+  fi
   case "$v" in
     *[[:space:]\"\'\#\$\`\\]*) echo "Remove spaces, quotes or special characters from: $k"; bad=1; continue ;;
   esac
   if [ "$k" = IQPIGEON_API_URL ]; then
     case "$v" in https://*) ;; *) echo "Must start with https://: $k"; bad=1; continue ;; esac
+    # the app adds /api/v1 itself; the provider's panel may show the address with it
+    v=$(printf '%s' "$v" | sed -E 's#/+$##; s#/api/v1$##')
   fi
   echo "OK: $k"
   lines+="$k=$v"$'\n'
@@ -40,7 +48,7 @@ printf '%s' "$lines" | $SSH 'bash -c '\''
   cp -p "$f" "$f.before-whatsapp"
   mv "$t" "$f"
   trap - EXIT
-  echo "server file updated: $(grep -c "^IQPIGEON_" "$f") of 5 values"
+  echo "server file updated: $(grep -c "^IQPIGEON_" "$f") values"
   systemctl restart mcci-web
   for i in $(seq 1 30); do
     if curl -sf -m 3 http://127.0.0.1:3200/api/health >/dev/null; then echo "app restarted and healthy"; exit 0; fi
