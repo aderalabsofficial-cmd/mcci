@@ -30,6 +30,9 @@ for k in $KEYS; do
     # the app adds /api/v1 itself; the provider's panel may show the address with it
     v=$(printf '%s' "$v" | sed -E 's#/+$##; s#/api/v1$##')
   fi
+  if [ "$k" = IQPIGEON_API_KEY ]; then
+    case "$v" in iqp_live_*) ;; *) echo "Must start with iqp_live_ in small letters: $k"; bad=1; continue ;; esac
+  fi
   echo "OK: $k"
   lines+="$k=$v"$'\n'
 done
