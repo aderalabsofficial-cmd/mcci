@@ -60,7 +60,7 @@
   .proto .wz-guide {padding: 10px 12px}
   .proto .wz-guide p {font-size: 12.5px}
   .proto .wz-guide p[lang='ur'] {font-size: 14px}
-  .proto .kv {grid-template-columns: 1fr 1fr !important; gap: 8px}
+  .proto .kv {grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px}
   .proto .g2c {grid-template-columns: 1fr !important; gap: 10px}
   .proto .fg {grid-template-columns: 1fr !important; gap: 10px}
 

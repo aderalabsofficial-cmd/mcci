@@ -170,6 +170,19 @@ test('connection is healthy only when every step passes; secrets never reach the
   await signInAs(page, 'sg');
   await page.goto('/admin/whatsapp/settings');
   await expect(page.locator('[data-secret-state="true"]')).toHaveText('Set');
+  // a tick box stays a tick box, with its words beside it, not a full-width field
+  for (const field of ['sending-enabled', 'consent-open']) {
+    const box = await page.locator(`[data-field="${field}"]`).boundingBox();
+    expect(box?.width).toBeLessThanOrEqual(44);
+    const label = await page.locator(`label:has([data-field="${field}"])`).boundingBox();
+    expect(label?.height).toBeLessThan(60);
+  }
+  // a long address wraps inside its box on a phone
+  const size = page.viewportSize();
+  await page.setViewportSize({ width: 375, height: 812 });
+  const wide = await page.locator('.kv').evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
+  expect(wide).toBe(0);
+  if (size) await page.setViewportSize(size);
   await page.locator('[data-action="wa.test"]').click();
   await expect(page.locator('[data-wa-status="webhook_failed"]')).toBeVisible(); // the API answering is not enough
   await expect(page.locator('[data-step="isolation"]')).toHaveAttribute('data-ok', 'true');

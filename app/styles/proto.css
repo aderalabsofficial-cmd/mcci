@@ -149,8 +149,8 @@
 .proto .mh button {border:0;background:var(--hov);border-radius:50%;width:32px;height:32px;cursor:pointer}
 .proto .mb {padding:20px 22px}
 .proto .mf {display:flex;gap:10px;justify-content:flex-end;padding:0 22px 20px;flex-wrap:wrap}
-.proto .kv {display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.proto .kv div {background:var(--card2);border-radius:12px;padding:10px 12px}
+.proto .kv {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.proto .kv div {background:var(--card2);border-radius:12px;padding:10px 12px;min-width:0;overflow-wrap:anywhere}
 .proto .kv small {display:block;color:var(--m)}
 @keyframes mq {to{transform:translateX(-100%)}}
 @keyframes drift {to{transform:translate(60px,40px) scale(1.15)}}
