@@ -42,7 +42,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Company Profile | `member/profile/` | `/portal/profile` | Registered particulars (changes go to MCCI for approval, per form note 4), partners & cards, company users, preferences |
 | Endorsement requests | `member/endorse/` | `/portal/endorse` | Members receive proposer / seconder requests live, review the applicant and sign digitally or decline; history of endorsements and yearly limit |
 
-## Admin panel (29 screens)
+## Admin panel (32 screens)
 
 | Screen | Prototype path | Route in app | What it does |
 |---|---|---|---|
@@ -55,6 +55,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Serial Register | `admin/serials/` | `/admin/serials` | Every certificate serial accounted for: batches, used, spoiled, balance; spoilage log |
 | Members Register | `admin/members/` | `/admin/members` | All members (permanent, temporary, expired), change-of-particulars requests, renewal campaign |
 | Member Record | `admin/member/` | `/admin/member` | View / edit a member: particulars, partners, documents, certificates (temp & permanent), payments, history; suspend, renew, message |
+| Change Declarations | `admin/changes/` | `/admin/changes` | Review queue for company changes declared with documents; approval updates the live profile (docs/31; no prototype screen) |
 | Data Import | `admin/import/` | `/admin/import` | Import existing members from CSV / Excel: template, validate, import, roll back |
 | Service Requests | `admin/applications/` | `/admin/applications` | All 7 services: board by status and table with SLA |
 | Review Desk | `admin/review/` | `/admin/review` | One service request: AI-read document, extracted fields, checks; start / return / approve / sign & issue |
@@ -63,6 +64,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Documents & QR | `admin/documents/` | `/admin/documents` | QR registry of every issued document incl. temporary certificates (Valid / Superseded / Expired / Revoked), scans, revoke |
 | Payments | `admin/payments/` | `/admin/payments` | Receipts to verify, collections and all vouchers |
 | Vouchers & Receipts | `admin/psid/` | `/admin/psid` | Issue, view, verify uploaded receipts, record counter payments, cancel vouchers; bank auto-confirmation shown as a dependency |
+| Accounts | `admin/finance/` | `/admin/finance` | Profit & Loss statement on MCCI's chart, Trial Balance, receipts and expenses with second-person verification, bank balances, month closing (docs/31; no prototype screen) |
 | Events | `admin/events/` | `/admin/events` | Calendar, events list, create / edit |
 | Meetings & Minutes | `admin/meetings/` | `/admin/meetings` | Committee meetings, minutes and decisions |
 | Complaint Desk | `admin/complaints/` | `/admin/complaints` | Tickets from members and public: assign, reply, resolve |
@@ -81,7 +83,8 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Message Templates | `admin/watemplates/` | `/admin/whatsapp/templates` | Sync status from the provider, record wording and variables |
 | Consent Management | `admin/waconsent/` | `/admin/whatsapp/consent` | Consent per number, suppression list |
 | WhatsApp Settings | `admin/wasettings/` | `/admin/whatsapp/settings` | Connection test, masked credentials, limits |
-| AI Insights | `admin/ai/` | `/admin/ai` | How document reading performs; guardrails |
+| AI Insights | `admin/ai/` | `/admin/ai` | How document reading performs; guardrails; voter list |
+| Ask MCCI AI | `admin/help/` | `/admin/help` | Staff guide: ask where something is or what to do, with links to the screens the person may open (docs/31; no prototype screen) |
 | Staff & Roles | `admin/staff/` | `/admin/staff` | Invite staff by email, designations with seniority levels, editable limits per module (No access / View / Edit / Approve), view the panel as anyone |
 | Audit Trail | `admin/audit/` | `/admin/audit` | Every action, who and when; export |
 | Services Setup | `admin/services/` | `/admin/services` | Fee and documents per service (fees to be confirmed by MCCI) |

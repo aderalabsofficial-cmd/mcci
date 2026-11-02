@@ -78,3 +78,15 @@ Member actions: `wiz.*`, `app.*`, `photo.*`, `sign.*`, `delivery.set`, `renew.*`
 `svc.*` → svc 2 (`svc.open` 1); `vault.*` → docs 2; `pay.*` → pay 2; `event.reg`, `opp.*` → events 2;
 `user.*`, `profile.change` → profile 3.
 **Endorsement signing** (`end.sign`, `end.decline`) → Owner or Manager of the endorser company only.
+
+## Modules added 1 Nov 2026 (docs/31)
+
+| Module | 1 | 2 | 3 | Default |
+|---|---|---|---|---|
+| `fin` Accounts | view | record entries, bank balances | verify, void, add accounts, opening balances, close a month | Secretary General 3, Accounts Officer 2, President and Auditor 1 |
+| `vot` Voter list | view | export | same as 2 | Secretary General 3, Deputy Secretary 2, President, Membership Officer and Auditor 1 |
+| `chg` Change declarations | view | same as 1 | approve or reject | Secretary General and President 3, Deputy Secretary, Membership Officer and Auditor 1 |
+
+A person's own limit overrides their designation's, one section at a time. Each service can have named officers; with someone named, only they and `svc` 3 can move its requests. All of these changes ask for the person's password again, and the database requires that fresh check.
+
+TODO(MCCI): these defaults are a proposal. The Secretary General's own access is fixed; if the By-Laws or the Trade Organizations Act change that, it is one rule in `role_permission_set`.

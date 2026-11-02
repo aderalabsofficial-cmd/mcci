@@ -120,6 +120,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
 | Staging security review: test evidence, findings, backups, open gates | `docs/18-staging-security-review.md` |
 | Business directory, segments, exports; WhatsApp integration assessment | `docs/29-business-directory.md`, `docs/28-outreach-integration-assessment.md` |
 | WhatsApp messaging, campaigns, inbox, consent; onboarding, provider remediation, deployment | `docs/30-whatsapp.md` |
+| Voter list, enrollment dates, renewal, restoration, change declarations, Accounts, per-section access, staff AI guide | `docs/31-admin-updates-nov-2026.md` |
 | Every screen / every action / reference data | `docs/catalogue/*` |
 
 ## 6. Conventions
@@ -128,7 +129,7 @@ npx serve reference/prototype   # view the prototype at http://localhost:3000 (u
   `const actor = await requirePermission('<module>', '<level>')` and ends with `await audit(...)`.
 - State changes go through `lib/flow/*` transition functions only (never `update ... set stage =` from a page).
   Each transition validates the current state, writes history, sends notifications and returns the new row.
-- Money is stored as integer PKR. Dates are `timestamptz`; display in Asia/Karachi.
+- Money is stored as integer PKR (the Accounts tables keep paisa, as MCCI's statement does: `docs/31`). Dates are `timestamptz`; display in Asia/Karachi.
 - Tokens: membership application `MCCI-2026-M-0231`, service request `MCCI-2026-10482`, voucher `PV-2026-0001`,
   membership number `MCCI-C-1134` (Corporate) / `MCCI-A-2205` (Associate). Generate with sequences, never in JS.
 - File uploads go to private Storage buckets; read through signed URLs that expire in 10 minutes.
