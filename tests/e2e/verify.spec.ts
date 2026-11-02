@@ -121,7 +121,17 @@ test('a membership number verifies; the form on the page works', async ({ page }
   await expect(page).toHaveURL(/\/verify\?m=/);
   const result = page.locator('[data-verify="found"]');
   await expect(result).toContainText('Genuine — current MCCI member');
-  await expect(result).toContainText(current);
+  // the newest valid certificate: other tests can issue one for this shared company after this file's setup
+  const { data: newest } = await admin()
+    .from('documents')
+    .select('code')
+    .eq('member_id', accounts.memberRowId!)
+    .eq('kind', 'certificate')
+    .eq('status', 'Valid')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  await expect(result).toContainText(newest!.code);
 });
 
 test('a replaced certificate says so and names the new reference', async ({ page }) => {

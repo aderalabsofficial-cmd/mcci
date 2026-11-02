@@ -49,13 +49,16 @@ async function memberPage(page: Page) {
 async function startRequest(page: Page, service: string) {
   await page.goto('/portal/apply');
   await page.locator(`[data-action="svc.new"][data-service="${service}"]`).click();
-  await expect(page).toHaveURL(/\/portal\/apply\?r=/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/portal\/apply\?r=/, SAVED);
   // as a person would: the new page has finished loading before the first file goes up (an action started while
   // Next.js is still navigating can be cut off — docs/20 "actions cut off under load")
   await page.waitForLoadState('networkidle');
   await page.getByLabel('Document file').setInputFiles(pdf(`${service}-document.pdf`));
   await expect(page.locator(`[data-doc="${service}-document.pdf"]`)).toBeVisible();
 }
+
+// one action was measured at 15.8 s, and successful, when the other worker was busy; assertions stay as they were
+const SAVED = { timeout: 45_000 };
 
 test('a request from start to issued letter: return, correction, fee at the counter, signature, public verification', async ({ page, browser }) => {
   test.setTimeout(180_000);
@@ -70,10 +73,10 @@ test('a request from start to issued letter: return, correction, fee at the coun
   await page.locator('[data-step="3"] [data-action="svc.step"]').click();
   await expect(page.locator('[data-step="4"]')).toContainText('PKR');
   await page.locator('[data-action="svc.submit"]').click();
-  await expect(page).toHaveURL(/\/portal\/application\?t=MCCI-/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/\/portal\/application\?t=MCCI-/, SAVED);
   await expect(page.locator('[data-outcome="ok"]')).toContainText(/Fee voucher PV-/);
   const token = new URL(page.url()).searchParams.get('t')!;
-  await expect(page.locator('[data-request]')).toHaveAttribute('data-status', 'Submitted', { timeout: 15_000 });
+  await expect(page.locator('[data-request]')).toHaveAttribute('data-status', 'Submitted', SAVED);
   const { data: req } = await admin.from('service_requests').select('id, data').eq('token', token).single();
   expect(req!.data).toMatchObject({ Consignee: 'ACME GmbH', 'Invoice value (USD)': '15000' });
 
@@ -84,11 +87,11 @@ test('a request from start to issued letter: return, correction, fee at the coun
   await expect(sg.locator(`[data-column="Submitted"] [aria-label="Open ${token}"]`)).toBeVisible();
   await sg.goto(`/admin/review?t=${token}`);
   await sg.locator('[data-action="svc.start"]').click();
-  await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'In review', { timeout: 15_000 });
+  await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'In review', SAVED);
   await sg.locator('[data-action="svc.return"]').click();
   await sg.getByRole('dialog').getByLabel('What to correct').fill('Please attach the signed C.O. form');
   await sg.locator('[data-action="svc.return.confirm"]').click();
-  await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Returned', { timeout: 15_000 });
+  await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Returned', SAVED);
 
   // the member corrects and sends it back
   await page.reload();
@@ -99,12 +102,12 @@ test('a request from start to issued letter: return, correction, fee at the coun
   await expect(fix.locator('[data-doc="co-form-signed.pdf"]')).toBeVisible();
   await fix.getByLabel('Note for MCCI (optional)').fill('Signed form attached');
   await fix.locator('[data-action="svc.fix.send"]').click();
-  await expect(page.locator('[data-request]')).toHaveAttribute('data-status', 'In review', { timeout: 15_000 });
+  await expect(page.locator('[data-request]')).toHaveAttribute('data-status', 'In review', SAVED);
 
   // approve; the signature waits for the fee
   await sg.reload();
   await sg.locator('[data-action="svc.approve"]').click();
-  await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Ready to sign', { timeout: 15_000 });
+  await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Ready to sign', SAVED);
   await expect(sg.locator('[data-action="svc.sign"]')).toBeDisabled();
 
   // Accounts record the fee at the counter
@@ -147,16 +150,16 @@ test('each of the seven services can be requested, approved and issued', async (
       for (const f of s.fields as string[]) await page.getByLabel(f, { exact: true }).fill(`${f} for ${s.key}`);
       await page.locator('[data-step="3"] [data-action="svc.step"]').click();
       await page.locator('[data-action="svc.submit"]').click();
-      await expect(page).toHaveURL(/\/portal\/application\?t=MCCI-/, { timeout: 15_000 });
+      await expect(page).toHaveURL(/\/portal\/application\?t=MCCI-/, SAVED);
       const token = new URL(page.url()).searchParams.get('t')!;
       await sg.goto(`/admin/review?t=${token}`);
       await sg.locator('[data-action="svc.start"]').click();
-      await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'In review', { timeout: 15_000 });
+      await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'In review', SAVED);
       await sg.locator('[data-action="svc.approve"]').click();
-      await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Ready to sign', { timeout: 15_000 });
+      await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Ready to sign', SAVED);
       await sg.locator('[data-action="svc.sign"]').click();
       await sg.locator('[data-action="svc.sign.confirm"]').click();
-      await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Issued', { timeout: 15_000 });
+      await expect(sg.locator('[data-request]')).toHaveAttribute('data-status', 'Issued', SAVED);
       const { data } = await admin.from('service_requests').select('status, issued_doc').eq('token', token).single();
       expect(data).toMatchObject({ status: 'Issued' });
       expect(data!.issued_doc).not.toBeNull();
