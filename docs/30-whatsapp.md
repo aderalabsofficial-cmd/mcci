@@ -223,3 +223,17 @@ MCCI's own record beside it. Saving them never approves anything; status comes o
 
 **Message types.** Text, template, image, document, audio and video: what the provider offers. It has no interactive
 messages, so the composer does not offer them.
+
+### Released 2 Nov 2026 (owner's brief)
+
+`fc15c14` is live; rollback targets `7e80de3`, `1fcf00d`. Backup `mcci-20261102T174154Z` verified, restore drill 13/13
+PASS, migration 0620 applied (55 total; companies, members, applications, vouchers, posts, messages and audit rows
+unchanged). `CRON_SECRET` was added to `/etc/mcci-web/env`; no timer exists, and scheduled jobs stay off.
+
+One worker tick run by hand made the production app check the provider: status `connected`, all six steps passed, account
+"The Multan Chamber of Commerce & Industry", number +92 312 7322224, WABA 937323199090897. It sent nothing. Sending and
+member opt-in stay off. Meta has 0 templates and MCCI has 0 consents.
+
+Not checked live: the signed-in screens, and IQPigeon's own webhook test, which a person has to press in its dashboard.
+No real message has been sent. Before running `scripts/ops/whatsapp-env.sh` again, correct the phone number ID in
+`.env.iqpigeon.local`: it differs from the value on the server, which is the one the provider confirmed.
