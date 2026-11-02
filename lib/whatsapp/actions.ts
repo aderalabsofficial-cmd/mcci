@@ -318,6 +318,14 @@ export async function saveTemplate(_: ActionResult | null, form: FormData): Prom
       p_var_map: map as unknown as Json,
     });
     if (error) throw error;
+    const buttons = text(form, 'buttons')
+      .split(',')
+      .map((b) => b.trim())
+      .filter(Boolean);
+    const { error: buttonsError } = await db
+      .schema('api')
+      .rpc('wa_template_buttons', { p_id: uuid.parse(text(form, 'id')), p_buttons: buttons });
+    if (buttonsError) throw buttonsError;
     refresh();
     return done(locale, 'templateSaved');
   } catch (error) {

@@ -194,6 +194,29 @@ test('connection is healthy only when every step passes; secrets never reach the
   ]);
   await page.locator('[data-action="wa.test"]').click();
   await expect(page.locator('[data-wa-status="connected"]')).toBeVisible();
+  await expect(page.locator('[data-account-name]')).toHaveText('MCCI Test');
+  await expect(page.locator('[data-official-number]')).toHaveText('+92 61 000000');
+  await expect(page.locator('[data-ready="provider"]')).toHaveAttribute('data-ok', 'true');
+  await expect(page.locator('[data-ready="sender"]')).toHaveAttribute('data-ok', 'true');
+  // connected is not permission to send: sending stays off until a person turns it on
+  await expect(page.locator('[data-ready="sendingOn"]')).toHaveAttribute('data-ok', 'false');
+
+  // a saved result from before the keys were complete does not stay on screen: opening the page checks again
+  await admin.from('whatsapp_health').update({ status: 'not_configured', webhook_test_at: null }).eq('id', true);
+  await page.reload();
+  await expect(page.locator('[data-wa-status="connected"]')).toBeVisible();
+  await page.goto('/admin/whatsapp');
+  await expect(page.locator('[data-wa-status="connected"]')).toBeVisible();
+  await page.goto('/admin/whatsapp/settings');
+
+  // the provider's signed test: answered and recorded, nothing kept; forged or unrelated ones are refused
+  const testEvent = { id: randomUUID(), type: 'webhook.test', data: { endpoint_id: 4, message: 'Test' } };
+  expect((await postEvent(page, testEvent, { secret: 'wrong' })).status()).toBe(401);
+  await expect(page.locator('[data-webhook-test="none"]')).toBeVisible();
+  expect((await postEvent(page, testEvent)).status()).toBe(200);
+  await page.reload();
+  await expect(page.locator('[data-webhook-test="done"]')).toBeVisible();
+  expect((await postEvent(page, { id: randomUUID(), type: 'messages', data: { messages: [] } })).status()).toBe(403);
 
   const html = await page.content();
   expect(html).not.toContain('test-iqpigeon-key');
@@ -224,8 +247,11 @@ test('templates sync from the provider; wording and variable mapping are recorde
   await en.locator('[data-field="tpl-body"]').fill('Dear {{1}}, your number is {{2}}.');
   await en.locator('[data-field="tpl-var-1"]').selectOption('business_name');
   await en.locator('[data-field="tpl-var-2"]').selectOption('membership_number');
+  await en.locator('[data-field="template-buttons"]').fill('Renew now, Contact us');
   await en.locator('[data-action="wa.template.save"]').click();
   await expect(en.getByRole('status')).toContainText('Wording saved');
+  await page.reload();
+  await expect(en.locator('[data-field="template-buttons"]')).toHaveValue('Renew now, Contact us');
   const pending = page.locator(`[data-template="${TEMPLATE}_pending"]`);
   await pending.locator('[data-field="tpl-body"]').fill('Trying to approve this by saving');
   await pending.locator('[data-action="wa.template.save"]').click();
@@ -279,6 +305,7 @@ test('one message from a profile: no consent is refused; a template goes with th
   expect((await postEvent(page, event({ statuses: [{ id: row!.wa_id, status: 'delivered' }] }))).status()).toBe(200);
   await page.reload();
   await expect(panel.locator('[data-last-state="read"]')).toBeVisible();
+  await expect(panel.locator('[data-wa-history] [data-provider-ref]').first()).toHaveText(row!.wa_id!);
 });
 
 test('webhooks: bad signature, old event and another account are refused; replies reach the right place; unmatched waits; STOP blocks at once', async ({
@@ -310,6 +337,12 @@ test('webhooks: bad signature, old event and another account are refused; replie
   await expect(page.locator(`[data-thread="${phone(1)}"]`)).toContainText('Hello MCCI');
   await expect(page.locator(`[data-thread="${phone(1)}"]`)).toContainText(names[1]!);
   await expect(page.locator('[data-window="open"]')).toBeVisible();
+  await page.goto(`/admin/whatsapp/inbox?q=${encodeURIComponent(names[1]!)}`);
+  await expect(page.locator(`[data-conversation="${phone(1)}"]`)).toBeVisible();
+  await page.goto('/admin/whatsapp/inbox?q=Contact%201');
+  await expect(page.locator(`[data-conversation="${phone(1)}"]`)).toBeVisible();
+  await page.goto(`/admin/whatsapp/inbox?q=${encodeURIComponent(phone(1))}`);
+  await page.locator(`[data-conversation="${phone(1)}"]`).click();
 
   // internal note, assignment
   await page.locator('[data-field="note-body"]').fill('Call them back');
@@ -388,6 +421,7 @@ test('campaign: preview explains exclusions, approval by someone else, exact-cou
   const f = encodeURIComponent(JSON.stringify(filterOf()));
   await officer.goto(`/admin/whatsapp/campaigns/new?f=${f}`);
   const c = officer.locator('[data-composer]');
+  await expect(c.locator('[data-sender]')).toContainText('+92 61 000000');
   await c.locator('[data-field="campaign-name"]').fill(`Renewal ${tag}`);
   await c.locator('[data-field="campaign-category"]').selectOption('membership');
   await c.locator('[data-field="campaign-template"]').selectOption({ label: `${TEMPLATE} · en · UTILITY` });
@@ -428,6 +462,13 @@ test('campaign: preview explains exclusions, approval by someone else, exact-cou
   await expect.poll(async () => (await sent()).length).toBe(countBefore + 2);
   await expect(page.locator(`[data-recipient="${memberNos[2]}"]`)).toHaveCount(0);
   await expect(page.locator(`[data-recipient="${memberNos[3]}"][data-status="skipped"]`)).toBeVisible();
+
+  // finished: on Campaign History, off the list of campaigns in hand
+  await page.goto('/admin/whatsapp/campaigns/history');
+  await expect(page.locator(`[data-campaign="Renewal ${tag}"]`)).toBeVisible();
+  await page.goto('/admin/whatsapp/campaigns');
+  await expect(page.locator(`[data-campaign="Renewal ${tag}"]`)).toHaveCount(0);
+  await page.goto(`/admin/whatsapp/campaigns/view?id=${id}`);
 
   // a worker that died after sending: the same message comes round again, with the same key, and no second message
   await admin

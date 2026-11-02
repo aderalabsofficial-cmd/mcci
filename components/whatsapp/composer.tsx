@@ -92,12 +92,14 @@ export function CampaignComposer({
   q,
   templates,
   segment,
+  sender,
 }: {
   locale: Locale;
   filter: Filter;
   q: string;
   templates: TemplateOption[];
   segment: string | null;
+  sender: string | null;
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `wa.composer.${k}`, v);
   const router = useRouter();
@@ -186,6 +188,9 @@ export function CampaignComposer({
           <span className="wa-step">2</span> {m('title')}
         </h3>
       </div>
+      <p className="muted" data-sender={sender ?? ''}>
+        {sender ? m('sender', { sender }) : m('senderUnknown')}
+      </p>
       <div className="biz-rule">
         <label className="form-field">
           {m('name')}

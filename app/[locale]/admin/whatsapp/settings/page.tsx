@@ -9,7 +9,8 @@ import { msg } from '@/lib/nav/model';
 import { requireUser } from '@/lib/permissions/server';
 import { runConnectionTest } from '@/lib/whatsapp/actions';
 import { isConfigured, publicConfig } from '@/lib/whatsapp/config';
-import { loadDashboard, loadHealth, loadSettings } from '@/lib/whatsapp/load';
+import { refreshHealthIfStale } from '@/lib/whatsapp/admin/health';
+import { loadDashboard, loadHealth, loadReadiness, loadSettings } from '@/lib/whatsapp/load';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -27,9 +28,11 @@ export default async function WhatsappSettingsPage({ params }: Props) {
   const g = guardStaff(session, locale, 'plat', 'screens.admin.wasettings');
   if (g.denied) return g.denied;
   const m = (k: string) => msg(locale, `wa.settings.${k}`);
-  const [health, settings, dash] = await Promise.all([
+  await refreshHealthIfStale();
+  const [health, settings, readiness, dash] = await Promise.all([
     loadHealth(),
     loadSettings(),
+    loadReadiness(),
     session.access.staff?.levels.out ? loadDashboard() : Promise.resolve(null),
   ]);
   const cfg = publicConfig();
@@ -42,6 +45,14 @@ export default async function WhatsappSettingsPage({ params }: Props) {
     iso ? new Date(iso).toLocaleString(locale === 'ur' ? 'ur-PK' : 'en-GB', { timeZone: 'Asia/Karachi' }) : '—';
   const steps = (health?.steps ?? []) as unknown as { key: string; ok: boolean; detail?: string }[];
   const yes = (b: boolean) => m(b ? 'set' : 'notSet');
+  const sender = steps.find((x) => x.key === 'sender')?.ok === true && steps.find((x) => x.key === 'isolation')?.ok === true;
+  const ready: [string, boolean][] = [
+    ['provider', steps.find((x) => x.key === 'auth')?.ok === true && steps.find((x) => x.key === 'account')?.ok === true],
+    ['sender', sender],
+    ['templates', (health?.templates_approved ?? 0) > 0],
+    ['consent', readiness.consented > 0],
+    ['sendingOn', settings.sendingEnabled],
+  ];
   return (
     <div className="proto">
       <div className="ph">
@@ -64,6 +75,22 @@ export default async function WhatsappSettingsPage({ params }: Props) {
       </div>
       <div className={`banner ${status === 'connected' ? 'green' : 'orange'}`} data-wa-status={status}>
         {msg(locale, `wa.status.${status}`)}
+      </div>
+      <div className="card" data-section="readiness">
+        <div className="ch">
+          <h3>{m('readiness.title')}</h3>
+        </div>
+        <ul className="wa-ready">
+          {ready.map(([key, ok]) => (
+            <li key={key} data-ready={key} data-ok={ok}>
+              <span className={`bd ${ok ? 'green' : 'orange'}`}>{m(ok ? 'readiness.yes' : 'readiness.no')}</span>
+              <span>
+                <b>{m(`readiness.${key}`)}</b>
+                {!ok && <small>{m(`readiness.${key}Why`)}</small>}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
       <div className="card" data-section="provider">
         <div className="ch">
@@ -94,6 +121,28 @@ export default async function WhatsappSettingsPage({ params }: Props) {
             <small>{m('phoneNumberId')}</small>
             <b dir="ltr">{cfg.phoneNumberId ?? '—'}</b>
           </div>
+          <div>
+            <small>{m('accountName')}</small>
+            <b data-account-name>{health?.account_name ?? '—'}</b>
+          </div>
+          <div>
+            <small>{m('accountId')}</small>
+            <b dir="ltr">{health?.account_id ?? '—'}</b>
+          </div>
+          <div>
+            <small>{m('officialNumber')}</small>
+            <b dir="ltr" data-official-number>{health?.display_phone ?? '—'}</b>
+          </div>
+          <div>
+            <small>{m('waba')}</small>
+            <b dir="ltr">{health?.waba_id ?? '—'}</b>
+          </div>
+          {health?.last_error && (
+            <div>
+              <small>{m('lastError')}</small>
+              <b dir="auto">{health.last_error}</b>
+            </div>
+          )}
         </div>
         {cfg.missing.length > 0 && (
           <p className="banner orange" data-missing={cfg.missing.length}>
@@ -148,8 +197,49 @@ export default async function WhatsappSettingsPage({ params }: Props) {
                 <small>{m('webhookRejected')}</small>
                 <b data-webhook-rejected={dash.webhookRejected}>{dash.webhookRejected}</b>
               </div>
+              <div>
+                <small>{m('webhookTest')}</small>
+                <b data-webhook-test={health?.webhook_test_at ? 'done' : 'none'}>
+                  {health?.webhook_test_at ? when(health.webhook_test_at) : m('webhookTestNone')}
+                </b>
+              </div>
             </>
           )}
+        </div>
+      </div>
+      <div className="card" data-section="queue">
+        <div className="ch">
+          <h3>{m('queue')}</h3>
+        </div>
+        <div className="kv">
+          <div>
+            <small>{m('queueWaiting')}</small>
+            <b>{readiness.submitting}</b>
+          </div>
+          <div>
+            <small>{m('queueUnknown')}</small>
+            <b>{readiness.unknown}</b>
+          </div>
+          <div>
+            <small>{m('queueFailed')}</small>
+            <b>{readiness.failed}</b>
+          </div>
+          <div>
+            <small>{m('queueActive')}</small>
+            <b>{readiness.campaignsActive}</b>
+          </div>
+          <div>
+            <small>{m('dailyUsed')}</small>
+            <b>
+              {readiness.sent24h} / {settings.dailyLimit}
+            </b>
+          </div>
+          <div>
+            <small>{m('templatesOnProvider')}</small>
+            <b data-templates-total={health?.templates_total ?? 0}>
+              {health?.templates_approved ?? 0} / {health?.templates_total ?? 0}
+            </b>
+          </div>
         </div>
       </div>
       <div className="card" data-section="sending">

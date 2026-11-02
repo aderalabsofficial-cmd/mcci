@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(44);
+select plan(55);
 
 update private.settings set value = value || '{"sendingEnabled":true,"approvalThreshold":1,"ratePerMinute":100}'::jsonb where key = 'whatsapp';
 
@@ -91,6 +91,19 @@ insert into public.outreach_suppressions (phone, reason, source) values ('+92300
 update public.whatsapp_messages set next_attempt_at = now() + interval '1 hour' where state = 'submitting';
 select is(pg_temp.svc('select jsonb_array_length(api.wa_claim(10))::bigint'), 1::bigint, 'only one message is released');
 select is((select reason from public.whatsapp_campaign_recipients where phone = '+923001110002' and campaign_id = (select id from tc)), 'suppressed', 'the late opt-out is skipped with its reason');
+
+-- ── connection detail, readiness, webhook test, buttons (0620)
+select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.wa_health_mark(''connected'', ''[]'', null, ''{}'')') $$, '42501', null, 'staff cannot write the connection result');
+select throws_ok($$ select tests.exec_as(tests.id('sg'), 'select api.wa_webhook_test_mark()') $$, '42501', null, 'staff cannot forge the webhook test');
+select lives_ok($$ select pg_temp.svc('select 0::bigint from (select api.wa_health_mark(''connected'', ''[]'', null, ''{"accountName":"MCCI","displayPhone":"+92 1","templatesTotal":2,"templatesApproved":1}'')) x') $$, 'the server records what the provider said');
+select lives_ok($$ select pg_temp.svc('select 0::bigint from (select api.wa_health_mark(''auth_failed'', ''[]'', ''bad key'')) x') $$, 'a failed check needs no detail');
+select is((select account_name || ' ' || display_phone || ' ' || templates_approved from public.whatsapp_health where id), 'MCCI +92 1 1', 'a failed check does not erase who the account was');
+select throws_ok($$ select tests.exec_as(tests.id('owner_b'), 'select api.wa_readiness()') $$, '42501', null, 'a member cannot read readiness');
+select ok(tests.num_as(tests.id('president'), 'select (api.wa_readiness()->>''templatesLocal'')::bigint') >= 1, 'view-only staff read the counts');
+select throws_ok(format($$ select tests.exec_as(tests.id('president'), %L) $$, format('select api.wa_template_buttons(%L, array[''Renew''])', (select ok from tp))), '42501', null, 'view-only staff cannot change a template');
+select lives_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_template_buttons(%L, array[''Renew'', ''Contact us''])', (select ok from tp))), 'buttons recorded');
+select throws_ok($$ select tests.exec_as(tests.id('president'), 'select api.wa_contact_companies(''One'')') $$, '42501', null, 'view-only staff cannot search by contact');
+select is(tests.num_as(tests.id('sg'), 'select count(*) from api.wa_contact_companies(''%'')'), 0::bigint, 'a wildcard in the search matches only itself');
 
 select * from finish();
 rollback;

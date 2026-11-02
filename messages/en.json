@@ -191,7 +191,8 @@
       "wasettings": "WhatsApp Settings",
       "finance": "Accounts",
       "changes": "Change Declarations",
-      "help": "Ask MCCI AI"
+      "help": "Ask MCCI AI",
+      "wahistory": "Campaign History"
     }
   },
   "tabs": {
@@ -242,14 +243,15 @@
       "wadash": "Overview",
       "wainbox": "Inbox",
       "wacampaigns": "Campaigns",
-      "wanew": "New",
+      "wanew": "New Message",
       "wacampaign": "Campaign",
       "watemplates": "Templates",
       "waconsent": "Consent",
       "wasettings": "Settings",
       "finance": "Accounts",
       "changes": "Change Declarations",
-      "help": "Ask MCCI AI"
+      "help": "Ask MCCI AI",
+      "wahistory": "Campaign History"
     }
   },
   "footer": {
@@ -4517,7 +4519,7 @@
   },
   "reports": {
     "title": "Reports",
-    "sub": "Aggregate figures for the chosen period. No personal data. Demo records are not counted.",
+    "sub": "Figures for the chosen period, without personal data; demo records are not counted. Only the voter list names members, and each download of it is logged.",
     "from": "From",
     "to": "To",
     "apply": "Show",
@@ -5040,7 +5042,10 @@
         "category": "Kind",
         "by": "Created by",
         "created": "Created"
-      }
+      },
+      "historyTitle": "Campaign History",
+      "historySub": "Finished campaigns and their results.",
+      "historyEmpty": "No campaign has finished yet."
     },
     "campaign": {
       "back": "Back to campaigns",
@@ -5135,7 +5140,9 @@
       "send": "Send",
       "noTemplateText": "No template: free text",
       "noTemplateClosed": "No template: free text (window closed)",
-      "advanced": "More detailed filters"
+      "advanced": "More detailed filters",
+      "sender": "Sends from: {sender}",
+      "senderUnknown": "The sending number is not confirmed yet. Run the connection test in Settings."
     },
     "templates": {
       "title": "Message Templates",
@@ -5160,7 +5167,8 @@
       "footer": "Footer",
       "fills": "Value for",
       "chooseValue": "Choose…",
-      "save": "Save wording"
+      "save": "Save wording",
+      "buttons": "Buttons (labels as approved on Meta, separated by commas)"
     },
     "consent": {
       "title": "Consent Management",
@@ -5224,7 +5232,36 @@
       "save": "Save settings",
       "retryPolicy": "Retries use the same key: rate limits wait and try again; an unclear answer is tried up to 3 times, then marked unknown for a person to check.",
       "schedulingNote": "Scheduled sending needs the server timer, which is off until separately authorised. Until then, use Send next batch on the campaign.",
-      "dailyLimit": "Customers per 24 hours (Meta's limit for this number)"
+      "dailyLimit": "Customers per 24 hours (Meta's limit for this number)",
+      "accountName": "Provider account",
+      "accountId": "Account identifier",
+      "officialNumber": "MCCI WhatsApp number",
+      "waba": "WhatsApp Business Account ID",
+      "lastError": "Last problem",
+      "webhookTest": "Last signed test from the provider",
+      "webhookTestNone": "None yet. Run the test in the provider's dashboard.",
+      "queue": "Queue and limits",
+      "queueWaiting": "Waiting to go out",
+      "queueUnknown": "Unclear answer, for a person to check",
+      "queueFailed": "Failed",
+      "queueActive": "Campaigns in progress",
+      "dailyUsed": "Customers in the last 24 hours / limit",
+      "templatesOnProvider": "Templates approved / on Meta",
+      "readiness": {
+        "title": "Ready to send?",
+        "yes": "Ready",
+        "no": "Not yet",
+        "provider": "Provider connected",
+        "providerWhy": "The API key or account did not pass the last check.",
+        "sender": "MCCI's number verified",
+        "senderWhy": "The number is not active on this account, or its Phone Number ID does not match.",
+        "templates": "Approved templates available",
+        "templatesWhy": "None approved in Meta yet. Create them in Meta, then press Sync under Templates. Without one, MCCI can only reply to people who wrote in during the last 24 hours.",
+        "consent": "Contacts with consent",
+        "consentWhy": "Nobody has consent recorded yet. Membership alone is not consent.",
+        "sendingOn": "Sending switched on",
+        "sendingOnWhy": "An administrator has not switched it on below. It never turns on by itself."
+      }
     },
     "panel": {
       "title": "WhatsApp",
@@ -5242,7 +5279,9 @@
         "direction": "Direction",
         "message": "Message",
         "campaign": "Campaign",
-        "status": "Status"
+        "status": "Status",
+        "by": "Sent by",
+        "reference": "Provider reference"
       }
     },
     "member": {

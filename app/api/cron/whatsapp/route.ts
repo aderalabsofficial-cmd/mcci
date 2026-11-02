@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { runTick } from '@/lib/whatsapp/admin/dispatch';
+import { refreshHealthIfStale } from '@/lib/whatsapp/admin/health';
 
 /**
  * One pass of the outbound queue. Called with `Authorization: Bearer <CRON_SECRET>` by the server's timer, which is a
@@ -18,5 +19,6 @@ function authorised(req: Request): boolean {
 
 export async function POST(req: Request) {
   if (!authorised(req)) return NextResponse.json({ error: 'unauthorised' }, { status: 401 });
+  await refreshHealthIfStale();
   return NextResponse.json(await runTick());
 }

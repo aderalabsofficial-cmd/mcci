@@ -35,9 +35,28 @@ export async function loadHealth() {
   const db = await createClient();
   const { data } = await db
     .from('whatsapp_health')
-    .select('status, steps, checked_at, last_ok_at, last_error, last_auth_failure_at')
+    .select(
+      'status, steps, checked_at, last_ok_at, last_error, last_auth_failure_at, account_id, account_name, display_phone, waba_id, templates_total, templates_approved, webhook_test_at',
+    )
     .single();
   return data;
+}
+
+export interface Readiness {
+  templatesLocal: number;
+  consented: number;
+  submitting: number;
+  unknown: number;
+  failed: number;
+  sent24h: number;
+  campaignsActive: number;
+}
+
+export async function loadReadiness(): Promise<Readiness> {
+  const db = await createClient();
+  const { data, error } = await db.schema('api').rpc('wa_readiness');
+  if (error) throw new Error(`readiness: ${error.code}`);
+  return data as unknown as Readiness;
 }
 
 export async function loadSettings() {
@@ -125,7 +144,16 @@ export async function loadConversations(q: string, filter: string) {
   if (filter === 'unmatched') query = query.is('company_id', null);
   else if (['open', 'pending', 'resolved'].includes(filter)) query = query.eq('status', filter as never);
   const safe = q.replace(/[^\p{L}\p{N} +]/gu, '').trim();
-  if (safe) query = query.or(`phone.ilike.%${safe}%,profile_name.ilike.%${safe}%`);
+  if (safe) {
+    // the search also finds a conversation by its business or the contact person named on that business
+    const [{ data: named }, { data: people }] = await Promise.all([
+      db.from('companies').select('id').ilike('name', `%${safe}%`).limit(50),
+      db.schema('api').rpc('wa_contact_companies', { p_q: safe }),
+    ]);
+    const ids = [...new Set([...(named ?? []).map((c) => c.id), ...(people ?? [])])];
+    const byCompany = ids.length ? `,company_id.in.(${ids.join(',')})` : '';
+    query = query.or(`phone.ilike.%${safe}%,profile_name.ilike.%${safe}%${byCompany}`);
+  }
   const { data, error } = await query;
   if (error) throw new Error(`conversations: ${error.code}`);
   return data ?? [];
@@ -168,7 +196,7 @@ export async function loadCompanyHistory(company: string) {
   const { data: messages } = await db
     .from('whatsapp_messages')
     .select(
-      'id, direction, kind, body, state, failure_code, created_at, wa_id, whatsapp_templates(name), whatsapp_campaigns(name)',
+      'id, direction, kind, body, state, failure_code, created_at, wa_id, provider_id, whatsapp_templates(name), whatsapp_campaigns(name), profiles(full_name)',
     )
     .eq('company_id', company)
     .order('created_at', { ascending: false })

@@ -217,6 +217,7 @@ export function TemplateForm({
     header: string | null;
     body: string | null;
     footer: string | null;
+    buttons: string[] | null;
     var_map: Record<string, string>;
   };
 }) {
@@ -254,6 +255,10 @@ export function TemplateForm({
               data-field="tpl-body"
               onChange={(e) => setBody(e.target.value)}
             />
+          </label>
+          <label className="form-field biz-wide">
+            {msg(locale, 'wa.templates.buttons')}
+            <input name="buttons" defaultValue={(t.buttons ?? []).join(', ')} maxLength={700} dir="auto" data-field="template-buttons" />
           </label>
           <label className="form-field biz-wide">
             {m('footer')}

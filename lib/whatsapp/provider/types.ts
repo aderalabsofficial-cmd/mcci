@@ -44,7 +44,7 @@ export type ProviderFailure = 'auth' | 'not_found' | 'unavailable' | 'rejected';
 export type Result<T> = { ok: true; value: T } | { ok: false; failure: ProviderFailure; detail: string };
 
 export interface WhatsappProvider {
-  getAccountStatus(): Promise<Result<{ name: string; status: string }>>;
+  getAccountStatus(): Promise<Result<{ id: string | null; name: string; status: string }>>;
   getSender(id: string): Promise<Result<ProviderSender>>;
   getWebhookUrls(): Promise<Result<string[]>>;
   getTemplates(): Promise<Result<ProviderTemplate[]>>;

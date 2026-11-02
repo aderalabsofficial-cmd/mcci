@@ -7,7 +7,8 @@ import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
 import { requireUser } from '@/lib/permissions/server';
-import { isConfigured } from '@/lib/whatsapp/config';
+import { refreshHealthIfStale } from '@/lib/whatsapp/admin/health';
+import { missingConfig } from '@/lib/whatsapp/config';
 import { loadDashboard, loadHealth, loadSettings } from '@/lib/whatsapp/load';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -26,8 +27,10 @@ export default async function WhatsappDashboardPage({ params }: Props) {
   const g = guardStaff(session, locale, 'out', 'screens.admin.wadash');
   if (g.denied) return g.denied;
   const m = (k: string, v?: Record<string, string>) => msg(locale, `wa.dash.${k}`, v);
+  await refreshHealthIfStale();
   const [d, health, settings] = await Promise.all([loadDashboard(), loadHealth(), loadSettings()]);
-  const status = isConfigured() ? (health?.status ?? 'not_configured') : 'not_configured';
+  const missing = missingConfig().length;
+  const status = missing === 0 ? (health?.status ?? 'not_configured') : missing >= 5 ? 'not_configured' : 'incomplete';
   const pct = (n: number) => (d.submitted ? `${Math.round((n / d.submitted) * 100)}%` : '—');
   return (
     <div className="proto">

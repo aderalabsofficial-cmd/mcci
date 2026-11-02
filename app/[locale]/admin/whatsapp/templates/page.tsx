@@ -89,6 +89,7 @@ export default async function TemplatesPage({ params }: Props) {
                 header: t.header,
                 body: t.body,
                 footer: t.footer,
+                buttons: Array.isArray(t.buttons) ? (t.buttons as string[]) : [],
                 var_map: t.var_map as Record<string, string>,
               }}
             />

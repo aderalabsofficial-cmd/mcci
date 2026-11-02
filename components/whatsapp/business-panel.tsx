@@ -66,7 +66,7 @@ export async function BusinessWhatsappPanel({ locale, p }: { locale: Locale; p: 
           <table data-wa-history>
             <thead>
               <tr>
-                {(['date', 'direction', 'message', 'campaign', 'status'] as const).map((c) => (
+                {(['date', 'direction', 'message', 'campaign', 'by', 'status', 'reference'] as const).map((c) => (
                   <th key={c} scope="col">
                     {m(`cols.${c}`)}
                   </th>
@@ -82,9 +82,13 @@ export async function BusinessWhatsappPanel({ locale, p }: { locale: Locale; p: 
                     {(x.whatsapp_templates as unknown as { name: string } | null)?.name ?? x.body ?? `[${x.kind}]`}
                   </td>
                   <td>{(x.whatsapp_campaigns as unknown as { name: string } | null)?.name ?? '—'}</td>
+                  <td>{(x.profiles as unknown as { full_name: string | null } | null)?.full_name ?? '—'}</td>
                   <td>
                     {msg(locale, `wa.states.${x.state}`)}
                     {x.failure_code ? ` · ${x.failure_code}` : ''}
+                  </td>
+                  <td dir="ltr" data-provider-ref>
+                    {x.wa_id ?? x.provider_id ?? '—'}
                   </td>
                 </tr>
               ))}

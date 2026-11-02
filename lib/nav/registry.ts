@@ -173,6 +173,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'wacampaigns', '/admin/whatsapp/campaigns', 'MC', 'mail'),
   s('admin', 'wanew', '/admin/whatsapp/campaigns/new', 'MC', 'pen'),
   s('admin', 'wacampaign', '/admin/whatsapp/campaigns/view', 'MC', 'list'),
+  s('admin', 'wahistory', '/admin/whatsapp/campaigns/history', 'MC', 'clock'),
   s('admin', 'watemplates', '/admin/whatsapp/templates', 'MC', 'file'),
   s('admin', 'waconsent', '/admin/whatsapp/consent', 'MC', 'shield'),
   s('admin', 'wasettings', '/admin/whatsapp/settings', 'MC', 'plug'),
@@ -295,7 +296,7 @@ export const PAGE_TABS: Record<'portal' | 'admin', string[][]> = {
     ['staff', 'audit'],
     ['services', 'integrations'],
     ['bizdir', 'bizprofile', 'segments', 'bizexports'],
-    ['wadash', 'wainbox', 'wacampaigns', 'wanew', 'wacampaign', 'watemplates', 'waconsent', 'wasettings'],
+    ['wadash', 'wainbox', 'wacampaigns', 'wanew', 'wahistory', 'watemplates', 'waconsent', 'segments', 'wasettings'],
   ],
 };
 

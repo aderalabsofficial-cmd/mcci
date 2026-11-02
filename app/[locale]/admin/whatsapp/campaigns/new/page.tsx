@@ -10,7 +10,7 @@ import { decodeFilter } from '@/lib/business/filters';
 import { loadFacets, loadSegments } from '@/lib/business/load';
 import { msg } from '@/lib/nav/model';
 import { requireUser } from '@/lib/permissions/server';
-import { loadTemplates } from '@/lib/whatsapp/load';
+import { loadHealth, loadTemplates } from '@/lib/whatsapp/load';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -32,7 +32,13 @@ export default async function NewCampaignPage({ params, searchParams }: Props) {
   if (g.denied) return g.denied;
   const m = (k: string) => msg(locale, `wa.composer.${k}`);
   const sp = await searchParams;
-  const [facets, segments, templates] = await Promise.all([loadFacets(), loadSegments(), loadTemplates()]);
+  const [facets, segments, templates, health] = await Promise.all([
+    loadFacets(),
+    loadSegments(),
+    loadTemplates(),
+    loadHealth(),
+  ]);
+  const sender = health?.display_phone ? [health.account_name, health.display_phone].filter(Boolean).join(' · ') : null;
   const open = sp.segment ? segments.find((s) => s.id === sp.segment) : undefined;
   const filter = decodeFilter(sp.f ?? (open ? open.definition : ''));
   const q = (sp.q ?? '').slice(0, 100);
@@ -59,7 +65,7 @@ export default async function NewCampaignPage({ params, searchParams }: Props) {
         canSave={staffCanSave(session.access.staff?.levels.biz)}
       />
       </details>
-      <CampaignComposer locale={locale} filter={filter} q={q} templates={approved} segment={open?.id ?? null} />
+      <CampaignComposer locale={locale} filter={filter} q={q} templates={approved} segment={open?.id ?? null} sender={sender} />
     </div>
   );
 }

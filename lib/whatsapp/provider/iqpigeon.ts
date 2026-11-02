@@ -110,6 +110,7 @@ export function createIqpigeonProvider(cfg: IqpigeonConfig): WhatsappProvider {
   return {
     getAccountStatus: () =>
       read('/me', (d) => ({
+        id: str(get(d, 'partner', 'id')),
         name: str(get(d, 'partner', 'name')) ?? '',
         status: str(get(d, 'partner', 'status')) ?? 'unknown',
       })),

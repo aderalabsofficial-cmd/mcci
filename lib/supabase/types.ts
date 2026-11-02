@@ -718,6 +718,9 @@ export type Database = {
 "wa_consent_record":
 { Args: { "p_categories": (string)[],"p_company": string,"p_evidence": string,"p_method": string,"p_status": string }; Returns: undefined
                            },
+"wa_contact_companies":
+{ Args: { "p_q": string }; Returns: string[]
+                           },
 "wa_contact_language":
 { Args: { "p_company": string,"p_language": string }; Returns: undefined
                            },
@@ -731,7 +734,7 @@ export type Database = {
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "wa_health_mark":
-{ Args: { "p_error": string,"p_status": string,"p_steps": Json }; Returns: undefined
+{ Args: { "p_detail"?: Json,"p_error": string,"p_status": string,"p_steps": Json }; Returns: undefined
                            },
 "wa_member_consent":
 { Args: { "p_categories": (string)[],"p_company": string,"p_grant": boolean,"p_name": string,"p_phone": string }; Returns: undefined
@@ -741,6 +744,9 @@ export type Database = {
                            },
 "wa_note_add":
 { Args: { "p_body": string,"p_id": string }; Returns: undefined
+                           },
+"wa_readiness":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "wa_reconcile":
 { Args: { "p_code": string,"p_detail": string,"p_id": string,"p_state": string,"p_wa_id": string }; Returns: undefined
@@ -760,6 +766,9 @@ export type Database = {
 "wa_settings_save":
 { Args: { "p_values": Json }; Returns: undefined
                            },
+"wa_template_buttons":
+{ Args: { "p_buttons": (string)[],"p_id": string }; Returns: undefined
+                           },
 "wa_template_save":
 { Args: { "p_body": string,"p_footer": string,"p_header": string,"p_header_type": string,"p_id": string,"p_var_map": Json }; Returns: undefined
                            },
@@ -771,6 +780,9 @@ export type Database = {
                            },
 "wa_webhook_reject":
 { Args: { "p_reason": string }; Returns: undefined
+                           },
+"wa_webhook_test_mark":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            }
           }
           Enums: {
@@ -2897,14 +2909,14 @@ isOneToOne: false
                   ]
                 },"whatsapp_health": {
                   Row: {
-                    "checked_at": string | null,"id": boolean,"last_auth_failure_at": string | null,"last_error": string | null,"last_ok_at": string | null,"status": string,"steps": NonNullable<Json>
+                    "account_id": string | null,"account_name": string | null,"checked_at": string | null,"display_phone": string | null,"id": boolean,"last_auth_failure_at": string | null,"last_error": string | null,"last_ok_at": string | null,"status": string,"steps": NonNullable<Json>,"templates_approved": number | null,"templates_total": number | null,"waba_id": string | null,"webhook_test_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "checked_at"?: string | null,"id"?: boolean,"last_auth_failure_at"?: string | null,"last_error"?: string | null,"last_ok_at"?: string | null,"status"?: string,"steps"?: NonNullable<Json>
+                    "account_id"?: string | null,"account_name"?: string | null,"checked_at"?: string | null,"display_phone"?: string | null,"id"?: boolean,"last_auth_failure_at"?: string | null,"last_error"?: string | null,"last_ok_at"?: string | null,"status"?: string,"steps"?: NonNullable<Json>,"templates_approved"?: number | null,"templates_total"?: number | null,"waba_id"?: string | null,"webhook_test_at"?: string | null
                   }
                   Update: {
-                    "checked_at"?: string | null,"id"?: boolean,"last_auth_failure_at"?: string | null,"last_error"?: string | null,"last_ok_at"?: string | null,"status"?: string,"steps"?: NonNullable<Json>
+                    "account_id"?: string | null,"account_name"?: string | null,"checked_at"?: string | null,"display_phone"?: string | null,"id"?: boolean,"last_auth_failure_at"?: string | null,"last_error"?: string | null,"last_ok_at"?: string | null,"status"?: string,"steps"?: NonNullable<Json>,"templates_approved"?: number | null,"templates_total"?: number | null,"waba_id"?: string | null,"webhook_test_at"?: string | null
                   }
                   Relationships: [
                     

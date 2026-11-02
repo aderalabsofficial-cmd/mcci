@@ -42,7 +42,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Company Profile | `member/profile/` | `/portal/profile` | Registered particulars (changes go to MCCI for approval, per form note 4), partners & cards, company users, preferences |
 | Endorsement requests | `member/endorse/` | `/portal/endorse` | Members receive proposer / seconder requests live, review the applicant and sign digitally or decline; history of endorsements and yearly limit |
 
-## Admin panel (32 screens)
+## Admin panel (33 screens)
 
 | Screen | Prototype path | Route in app | What it does |
 |---|---|---|---|
@@ -80,6 +80,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | WhatsApp Campaigns | `admin/wacampaigns/` | `/admin/whatsapp/campaigns` | Campaign history |
 | New Campaign | `admin/wanew/` | `/admin/whatsapp/campaigns/new` | Audience, message, preview with reasons, draft |
 | Campaign | `admin/wacampaign/` | `/admin/whatsapp/campaigns/view` | Approval, launch, pause, cancel, results per recipient |
+| Campaign History | `admin/wahistory/` | `/admin/whatsapp/campaigns/history` | Finished campaigns with their results (docs/30; no prototype screen) |
 | Message Templates | `admin/watemplates/` | `/admin/whatsapp/templates` | Sync status from the provider, record wording and variables |
 | Consent Management | `admin/waconsent/` | `/admin/whatsapp/consent` | Consent per number, suppression list |
 | WhatsApp Settings | `admin/wasettings/` | `/admin/whatsapp/settings` | Connection test, masked credentials, limits |

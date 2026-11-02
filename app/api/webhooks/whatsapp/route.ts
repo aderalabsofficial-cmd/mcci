@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   let event: {
     id?: unknown;
     type?: unknown;
-    data?: { metadata?: { phone_number_id?: unknown } } & Record<string, unknown>;
+    data?: { metadata?: { phone_number_id?: unknown }; phone_number_id?: unknown } & Record<string, unknown>;
   };
   try {
     event = JSON.parse(body);
@@ -34,9 +34,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'bad_body' }, { status: 400, headers: NO_STORE });
   }
   const db = createAdminClient();
+  // the provider's dashboard test: signed, for no number. Proves the secret matches; nothing from it is kept
+  if (event.type === 'webhook.test') {
+    const { error } = await db.schema('api').rpc('wa_webhook_test_mark');
+    if (error) {
+      console.error('whatsapp webhook test failed', error.code);
+      return NextResponse.json({ error: 'failed' }, { status: 500, headers: NO_STORE });
+    }
+    return NextResponse.json({ ok: true, result: 'test' }, { headers: NO_STORE });
+  }
   const eventId = req.headers.get('x-iqp-event-id') ?? (typeof event.id === 'string' ? event.id : '');
   if (!eventId || !event.data) return NextResponse.json({ error: 'bad_body' }, { status: 400, headers: NO_STORE });
-  if (String(event.data.metadata?.phone_number_id ?? '') !== own) {
+  if (String(event.data.metadata?.phone_number_id ?? event.data.phone_number_id ?? '') !== own) {
     // signed, but not MCCI's number: counted for the settings screen, nothing from it is kept
     await db.schema('api').rpc('wa_webhook_reject', { p_reason: 'other_account' });
     console.error('whatsapp webhook: event for another number refused');
