@@ -8,6 +8,9 @@ export const LOCALES = ['en', 'ur'] as const;
 /** Every catalogue screen that exists so far (grows with each milestone). */
 export const BUILT_ROUTES = SCREENS.filter((s) => isBuilt(s.milestone)).map((s) => s.href);
 
+/** Every catalogue screen, plus the sign-in pages on the owner's design that are not catalogue screens of their own. */
+export const AUDIT_ROUTES = [...new Set([...BUILT_ROUTES, '/register', '/login/forgot'])];
+
 /** URL of a route in a locale: English has no prefix (localePrefix: 'as-needed'). */
 export const localized = (route: string, locale: (typeof LOCALES)[number]) =>
   locale === 'en' ? route : `/ur${route === '/' ? '' : route}`;

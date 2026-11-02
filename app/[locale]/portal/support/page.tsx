@@ -85,8 +85,8 @@ export default async function SupportPage({ params, searchParams }: Props) {
       <div className="btg">
         <a className="bt" href={`tel:+${tel.replace(/^\+/, '')}`} data-action="help.call">
           {tile(
-            <Phone size={28} color="#1b4f9c" aria-hidden />,
-            '#1b4f9c',
+            <Phone size={28} color="#007845" aria-hidden />,
+            '#007845',
             'call',
             settings.chamber.tel.split(',')[0]!,
           )}

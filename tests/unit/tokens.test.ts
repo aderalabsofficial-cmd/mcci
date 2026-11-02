@@ -5,12 +5,44 @@ const css = readFileSync('app/globals.css', 'utf8');
 const block = (selector: string) => css.slice(css.indexOf(selector)).split('}')[0] ?? '';
 
 describe('design tokens (docs/12-design-i18n.md, docs/15-mobile-app.md §5.1)', () => {
-  it('ports the prototype palette for light and dark', () => {
-    expect(block(':root {')).toContain('--bg: #fbf6ec');
-    expect(block(':root {')).toContain('--em: #1b4f9c');
-    expect(block('.dark {')).toContain('--bg: #07162f');
-    expect(css).toContain('--color-navy-800: #0b2a5b');
+  it('carries the green identity in light and dark (owner, Nov 2026)', () => {
+    expect(block(':root {')).toContain('--brand: #007845');
+    expect(block('.dark {')).toContain('--bg: #06120d');
+    expect(css).toContain('--color-navy-800: #005c35');
     expect(css).toContain('--color-gold-500: #e9b949');
+  });
+
+  it('meets WCAG AA: text on page and cards, white on green, input borders', () => {
+    const token = (selector: string, name: string) =>
+      (new RegExp(`--${name}: (#[0-9a-f]{3,6})`).exec(block(selector))?.[1] ?? '').replace(
+        /^#(.)(.)(.)$/,
+        '#$1$1$2$2$3$3',
+      );
+    const lum = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+    };
+    const ratio = (x: string, y: string) => {
+      const [hi, lo] = [lum(x), lum(y)].sort((p, q) => q - p);
+      return (hi! + 0.05) / (lo! + 0.05);
+    };
+    for (const theme of [':root {', '.dark {']) {
+      const t = (n: string) => token(theme, n);
+      for (const surface of ['bg', 'card', 'card2', 'th']) {
+        expect(ratio(t('t'), t(surface)), `${theme} text on ${surface}`).toBeGreaterThanOrEqual(4.5);
+        expect(ratio(t('m'), t(surface)), `${theme} muted on ${surface}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(ratio('#ffffff', t('brand')), `${theme} white on the buttons and selected tabs`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+      expect(ratio(t('gt'), t('card')), `${theme} link on a card`).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t('input-b'), t('card')), `${theme} input border`).toBeGreaterThanOrEqual(3);
+    }
+    // the sidebar and the darker end of the button gradient
+    expect(ratio('#ffffff', '#005c35')).toBeGreaterThanOrEqual(4.5);
   });
 
   it('limits Jameel Noori Nastaleeq to Arabic script', () => {

@@ -6,9 +6,9 @@ export const SVC_LOOK: Record<string, { icon: string; color: string }> = {
   sample: { icon: 'folder', color: '#f59e0b' },
   other: { icon: 'file', color: '#8b5cf6' },
   co: { icon: 'landmark', color: '#c8963e' },
-  att: { icon: 'badge', color: '#1b4f9c' },
+  att: { icon: 'badge', color: '#007845' },
 };
-export const svcLook = (key: string) => SVC_LOOK[key] ?? { icon: 'file', color: '#1b4f9c' };
+export const svcLook = (key: string) => SVC_LOOK[key] ?? { icon: 'file', color: '#007845' };
 
 /** status → badge colour (prototype bd()) */
 export const SVC_TONE: Record<string, string> = {

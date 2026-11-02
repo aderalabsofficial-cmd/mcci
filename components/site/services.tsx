@@ -12,7 +12,7 @@ export const SERVICE_LOOK: Record<string, { icon: LucideIcon; color: string }> =
   sample: { icon: Folder, color: '#f59e0b' },
   other: { icon: FileText, color: '#8b5cf6' },
   co: { icon: Landmark, color: '#c8963e' },
-  att: { icon: BadgeCheck, color: '#1b4f9c' },
+  att: { icon: BadgeCheck, color: '#007845' },
 };
 
 export const serviceName = (s: ServiceType, locale: Locale) => (locale === 'ur' ? s.name_ur || s.name_en : s.name_en);
@@ -22,7 +22,7 @@ export function ServiceCards({ locale, services }: { locale: Locale; services: S
   return (
     <div className="g4">
       {services.map((s) => {
-        const look = SERVICE_LOOK[s.key] ?? { icon: FileText, color: '#1b4f9c' };
+        const look = SERVICE_LOOK[s.key] ?? { icon: FileText, color: '#007845' };
         return (
           <Card
             key={s.key}

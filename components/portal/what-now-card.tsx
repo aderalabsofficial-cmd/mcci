@@ -7,7 +7,7 @@ import type { IconName } from '@/lib/nav/registry';
 import { cn } from '@/lib/utils';
 
 const TONES = {
-  gold: 'from-[#7a5410] to-[#c8963e]',
+  gold: 'from-navy-900 to-navy-600',
   blue: 'from-navy-800 to-navy-600',
   red: 'from-[#7f1d1d] to-[#dc2626]',
   teal: 'from-[#0b4f4a] to-teal-500',

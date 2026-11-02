@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Manrope, Plus_Jakarta_Sans } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -13,6 +13,14 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-jakarta',
+  display: 'swap',
+});
+
+// the owner's design: body text on the home and sign-in pages (self-hosted by next/font, no call to Google at runtime)
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
   display: 'swap',
 });
 
@@ -34,7 +42,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0b2a5b',
+  themeColor: '#005c35',
 };
 
 export default async function LocaleLayout({
@@ -59,7 +67,7 @@ export default async function LocaleLayout({
       lang={locale}
       dir={dirOf(locale)}
       data-shell={shell}
-      className={cn(jakarta.variable, theme === 'dark' && 'dark')}
+      className={cn(jakarta.variable, manrope.variable, theme === 'dark' && 'dark')}
       suppressHydrationWarning
     >
       <head>{theme === null && <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />}</head>

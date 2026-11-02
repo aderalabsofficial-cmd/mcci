@@ -32,6 +32,15 @@ async function staffForm(page: Page, email: string, password: string) {
   await page.locator('[data-action="login.staff"]').click();
 }
 
+/** Sign up's first step (the design's "Business"); leaves the page on the password step. */
+async function fillBusinessStep(page: Page, name: string, email: string) {
+  await page.getByLabel('Business name').fill('E2E Traders');
+  await page.getByLabel('Your full name').fill(name);
+  await page.getByLabel('Mobile number').fill('0300-1234567');
+  await page.getByLabel('Email').fill(email);
+  await page.locator('[data-action="register.next"]').click();
+}
+
 /** The newest email to `address`, once at least `count` have arrived (Mailpit lists newest first). */
 async function mailTo(address: string, count = 1) {
   for (let i = 0; i < 20; i++) {
@@ -76,6 +85,7 @@ test('every password field has a show / hide eye (mouse, keyboard, English and U
     ['/register', 'Repeat the password'],
   ] as const) {
     await page.goto(url);
+    if (url === '/register') await fillBusinessStep(page, 'E2E Applicant', 'eye@test.local');
     const input = page.getByLabel(field, { exact: true });
     const eye = input.locator('xpath=following-sibling::button[@data-action="password.toggle"]');
     await input.fill('not-a-real-secret');
@@ -96,6 +106,51 @@ test('every password field has a show / hide eye (mouse, keyboard, English and U
   }
   await page.goto('/ur/login');
   await expect(page.locator('[data-action="password.toggle"]').first()).toHaveAccessibleName('پاس ورڈ دکھائیں');
+});
+
+test('sign up: two steps, no class question, friendly checks before anything is sent', async ({ page }) => {
+  await page.goto('/register');
+  await expect(page.locator('.au-steps li')).toHaveCount(2);
+  await expect(page.locator('input[name="cls"]')).toHaveCount(0);
+  await page.locator('[data-action="register.next"]').click();
+  await expect(page.locator('.au-err')).toContainText('highlighted');
+  await page.getByLabel('Business name').fill('E2E Traders');
+  await page.getByLabel('Your full name').fill('E2E Applicant');
+  await page.getByLabel('Mobile number').fill('12345');
+  await page.getByLabel('Email').fill('steps@test.local');
+  await page.locator('[data-action="register.next"]').click();
+  await expect(page.locator('.au-err')).toContainText('mobile');
+  await page.getByLabel('Mobile number').fill('0300-1234567');
+  await page.locator('[data-action="register.next"]').click();
+  await page.getByLabel('Password (at least 10 characters)').fill('E2e-password-123');
+  await page.getByLabel('Repeat the password').fill('E2e-password-123');
+  await page.locator('[data-action="register.start"]').click();
+  await expect(page.locator('.au-err')).toContainText('tick');
+  await expect(page).toHaveURL(/\/register$/);
+  // back keeps what was typed
+  await page.locator('[data-action="register.back"]').click();
+  await expect(page.getByLabel('Business name')).toHaveValue('E2E Traders');
+});
+
+test('sign in and sign up slide on one page; the address follows and each route opens on its own form', async ({ page }) => {
+  await page.goto('/login');
+  await expect(page.getByRole('tab')).toHaveText(['Sign In', 'Sign Up']);
+  await page.getByRole('tab', { name: 'Sign Up' }).click();
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(page.getByLabel('Business name')).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('Business name')).toBeVisible();
+  await page.getByRole('tab', { name: 'Sign In' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByLabel('Mobile, email or member ID')).toBeVisible();
+  await expect(page.getByLabel('Business name')).toHaveCount(0);
+  // where the visitor wanted to go survives the round trip
+  await page.goto('/login?next=%2Fportal%2Fapply');
+  await page.getByRole('tab', { name: 'Sign Up' }).click();
+  // the pane going away stays (inert) until the photo panel has covered it
+  await page.locator('.au-pane:not([inert])').getByRole('tab', { name: 'Sign In' }).click();
+  await expect(page).toHaveURL(/\/login\?next=%2Fportal%2Fapply$/);
+  await expect(page.locator('input[name="next"]')).toHaveValue('/portal/apply');
 });
 
 test.describe('with the local stack', () => {
@@ -144,7 +199,7 @@ test.describe('with the local stack', () => {
   test('staff and members sign in on separate pages (owner, 29 Oct 2026)', async ({ page }) => {
     // the members' page has no staff tab and links to no staff page
     await page.goto('/login');
-    await expect(page.getByRole('tab')).toHaveText(['Member login', 'New applicant']);
+    await expect(page.getByRole('tab')).toHaveText(['Sign In', 'Sign Up']);
     await expect(page.locator('a[href*="staff"]')).toHaveCount(0);
     // a staff account on the members' page is refused and signed out again
     await memberForm(page, accounts.staff!.email, accounts.staff!.password);
@@ -212,10 +267,10 @@ test.describe('with the local stack', () => {
   test('registration: inactive until the emailed confirmation link is opened, then signed in', async ({ page }) => {
     const email = `e2e-${accounts.run}-reg@test.local`;
     await page.goto('/register');
-    await page.getByLabel('Your full name').fill('E2E Applicant');
-    await page.getByLabel('Email').fill(email);
+    await fillBusinessStep(page, 'E2E Applicant', email);
     await page.getByLabel('Password (at least 10 characters)').fill('E2e-password-123');
     await page.getByLabel('Repeat the password').fill('E2e-password-123');
+    await page.getByLabel('I confirm the details I have given are correct.').check({ force: true });
     await page.locator('[data-action="register.start"]').click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(
       `We have emailed a confirmation link to ${email}`,

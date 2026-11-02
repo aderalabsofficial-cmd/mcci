@@ -28,11 +28,12 @@
   --font-urdu: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', Tahoma, serif;
 
   /* brand palette (fixed in both themes) */
-  --color-navy-950: #071a3a;
-  --color-navy-900: #081a3a;
-  --color-navy-800: #0b2a5b;
-  --color-navy-700: #143c7a;
-  --color-navy-600: #1b4f9c;
+  /* the "navy" family carries the green identity now (owner, Nov 2026): logo green #007845 and darker */
+  --color-navy-950: #04130d;
+  --color-navy-900: #00472a;
+  --color-navy-800: #005c35;
+  --color-navy-700: #006b3e;
+  --color-navy-600: #007845;
   --color-teal-500: #14b8a6;
   --color-teal-600: #1fa6a0;
   --color-teal-900: #0f4c5c;
@@ -73,7 +74,7 @@
   --color-destructive: #dc2626;
   --color-border: var(--b);
   --color-input: var(--b);
-  --color-ring: var(--gold);
+  --color-ring: var(--ring);
 
   --radius-card: 18px;
   --radius-btn: 12px;
@@ -82,8 +83,8 @@
   --radius-md: 12px;
   --radius-sm: 9px;
 
-  --shadow-card: 0 12px 40px rgba(11, 42, 91, 0.06);
-  --shadow-card-hover: 0 22px 50px rgba(11, 42, 91, 0.14);
+  --shadow-card: 0 12px 40px rgba(6, 18, 13, 0.08);
+  --shadow-card-hover: 0 22px 50px rgba(6, 18, 13, 0.16);
 
   --animate-shine: shine 4s infinite;
   @keyframes shine {
@@ -99,31 +100,40 @@
 
 :root {
   /* light (prototype style.css :root) */
-  --bg: #fbf6ec;
+  --bg: #e9efe9;
   --bg2: #fff;
   --card: #fff;
-  --card2: #faf4e6;
-  --b: #eadfc6;
-  --t: #0e1b33;
-  --m: #55687f;
-  --hov: #f1f5fd;
+  --card2: #f3f6f2;
+  --b: #cfd9d1;
+  --b-strong: #aab8ae;
+  --t: #0d1a14;
+  --m: #4c5c53;
+  --hov: #e7f1ea;
   --gold: #c8963e;
   --amber: #f0c46a;
-  --em: #1b4f9c;
+  --em: #007845;
+  --em-2: #005c35;
+  --brand: #007845;
+  --brand-glow: rgba(0, 120, 69, 0.28);
+  --ring: #007845;
   --mint: #1fa6a0;
-  --gt: #8a5f12;
+  --gt: #00663b;
   --cy: #2a8fd0;
-  --g: #1b4f9c;
+  --g: #007845;
   --mt: #0b7a75;
+  --th: #e2eae3;
+  --input-bg: #fff;
+  --input-b: #7f9186;
+  --sh-card: 0 1px 2px rgba(6, 18, 13, 0.08), 0 10px 24px -16px rgba(6, 18, 13, 0.3);
   --at: #8a5a00;
   --ct: #1b4f9c;
   --r: 16px;
-  --sh: 0 14px 34px rgba(14, 27, 51, 0.12);
+  --sh: 0 14px 34px rgba(6, 18, 13, 0.16);
 
   /* public hero colour layer (site.css) */
   --ov: 0.8;
-  --ov-c1: 8, 30, 72;
-  --ov-c2: 9, 74, 64;
+  --ov-c1: 6, 26, 18;
+  --ov-c2: 0, 72, 42;
   --xh: 84px;
 
   /* desktop density */
@@ -145,18 +155,27 @@
 
 .dark {
   /* dark (prototype body.dark) */
-  --bg: #07162f;
-  --bg2: #0a1f42;
-  --card: #0e2a52;
-  --card2: #123262;
-  --b: #234478;
-  --t: #f3f6fb;
-  --m: #a9bcd6;
-  --hov: #16386c;
-  --em: #4a86e0;
-  --gt: #f0c46a;
-  --g: #4a86e0;
+  --bg: #06120d;
+  --bg2: #0b1d15;
+  --card: #10261c;
+  --card2: #173327;
+  --b: #2d4c3e;
+  --b-strong: #4a6b5b;
+  --t: #eef5f0;
+  --m: #a9bdb2;
+  --hov: #1b3b2d;
+  --em: #00854c;
+  --em-2: #006b3e;
+  --brand: #00854c;
+  --brand-glow: rgba(43, 209, 133, 0.22);
+  --ring: #2bd185;
+  --gt: #5fe0a6;
+  --g: #5fe0a6;
   --mt: #5fd6cf;
+  --th: #173327;
+  --input-bg: #0b1d15;
+  --input-b: #6b8a7a;
+  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.4);
   --at: #f0c46a;
   --ct: #7cc0ff;
   --sh: 0 18px 44px rgba(0, 0, 0, 0.4);
@@ -227,10 +246,10 @@
   }
   ::selection {
     background: var(--gold);
-    color: #081a3a;
+    color: #04130d;
   }
   :focus-visible {
-    outline: 2px solid var(--gold);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
   a {
@@ -310,10 +329,10 @@
     cursor: progress;
   }
   .btn-primary {
-    background: linear-gradient(135deg, var(--em), #143c7a);
+    background: linear-gradient(135deg, var(--em), var(--em-2));
     color: #fff;
     border: 0;
-    box-shadow: 0 8px 20px rgba(27, 79, 156, 0.35);
+    box-shadow: 0 8px 20px var(--brand-glow);
   }
   .btn-primary::after {
     content: '';
@@ -355,12 +374,12 @@
     }
   }
   .pill-tabs button:hover {
-    border-color: var(--gt);
+    border-color: var(--brand);
   }
   .pill-tabs button[aria-selected='true'] {
-    background: var(--gold);
-    color: #2a1d05;
-    border-color: var(--gt);
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
   }
 
   /* form fields (style.css .fg label / .fg input, input:focus) */
@@ -393,8 +412,8 @@
   .form-field select:focus,
   .form-field textarea:focus {
     outline: 0;
-    border-color: var(--gt);
-    box-shadow: 0 0 0 3px rgba(217, 180, 91, 0.2);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-glow);
   }
 
   /* status badges (style.css .bd) */
@@ -576,6 +595,6 @@
 /* password field with a show / hide eye (components/shared/password-field.tsx) */
 .pw-wrap {position:relative;display:block}
 .pw-wrap input {width:100%;padding-inline-end:48px}
-.pw-eye {position:absolute;inset-inline-end:2px;top:50%;transform:translateY(-50%);width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;color:#64748b;border-radius:10px;cursor:pointer}
-.pw-eye:hover {color:#0b2a5b}
-.pw-eye:focus-visible {outline:2px solid #c8963e;outline-offset:-2px}
+.pw-eye {position:absolute;inset-inline-end:2px;top:50%;transform:translateY(-50%);width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;color:var(--m);border-radius:10px;cursor:pointer}
+.pw-eye:hover {color:var(--t)}
+.pw-eye:focus-visible {outline:2px solid var(--ring);outline-offset:-2px}

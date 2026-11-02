@@ -1,6 +1,5 @@
 import { setRequestLocale } from 'next-intl/server';
-import { RegisterForm } from '@/components/auth/account-forms';
-import { AuthSplit } from '@/components/auth/auth-split';
+import { AuthSwitch } from '@/components/auth/auth-switch';
 import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
@@ -20,26 +19,5 @@ export default async function RegisterPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   if (await getSession()) redirect({ href: '/portal', locale });
-  const t = (k: string) => msg(locale, `auth.registerPage.${k}`);
-  return (
-    <AuthSplit locale={locale}>
-      <RegisterForm
-        locale={locale}
-        text={{
-          title: t('title'),
-          help: t('help'),
-          name: t('name'),
-          email: t('email'),
-          password: t('password'),
-          confirm: t('confirm'),
-          create: t('create'),
-          sent: t('sent'),
-          resend: t('resend'),
-          resent: t('resent'),
-          haveAccount: t('haveAccount'),
-          working: msg(locale, 'auth.working'),
-        }}
-      />
-    </AuthSplit>
-  );
+  return <AuthSwitch locale={locale} mode="signup" />;
 }

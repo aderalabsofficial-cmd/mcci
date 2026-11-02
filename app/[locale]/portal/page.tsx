@@ -85,7 +85,7 @@ export default async function PortalHomePage({ params }: Props) {
           </p>
         </div>
         <a className="btn" href={`tel:+${tel}`} data-action="help.call">
-          <Ic name="phone" color="#1b4f9c" /> <L {...both('membership.home.callHelpdesk')} />
+          <Ic name="phone" color="#007845" /> <L {...both('membership.home.callHelpdesk')} />
         </a>
       </div>
 
@@ -149,7 +149,7 @@ export default async function PortalHomePage({ params }: Props) {
           {notes?.length ? (
             notes.map((n) => (
               <div className="li st" key={n.id}>
-                <i style={{ background: '#1b4f9c22', color: '#1b4f9c' }}>
+                <i style={{ background: '#00784522', color: '#007845' }}>
                   <Ic name={n.read_at ? 'file' : 'flag'} size={20} />
                 </i>
                 <div>

@@ -8,7 +8,7 @@ import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import type { NavSectionModel } from '@/lib/nav/model';
 
-/** Navy sidebar of the member portal and the admin panel (prototype .sb / .ni). Hidden at ≤ 640 px. */
+/** Green sidebar of the member portal and the admin panel (prototype .sb / .ni). Hidden at ≤ 640 px. */
 export function Sidebar({
   sections,
   locale,
@@ -29,7 +29,7 @@ export function Sidebar({
   return (
     <aside
       aria-label={menuLabel}
-      className="sb-pattern sticky top-0 hidden h-svh w-[var(--sidebar-w)] shrink-0 flex-col overflow-y-auto bg-linear-to-b from-navy-800 to-navy-900 px-3 pb-3 text-[#d6e4db] sm:flex"
+      className="sb-pattern sticky top-0 hidden h-svh w-[var(--sidebar-w)] shrink-0 flex-col overflow-y-auto bg-linear-to-b from-navy-800 to-navy-900 px-3 pb-3 text-[#e6f1ea] sm:flex"
     >
       <Link href={home} className="relative flex items-center gap-2.5 px-2 pt-5 pb-4">
         <Image src="/images/logo-white.png" width={46} height={46} alt={logoAlt} priority />
@@ -37,14 +37,14 @@ export function Sidebar({
           <b className="block text-[21px] leading-tight tracking-tight text-white">
             {brand.name} <span className="text-[#f3d98b]">{brand.area}</span>
           </b>
-          <small className="block text-[12px] text-[#9fb6dc]">{brand.sub}</small>
+          <small className="block text-[12px] text-[#cfe6d8]">{brand.sub}</small>
         </div>
       </Link>
       <nav className="relative flex-1">
         {sections.map((section, i) => (
           <div key={i}>
             {section.title && (
-              <h2 className="mx-2 mt-4 mb-1.5 text-[11px] font-bold tracking-[.08em] text-[#8fb0e0]">
+              <h2 className="mx-2 mt-4 mb-1.5 text-[11px] font-bold tracking-[.08em] text-[#bfe9d2]">
                 <Bi label={section.title} locale={locale} single={!bilingual} row />
               </h2>
             )}
@@ -60,7 +60,7 @@ export function Sidebar({
                   >
                     <span
                       className="grid size-[30px] shrink-0 place-items-center rounded-[9px]"
-                      style={{ background: `${item.color ?? '#9fd0ff'}22`, color: item.color }}
+                      style={{ background: 'rgba(255,255,255,.12)', color: `color-mix(in srgb, ${item.color ?? '#fff'} 25%, #fff)` }}
                     >
                       <NavIcon name={item.icon} className="size-[18px]" />
                     </span>

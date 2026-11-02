@@ -3,6 +3,9 @@ import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { LangToggle } from '@/components/shared/lang-toggle';
 import { BottomTabs } from '@/components/shell/bottom-tabs';
+import { LandingFooter } from '@/components/landing/landing-footer';
+import { LandingHeader } from '@/components/landing/landing-header';
+import { SiteChrome } from '@/components/site/site-chrome';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteFx } from '@/components/site/site-fx';
 import { SiteHeader } from '@/components/site/site-header';
@@ -14,10 +17,13 @@ import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
 import '@/app/styles/site.css';
 import '@/app/styles/mobile.css';
+import '@/app/styles/theme.css';
+import '@/app/styles/landing.css';
 import { MobileTables } from '@/components/shared/mobile-tables';
 
 /**
- * Public website frame. In a browser: transparent header + footer (compact header and menu sheet on phones).
+ * Public website frame. In a browser: the owner's design on the home page, none on the sign-in pages, and the
+ * transparent header + footer on the others (compact header and menu sheet on phones).
  * Inside the Android app: app bar + visitor bottom tabs, no footer (docs/15-mobile-app.md §4).
  */
 export default async function SiteLayout({
@@ -60,23 +66,28 @@ export default async function SiteLayout({
 
   return (
     <>
-      <SiteHeader
-        locale={locale}
-        nav={siteNavModel(locale)}
-        login={loginModel(locale)}
-        text={{
-          name: msg(locale, 'brand.name'),
-          tagline: msg(locale, 'brand.digitalChamber'),
-          chamberUr: msg('ur', 'brand.chamber'),
-          menu: msg(locale, 'common.menu'),
-          close: msg(locale, 'common.close'),
-          logoAlt: msg(locale, 'brand.logoAlt'),
-          mainMenu: msg(locale, 'common.mainMenu'),
-        }}
+      <SiteChrome
+        landing={<LandingHeader locale={locale} />}
+        site={
+          <SiteHeader
+            locale={locale}
+            nav={siteNavModel(locale)}
+            login={loginModel(locale)}
+            text={{
+              name: msg(locale, 'brand.name'),
+              tagline: msg(locale, 'brand.digitalChamber'),
+              chamberUr: msg('ur', 'brand.chamber'),
+              menu: msg(locale, 'common.menu'),
+              close: msg(locale, 'common.close'),
+              logoAlt: msg(locale, 'brand.logoAlt'),
+              mainMenu: msg(locale, 'common.mainMenu'),
+            }}
+          />
+        }
       />
       <main id="main">{children}</main>
       <MobileTables />
-      <SiteFooter locale={locale} />
+      <SiteChrome landing={<LandingFooter locale={locale} />} site={<SiteFooter locale={locale} />} />
       <SiteFx />
     </>
   );
