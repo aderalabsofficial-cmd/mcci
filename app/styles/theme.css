@@ -161,3 +161,7 @@ html[lang='en'] .proto :is(.ph h1, .ch h3, .hz h1, .next-b h2) {
   font-weight: 800;
   letter-spacing: -0.015em;
 }
+
+/* a selected tab's Urdu line takes the tab's own readable colour, not the muted one */
+.proto .tabs button.on .bi-ur,
+.proto .tabs button[aria-selected='true'] .bi-ur {color:inherit;opacity:1}
