@@ -165,3 +165,50 @@ html[lang='en'] .proto :is(.ph h1, .ch h3, .hz h1, .next-b h2) {
 /* a selected tab's Urdu line takes the tab's own readable colour, not the muted one */
 .proto .tabs button.on .bi-ur,
 .proto .tabs button[aria-selected='true'] .bi-ur {color:inherit;opacity:1}
+
+/* ── spacing (owner's brief of 2 Nov 2026): one scale for the admin and portal screens ──
+ * Independent sections never touch. Change a token here, not a margin on one page. */
+.proto {
+  --sp-section: 20px;
+  --sp-block: 16px;
+  --sp-field: 12px;
+}
+/* every block that sits directly in a page keeps the same distance from the next one */
+.proto > .card, .proto > section.card, .proto > details.card, .proto > form.card, .proto > .fin-sheet,
+.proto > .banner, .proto > .kg, .proto > .gr, .proto > .pills, .proto > .mr-strip, .proto > .tw, .proto > .access-extras {
+  margin-bottom: var(--sp-section);
+}
+.proto > :last-child {margin-bottom: 0}
+.proto > .card + .card, .proto > section.card + section.card {margin-top: 0}
+.proto .kg, .proto .gr {gap: var(--sp-block)}
+/* inside a card: heading, help, controls and data each get their own air */
+.proto .card > .ch {margin-bottom: var(--sp-field); gap: var(--sp-field); flex-wrap: wrap}
+.proto .card > p.muted {margin: 0 0 var(--sp-block)}
+.proto .card > .pills {margin-bottom: var(--sp-field)}
+.proto .card > .pills + .pills {margin-top: 0}
+.proto .card > .rep-filter {margin-bottom: var(--sp-block)}
+.proto .card > .tw {margin-top: var(--sp-field)}
+.proto .card > .kv + .banner, .proto .card > .banner + .kv {margin-top: var(--sp-field)}
+.proto .card > .card {margin-top: var(--sp-block)}
+.proto .rep-filter {gap: var(--sp-field)}
+.proto .rep-filter .form-field {display: grid; gap: 6px}
+.proto .biz-form {gap: var(--sp-field) var(--sp-block)}
+.proto .form-field {gap: 6px}
+/* buttons never touch a border or each other */
+.proto .pb {gap: 10px; flex-wrap: wrap}
+.proto .tw td .pb {padding-block: 4px}
+.proto .tw th, .proto .tw td {padding-inline: 12px}
+.proto .card > form + p.muted {margin-top: var(--sp-block)}
+/* a second line in a register cell */
+.proto .reg-sub {display: block; margin-top: 4px; color: var(--m); font-size: 12px}
+/* the readiness list on WhatsApp Settings */
+.proto .wa-ready {list-style: none; margin: 0; padding: 0; display: grid; gap: 10px}
+.proto .wa-ready li {display: flex; gap: 12px; align-items: flex-start}
+.proto .wa-ready li > span:last-child {display: grid; gap: 2px; min-width: 0}
+.proto .wa-ready small {color: var(--m); overflow-wrap: anywhere}
+.proto .wa-ready .bd {flex: none; min-width: 70px; text-align: center}
+@media (max-width: 640px) {
+  .proto {--sp-section: 12px; --sp-block: 10px; --sp-field: 8px}
+  .proto .rep-filter {align-items: stretch}
+  .proto .rep-filter > * {width: 100%}
+}

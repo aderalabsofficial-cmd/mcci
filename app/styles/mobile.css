@@ -30,7 +30,7 @@
   .proto .kpi .ki svg {width: 18px; height: 18px}
   .proto .kpi small {font-size: 11px; line-height: 1.3; display: block}
   .proto .kpi b {font-size: 18px; margin-right: 4px}
-  .proto .kpi p {font-size: 10.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%}
+  .proto .kpi p {font-size: 10.5px; line-height: 1.3; overflow-wrap: anywhere; max-width: 100%}
 
   /* ── official form preview: scaled to the phone (it is an A4 page) ── */
   .proto .formv {overflow: hidden}

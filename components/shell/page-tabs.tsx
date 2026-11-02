@@ -9,8 +9,8 @@ import { isCurrent, type NavItem } from '@/lib/nav/model';
 
 /**
  * Page tabs (prototype .ptabs / M.GROUPS): the screens that share one sidebar item, e.g.
- * My Membership → Status · Application form · Track · Official form. Underlined tabs on desktop, chips that wrap
- * onto a second line (active language only) on phones — never a sideways scroll (owner, 28 Oct 2026). Renders nothing outside a group.
+ * My Membership → Status · Application form · Track · Official form. Underlined tabs on desktop, wrapping when a group is long so
+ * none is out of sight; chips that wrap onto a second line (active language only) on phones — never a sideways scroll (owner, 28 Oct 2026). Renders nothing outside a group.
  */
 export function PageTabs({
   groups,
@@ -29,9 +29,9 @@ export function PageTabs({
   return (
     <nav
       aria-label={label}
-      className="mb-3 sm:-mt-1.5 sm:mb-5 sm:overflow-x-auto sm:border-b sm:border-line sm:[scrollbar-width:none]"
+      className="mb-3 sm:-mt-1.5 sm:mb-5 sm:border-b sm:border-line"
     >
-      <ul className="flex flex-wrap gap-1.5 sm:min-w-max sm:flex-nowrap sm:gap-1">
+      <ul className="flex flex-wrap gap-1.5 sm:gap-1">
         {group.map((item) => (
           <li key={item.id}>
             <NavEntry

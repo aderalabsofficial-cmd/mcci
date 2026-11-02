@@ -173,7 +173,7 @@ export default async function MembersPage({ params, searchParams }: Props) {
             <table>
               <thead>
                 <tr>
-                  {(['no', 'company', 'rep', 'cls', 'since', 'validTo', 'owner', 'status'] as const).map((c) => (
+                  {(['no', 'company', 'rep', 'since', 'validTo', 'status'] as const).map((c) => (
                     <th key={c} scope="col">
                       {m(`cols.${c}`)}
                     </th>
@@ -185,9 +185,15 @@ export default async function MembersPage({ params, searchParams }: Props) {
                 {visible.map((r) => (
                   <tr className="st" key={r.id}>
                     <td>
-                      <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
-                        <b>{r.member_no}</b>
-                      </Link>
+                      <div>
+                        <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
+                          <b>{r.member_no}</b>
+                        </Link>
+                        <small className="reg-sub" data-member-class>
+                          {msg(locale, `membership.classes.${r.class}`)}
+                          {r.women ? ' · W' : ''}
+                        </small>
+                      </div>
                     </td>
                     <td>
                       <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
@@ -195,20 +201,20 @@ export default async function MembersPage({ params, searchParams }: Props) {
                       </Link>
                     </td>
                     <td>{r.rep_name}</td>
-                    <td>
-                      {msg(locale, `membership.classes.${r.class}`)}
-                      {r.women ? ' · W' : ''}
-                    </td>
                     <td>{r.since ? date(r.since) : <span className="bd orange">{m('noDate')}</span>}</td>
                     <td>{date(r.valid_to)}</td>
-                    <td>{m(`owner_${invited.get(r.company_id) ?? 'none'}`)}</td>
                     <td>
-                      <span className={`bd ${r.status === 'Permanent' ? 'green' : r.status === 'Temporary' ? 'blue' : 'red'}`}>{m(`status.${r.status}`)}</span>
-                      {r.blacklisted && (
-                        <span className="bd red" title={r.blacklist_note ?? undefined} data-blacklisted>
-                          {m('life.mustWhitelist')}
-                        </span>
-                      )}
+                      <div>
+                        <span className={`bd ${r.status === 'Permanent' ? 'green' : r.status === 'Temporary' ? 'blue' : 'red'}`}>{m(`status.${r.status}`)}</span>
+                        {r.blacklisted && (
+                          <span className="bd red" title={r.blacklist_note ?? undefined} data-blacklisted>
+                            {m('life.mustWhitelist')}
+                          </span>
+                        )}
+                        <small className="reg-sub">
+                          {m('cols.owner')}: {m(`owner_${invited.get(r.company_id) ?? 'none'}`)}
+                        </small>
+                      </div>
                     </td>
                     <td>
                       <div className="pb" data-member={r.member_no}>
@@ -236,7 +242,7 @@ export default async function MembersPage({ params, searchParams }: Props) {
                 ))}
                 {!visible.length && (
                   <tr className="st">
-                    <td colSpan={9} className="em">
+                    <td colSpan={7} className="em">
                       {rows.length ? m('noMatch') : m('none')}
                     </td>
                   </tr>
