@@ -78,3 +78,7 @@ A guide of tasks, each with its screen and the access it needs. It works without
 4. In Accounts, set the opening balances and "books start on" before relying on the Trial Balance.
 
 Rollback: `release.sh --rollback` for the code. The migrations are additive, except that `members.since` becomes nullable and hand restoration is withdrawn, so an older release can show a blank date.
+
+### Released 2 Nov 2026 (owner approved)
+
+`7e80de3` is live, with the landing, sign-in, sign-up and green theme work merged; rollback target `1fcf00d`. Backup `mcci-20261102T120121Z` verified, restore drill 13/13 PASS, migrations 0590, 0600 and 0610 applied (companies, members, applications, vouchers and posts unchanged). WhatsApp sending and member opt-in stay off; no timer exists. Signed-out checks passed: health, public pages, admin screens 404, new routes refuse signed-out requests. Not checked live: the signed-in screens, and the opening balances, which MCCI still has to enter.
