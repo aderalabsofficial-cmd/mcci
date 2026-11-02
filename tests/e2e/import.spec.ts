@@ -138,7 +138,7 @@ test('import: a PDF directory is read by AI only after consent; uncertain rows a
   await expect(preview).toContainText('Read by AI from a PDF');
   await expect(preview.locator('tr[data-row="1"]')).toHaveAttribute('data-decision', 'create');
   await expect(preview.locator('tr[data-row="2"]')).toHaveAttribute('data-decision', 'skip');
-  await expect(preview.locator('tr[data-row="2"] [data-issue="low_confidence"]')).toContainText('AI was not sure about Valid to');
+  await expect(preview.locator('tr[data-row="2"] [data-issue="low_confidence"]')).toContainText('AI was not sure about Valid till');
   await expect(preview.locator('tr[data-row="1"]')).toContainText('2027-03-31');
 
   await preview.locator('[data-action="imp.discard"]').click();

@@ -107,7 +107,7 @@ function lifecycleFail(locale: Locale, error: unknown, what: string): MemberAddR
   if (error instanceof z.ZodError) return { ok: false, message: msg(locale, 'register.life.errors.reason_required') };
   const e = error as { code?: string; hint?: string; message?: string };
   if (e?.code === '42501') return { ok: false, message: msg(locale, 'register.errors.notAllowed') };
-  const known = ['reason_required', 'not_found', 'demo', 'not_whitelisted', 'wrong_status', 'already_renewed', 'open_voucher', 'not_blacklisted', 'fees'];
+  const known = ['reason_required', 'not_found', 'demo', 'not_whitelisted', 'wrong_status', 'already_renewed', 'open_voucher', 'not_blacklisted', 'fees', 'declaration', 'documents', 'period', 'not_open', 'date', 'not_legacy', 'fields', 'decided'];
   if (e?.code === 'P0001' && e.hint && known.includes(e.hint)) {
     return { ok: false, message: msg(locale, `register.life.errors.${e.hint}`) };
   }
@@ -115,33 +115,182 @@ function lifecycleFail(locale: Locale, error: unknown, what: string): MemberAddR
   return { ok: false, message: msg(locale, 'register.errors.generic') };
 }
 
-/** reg.renew: the renewal voucher (subscription); Accounts verify it, then the year runs to the next 31 March */
-export async function renewMember(locale: Locale, id: string): Promise<MemberAddResult> {
+/** the documents a form carries: [{ path, name }] from the checked upload route */
+const docsSchema = z.array(z.object({ path: z.string().min(10).max(300), name: z.string().max(200) })).max(10);
+const parseDocs = (form: FormData, key: string) => docsSchema.parse(JSON.parse(String(form.get(key) || '[]')));
+const dayText = z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]);
+const refreshMembers = () => {
+  revalidatePath('/[locale]/admin/members', 'page');
+  revalidatePath('/[locale]/admin/member', 'page');
+  revalidatePath('/[locale]/portal/membership', 'page');
+};
+
+/** changed particulars as the form lists them; only the fields the database accepts are sent */
+const DECLARABLE = ['name', 'address', 'tel', 'email', 'ntn', 'gst', 'nature_sector', 'rep_name'] as const;
+function declaredFields(form: FormData) {
+  return DECLARABLE.flatMap((field) => {
+    const value = String(form.get(`change_${field}`) ?? '').trim();
+    return value ? [{ field, value: value.slice(0, 2000) }] : [];
+  });
+}
+
+/**
+ * reg.renew: the renewal voucher, with the declaration the owner requires: no change, or a change with its document,
+ * which goes to the review queue. Staff may set the period (a reason is required when it differs from the proposal);
+ * members take the proposal, from the date renewals open. Accounts verify the payment; the period then applies.
+ */
+export async function renewMember(form: FormData): Promise<MemberAddResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
   try {
-    await requirePermission('reg', 2);
+    const id = memberId.parse(form.get('member'));
+    const company = memberId.parse(form.get('company'));
+    const declared = form.get('declaration') === 'change';
+    if (!declared && form.get('declaration') !== 'none') {
+      return { ok: false, message: msg(locale, 'register.life.errors.declaration') };
+    }
+    const staff = form.get('period') === 'staff';
+    const from = dayText.parse(form.get('from') ?? '');
+    const to = dayText.parse(form.get('to') ?? '');
+    const period = {
+      p_from: (staff && from ? from : null) as string,
+      p_to: (staff && to ? to : null) as string,
+      p_reason: String(form.get('reason') ?? '').trim().slice(0, 1000),
+    };
     const supabase = await createClient();
-    const { data, error } = await supabase.schema('api').rpc('member_renew_start', { p_member: memberId.parse(id) });
+    const { data, error } = declared
+      ? await supabase.schema('api').rpc('member_renew_declared', {
+          p_member: id,
+          p_company: company,
+          p_summary: why.parse(form.get('summary')),
+          p_fields: declaredFields(form),
+          p_docs: parseDocs(form, 'documents'),
+          ...period,
+        })
+      : await supabase.schema('api').rpc('member_renew_start', { p_member: id, p_no_change: true, ...period });
     if (error) throw error;
-    revalidatePath('/[locale]/admin/members', 'page');
+    refreshMembers();
     return { ok: true, message: msg(locale, 'register.life.done.renew', { voucher: data ?? '' }) };
   } catch (error) {
     return lifecycleFail(locale, error, 'reg.renew');
   }
 }
 
-/** reg.restore: a lapsed member restored by hand by the Membership Officer, with the reason */
-export async function restoreMember(locale: Locale, id: string, reason: string): Promise<MemberAddResult> {
+export interface RestoreQuote {
+  ok: boolean;
+  message?: string;
+  lines?: { label: string; amount: number }[];
+  total?: number;
+  since?: string | null;
+  until?: string;
+}
+
+export async function quoteRestore(locale: Locale, id: string): Promise<RestoreQuote> {
   try {
-    await requirePermission('reg', 2);
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .schema('api')
-      .rpc('member_restore', { p_member: memberId.parse(id), p_reason: why.parse(reason) });
+    const { data, error } = await supabase.schema('api').rpc('member_restore_quote', { p_member: memberId.parse(id) });
     if (error) throw error;
-    revalidatePath('/[locale]/admin/members', 'page');
-    return { ok: true, message: msg(locale, 'register.life.done.restore', { until: data ?? '' }) };
+    return { ok: true, ...(data as object) };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'reg.restore.quote');
+  }
+}
+
+/** reg.restore: tax returns and all dues through a voucher. The date of enrollment never changes (owner, 1 Nov 2026). */
+export async function restoreMember(form: FormData): Promise<MemberAddResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.schema('api').rpc('member_restore_start', {
+      p_member: memberId.parse(form.get('member')),
+      p_docs: parseDocs(form, 'documents'),
+      p_reason: String(form.get('reason') ?? '').trim().slice(0, 1000),
+    });
+    if (error) throw error;
+    refreshMembers();
+    return data
+      ? { ok: true, message: msg(locale, 'register.life.done.restoreVoucher', { voucher: data }) }
+      : { ok: true, message: msg(locale, 'register.life.done.restoreNow') };
   } catch (error) {
     return lifecycleFail(locale, error, 'reg.restore');
+  }
+}
+
+/** reg.enrollment: a legacy member's date, the oldest of the SECP and FBR dates */
+export async function setEnrollment(form: FormData): Promise<MemberAddResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  try {
+    await requirePermission('reg', 2);
+    const secp = dayText.parse(form.get('secp') ?? '');
+    const fbr = dayText.parse(form.get('fbr') ?? '');
+    const supabase = await createClient();
+    const { data, error } = await supabase.schema('api').rpc('member_enrollment_set', {
+      p_member: memberId.parse(form.get('member')),
+      p_secp: (secp || null) as string,
+      p_fbr: (fbr || null) as string,
+      p_reason: String(form.get('reason') ?? '').trim().slice(0, 1000),
+    });
+    if (error) throw error;
+    refreshMembers();
+    return { ok: true, message: msg(locale, 'register.life.done.enrollment', { d: data ?? '' }) };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'reg.enrollment');
+  }
+}
+
+/** reg.season: the day members can start their own renewal (a DGTO order or gazette notification can move it) */
+export async function saveRenewalOpens(form: FormData): Promise<MemberAddResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  try {
+    await requirePermission('reg', 3);
+    const supabase = await createClient();
+    const { error } = await supabase.schema('api').rpc('renewal_opens_save', {
+      p_day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(form.get('opensOn')),
+      p_reason: why.parse(form.get('reason')),
+    });
+    if (error) throw error;
+    refreshMembers();
+    return { ok: true, message: msg(locale, 'register.life.done.season') };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'reg.season');
+  }
+}
+
+/** chg.submit: a change declared at any time from the portal, or by staff for a member, with its document */
+export async function submitDeclaration(form: FormData): Promise<MemberAddResult> {
+  const locale = asLocale(String(form.get('locale') ?? 'en'));
+  try {
+    const company = memberId.parse(form.get('company'));
+    const supabase = await createClient();
+    const { error } = await supabase.schema('api').rpc('declaration_submit', {
+      p_company: company,
+      p_context: 'anytime',
+      p_summary: why.parse(form.get('summary')),
+      p_fields: declaredFields(form),
+      p_docs: parseDocs(form, 'documents'),
+    });
+    if (error) throw error;
+    revalidatePath('/[locale]/portal/profile', 'page');
+    revalidatePath('/[locale]/admin/changes', 'page');
+    return { ok: true, message: msg(locale, 'register.life.done.declared') };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'chg.submit');
+  }
+}
+
+/** chg.decide: approved fields go to the live profile; a refusal needs its reason and tells the member */
+export async function decideDeclaration(locale: Locale, id: string, approve: boolean, note: string): Promise<MemberAddResult> {
+  try {
+    await requirePermission('chg', 3);
+    const supabase = await createClient();
+    const { error } = await supabase
+      .schema('api')
+      .rpc('declaration_decide', { p_id: memberId.parse(id), p_approve: approve, p_note: note.trim().slice(0, 1000) });
+    if (error) throw error;
+    revalidatePath('/[locale]/admin/changes', 'page');
+    refreshMembers();
+    return { ok: true, message: msg(locale, approve ? 'register.life.done.approved' : 'register.life.done.rejected') };
+  } catch (error) {
+    return lifecycleFail(locale, error, 'chg.decide');
   }
 }
 

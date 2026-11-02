@@ -1,3 +1,4 @@
+import { ChevronRight, Search } from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ActionButton } from '@/components/admin/action-button';
@@ -5,6 +6,7 @@ import { FlashProvider } from '@/components/admin/flash';
 import { NoAccess } from '@/components/admin/no-access';
 import { AddMember } from '@/components/members/add-member';
 import { DemoCard, type DemoRow, type MarkableRow } from '@/components/members/demo-card';
+import { RenewalSeason, RenewDialog, RestoreDialog } from '@/components/members/lifecycle';
 import { Kpi } from '@/components/review/kpi';
 import { PageHeader } from '@/components/shared/page-header';
 import { Link } from '@/i18n/navigation';
@@ -14,7 +16,7 @@ import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ q?: string; show?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'register.title') };
@@ -23,14 +25,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const dynamic = 'force-dynamic';
 
 /** the membership year ends on 31 March (docs/02) */
-function yearEnd(): string {
-  const now = new Date();
-  const y = now.getUTCMonth() >= 3 ? now.getUTCFullYear() + 1 : now.getUTCFullYear();
-  return `${y}-03-31`;
-}
+const yearEndOf = (day: string): string => {
+  const y = Number(day.slice(0, 4));
+  return `${Number(day.slice(5, 7)) >= 4 ? y + 1 : y}-03-31`;
+};
+const addDay = (day: string) => {
+  const t = new Date(`${day}T00:00:00Z`);
+  t.setUTCDate(t.getUTCDate() + 1);
+  return t.toISOString().slice(0, 10);
+};
 
-/** Members Register (prototype admin/members, minimal for Release 3): members with their owners' sign-in status. */
-export default async function MembersPage({ params }: Props) {
+const SHOW = ['all', 'corporate', 'associate', 'active', 'lapsed', 'noDate', 'blacklisted'] as const;
+type Show = (typeof SHOW)[number];
+
+/** Members Register: one clear list. Clicking a member opens their whole record; search and tabs narrow the list. */
+export default async function MembersPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const session = await requireUser();
@@ -44,11 +53,15 @@ export default async function MembersPage({ params }: Props) {
       </>
     );
   }
-  const date = (iso: string) => new Date(iso).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const sp = await searchParams;
+  const show: Show = (SHOW as readonly string[]).includes(sp.show ?? '') ? (sp.show as Show) : 'all';
+  const q = (sp.q ?? '').trim().slice(0, 100);
+  const date = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   const supabase = await createClient();
   const { data: members } = await supabase
     .from('members')
-    .select('id, member_no, class, women, status, rep_name, valid_to, company_id, blacklisted, blacklist_note, companies!inner(name, demo)')
+    .select('id, member_no, class, women, status, rep_name, since, valid_to, company_id, blacklisted, blacklist_note, companies!inner(name, demo)')
     .eq('companies.demo', false)
     .order('member_no');
   const { data: invites } = await supabase.from('invitations').select('company_id, status, email').eq('kind', 'company_user');
@@ -75,105 +88,164 @@ export default async function MembersPage({ params }: Props) {
     id: a.company_id,
     label: [a.company, a.token, a.owner_email].filter(Boolean).join(' · '),
   }));
+  const { data: opensOn } = level >= 3 ? await supabase.schema('api').rpc('renewal_opens_on') : { data: null };
   const invited = new Map((invites ?? []).map((i) => [i.company_id, i.status]));
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
   const rows = members ?? [];
+  const name = (r: (typeof rows)[number]) => (r.companies as unknown as { name: string } | null)?.name ?? '—';
+  const lapsed = (r: (typeof rows)[number]) => r.status !== 'Permanent' || r.valid_to < today;
+  const counts: Record<Show, number> = {
+    all: rows.length,
+    corporate: rows.filter((r) => r.class === 'Corporate').length,
+    associate: rows.filter((r) => r.class === 'Associate').length,
+    active: rows.filter((r) => !lapsed(r)).length,
+    lapsed: rows.filter(lapsed).length,
+    noDate: rows.filter((r) => !r.since).length,
+    blacklisted: rows.filter((r) => r.blacklisted).length,
+  };
+  const needle = q.toLowerCase();
+  const visible = rows.filter((r) => {
+    if (show === 'corporate' && r.class !== 'Corporate') return false;
+    if (show === 'associate' && r.class !== 'Associate') return false;
+    if (show === 'active' && lapsed(r)) return false;
+    if (show === 'lapsed' && !lapsed(r)) return false;
+    if (show === 'noDate' && r.since) return false;
+    if (show === 'blacklisted' && !r.blacklisted) return false;
+    return !needle || [r.member_no, name(r), r.rep_name].some((v) => v.toLowerCase().includes(needle));
+  });
+  const base = locale === 'ur' ? '/ur' : '';
+  const tabHref = (s: Show) => `/admin/members?${new URLSearchParams({ show: s, ...(q ? { q } : {}) })}`;
 
   return (
     <div className="proto">
       <FlashProvider>
-      <div className="ph">
-        <div>
-          <h1>{m('title')}</h1>
-          <p>{m('sub')}</p>
+        <div className="ph">
+          <div>
+            <h1>{m('title')}</h1>
+            <p>{m('sub')}</p>
+          </div>
+          <div className="pb">
+            {session.access.staff?.designation === 'IT Convener' && (
+              <a className="btn" href="/api/register/export" download data-action="reg.export">
+                {m('export')}
+              </a>
+            )}
+            {level >= 2 && <AddMember locale={locale} validTo={yearEndOf(today)} />}
+          </div>
         </div>
-        <div className="pb">
-          {session.access.staff?.designation === 'IT Convener' && (
-            <a className="btn" href="/api/register/export" download data-action="reg.export">
-              {m('export')}
-            </a>
-          )}
-          {level >= 2 && <AddMember locale={locale} validTo={yearEnd()} />}
+        <div className="kg">
+          <Kpi label={m('kMembers')} value={rows.length} sub={m('kMembersSub')} icon="users" color="#7c3aed" />
+          <Kpi label={m('kCorporate')} value={rows.filter((r) => r.status === 'Permanent' && r.class === 'Corporate').length} icon="check" color="#1fa34a" />
+          <Kpi label={m('kAssociate')} value={rows.filter((r) => r.status === 'Permanent' && r.class === 'Associate').length} icon="check" color="#14b8a6" />
+          <Kpi label={m('kBlacklisted')} value={counts.blacklisted} sub={m('kBlacklistedSub')} icon="flag" color="#ef4444" />
         </div>
-      </div>
-      <div className="kg">
-        <Kpi label={m('kMembers')} value={rows.length} sub={m('kMembersSub')} icon="users" color="#7c3aed" />
-        <Kpi label={m('kCorporate')} value={rows.filter((r) => r.status === 'Permanent' && r.class === 'Corporate').length} icon="check" color="#1fa34a" />
-        <Kpi label={m('kAssociate')} value={rows.filter((r) => r.status === 'Permanent' && r.class === 'Associate').length} icon="check" color="#14b8a6" />
-        <Kpi label={m('kBlacklisted')} value={rows.filter((r) => r.blacklisted).length} sub={m('kBlacklistedSub')} icon="flag" color="#ef4444" />
-      </div>
-      <div className="card">
-        <div className="ch">
-          <h3>{m('table')}</h3>
-        </div>
-        <div className="tw" tabIndex={0} role="region" aria-label={m('table')}>
-          <table>
-            <thead>
-              <tr>
-                {(['no', 'company', 'rep', 'cls', 'validTo', 'owner', 'status'] as const).map((c) => (
-                  <th key={c} scope="col">
-                    {m(`cols.${c}`)}
-                  </th>
-                ))}
-                {level >= 2 && <th scope="col">{m('cols.actions')}</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr className="st" key={r.id}>
-                  <td>
-                    <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
-                      <b>{r.member_no}</b>
-                    </Link>
-                  </td>
-                  <td>{(r.companies as unknown as { name: string } | null)?.name ?? '—'}</td>
-                  <td>{r.rep_name}</td>
-                  <td>
-                    {msg(locale, `membership.classes.${r.class}`)}
-                    {r.women ? ' · W' : ''}
-                  </td>
-                  <td>{date(r.valid_to)}</td>
-                  <td>{m(`owner_${invited.get(r.company_id) ?? 'none'}`)}</td>
-                  <td>
-                    <span className={`bd ${r.status === 'Permanent' ? 'green' : r.status === 'Temporary' ? 'blue' : 'red'}`}>{m(`status.${r.status}`)}</span>
-                    {r.blacklisted && (
-                      <span className="bd red" title={r.blacklist_note ?? undefined} data-blacklisted>
-                        {m('life.mustWhitelist')}
-                      </span>
-                    )}
-                  </td>
-                  {level >= 2 && (
+        {level >= 3 && opensOn && (
+          <section className="card" data-section="renewal-season">
+            <div className="ch">
+              <h3>{m('life.season.title')}</h3>
+            </div>
+            <p className="muted">{m('life.season.help')}</p>
+            <RenewalSeason locale={locale} opensOn={opensOn} />
+          </section>
+        )}
+        <div className="card">
+          <div className="ch">
+            <h3>{m('table')}</h3>
+          </div>
+          <form method="get" action={`${base}/admin/members`} className="rep-filter" role="search">
+            <input type="hidden" name="show" value={show} />
+            <label className="form-field reg-search">
+              {m('search')}
+              <input type="search" name="q" defaultValue={q} placeholder={m('searchHint')} data-field="reg-search" />
+            </label>
+            <button type="submit" className="btn p" data-action="reg.search">
+              <Search size={15} aria-hidden /> {m('searchGo')}
+            </button>
+          </form>
+          <nav className="pills" aria-label={m('showLabel')}>
+            {SHOW.map((s) => (
+              <Link key={s} href={tabHref(s)} className={`pill ${show === s ? 'on' : ''}`} aria-current={show === s ? 'true' : undefined} data-action="reg.show" data-show={s}>
+                {m(`show.${s}`)} ({counts[s]})
+              </Link>
+            ))}
+          </nav>
+          <div className="tw" tabIndex={0} role="region" aria-label={m('table')}>
+            <table>
+              <thead>
+                <tr>
+                  {(['no', 'company', 'rep', 'cls', 'since', 'validTo', 'owner', 'status'] as const).map((c) => (
+                    <th key={c} scope="col">
+                      {m(`cols.${c}`)}
+                    </th>
+                  ))}
+                  <th scope="col">{m('cols.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((r) => (
+                  <tr className="st" key={r.id}>
+                    <td>
+                      <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
+                        <b>{r.member_no}</b>
+                      </Link>
+                    </td>
+                    <td>
+                      <Link href={`/admin/member?id=${r.id}`} data-action="member.open" className="rowlink">
+                        {name(r)}
+                      </Link>
+                    </td>
+                    <td>{r.rep_name}</td>
+                    <td>
+                      {msg(locale, `membership.classes.${r.class}`)}
+                      {r.women ? ' · W' : ''}
+                    </td>
+                    <td>{r.since ? date(r.since) : <span className="bd orange">{m('noDate')}</span>}</td>
+                    <td>{date(r.valid_to)}</td>
+                    <td>{m(`owner_${invited.get(r.company_id) ?? 'none'}`)}</td>
+                    <td>
+                      <span className={`bd ${r.status === 'Permanent' ? 'green' : r.status === 'Temporary' ? 'blue' : 'red'}`}>{m(`status.${r.status}`)}</span>
+                      {r.blacklisted && (
+                        <span className="bd red" title={r.blacklist_note ?? undefined} data-blacklisted>
+                          {m('life.mustWhitelist')}
+                        </span>
+                      )}
+                    </td>
                     <td>
                       <div className="pb" data-member={r.member_no}>
-                        {r.status === 'Permanent' || r.status === 'Expired' ? (
-                          <ActionButton locale={locale} action="reg.renew" target={r.id} subject={r.member_no} />
-                        ) : null}
-                        {r.status !== 'Permanent' || r.valid_to < today ? (
-                          <ActionButton locale={locale} action="reg.restore" target={r.id} subject={r.member_no} />
-                        ) : null}
-                        <ActionButton
-                          locale={locale}
-                          action={r.blacklisted ? 'reg.whitelist' : 'reg.blacklist'}
-                          target={r.id}
-                          subject={r.member_no}
-                        />
+                        <Link className="btn btn-w" href={`/admin/member?id=${r.id}`} data-action="member.open">
+                          {m('open')} <ChevronRight size={14} aria-hidden />
+                        </Link>
+                        {level >= 2 && (r.status === 'Permanent' || r.status === 'Expired') && (
+                          <RenewDialog
+                            locale={locale}
+                            member={r.id}
+                            company={r.company_id}
+                            subject={r.member_no}
+                            defaultFrom={addDay(r.valid_to)}
+                            defaultTo={yearEndOf(addDay(r.valid_to) > today ? addDay(r.valid_to) : today)}
+                            canEditPeriod
+                          />
+                        )}
+                        {level >= 2 && lapsed(r) && <RestoreDialog locale={locale} member={r.id} company={r.company_id} subject={r.member_no} />}
+                        {level >= 2 && (
+                          <ActionButton locale={locale} action={r.blacklisted ? 'reg.whitelist' : 'reg.blacklist'} target={r.id} subject={r.member_no} />
+                        )}
                       </div>
                     </td>
-                  )}
-                </tr>
-              ))}
-              {!rows.length && (
-                <tr className="st">
-                  <td colSpan={level >= 2 ? 8 : 7} className="em">
-                    {m('none')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </tr>
+                ))}
+                {!visible.length && (
+                  <tr className="st">
+                    <td colSpan={9} className="em">
+                      {rows.length ? m('noMatch') : m('none')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-      <DemoCard locale={locale} rows={demoRows} canManage={level >= 3} markable={markable} />
+        <DemoCard locale={locale} rows={demoRows} canManage={level >= 3} markable={markable} />
       </FlashProvider>
     </div>
   );

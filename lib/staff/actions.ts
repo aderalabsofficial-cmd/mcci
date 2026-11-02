@@ -217,3 +217,73 @@ export async function resetRoleLimits(_: ActionResult | null, form: FormData): P
   revalidatePath(PAGE, 'page');
   return ok(locale, 'access.staff.limitsReset');
 }
+
+const moduleName = z.enum(STAFF_MODULES);
+
+/** perm.designation: a designation the Secretary General adds, starting from another's limits; asks for the password */
+export async function addDesignation(_: ActionResult | null, form: FormData): Promise<ActionResult> {
+  const locale = localeOf(form);
+  const g = await guard(locale);
+  if (g.denied) return g.denied;
+  const refused = await confirmed(locale, g.actor!.userId, form);
+  if (refused) return refused;
+  const name = z.string().trim().min(2).max(80).safeParse(form.get('name'));
+  const seniority = z.coerce.number().int().min(1).max(4).safeParse(form.get('seniority'));
+  if (!name.success || !seniority.success) return fail(locale, 'access.errors.designation');
+  const supabase = await createClient();
+  const { error } = await supabase.schema('api').rpc('designation_add', {
+    p_name: name.data,
+    p_seniority: seniority.data,
+    p_copy_from: String(form.get('copyFrom') ?? ''),
+  });
+  if (error) return dbFail(locale, error, 'perm.designation');
+  revalidatePath(PAGE, 'page');
+  return ok(locale, 'access.staff.designationAdded', { designation: name.data });
+}
+
+/** perm.person: one person's own limit for one section, above or below their designation's; asks for the password */
+export async function setPersonLimit(_: ActionResult | null, form: FormData): Promise<ActionResult> {
+  const locale = localeOf(form);
+  const g = await guard(locale);
+  if (g.denied) return g.denied;
+  const refused = await confirmed(locale, g.actor!.userId, form);
+  if (refused) return refused;
+  const user = z.string().uuid().safeParse(form.get('user'));
+  const mod = moduleName.safeParse(form.get('module'));
+  const raw = String(form.get('level') ?? '');
+  const level = raw === 'default' ? null : Number(raw);
+  const why = z.string().trim().min(3).max(500).safeParse(form.get('reason'));
+  if (!user.success || !mod.success || !why.success || (level !== null && ![0, 1, 2, 3].includes(level)))
+    return fail(locale, 'access.errors.level');
+  const supabase = await createClient();
+  const { error } = await supabase.schema('api').rpc('staff_override_set', {
+    p_user: user.data,
+    p_module: mod.data,
+    p_level: level as number,
+    p_reason: why.data,
+  });
+  if (error) return dbFail(locale, error, 'perm.person');
+  revalidatePath(PAGE, 'page');
+  return ok(locale, 'access.staff.personSaved');
+}
+
+/** perm.service: who works each service; nobody named means everyone with Service requests access; asks for the password */
+export async function setServiceOfficers(_: ActionResult | null, form: FormData): Promise<ActionResult> {
+  const locale = localeOf(form);
+  const g = await guard(locale);
+  if (g.denied) return g.denied;
+  const refused = await confirmed(locale, g.actor!.userId, form);
+  if (refused) return refused;
+  const service = z.string().min(1).max(40).safeParse(form.get('service'));
+  const users = z.array(z.string().uuid()).max(50).safeParse(form.getAll('officers'));
+  if (!service.success || !users.success) return fail(locale, 'access.errors.level');
+  const supabase = await createClient();
+  const { error } = await supabase.schema('api').rpc('service_assignees_set', {
+    p_service: service.data,
+    p_users: users.data,
+    p_reason: service.data,
+  });
+  if (error) return dbFail(locale, error, 'perm.service');
+  revalidatePath(PAGE, 'page');
+  return ok(locale, 'access.staff.officersSaved');
+}

@@ -73,7 +73,9 @@
       "servicesIntegrations": "Services & Integrations",
       "settings": "Settings",
       "businessDirectory": "Business Directory",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "accounts": "Accounts",
+      "askAi": "Ask MCCI AI"
     },
     "sections": {
       "membership": "MEMBERSHIP",
@@ -186,7 +188,10 @@
       "wacampaign": "Campaign",
       "watemplates": "Message Templates",
       "waconsent": "Consent Management",
-      "wasettings": "WhatsApp Settings"
+      "wasettings": "WhatsApp Settings",
+      "finance": "Accounts",
+      "changes": "Change Declarations",
+      "help": "Ask MCCI AI"
     }
   },
   "tabs": {
@@ -241,7 +246,10 @@
       "wacampaign": "Campaign",
       "watemplates": "Templates",
       "waconsent": "Consent",
-      "wasettings": "Settings"
+      "wasettings": "Settings",
+      "finance": "Accounts",
+      "changes": "Change Declarations",
+      "help": "Ask MCCI AI"
     }
   },
   "footer": {
@@ -404,7 +412,10 @@
       "staff": "Staff & audit",
       "plat": "Services setup & settings",
       "biz": "Business directory",
-      "out": "Outreach & consent"
+      "out": "Outreach & consent",
+      "fin": "Accounts",
+      "vot": "Voter list",
+      "chg": "Change declarations"
     },
     "designations": {
       "Secretary General": "Senior management — full control incl. staff, settings and final approvals",
@@ -502,7 +513,11 @@
       "confirmHelp": "For security, changes to staff access need your password.",
       "yourPassword": "Your password",
       "confirmSave": "Confirm and save",
-      "limitsSaved": "{designation}: {n} limit(s) saved."
+      "limitsSaved": "{designation}: {n} limit(s) saved.",
+      "customDesignation": "Added by the Secretary General",
+      "designationAdded": "Designation \"{designation}\" added. Set its limits below.",
+      "personSaved": "This person's limit is saved.",
+      "officersSaved": "Officers for this service are saved."
     },
     "errors": {
       "notAllowed": "You are not allowed to do this.",
@@ -621,6 +636,29 @@
       "Services": "Services",
       "Accounts": "Accounts",
       "Viewer": "Viewer"
+    },
+    "extras": {
+      "password": "Your password",
+      "designationTitle": "Add a designation",
+      "designationHelp": "For a post not in the list. It can start from another designation's limits, or with no access. Staff can then be invited to it.",
+      "designationName": "Designation",
+      "seniority": "Seniority",
+      "copyFrom": "Start with the limits of",
+      "copyNone": "No access",
+      "designationSave": "Add designation",
+      "personTitle": "One person's access to one section",
+      "personHelp": "Grant or remove one section for one person, whatever their designation allows. The reason is kept in the audit trail.",
+      "person": "Person",
+      "section": "Section",
+      "level": "Access",
+      "asDesignation": "As their designation",
+      "reason": "Reason",
+      "personSave": "Save access",
+      "officersTitle": "Officers for each service",
+      "officersHelp": "Name who handles a service. With someone named, only they and Approve-level staff can move its requests. With nobody named, everyone with Service requests access can.",
+      "service": "Service",
+      "officers": "Officers",
+      "officersSave": "Save officers"
     }
   },
   "membership": {
@@ -1265,7 +1303,7 @@
         "cls": "Class",
         "status": "Status",
         "since": "Member since",
-        "validTo": "Valid until"
+        "validTo": "Valid till"
       }
     },
     "form": {
@@ -1638,7 +1676,7 @@
     "sector": "Sector",
     "rep": "Authorized representative",
     "since": "Member since",
-    "validTo": "Valid until",
+    "validTo": "Valid till",
     "women": "Women Entrepreneur",
     "owner": "Owner's name (portal account)",
     "email": "Owner's email (invitation)",
@@ -1653,10 +1691,11 @@
       "company": "Company",
       "rep": "Representative",
       "cls": "Class",
-      "validTo": "Valid to",
+      "validTo": "Valid till",
       "owner": "Owner sign-in",
       "status": "Status",
-      "actions": "Actions"
+      "actions": "Actions",
+      "since": "Enrollment date"
     },
     "owner_Invited": "Invited",
     "owner_Active": "Signed in",
@@ -1692,7 +1731,14 @@
         "renew": "Renewal voucher {voucher} issued. The membership is renewed once Accounts verify the payment.",
         "restore": "Membership restored, valid until {until}.",
         "blacklist": "Marked blacklisted. Renewal is refused until the whitelisting is recorded.",
-        "whitelist": "Whitelisting recorded. The member can be renewed."
+        "whitelist": "Whitelisting recorded. The member can be renewed.",
+        "restoreVoucher": "Restoration voucher {voucher} issued. The membership is restored when Accounts verify it. The enrollment date stays the same.",
+        "restoreNow": "No dues were outstanding: the membership is restored. The enrollment date stays the same.",
+        "enrollment": "Enrollment date set to {d}.",
+        "season": "Saved. Members can start their renewal from this date.",
+        "declared": "Your change is sent to MCCI for review.",
+        "approved": "Approved. The member's profile is updated.",
+        "rejected": "Rejected. The member is told why."
       },
       "errors": {
         "reason_required": "Please write the reason (at least 3 characters).",
@@ -1703,10 +1749,127 @@
         "already_renewed": "This membership year is already renewed.",
         "open_voucher": "A renewal voucher is already open for this member.",
         "not_blacklisted": "This member is not blacklisted.",
-        "fees": "The membership fees are not configured. Ask the administrator."
+        "fees": "The membership fees are not configured. Ask the administrator.",
+        "declaration": "Declare any change, or confirm there is none.",
+        "documents": "Attach the supporting document.",
+        "period": "Check the renewal dates: \"valid till\" must come after \"from\".",
+        "not_open": "Renewals are not open yet. Please check back from the date shown.",
+        "date": "Enter a real SECP or FBR date.",
+        "not_legacy": "The date of an approved application is not changed.",
+        "fields": "Please check the fields.",
+        "decided": "This declaration is already decided."
+      },
+      "upload": {
+        "type": "Only PDF, JPG or PNG files.",
+        "size": "The file is larger than 10 MB.",
+        "notAllowed": "You cannot upload for this company.",
+        "generic": "The file did not upload. Please try again."
+      },
+      "renew": {
+        "button": "Renew",
+        "title": "Renew membership: {subject}",
+        "help": "Issues the renewal voucher. When Accounts verify the payment, the membership runs for this period.",
+        "from": "Renewal from",
+        "till": "Valid till",
+        "opensOn": "Renewals open from",
+        "reason": "Reason, if you changed the dates",
+        "reasonHint": "For example: DGTO order or gazette notification",
+        "declaration": "Any change in the company?",
+        "noChange": "No change",
+        "hasChange": "Yes, a change to declare",
+        "ok": "Issue renewal voucher"
+      },
+      "restore": {
+        "button": "Restore",
+        "title": "Restore membership: {subject}",
+        "help": "Needs only the tax returns and all previous years' fees. When Accounts verify the payment, the membership is restored.",
+        "total": "Total to pay",
+        "keepsDate": "The enrollment date {d} stays the same.",
+        "noDate": "The enrollment date is missing. Set it from SECP or FBR records in the member's record.",
+        "returns": "Tax returns",
+        "returnsHelp": "PDF, JPG or PNG, up to 10 MB each. You can choose several.",
+        "reason": "Note (optional)",
+        "ok": "Issue restoration voucher"
+      },
+      "enrollment": {
+        "secp": "SECP Certificate of Incorporation date",
+        "fbr": "FBR registration date (NTN)",
+        "reason": "Reason for correcting the date",
+        "save": "Use the oldest date"
+      },
+      "season": {
+        "title": "Renewal season",
+        "help": "The day members can start their own renewal. Move it when the Secretary decides, or under a DGTO order or gazette notification. Staff can issue a renewal at any time.",
+        "opensOn": "Renewals open from",
+        "reason": "Reason",
+        "reasonHint": "For example: DGTO order of 5 January",
+        "save": "Save"
+      },
+      "change": {
+        "button": "Declare a change",
+        "title": "Declare a company change",
+        "help": "Tell MCCI about a change in ownership, partners, or authorized representative, at any time. Attach the document. After MCCI verifies it, your profile updates automatically.",
+        "summary": "What changed?",
+        "summaryHint": "For example: new partner joined under the deed of 1 October",
+        "fieldsHelp": "Fill in only what is changing. These go to your profile once approved.",
+        "fields": {
+          "name": "Company name",
+          "address": "Address",
+          "tel": "Telephone",
+          "fax": "Fax",
+          "email": "Email",
+          "web": "Website",
+          "ntn": "NTN",
+          "gst": "GST",
+          "nature_sector": "Sector",
+          "particulars": "Particulars of business",
+          "rep_name": "Authorized representative"
+        },
+        "document": "Supporting documents",
+        "documentHelp": "Partnership deed, SECP Form, or authority letter. PDF, JPG or PNG, up to 10 MB each.",
+        "submit": "Send to MCCI"
+      },
+      "review": {
+        "title": "Change Declarations",
+        "sub": "Check the documents, then approve or reject. Approval updates the member's live profile.",
+        "waiting": "Waiting for review ({n})",
+        "decided": "Decided",
+        "none": "Nothing is waiting.",
+        "fields": "Changes",
+        "field": "Field",
+        "old": "Now",
+        "new": "Becomes",
+        "note": "Note (a reason is required to reject)",
+        "approve": "Approve",
+        "reject": "Reject",
+        "status": {
+          "Pending": "Waiting for review",
+          "Approved": "Approved",
+          "Rejected": "Rejected"
+        },
+        "context": {
+          "anytime": "Declared by the member",
+          "renewal": "Declared at renewal"
+        }
       }
     },
-    "export": "Export register (CSV)"
+    "export": "Export register (CSV)",
+    "search": "Search",
+    "searchHint": "Number, company or representative",
+    "searchGo": "Search",
+    "showLabel": "Show",
+    "show": {
+      "all": "All",
+      "corporate": "Corporate",
+      "associate": "Associate",
+      "active": "Active",
+      "lapsed": "Lapsed",
+      "noDate": "Date missing",
+      "blacklisted": "Blacklisted"
+    },
+    "noDate": "Date missing",
+    "noMatch": "No member matches this search.",
+    "open": "Open"
   },
   "committee": {
     "names": {
@@ -1816,7 +1979,8 @@
         "membership": "Membership fee",
         "renewal": "Renewal",
         "service": "Service fee",
-        "extra_card": "Extra card"
+        "extra_card": "Extra card",
+        "restoration": "Membership restoration"
       },
       "status": {
         "Unpaid": "Unpaid",
@@ -2018,7 +2182,19 @@
       "uploaded": "uploaded {when}",
       "bankRef": "bank ref. {ref}",
       "viewReceipt": "View receipt",
-      "all": "All vouchers"
+      "all": "All vouchers",
+      "filtersLabel": "Filter payments",
+      "classLabel": "Membership class",
+      "categoryLabel": "Type of payment",
+      "allClasses": "All members",
+      "categories": {
+        "all": "All payments",
+        "membership": "Admission",
+        "renewal": "Renewal",
+        "restoration": "Restoration",
+        "service": "Services",
+        "extra_card": "Extra cards"
+      }
     },
     "psid": {
       "title": "Vouchers & Receipts",
@@ -2362,7 +2538,7 @@
     "doc": "Document",
     "holder": "Issued to",
     "memberNo": "Membership No.",
-    "validTo": "Valid until",
+    "validTo": "Valid till",
     "issued": "Issued",
     "code": "Code",
     "status": {
@@ -2427,7 +2603,7 @@
     "tempLine2": "Member of the Chamber on a temporary basis while the permanent certificate is being printed.",
     "memberNo": "Membership No.",
     "validFrom": "Valid from",
-    "validUntil": "Valid until",
+    "validUntil": "Valid till",
     "extended": "(extended)",
     "receipt": "Payment voucher",
     "scan": "Scan to verify",
@@ -2594,7 +2770,7 @@
         "row": "Row",
         "no": "Membership No.",
         "company": "Company / representative",
-        "details": "Class · status · valid to",
+        "details": "Class · status · valid till",
         "match": "In the register",
         "issues": "Checks",
         "confidence": "AI certainty",
@@ -2645,13 +2821,14 @@
       "status_inferred": "No status in the file: worked out from the valid-to date",
       "expired_but_permanent": "Marked Permanent but the valid-to date has passed",
       "date": "{field} is not a date we can read",
-      "since_after_valid": "Member since is after valid to",
+      "since_after_valid": "Member since is after valid till",
       "business_type": "Business type not recognised",
       "business_type_inferred": "Business type taken from the company name",
       "email": "Email is not valid",
       "no_email": "No email: the member cannot be invited to sign in yet",
       "ntn": "NTN looks unusual",
-      "low_confidence": "AI was not sure about {field}"
+      "low_confidence": "AI was not sure about {field}",
+      "no_enrollment_date": "No enrollment date: set it later from SECP or FBR records"
     },
     "fields": {
       "membership_no": "Membership No.",
@@ -2667,7 +2844,7 @@
       "mobile": "Mobile",
       "email": "Email",
       "member_since": "Member since",
-      "valid_to": "Valid to",
+      "valid_to": "Valid till",
       "status": "Status",
       "certificate_serial": "Certificate serial",
       "row": "Row"
@@ -2858,7 +3035,9 @@
         "Notice": "Notice",
         "Circular": "Circular",
         "Event": "Event"
-      }
+      },
+      "channels": "News channels",
+      "allChannels": "All"
     },
     "urdu": {
       "eyebrow": "LAUNCH COUNTDOWN",
@@ -2960,7 +3139,7 @@
       "none": "No member companies are listed yet.",
       "noMatch": "No company matches your search.",
       "view": "View {company}",
-      "validTo": "Valid to",
+      "validTo": "Valid till",
       "publicOnly": "Only public fields are shown. Contact details are shared by MCCI on request.",
       "status": {
         "Permanent": "Member",
@@ -3560,7 +3739,10 @@
         "Draft": "Draft",
         "Live": "Live on the website",
         "Archived": "Archived"
-      }
+      },
+      "channels": "Channels",
+      "allChannels": "All",
+      "mediaCount": "{n} media files"
     },
     "notify": {
       "title": "Notification Center",
@@ -3634,6 +3816,18 @@
       "closed": "This ticket is already resolved.",
       "staff": "Choose an active staff member.",
       "generic": "Something went wrong. Please try again."
+    },
+    "media": {
+      "title": "Photos, videos and files",
+      "add": "Add photos, videos or files",
+      "help": "JPG, PNG, WebP, MP4 or PDF, up to 10 MB each. They go up when you save.",
+      "tooBig": "Larger than 10 MB, not added: {names}",
+      "remove": "Remove {name}",
+      "waiting": "ready to upload",
+      "download": "Open {name}",
+      "removed": "Removed.",
+      "failed": "It could not be removed. Please try again.",
+      "someFailed": "Saved, but these files did not upload: {names}. Check the type and size, then add them again."
     }
   },
   "certs": {
@@ -3682,7 +3876,7 @@
       "company_name": "Company",
       "class": "Class",
       "membership_year": "Year",
-      "valid_to": "Valid to",
+      "valid_to": "Valid till",
       "issued_on": "Given on",
       "ntn": "NTN",
       "book_no": "Book",
@@ -3788,7 +3982,7 @@
   "memberRecord": {
     "title": "Member Record",
     "choose": "Choose a member in the Members Register to see their record.",
-    "toRegister": "Open the register",
+    "toRegister": "Back to the register",
     "notFound": "This member is not in the register (or is outside your limits).",
     "none": "Nothing here yet.",
     "message": "Email the member",
@@ -3796,7 +3990,7 @@
     "sections": "Sections of the record",
     "view": "View",
     "verify": "Verify",
-    "validTo": "valid to {d}",
+    "validTo": "valid till {d}",
     "partnerPhoto": "Photo of partner / director {n}",
     "tabs": {
       "particulars": "Particulars",
@@ -3817,9 +4011,13 @@
       "ntn": "NTN",
       "gst": "GST",
       "tel": "Telephone",
-      "since": "Member since",
-      "validTo": "Valid to",
-      "particulars": "Particulars of business"
+      "since": "Enrollment date",
+      "validTo": "Valid till",
+      "particulars": "Particulars of business",
+      "validFrom": "Renewal from",
+      "restored": "Restored on",
+      "secp": "SECP incorporation date",
+      "fbr": "FBR registration date"
     },
     "pay": {
       "voucher": "Voucher",
@@ -3827,6 +4025,36 @@
       "amount": "Amount",
       "status": "Status",
       "paid": "Paid"
+    },
+    "noDate": "Date missing",
+    "declarations": "Change declarations",
+    "noDeclarations": "No change has been declared.",
+    "renewals": "Renewals and restoration",
+    "noRenewals": "No renewal recorded in MCCI Digital yet.",
+    "activity": "All activity",
+    "noChangeDeclared": "No change declared",
+    "enrollmentHelp": "For a legacy member, enter what the records show: the oldest date is used. A date from an approved application is not changed.",
+    "kind": {
+      "renewal": "Renewal",
+      "restoration": "Restoration"
+    },
+    "requestStatus": {
+      "open": "Waiting for payment",
+      "paid": "Done",
+      "cancelled": "Replaced"
+    },
+    "groups": {
+      "business": "Business",
+      "contact": "Representative and contact",
+      "registration": "Registration",
+      "enrollment": "Enrollment date"
+    },
+    "source": {
+      "application": "From the approved application",
+      "register": "Entered in the register",
+      "import": "From the imported register",
+      "secp": "SECP certificate date",
+      "fbr": "FBR registration date"
     }
   },
   "settings": {
@@ -4074,7 +4302,14 @@
       "invalid": "Invalid code",
       "tampered": "Altered QR",
       "limited": "Rate-limited"
-    }
+    },
+    "pillarLabel": "Reports",
+    "pillars": {
+      "membership": "Membership",
+      "services": "Services",
+      "accounts": "Accounts"
+    },
+    "openAccounts": "Open the Profit & Loss statement and Trial Balance"
   },
   "queue": {
     "title": "My queue",
@@ -4120,7 +4355,7 @@
       "district": "District",
       "rep_name": "Representative",
       "member_since": "Member since",
-      "valid_to": "Valid to",
+      "valid_to": "Valid till",
       "consent": "WhatsApp consent",
       "tags": "Internal tags",
       "tel": "Telephone",
@@ -4137,7 +4372,7 @@
       "member_status": "Membership status",
       "renewal": "Renewal",
       "member_since": "Member since",
-      "valid_to": "Valid to",
+      "valid_to": "Valid till",
       "valid_year": "Validity year",
       "city": "City",
       "district": "District",
@@ -4662,7 +4897,8 @@
       "firstRows": "First {n} shown.",
       "send": "Send",
       "noTemplateText": "No template: free text",
-      "noTemplateClosed": "No template: free text (window closed)"
+      "noTemplateClosed": "No template: free text (window closed)",
+      "advanced": "More detailed filters"
     },
     "templates": {
       "title": "Message Templates",
@@ -4750,7 +4986,8 @@
       "consentOpen": "Offer WhatsApp consent to members in the portal",
       "save": "Save settings",
       "retryPolicy": "Retries use the same key: rate limits wait and try again; an unclear answer is tried up to 3 times, then marked unknown for a person to check.",
-      "schedulingNote": "Scheduled sending needs the server timer, which is off until separately authorised. Until then, use Send next batch on the campaign."
+      "schedulingNote": "Scheduled sending needs the server timer, which is off until separately authorised. Until then, use Send next batch on the campaign.",
+      "dailyLimit": "Customers per 24 hours (Meta's limit for this number)"
     },
     "panel": {
       "title": "WhatsApp",
@@ -4828,6 +5065,360 @@
       "memberGranted": "Thank you. Your choice is saved.",
       "memberWithdrawn": "You will not receive WhatsApp messages from MCCI.",
       "settings": "Settings saved."
+    },
+    "tabs": {
+      "title": "Who should get this?",
+      "help": "Tap one choice in each row. The preview below shows exactly who is included and who is left out, and why.",
+      "clear": "Clear all",
+      "any": "Any",
+      "q": {
+        "member_class": "Class",
+        "renewal": "Renewal",
+        "business_category": "Business",
+        "consent": "Consent",
+        "city": "City",
+        "sector": "Sector"
+      }
+    }
+  },
+  "voter": {
+    "title": "Voter list",
+    "help": "Choose the day the election schedule is announced. The list follows MCCI's rules: 2 years of valid membership by that day, and 1 year since restoration. A member enrolled even a day late is not on it.",
+    "cutoff": "Election schedule announced on",
+    "apply": "Make the list",
+    "export": "Download the list",
+    "classLabel": "Membership class",
+    "resultLabel": "Result",
+    "allClasses": "All classes",
+    "results": {
+      "eligible": "Eligible",
+      "not_eligible": "Not eligible",
+      "all": "Everyone"
+    },
+    "count": "{n} of {total} members are eligible on {d}",
+    "none": "No members in this view.",
+    "eligible": "Eligible",
+    "cols": {
+      "no": "Membership No.",
+      "company": "Company",
+      "rep": "Representative",
+      "cls": "Class",
+      "since": "Enrollment date",
+      "valid": "Valid till",
+      "result": "Result"
+    },
+    "reasons": {
+      "no_date": "Enrollment date missing",
+      "not_active": "Suspended or revoked",
+      "lapsed": "Membership not valid",
+      "blacklisted": "Blacklisted",
+      "too_new": "Less than 2 years",
+      "restored_recently": "Less than 1 year since restoration"
+    }
+  },
+  "fin": {
+    "title": "Accounts",
+    "sub": "Profit & Loss, Trial Balance, receipts, expenses and bank balances. Membership and service fees come in from verified vouchers.",
+    "tabsLabel": "Accounts sections",
+    "tabs": {
+      "statement": "Profit & Loss",
+      "entries": "Receipts & Expenses",
+      "trial": "Trial Balance",
+      "setup": "Banks & Closing"
+    },
+    "rangeLabel": "Period",
+    "presets": {
+      "15d": "Last 15 days",
+      "month": "This month",
+      "quarter": "This quarter",
+      "year": "This year"
+    },
+    "from": "From",
+    "to": "To",
+    "apply": "Show",
+    "verifiedOnly": "Verified entries only",
+    "print": "Print",
+    "export": "Download CSV",
+    "autoTag": "from verified vouchers, plus any entries",
+    "cat": {
+      "membership": "Admission",
+      "renewal": "Renewal",
+      "restoration": "Restoration",
+      "extra_card": "Extra cards"
+    },
+    "st": {
+      "chamber": "THE MULTAN CHAMBER OF COMMERCE & INDUSTRY",
+      "heading": "Profit & Loss Statement For the Year {year}",
+      "receipts": "RECEIPTS",
+      "expense": "EXPENSE",
+      "no": "S. #",
+      "description": "Description",
+      "total": "Total",
+      "grossReceipts": "Gross Receipts",
+      "grossExpense": "Gross Expense",
+      "lessExpense": "Less Gross Expense",
+      "profit": "Profit For The Period",
+      "loss": "Loss For The Period",
+      "banks": "Bank Balance as on {d}",
+      "banksShort": "Bank balances",
+      "bank": "Bank",
+      "books": "Per books",
+      "bankStatement": "Per bank statement",
+      "difference": "Difference",
+      "notEntered": "Not entered",
+      "membershipBreakdown": "Membership fee by type and class",
+      "category": "Type"
+    },
+    "tb": {
+      "heading": "Trial Balance",
+      "note": "On a cash basis, from receipts, expenses and bank balances. MCCI's accountant should confirm this suits the audit.",
+      "account": "Account",
+      "debit": "Debit",
+      "credit": "Credit",
+      "total": "Total",
+      "agrees": "Debit and credit agree.",
+      "differs": "Debit and credit differ by {d}. Check the opening balances."
+    },
+    "entry": {
+      "title": "Add a receipt or an expense",
+      "kind": "Type of entry",
+      "kind_expense": "Expense",
+      "kind_receipt": "Receipt",
+      "autoNote": "Membership and service fees come from verified vouchers. Enter only money that did not come through a voucher here.",
+      "account": "Account",
+      "pickAccount": "Choose an account",
+      "amount": "Amount (Rs.)",
+      "date": "Date",
+      "bank": "Paid through",
+      "cash": "Cash",
+      "party": "Paid to / received from",
+      "reference": "Bill or cheque number",
+      "attachment": "Bill or receipt",
+      "attachmentHelp": "PDF, JPG or PNG, up to 10 MB",
+      "note": "Note",
+      "save": "Save entry",
+      "list": "Entries in this period",
+      "none": "No entries in this period.",
+      "verify": "Verify",
+      "void": "Void",
+      "voidTitle": "Void entry {no}",
+      "voidHelp": "A voided entry stays on record but leaves the statement. Enter the correct one again.",
+      "voidReason": "Reason",
+      "voidedBecause": "Voided: {r}",
+      "viewFile": "Open the bill for {no}",
+      "cols": {
+        "no": "Entry",
+        "date": "Date",
+        "account": "Account",
+        "party": "Party",
+        "bank": "Through",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "Recorded": "Waiting for verification",
+        "Verified": "Verified",
+        "Voided": "Voided"
+      }
+    },
+    "setup": {
+      "viewOnly": "You can view the accounts. Ask the Secretary General for access to change them.",
+      "bank": "Bank",
+      "month": "Month",
+      "save": "Save",
+      "reason": "Reason",
+      "balanceTitle": "Month-end balance from the bank statement",
+      "balanceHelp": "The statement shows it beside the books, with any difference.",
+      "balance": "Balance (Rs.)",
+      "openingTitle": "Opening balances",
+      "openingHelp": "What each bank held on the day MCCI starts using this. Earlier months stay out of the books.",
+      "openingOn": "Books start on",
+      "opening": "Opening balance (Rs.)",
+      "accountTitle": "Add an account",
+      "accountHelp": "A new line on the statement, under the group you choose.",
+      "group": "Group",
+      "nameEn": "Name in English",
+      "nameUr": "Name in Urdu",
+      "addAccount": "Add account",
+      "closeTitle": "Close a month",
+      "closeHelp": "After audit, close the month so its entries can no longer change. Reopening needs a reason and is recorded.",
+      "action": "Action",
+      "close": "Close",
+      "reopen": "Reopen",
+      "closedList": "Closed:"
+    },
+    "upload": {
+      "type": "Only PDF, JPG or PNG files.",
+      "size": "The file is larger than 10 MB.",
+      "notAllowed": "You cannot upload here.",
+      "generic": "The file did not upload. Please try again."
+    },
+    "done": {
+      "entry": "Entry {no} saved. Someone else verifies it.",
+      "verified": "Entry verified.",
+      "voided": "Entry voided.",
+      "account": "Account added.",
+      "balance": "Balance saved.",
+      "opening": "Opening balance saved.",
+      "closed": "{month} is closed.",
+      "reopened": "{month} is reopened."
+    },
+    "errors": {
+      "notAllowed": "You do not have access to do this.",
+      "fields": "Please check the fields.",
+      "generic": "It could not be saved. Please try again.",
+      "amount": "Enter the amount in rupees, for example 1,250 or 1,250.50.",
+      "date": "Enter a date that is not in the future.",
+      "account": "Choose an account.",
+      "bank": "Choose a bank.",
+      "attachment": "That file cannot be used.",
+      "state": "This entry has already changed. Reload the page.",
+      "own_entry": "Someone else must verify your own entry.",
+      "month_closed": "This month is closed. Reopen it first, with a reason.",
+      "reason_required": "A reason is required.",
+      "exists": "That account already exists."
+    }
+  },
+  "staffHelp": {
+    "title": "Ask MCCI AI",
+    "sub": "Not sure where something is, or what to do next? Ask in English or Urdu. It takes you to the right screen.",
+    "ask": "Your question",
+    "hint": "For example: how do I record the electricity bill?",
+    "send": "Ask",
+    "open": "Open",
+    "working": "Please wait",
+    "tooLong": "Please write a question of up to 600 characters.",
+    "found": "Here is where to do that:",
+    "noMatch": "I could not find that among the screens you can open. Try other words, or ask the Secretary General.",
+    "unavailable": "This is not available right now. Please try again.",
+    "items": {
+      "voter": {
+        "title": "Voter list",
+        "how": "Reports, Membership. Choose the schedule announcement date; filter by class and result; download the list.",
+        "question": "Make the voter list"
+      },
+      "renew": {
+        "title": "Renew a member",
+        "how": "Members Register, press Renew on the member. Set the dates if needed, record the declaration, and issue the voucher."
+      },
+      "season": {
+        "title": "Move the renewal date",
+        "how": "Members Register, Renewal season. Enter the new date and the reason, for example a DGTO order."
+      },
+      "restore": {
+        "title": "Restore a lapsed member",
+        "how": "Members Register, Lapsed tab, press Restore. Upload the tax returns; the voucher adds all dues. The enrollment date does not change.",
+        "question": "Restore a lapsed member"
+      },
+      "enrollment": {
+        "title": "Set an old member's enrollment date",
+        "how": "Members Register, Date missing tab. Open the member and enter the SECP and FBR dates; the oldest is used."
+      },
+      "member": {
+        "title": "Find a member",
+        "how": "Members Register. Search by number, company or representative, then click the member to see the whole record."
+      },
+      "addMember": {
+        "title": "Add an existing member",
+        "how": "Members Register, press Add member."
+      },
+      "import": {
+        "title": "Import members from Excel",
+        "how": "Data Import. Upload the file, check the preview, then import."
+      },
+      "declaration": {
+        "title": "Review a company change",
+        "how": "Change Declarations. Open the documents, then approve or reject. Approval updates the member's profile."
+      },
+      "application": {
+        "title": "Review a new application",
+        "how": "Membership Pipeline. Open the application, check documents, then return or forward it."
+      },
+      "committee": {
+        "title": "Committee decision",
+        "how": "Committee Desk. The Convener approves, returns or rejects each file."
+      },
+      "certificate": {
+        "title": "Certificates",
+        "how": "Certificates. Upload the printed certificate's scan."
+      },
+      "payment": {
+        "title": "Verify a payment",
+        "how": "Payments. Filter by Corporate or Associate and by Admission, Renewal or Restoration, open the receipt, and verify it."
+      },
+      "statement": {
+        "title": "Profit & Loss statement",
+        "how": "Accounts, Profit & Loss. Choose 15 days, month, quarter, year or your own dates, then print or download."
+      },
+      "trial": {
+        "title": "Trial Balance",
+        "how": "Accounts, Trial Balance. Choose the period, then print or download."
+      },
+      "expense": {
+        "title": "Record an expense",
+        "how": "Accounts, Receipts & Expenses. Choose the account, enter the amount and date, attach the bill, and save. Someone else verifies it.",
+        "question": "How do I record an expense?"
+      },
+      "verifyEntry": {
+        "title": "Verify or void an entry",
+        "how": "Accounts, Receipts & Expenses. Verify someone else's entry, or void a wrong one with a reason."
+      },
+      "bank": {
+        "title": "Bank balances and closing a month",
+        "how": "Accounts, Banks & Closing."
+      },
+      "service": {
+        "title": "Service requests",
+        "how": "Service Requests. Open a request, review it, then approve, return or sign."
+      },
+      "staff": {
+        "title": "Add staff or a designation",
+        "how": "Staff & Roles. Invite someone by email. To add a post that is not listed, use Add a designation."
+      },
+      "permission": {
+        "title": "Change who can see what",
+        "how": "Staff & Roles. Set limits by designation, one person's access to a section, and officers per service. Your password is asked first.",
+        "question": "Give someone access to one section"
+      },
+      "audit": {
+        "title": "See who did what",
+        "how": "Audit Trail. Every change, by whom and when."
+      },
+      "post": {
+        "title": "Publish news, a notice or a circular",
+        "how": "Website Content, New post. Choose the channel, write English and Urdu, add photos or files, and set it Live.",
+        "question": "Publish a news post with photos"
+      },
+      "event": {
+        "title": "Add an event",
+        "how": "Events & Meetings. Add the event, its details and any files."
+      },
+      "complaint": {
+        "title": "Complaints",
+        "how": "Complaint Desk. Assign, reply and resolve."
+      },
+      "whatsapp": {
+        "title": "Send a WhatsApp campaign",
+        "how": "WhatsApp, New. Tap who should get it, choose a template or message, attach a file if needed, preview, and create.",
+        "question": "Send a WhatsApp message to many members"
+      },
+      "template": {
+        "title": "WhatsApp templates",
+        "how": "WhatsApp, Templates. Create them in Meta, then press Sync."
+      },
+      "consent": {
+        "title": "WhatsApp consent",
+        "how": "WhatsApp, Consent. Record it or see who opted out."
+      },
+      "directory": {
+        "title": "Business directory",
+        "how": "Business Directory. Search, filter, save a segment or export."
+      },
+      "settings": {
+        "title": "Fees and chamber details",
+        "how": "Settings. Fees, chamber details and the bank account."
+      }
     }
   }
 }

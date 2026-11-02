@@ -141,6 +141,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'serials', '/admin/serials', 'M6b', 'database'),
   s('admin', 'members', '/admin/members', 'M4', 'users'),
   s('admin', 'member', '/admin/member', 'M8a', 'idCard'),
+  s('admin', 'changes', '/admin/changes', 'M8a', 'list'),
   s('admin', 'import', '/admin/import', 'M6', 'upload'),
   s('admin', 'applications', '/admin/applications', 'M7', 'file'),
   s('admin', 'review', '/admin/review', 'M7', 'shield'),
@@ -154,8 +155,10 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'complaints', '/admin/complaints', 'M8a', 'help'),
   s('admin', 'content', '/admin/content', 'M8a', 'globe'),
   s('admin', 'notify', '/admin/notify', 'M8a', 'mail'),
+  s('admin', 'finance', '/admin/finance', 'M8a', 'chart'),
   s('admin', 'reports', '/admin/reports', 'M9', 'chart'),
   s('admin', 'ai', '/admin/ai', 'M8a', 'sparkles'),
+  s('admin', 'help', '/admin/help', 'M8a', 'sparkles'),
   s('admin', 'staff', '/admin/staff', 'M1', 'team'),
   s('admin', 'audit', '/admin/audit', 'M8a', 'clock'),
   s('admin', 'services', '/admin/services', 'M7', 'gear'),
@@ -236,7 +239,13 @@ export const SIDEBAR: Record<'portal' | 'admin', NavSection[]> = {
         { label: 'documentsQr', key: 'documents', color: '#9fd0ff' },
       ],
     },
-    { section: 'finance', items: [{ label: 'payments', key: 'payments', color: '#8be3a5' }] },
+    {
+      section: 'finance',
+      items: [
+        { label: 'payments', key: 'payments', color: '#8be3a5' },
+        { label: 'accounts', key: 'finance', color: '#7ee0d8' },
+      ],
+    },
     {
       section: 'engagement',
       items: [
@@ -256,6 +265,7 @@ export const SIDEBAR: Record<'portal' | 'admin', NavSection[]> = {
       section: 'insights',
       items: [
         { label: 'reportsAi', key: 'reports', color: '#c9a8ff' },
+        { label: 'askAi', key: 'help', color: '#ffd27a' },
         { label: 'staffAudit', key: 'staff', color: '#7ee0d8' },
         { label: 'servicesIntegrations', key: 'services', color: '#ffb27a' },
         { label: 'settings', key: 'settings', color: '#cbd5e1' },
@@ -276,7 +286,7 @@ export const PAGE_TABS: Record<'portal' | 'admin', string[][]> = {
   admin: [
     ['requests', 'mreview', 'committee'],
     ['temp', 'certs', 'serials'],
-    ['members', 'member', 'import'],
+    ['members', 'changes', 'import'],
     ['applications', 'review', 'sla', 'approvals'],
     ['payments', 'psid'],
     ['events', 'meetings'],

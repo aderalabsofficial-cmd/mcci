@@ -9,10 +9,9 @@ import { sendInvitation } from '@/lib/invitations/email';
 import { msg } from '@/lib/nav/model';
 import { requireCompanyPermission, requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
-import { PARTICULAR_FIELDS } from './fields';
 
 /**
- * Company Profile (actions user.invite, user.edit, user.resend, user.remove, profile.change, setting.toggle me.prefs).
+ * Company Profile (actions user.invite, user.edit, user.resend, user.remove, setting.toggle me.prefs).
  * Colleagues are managed by the company's Owner only (area 'profile' level 3, docs/06): requireCompanyPermission
  * refuses early, and the api.* functions / RLS policies check the same rule again in the database and write
  * audit_log. The last active Owner cannot be removed or demoted (trigger keep_one_owner, finding F-20).
@@ -161,39 +160,6 @@ export async function removeCompanyUser(_: ActionResult | null, form: FormData):
   if (error) return dbFail(locale, error, 'user.remove');
   revalidatePath(PAGE, 'page');
   return ok(locale, 'access.company.removed', { name: person.full_name });
-}
-
-const changeSchema = z.object({
-  field: z.enum(PARTICULAR_FIELDS),
-  value: z.string().trim().min(1).max(500),
-  reason: z.string().trim().max(500).optional(),
-});
-
-/** profile.change: a request MCCI approves later (members register, M8); RLS allows it for the Owner only. */
-export async function requestParticularChange(_: ActionResult | null, form: FormData): Promise<ActionResult> {
-  const locale = localeOf(form);
-  const g = await owner(locale, form);
-  if (g.denied) return g.denied;
-  const parsed = changeSchema.safeParse({
-    field: form.get('field'),
-    value: form.get('value'),
-    reason: form.get('reason') || undefined,
-  });
-  if (!parsed.success) return fail(locale, 'access.errors.required');
-  const supabase = await createClient();
-  const current = await supabase.from('companies').select(parsed.data.field).eq('id', g.company!).maybeSingle();
-  if (current.error || !current.data) return fail(locale, 'access.errors.notAllowed');
-  const old = (current.data as Record<string, unknown>)[parsed.data.field];
-  const { error } = await supabase.from('change_requests').insert({
-    company_id: g.company!,
-    field: parsed.data.field,
-    old_value: old == null ? null : String(old),
-    new_value: parsed.data.value,
-    reason: parsed.data.reason ?? null,
-  });
-  if (error) return dbFail(locale, error, 'profile.change');
-  revalidatePath(PAGE, 'page');
-  return ok(locale, 'access.company.changeSent');
 }
 
 /** setting.toggle me.prefs.urdu: the person's own language for emails and messages (profiles.lang, own row). */

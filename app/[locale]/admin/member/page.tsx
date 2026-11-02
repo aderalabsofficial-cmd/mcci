@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { ActionButton } from '@/components/admin/action-button';
 import { FlashProvider } from '@/components/admin/flash';
+import { DeclarationForm, EnrollmentForm, RenewDialog, RestoreDialog } from '@/components/members/lifecycle';
 import { guardStaff } from '@/components/services/staff-page';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
@@ -64,41 +67,25 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
         })
       : '—';
 
-  const header = (
-    <div className="ph">
-      <div>
-        <h1>{m('title')}</h1>
-      </div>
-    </div>
+  const back = (
+    <Link href="/admin/members" className="btn btn-w mr-back" data-action="nav">
+      <ArrowLeft size={15} aria-hidden /> {m('toRegister')}
+    </Link>
   );
-  if (!sp.id || !UUID.test(sp.id)) {
-    return (
-      <div className="proto">
-        {header}
-        <div className="card">
-          <p className="em">
-            {m('choose')}{' '}
-            <Link href="/admin/members" className="btn" data-action="nav">
-              {m('toRegister')}
-            </Link>
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (!sp.id || !UUID.test(sp.id)) redirect(`${locale === 'ur' ? '/ur' : ''}/admin/members`);
 
   const supabase = await createClient();
   const { data: member } = await supabase
     .from('members')
     .select(
-      'id, member_no, class, women, status, rep_name, since, valid_to, serial, blacklisted, blacklist_note, company_id, companies!inner(name, biz_type, address, ntn, gst, tel, email, web, particulars, nature_sector, established, demo)',
+      'id, member_no, class, women, status, rep_name, since, valid_from, valid_to, serial, blacklisted, blacklist_note, restored_at, enrollment_source, secp_incorporated_on, fbr_registered_on, company_id, companies!inner(name, biz_type, address, ntn, gst, tel, email, web, particulars, nature_sector, established, demo)',
     )
     .eq('id', sp.id)
     .maybeSingle();
   if (!member) {
     return (
       <div className="proto">
-        {header}
+        {back}
         <div className="card">
           <p className="em">{m('notFound')}</p>
         </div>
@@ -127,7 +114,7 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
     .limit(1)
     .maybeSingle();
   const form = (app?.form ?? {}) as Record<string, unknown>;
-  const [partners, docs, certs, vouchers, history] = await Promise.all([
+  const [partners, docs, certs, vouchers, history, declarations, requests] = await Promise.all([
     app
       ? supabase
           .from('application_partners')
@@ -154,6 +141,16 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
       .or(`object_id.eq.${member.id},object_id.eq.${member.member_no}`)
       .order('at', { ascending: false })
       .limit(50),
+    supabase
+      .from('change_declarations')
+      .select('id, context, summary, fields, documents, status, created_at, decided_at, decision_note')
+      .eq('company_id', member.company_id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('membership_requests')
+      .select('id, kind, voucher_no, valid_from, valid_to, no_change, status, reason, documents, created_at')
+      .eq('member_id', member.id)
+      .order('created_at', { ascending: false }),
   ]);
   const appHistory = app
     ? (
@@ -185,20 +182,40 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
   let body: ReactNode = null;
   if (tab === 'particulars') {
     body = (
-      <div className="mr-grid" data-section="particulars">
-        {field(m('f.name'), c.name)}
-        {field(m('f.rep'), member.rep_name)}
-        {field(m('f.mobile'), String(form.mobile ?? ''))}
-        {field(m('f.email'), c.email)}
-        {field(m('f.sector'), c.nature_sector)}
-        {field(m('f.biz'), msg(locale, `membership.biz.${c.biz_type}.name`))}
-        {field(m('f.address'), c.address)}
-        {field(m('f.ntn'), c.ntn)}
-        {field(m('f.gst'), c.gst)}
-        {field(m('f.tel'), c.tel)}
-        {field(m('f.since'), date(member.since))}
-        {field(m('f.validTo'), date(member.valid_to))}
-        {field(m('f.particulars'), c.particulars)}
+      <div data-section="particulars">
+        <h3 className="mr-h">{m('groups.business')}</h3>
+        <div className="mr-grid">
+          {field(m('f.name'), c.name)}
+          {field(m('f.biz'), msg(locale, `membership.biz.${c.biz_type}.name`))}
+          {field(m('f.sector'), c.nature_sector)}
+          {field(m('f.particulars'), c.particulars)}
+        </div>
+        <h3 className="mr-h">{m('groups.contact')}</h3>
+        <div className="mr-grid">
+          {field(m('f.rep'), member.rep_name)}
+          {field(m('f.mobile'), String(form.mobile ?? ''))}
+          {field(m('f.tel'), c.tel)}
+          {field(m('f.email'), c.email)}
+          {field(m('f.address'), c.address)}
+        </div>
+        <h3 className="mr-h">{m('groups.registration')}</h3>
+        <div className="mr-grid">
+          {field(m('f.ntn'), c.ntn)}
+          {field(m('f.gst'), c.gst)}
+          {field(m('f.secp'), date(member.secp_incorporated_on))}
+          {field(m('f.fbr'), date(member.fbr_registered_on))}
+        </div>
+        <h3 className="mr-h">{m('groups.enrollment')}</h3>
+        <p className="muted">{m('enrollmentHelp')}</p>
+        {canAct && member.enrollment_source !== 'application' ? (
+          <EnrollmentForm
+            locale={locale}
+            member={member.id}
+            secp={member.secp_incorporated_on}
+            fbr={member.fbr_registered_on}
+            needsReason={Boolean(member.since)}
+          />
+        ) : null}
       </div>
     );
   } else if (tab === 'partners') {
@@ -337,8 +354,80 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
         by: h.user_name,
       })),
     ].sort((a, b) => b.at.localeCompare(a.at));
-    body = rows.length ? (
+    const decl = declarations.data ?? [];
+    const reqs = requests.data ?? [];
+    body = (
       <div data-section="history">
+        <div className="ch">
+          <h3 className="mr-h">{m('declarations')}</h3>
+          {canAct && <DeclarationForm locale={locale} company={member.company_id} />}
+        </div>
+        {decl.length ? (
+          decl.map((d) => {
+            const fields = (d.fields ?? []) as { field: string; new: string }[];
+            const files = (d.documents ?? []) as { path: string; name: string }[];
+            return (
+              <div className="li st" key={d.id} data-declaration={d.id}>
+                <div style={{ flex: 1 }}>
+                  <b dir="auto">{d.summary}</b>
+                  <small>
+                    {date(d.created_at)} · {msg(locale, `register.life.review.context.${d.context}`)}
+                    {d.decision_note ? ` · ${d.decision_note}` : ''}
+                  </small>
+                  {fields.map((x) => (
+                    <small key={x.field} dir="auto">
+                      {msg(locale, `register.life.change.fields.${x.field}`)}: {x.new}
+                    </small>
+                  ))}
+                  <span className="pb">
+                    {files.map((f) => (
+                      <a key={f.path} className="btn btn-sm" href={staffFileUrl('member-docs', f.path)} target="_blank" rel="noreferrer" data-action="chg.doc">
+                        {f.name}
+                      </a>
+                    ))}
+                  </span>
+                </div>
+                <span className={`bd ${d.status === 'Approved' ? 'green' : d.status === 'Rejected' ? 'red' : 'orange'}`}>
+                  {msg(locale, `register.life.review.status.${d.status}`)}
+                </span>
+              </div>
+            );
+          })
+        ) : (
+          <p className="em">{m('noDeclarations')}</p>
+        )}
+        <h3 className="mr-h">{m('renewals')}</h3>
+        {reqs.length ? (
+          reqs.map((q) => {
+            const files = (q.documents ?? []) as { path: string; name: string }[];
+            return (
+              <div className="li st" key={q.id} data-request={q.kind}>
+                <div style={{ flex: 1 }}>
+                  <b>
+                    {m(`kind.${q.kind}`)} · {date(q.valid_from)} – {date(q.valid_to)}
+                  </b>
+                  <small>
+                    {date(q.created_at)}
+                    {q.voucher_no ? ` · ${q.voucher_no}` : ''}
+                    {q.no_change ? ` · ${m('noChangeDeclared')}` : ''}
+                    {q.reason ? ` · ${q.reason}` : ''}
+                  </small>
+                  <span className="pb">
+                    {files.map((f) => (
+                      <a key={f.path} className="btn btn-sm" href={staffFileUrl('member-docs', f.path)} target="_blank" rel="noreferrer" data-action="chg.doc">
+                        {f.name}
+                      </a>
+                    ))}
+                  </span>
+                </div>
+                <span className={`bd ${q.status === 'paid' ? 'green' : q.status === 'cancelled' ? 'gray' : 'orange'}`}>{m(`requestStatus.${q.status}`)}</span>
+              </div>
+            );
+          })
+        ) : (
+          <p className="em">{m('noRenewals')}</p>
+        )}
+        <h3 className="mr-h">{m('activity')}</h3>
         {rows.map((h, i) => (
           <div className="li st" key={i}>
             <div>
@@ -351,24 +440,30 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
             </div>
           </div>
         ))}
+        {!rows.length && <p className="em">{m('none')}</p>}
       </div>
-    ) : (
-      <p className="em">{m('none')}</p>
     );
   }
+
+  const defaultFrom = (() => {
+    const t = new Date(`${member.valid_to}T00:00:00Z`);
+    t.setUTCDate(t.getUTCDate() + 1);
+    return t.toISOString().slice(0, 10);
+  })();
+  const endOf = (d: string) => `${Number(d.slice(5, 7)) >= 4 ? Number(d.slice(0, 4)) + 1 : Number(d.slice(0, 4))}-03-31`;
+  const lapsed = member.status !== 'Permanent' || member.valid_to < today;
 
   return (
     <div className="proto">
       <FlashProvider>
+        {back}
         <div className="ph">
           <div>
             <h1>{c.name}</h1>
             <p>
               {member.member_no} · {msg(locale, `membership.classes.${member.class}`)}
               {member.women ? ` · ${msg(locale, 'membership.fee.women')}` : ''}{' '}
-              <span className={`bd ${TONE[member.status] ?? 'gray'}`}>
-                {msg(locale, `register.status.${member.status}`)}
-              </span>
+              <span className={`bd ${TONE[member.status] ?? 'gray'}`}>{msg(locale, `register.status.${member.status}`)}</span>
               {member.blacklisted && (
                 <span className="bd red" title={member.blacklist_note ?? undefined} data-blacklisted>
                   {msg(locale, 'register.life.mustWhitelist')}
@@ -378,6 +473,25 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
             </p>
           </div>
         </div>
+        <div className="mr-strip" data-section="summary">
+          <div className={member.since ? '' : 'mr-warn'} data-enrollment={member.since ?? 'none'}>
+            <small>{m('f.since')}</small>
+            <b>{member.since ? date(member.since) : m('noDate')}</b>
+            <small>{m(`source.${member.enrollment_source}`)}</small>
+          </div>
+          <div>
+            <small>{m('f.validFrom')}</small>
+            <b>{date(member.valid_from)}</b>
+          </div>
+          <div className={lapsed ? 'mr-warn' : ''}>
+            <small>{m('f.validTo')}</small>
+            <b>{date(member.valid_to)}</b>
+          </div>
+          <div>
+            <small>{m('f.restored')}</small>
+            <b>{date(member.restored_at)}</b>
+          </div>
+        </div>
         <div className="pb" style={{ marginBottom: 14 }} data-member={member.member_no}>
           {c.email && (
             <a className="btn" href={`mailto:${c.email}`} data-action="member.message">
@@ -385,11 +499,18 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
             </a>
           )}
           {canAct && (member.status === 'Permanent' || member.status === 'Expired') && (
-            <ActionButton locale={locale} action="reg.renew" target={member.id} subject={member.member_no} />
+            <RenewDialog
+              locale={locale}
+              member={member.id}
+              company={member.company_id}
+              subject={member.member_no}
+              defaultFrom={defaultFrom}
+              defaultTo={endOf(defaultFrom > today ? defaultFrom : today)}
+              canEditPeriod
+              className="btn"
+            />
           )}
-          {canAct && (member.status !== 'Permanent' || member.valid_to < today) && (
-            <ActionButton locale={locale} action="reg.restore" target={member.id} subject={member.member_no} />
-          )}
+          {canAct && lapsed && <RestoreDialog locale={locale} member={member.id} company={member.company_id} subject={member.member_no} className="btn" />}
           {canAct && (
             <ActionButton
               locale={locale}

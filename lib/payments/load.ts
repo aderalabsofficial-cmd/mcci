@@ -21,6 +21,7 @@ export interface StaffVoucher {
   no: string;
   company: string;
   ref_type: string;
+  member_class: string | null;
   token: string | null;
   amount: number;
   status: string;
@@ -47,8 +48,10 @@ export async function loadVouchers(): Promise<StaffVoucher[]> {
   if (error) throw new Error(`vouchers: ${error.message}`);
   const apps = (vs ?? []).filter((v) => v.ref_type === 'membership').map((v) => v.ref_id);
   const { data: appRows } = apps.length
-    ? await supabase.from('applications').select('id, token').in('id', apps)
-    : { data: [] as { id: string; token: string }[] };
+    ? await supabase.from('applications').select('id, token, class').in('id', apps)
+    : { data: [] as { id: string; token: string; class: string | null }[] };
+  const { data: classes } = await supabase.from('members').select('company_id, class');
+  const classOf = new Map((classes ?? []).map((c) => [c.company_id, c.class as string]));
   const waiting = (rs ?? []).filter((r) => r.status === 'Submitted' && r.path).map((r) => r.path!);
   // staff see receipts through the file route (logged; 0460), never a storage link
   const url = staffFileUrls('receipts', waiting);
@@ -56,6 +59,7 @@ export async function loadVouchers(): Promise<StaffVoucher[]> {
     no: v.voucher_no,
     company: (v.companies as unknown as { name: string } | null)?.name ?? '—',
     ref_type: v.ref_type,
+    member_class: classOf.get(v.company_id) ?? appRows?.find((a) => a.id === v.ref_id)?.class ?? null,
     token: appRows?.find((a) => a.id === v.ref_id)?.token ?? null,
     amount: v.amount,
     status: v.status,

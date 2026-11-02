@@ -7,9 +7,12 @@ import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { voucherDate } from '@/lib/committee/voucher';
 import { msg } from '@/lib/nav/model';
-import { loadEvents, loadPosts, postCategory } from '@/lib/site/load';
+import { loadEvents, loadPosts, loadPublicMedia, postCategory } from '@/lib/site/load';
+import { MediaGallery } from '@/components/content/media';
 
-type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ post?: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ post?: string; channel?: string }> };
+
+const CHANNELS = ['all', 'News', 'Notice', 'Circular', 'Event'] as const;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'site.news.pageTitle') };
@@ -25,8 +28,10 @@ export default async function NewsPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `site.news.${k}`, v);
-  const [posts, events, sp] = await Promise.all([loadPosts(30), loadEvents(), searchParams]);
-  const open = posts.find((p) => p.id === sp.post) ?? null;
+  const [allPosts, events, sp, media] = await Promise.all([loadPosts(30), loadEvents(), searchParams, loadPublicMedia()]);
+  const channel = (CHANNELS as readonly string[]).includes(sp.channel ?? '') ? sp.channel! : 'all';
+  const posts = channel === 'all' ? allPosts : allPosts.filter((p) => p.category === channel);
+  const open = allPosts.find((p) => p.id === sp.post) ?? null;
   const t = (en: string, ur: string | null) => (locale === 'ur' ? ur || en : en);
   return (
     <SitePage locale={locale}>
@@ -42,6 +47,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
               <h2 id="post-h" style={{ fontSize: 28, fontWeight: 800, margin: '6px 0 12px' }}>
                 {t(open.title, open.title_ur)}
               </h2>
+              <MediaGallery locale={locale} media={media.filter((x) => x.post_id === open.id)} />
               <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{t(open.body, open.body_ur)}</div>
               <p style={{ marginTop: 16 }}>
                 <Link className="btn" href="/news" data-action="nav">
@@ -53,6 +59,13 @@ export default async function NewsPage({ params, searchParams }: Props) {
         </section>
       )}
       <Section n={1} title={m('latest')} id="latest">
+        <nav className="news-channels" aria-label={m('channels')}>
+          {CHANNELS.map((c) => (
+            <Link key={c} href={c === 'all' ? '/news#latest' : `/news?channel=${c}#latest`} className={`btn ${channel === c ? 'btn-primary' : ''}`} aria-current={channel === c ? 'true' : undefined} data-action="news.channel" data-channel={c}>
+              {c === 'all' ? m('allChannels') : postCategory(c, locale)}
+            </Link>
+          ))}
+        </nav>
         {posts.length ? (
           <div className="g3">
             {posts.map((p) => (

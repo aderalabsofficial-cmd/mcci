@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
+import { RenewDialog, RestoreDialog } from '@/components/members/lifecycle';
 import { HomeNext } from '@/components/membership/home-next';
 import { ProtoTabs } from '@/components/membership/tabs';
 import { both, Card, Journey, KV, L } from '@/components/membership/ui';
@@ -18,6 +19,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'screens.portal.membership') };
 }
 
+const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+const renewFrom = (validTo: string) => {
+  const t = new Date(`${validTo}T00:00:00Z`);
+  t.setUTCDate(t.getUTCDate() + 1);
+  return t.toISOString().slice(0, 10);
+};
+const renewTill = (validTo: string) => {
+  const from = renewFrom(validTo);
+  const d = from > today() ? from : today();
+  return `${Number(d.slice(5, 7)) >= 4 ? Number(d.slice(0, 4)) + 1 : Number(d.slice(0, 4))}-03-31`;
+};
+const memberLapsed = (m: { status: string; valid_to: string }) => m.status !== 'Permanent' || m.valid_to < today();
+
 /**
  * My Membership (prototype member/membership): status with the 8 steps; certificates & cards and renewal fill in
  * once MCCI approves, the fee is paid and the certificate is printed (M5–M7).
@@ -33,6 +47,7 @@ export default async function MembershipPage({ params }: Props) {
     supabase.from('documents').select('code, kind, status, valid_to').order('created_at', { ascending: false }),
   ]);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `membership.${k}`, v);
+  const { data: opensOn } = await (await createClient()).schema('api').rpc('renewal_opens_on');
   const asMember = member && (!app || ['withdrawn', 'draft', 'rejected', 'permanent'].includes(app.stage));
   const open = !asMember && app && app.stage !== 'withdrawn';
   const due =
@@ -73,7 +88,7 @@ export default async function MembershipPage({ params }: Props) {
               [m('page.member.no'), member.member_no],
               [m('page.member.cls'), `${m(`classes.${member.class}`)}${member.women ? ' · W' : ''}`],
               [m('page.member.status'), msg(locale, `register.status.${member.status}`)],
-              [m('page.member.since'), voucherDate(`${member.since}T12:00:00+05:00`, locale)],
+              [m('page.member.since'), member.since ? voucherDate(`${member.since}T12:00:00+05:00`, locale) : '—'],
               [m('page.member.validTo'), voucherDate(`${member.valid_to}T12:00:00+05:00`, locale)],
             ]}
           />
@@ -134,7 +149,35 @@ export default async function MembershipPage({ params }: Props) {
             <p className="muted">{m('page.cardsLater')}</p>
           </Card>,
           <Card key="r" title={<L {...both('membership.page.tabs.renew')} />}>
-            <p className="muted">{m('page.renewLater')}</p>
+            {asMember ? (
+              <>
+                <KV
+                  pairs={[
+                    [msg(locale, 'register.life.renew.till'), voucherDate(`${member.valid_to}T12:00:00+05:00`, locale)],
+                    [msg(locale, 'register.life.renew.opensOn'), opensOn ? voucherDate(`${opensOn}T12:00:00+05:00`, locale) : ''],
+                  ]}
+                />
+                <div className="pb" data-section="member-renew">
+                  {member.status === 'Permanent' || member.status === 'Expired' ? (
+                    <RenewDialog
+                      locale={locale}
+                      member={member.id}
+                      company={member.company_id}
+                      subject={member.member_no}
+                      defaultFrom={renewFrom(member.valid_to)}
+                      defaultTo={renewTill(member.valid_to)}
+                      canEditPeriod={false}
+                      className="btn btn-primary"
+                    />
+                  ) : null}
+                  {memberLapsed(member) && (
+                    <RestoreDialog locale={locale} member={member.id} company={member.company_id} subject={member.member_no} className="btn" />
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="muted">{m('page.renewLater')}</p>
+            )}
           </Card>,
         ]}
       />

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
+import { DeclarationForm } from '@/components/members/lifecycle';
 import { CompanyProfile, type Person } from '@/components/portal/company-profile';
 import { MemberConsentForm } from '@/components/whatsapp/forms';
 import { WhatNowCard } from '@/components/portal/what-now-card';
@@ -52,7 +53,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   const { data: whatsappData } = await (await createClient()).schema('api').rpc('wa_my_consent', { p_company: company.id });
   const whatsapp = whatsappData as unknown as { open: boolean; name: string | null; phone: string | null; status: string | null; categories: string[] | null } | null;
   const supabase = await createClient();
-  const [details, people, invites, changes, me] = await Promise.all([
+  const [details, people, invites, changes, me, declarations] = await Promise.all([
     supabase.from('companies').select(PARTICULAR_FIELDS.join(', ')).eq('id', company.id).single(),
     supabase.schema('api').rpc('company_people', { p_company: company.id }),
     canManage
@@ -71,6 +72,12 @@ export default async function ProfilePage({ params, searchParams }: Props) {
       .order('created_at', { ascending: false })
       .limit(20),
     supabase.from('profiles').select('lang').eq('id', session.userId).single(),
+    supabase
+      .from('change_declarations')
+      .select('id, summary, status, decision_note')
+      .eq('company_id', company.id)
+      .order('created_at', { ascending: false })
+      .limit(10),
   ]);
   for (const r of [details, people, invites, changes, me]) if (r.error) throw new Error(r.error.message);
 
@@ -131,6 +138,26 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         <section className="card mb-4" data-section="whatsapp-consent">
           <h2 className="font-bold">{msg(locale, 'wa.member.title')}</h2>
           <MemberConsentForm locale={locale} company={company.id} current={whatsapp} />
+        </section>
+      )}
+      {canManage && (
+        <section className="card mb-4" data-section="declare-change">
+          <div className="ch">
+            <h2 className="font-bold">{msg(locale, 'register.life.change.title')}</h2>
+            <DeclarationForm locale={locale} company={company.id} />
+          </div>
+          <p className="muted">{msg(locale, 'register.life.change.help')}</p>
+          {(declarations.data ?? []).map((d) => (
+            <div className="li st" key={d.id} data-my-declaration={d.status}>
+              <div style={{ flex: 1 }}>
+                <b dir="auto">{d.summary}</b>
+                {d.decision_note && <small dir="auto">{d.decision_note}</small>}
+              </div>
+              <span className={`bd ${d.status === 'Approved' ? 'green' : d.status === 'Rejected' ? 'red' : 'orange'}`}>
+                {msg(locale, `register.life.review.status.${d.status}`)}
+              </span>
+            </div>
+          ))}
         </section>
       )}
       <CompanyProfile

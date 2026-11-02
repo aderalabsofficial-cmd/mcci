@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { FilterBuilder } from '@/components/business/filter-builder';
 import { guardStaff } from '@/components/services/staff-page';
+import { AudienceTabs } from '@/components/whatsapp/audience-tabs';
+import { isTabFilter } from '@/lib/whatsapp/audience';
 import { CampaignComposer, type TemplateOption } from '@/components/whatsapp/composer';
 import { asLocale } from '@/i18n/locale';
 import { decodeFilter } from '@/lib/business/filters';
@@ -43,7 +45,10 @@ export default async function NewCampaignPage({ params, searchParams }: Props) {
           <p>{m('sub')}</p>
         </div>
       </div>
-      <FilterBuilder
+      <AudienceTabs locale={locale} filter={filter} q={q} facets={facets} />
+      <details className="card wa-advanced" open={filter.groups.length > 0 && !isTabFilter(filter)}>
+        <summary data-action="wa.advanced">{m('advanced')}</summary>
+        <FilterBuilder
         key={sp.segment ?? 'filter'}
         locale={locale}
         basePath="/admin/whatsapp/campaigns/new"
@@ -53,6 +58,7 @@ export default async function NewCampaignPage({ params, searchParams }: Props) {
         segment={open ? { id: open.id, name: open.name, description: open.description } : null}
         canSave={staffCanSave(session.access.staff?.levels.biz)}
       />
+      </details>
       <CampaignComposer locale={locale} filter={filter} q={q} templates={approved} segment={open?.id ?? null} />
     </div>
   );

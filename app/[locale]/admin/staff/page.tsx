@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { NoAccess } from '@/components/admin/no-access';
+import { AccessExtras } from '@/components/admin/access-extras';
 import { StaffScreen, type StaffRow } from '@/components/admin/staff-screen';
 import { PageHeader } from '@/components/shared/page-header';
 import { asLocale } from '@/i18n/locale';
@@ -40,7 +41,7 @@ export default async function StaffPage({ params }: Props) {
   }
 
   const supabase = await createClient();
-  const [dir, invites, designations, limits] = await Promise.all([
+  const [dir, invites, designations, limits, overrides, services, assignees] = await Promise.all([
     supabase.schema('api').rpc('staff_directory'),
     supabase
       .from('invitations')
@@ -50,6 +51,9 @@ export default async function StaffPage({ params }: Props) {
       .order('created_at', { ascending: false }),
     supabase.from('designations').select('name, seniority').order('seniority', { ascending: false }),
     supabase.from('role_permissions').select('designation, module, level'),
+    level >= 3 ? supabase.from('staff_permission_overrides').select('user_id, module, level, reason') : Promise.resolve({ data: [], error: null }),
+    supabase.from('service_types').select('key, name_en').order('sort'),
+    supabase.from('service_assignees').select('service_key, user_id'),
   ]);
   for (const r of [dir, invites, designations, limits]) if (r.error) throw new Error(r.error.message);
 
@@ -104,6 +108,16 @@ export default async function StaffPage({ params }: Props) {
         designations={(designations.data ?? []).map((d) => ({ name: d.name, seniority: d.seniority }))}
         limits={grid}
       />
+      {level >= 3 && (
+        <AccessExtras
+          locale={locale}
+          designations={(designations.data ?? []).map((d) => d.name)}
+          people={(dir.data ?? []).filter((s) => s.active && s.designation !== 'Secretary General').map((s) => ({ id: s.user_id, name: s.full_name, designation: s.designation }))}
+          overrides={(overrides.data ?? []) as { user_id: string; module: string; level: number; reason: string }[]}
+          services={(services.data ?? []).map((v) => ({ key: v.key, name: v.name_en }))}
+          assignees={assignees.data ?? []}
+        />
+      )}
     </>
   );
 }

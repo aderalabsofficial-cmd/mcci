@@ -161,15 +161,21 @@ test('A. counter payment → membership active; blacklist blocks renewal; whitel
   await act(page, row, 'reg.blacklist', { [REASON]: 'Listed on the FBR notice of 1 Oct' });
   await expect(flash(page)).toContainText('Marked blacklisted');
   await expect(page.locator('tr', { has: page.locator(row) }).locator('[data-blacklisted]')).toBeVisible();
-  await act(page, row, 'reg.renew');
+  const renew = async () => {
+    await page.locator(`${row} [data-action="reg.renew"]`).first().click();
+    const d = page.getByRole('dialog');
+    await d.locator('[data-field="declare-none"]').check();
+    await d.locator('[data-action="reg.renew.confirm"]').click();
+  };
+  await renew();
   await expect(page.getByRole('dialog').getByRole('alert')).toContainText('Record the whitelisting');
-  await page.getByRole('dialog').locator('[data-action="modal.close"]').click();
+  await page.keyboard.press('Escape');
 
   // whitelisting recorded with the evidence; renewal voucher; Accounts verify → the next 31 March
   await act(page, row, 'reg.whitelist', { [REASON]: 'FBR whitelisting letter No. 77 seen' });
   await expect(flash(page)).toContainText('Whitelisting recorded');
-  await act(page, row, 'reg.renew');
-  await expect(flash(page)).toContainText(/Renewal voucher PV-\d{4}-\d+ issued/);
+  await renew();
+  await expect(page.getByRole('status').filter({ hasText: /Renewal voucher PV-\d{4}-\d+ issued/ })).toBeVisible();
   const { data: rv } = await admin.from('payment_vouchers').select('voucher_no, amount').eq('ref_type', 'renewal').eq('ref_id', a!.member_id).single();
   expect(rv!.amount).toBe(7000);
   await page.goto('/admin/psid');
@@ -178,15 +184,30 @@ test('A. counter payment → membership active; blacklist blocks renewal; whitel
   const next = `${Number(yearEnd(new Date()).slice(0, 4)) + 1}-03-31`;
   expect((await admin.from('members').select('valid_to').eq('id', a!.member_id).single()).data!.valid_to).toBe(next);
 
-  // a lapsed member is restored by hand by the officer, with the reason
+  // a lapsed member: tax returns and every unpaid year through a voucher; the enrollment date stays (docs/31)
+  const before = (await admin.from('members').select('since').eq('id', a!.member_id).single()).data!.since;
   await admin.from('members').update({ status: 'Expired', valid_to: '2024-03-31' }).eq('id', a!.member_id);
   await page.goto('/admin/members');
-  await act(page, row, 'reg.restore', { [REASON]: 'Dues 2024-26 settled, receipt 5512' });
-  await expect(flash(page)).toContainText('Membership restored');
-  expect((await admin.from('members').select('status, valid_to').eq('id', a!.member_id).single()).data).toEqual({
-    status: 'Permanent',
-    valid_to: yearEnd(new Date()),
+  await page.locator(`${row} [data-action="reg.restore"]`).first().click();
+  const d = page.getByRole('dialog');
+  await expect(d.locator('[data-quote-total]')).toBeVisible();
+  await d.locator('[data-field="restore-returns"]').setInputFiles({
+    name: 'returns.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4 test'),
   });
+  await expect(d.locator('[data-uploaded="returns.pdf"]')).toBeVisible();
+  await d.locator('[data-action="reg.restore.confirm"]').click();
+  await expect(page.getByRole('status').filter({ hasText: /Restoration voucher PV-\d{4}-\d+ issued/ })).toBeVisible();
+  expect((await admin.from('members').select('status').eq('id', a!.member_id).single()).data!.status).toBe('Expired');
+  const { data: v } = await admin
+    .from('payment_vouchers')
+    .select('voucher_no, lines')
+    .eq('ref_type', 'restoration')
+    .eq('ref_id', a!.member_id)
+    .single();
+  expect((v!.lines as unknown[]).length).toBeGreaterThan(1);
+  expect((await admin.from('members').select('since').eq('id', a!.member_id).single()).data!.since).toBe(before);
 });
 
 test('B. bank confirmed → receipt upload, reject with reason, upload again, verify', async ({ page, browser }) => {

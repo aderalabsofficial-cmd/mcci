@@ -230,3 +230,83 @@
   .proto .wa-inbox {grid-template-columns:minmax(0,1fr)}
 }
 .proto .banner.green[data-wa-status] {color:#14532d;background:#dcfce7}
+
+/* accounts statement (MCCI's layout), printable */
+.proto .fin-sheet {background:var(--card);border:1px solid var(--b);border-radius:14px;padding:18px;margin-top:12px}
+.proto .fin-head {text-align:center;margin-bottom:10px}
+.proto .fin-head h2 {font-size:16px;font-weight:800;text-decoration:underline;margin:0}
+.proto .fin-head p {margin:2px 0;font-weight:700}
+.proto .fin-title {text-align:center;font-weight:800;letter-spacing:.08em;margin:16px 0 8px;font-size:14px}
+.proto .pills .pill {min-height:44px}
+.proto .pills .pill.on {color:#2b1d05}
+.proto .ch h3 a.rowlink {display:inline-flex;align-items:center;min-height:44px}
+.proto .fin-scroll {overflow-x:auto}
+.proto .fin-table {width:100%;border-collapse:collapse;font-size:13.5px}
+.proto .fin-table th, .proto .fin-table td {border:1px solid var(--b);padding:5px 8px;text-align:start}
+.proto .fin-table thead th {background:rgba(14,116,144,.14);font-weight:800}
+.proto .fin-table .fin-num {text-align:end;white-space:nowrap;font-variant-numeric:tabular-nums}
+.proto .fin-table .fin-no {width:44px;text-align:center}
+.proto .fin-group th {background:rgba(14,116,144,.14);font-weight:800}
+.proto .fin-total th, .proto .fin-total td {background:rgba(200,150,62,.22);font-weight:800}
+.proto .fin-result {margin:16px 0 0 auto;max-width:440px}
+.proto .fin-result div {display:flex;justify-content:space-between;gap:16px;padding:4px 8px;font-weight:700}
+.proto .fin-result dd {margin:0;font-variant-numeric:tabular-nums}
+.proto .fin-bottom {border-top:2px solid var(--t)}
+.proto .fin-diff {color:#b91c1c;font-weight:800}
+.proto .fin-file {display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;vertical-align:middle}
+.proto .fin-range .rep-filter {margin-top:6px}
+.proto .block {display:block}
+.proto .doc-error {color:#b91c1c;font-weight:600}
+@media print {
+  .no-print, .proto .no-print {display:none !important}
+  .proto .fin-sheet {border:0;padding:0}
+  .proto .fin-table {font-size:11px}
+  .proto .fin-table th, .proto .fin-table td {padding:2px 5px;border-color:#000}
+  .proto .fin-table tr {break-inside:avoid}
+}
+/* member record */
+.proto .mr-back {margin-bottom:12px}
+.proto .mr-h {font-size:14px;font-weight:800;margin:16px 0 8px}
+.proto .mr-strip {display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.proto .mr-strip > div {background:var(--card);border:1px solid var(--b);border-radius:12px;padding:10px 12px;display:grid;gap:2px}
+.proto .mr-strip small {color:var(--m);font-size:12px}
+.proto .mr-strip b {font-size:16px}
+.proto .mr-strip .mr-warn {border-color:#f59e0b;background:rgba(245,158,11,.1)}
+.proto .reg-search {flex:1;min-width:220px}
+/* content media */
+.media-field {border:1px solid var(--b,#e5e7eb);border-radius:12px;padding:12px;margin:0;display:grid;gap:10px}
+.media-field legend {font-weight:700;padding:0 6px}
+.media-drop {display:flex;align-items:center;gap:12px;min-height:64px;padding:12px;border:2px dashed var(--b,#cbd5e1);border-radius:12px;cursor:pointer;position:relative}
+.media-drop small {display:block}
+.media-drop input {position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.media-drop:focus-within {outline:2px solid #c8963e;outline-offset:2px}
+.media-list {list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.media-list li {border:1px solid var(--b,#e5e7eb);border-radius:10px;padding:8px;display:grid;gap:6px;justify-items:center;text-align:center;overflow-wrap:anywhere}
+.media-list img {width:100%;height:84px;object-fit:cover;border-radius:6px}
+.media-gallery {display:grid;gap:12px;margin:14px 0}
+.media-photos {display:grid;gap:8px}
+.media-photos.n2 {grid-template-columns:1fr 1fr}
+.media-photos.n3 {grid-template-columns:repeat(3,1fr)}
+.media-photos img {width:100%;height:100%;max-height:420px;object-fit:cover;border-radius:12px;display:block}
+.media-gallery video {width:100%;border-radius:12px}
+.news-channels {display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:18px}
+/* whatsapp audience tabs */
+.proto .wa-tabrow {display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:start;margin-top:8px}
+.proto .wa-tabrow > span {font-weight:700;padding-top:10px}
+.proto .wa-tabrow .pills {margin-bottom:0}
+.proto .wa-tabrow .pill {min-height:44px}
+.proto .wa-step {display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--gold,#c8963e);color:#fff;font-size:13px;font-weight:800;margin-inline-end:6px}
+.proto .wa-advanced summary {cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+/* staff guide */
+.proto .guide-ask {display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.proto .guide-ask .form-field {flex:1;min-width:240px}
+.proto .guide-ask input {width:100%;min-height:44px;border:1px solid var(--b);border-radius:10px;padding:8px 10px;background:var(--card2);color:var(--t);font:inherit}
+.proto .guide-suggest {margin-top:12px}
+.proto .access-extras {margin-top:16px}
+@media (max-width:640px) {
+  .proto .wa-tabrow {grid-template-columns:1fr;gap:2px}
+  .proto .fin-sheet {padding:10px}
+  .proto .fin-table {font-size:12.5px}
+  .proto .fin-table .fin-no {display:none}
+  .proto .fin-table th, .proto .fin-table td {padding:5px 6px}
+}

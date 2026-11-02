@@ -16,7 +16,10 @@ import { loadBank, loadVouchers } from '@/lib/payments/load';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ class?: string; category?: string }> };
+
+const CLASSES = ['all', 'Corporate', 'Associate'] as const;
+const CATEGORIES = ['all', 'membership', 'renewal', 'restoration', 'service', 'extra_card'] as const;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'pay.admin.title') };
@@ -28,7 +31,7 @@ export const dynamic = 'force-dynamic';
  * Payments (prototype admin/payments): receipts to verify, collections, MCCI's bank account and all vouchers.
  * Staff with module 'pay' ≥ 1 read; Accounts (pay ≥ 2) verify, reject and record counter payments (docs/06).
  */
-export default async function PaymentsAdminPage({ params }: Props) {
+export default async function PaymentsAdminPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const session = await requireUser();
@@ -42,7 +45,14 @@ export default async function PaymentsAdminPage({ params }: Props) {
       </>
     );
   }
-  const [rows, bank] = await Promise.all([loadVouchers(), loadBank()]);
+  const sp = await searchParams;
+  const cls = (CLASSES as readonly string[]).includes(sp.class ?? '') ? (sp.class as (typeof CLASSES)[number]) : 'all';
+  const category = (CATEGORIES as readonly string[]).includes(sp.category ?? '') ? (sp.category as (typeof CATEGORIES)[number]) : 'all';
+  const [allRows, bank] = await Promise.all([loadVouchers(), loadBank()]);
+  const rows = allRows.filter((v) => (cls === 'all' || v.member_class === cls) && (category === 'all' || v.ref_type === category));
+  const href = (over: { class?: string; category?: string }) =>
+    `/admin/payments?${new URLSearchParams({ class: over.class ?? cls, category: over.category ?? category })}`;
+  const paidOf = (r: (typeof allRows)[number]) => r.status === 'Paid' && (cls === 'all' || r.member_class === cls);
   const paid = rows.filter((v) => v.status === 'Paid');
   const waiting = rows.filter((v) => v.status === 'Receipt uploaded');
   const sum = (list: typeof rows) => list.reduce((s, v) => s + v.amount, 0);
@@ -67,6 +77,23 @@ export default async function PaymentsAdminPage({ params }: Props) {
           <Kpi label={m('kUnpaid')} value={rows.filter((v) => v.status === 'Unpaid').length} icon="clock" color="#3b82f6" />
           <Kpi label={m('kMembership')} value={pkr(sum(paid.filter((v) => v.ref_type === 'membership')))} icon="award" color="#0e7490" />
         </div>
+        <section className="card" data-section="pay-filters" aria-label={m('filtersLabel')}>
+          <nav className="pills" aria-label={m('classLabel')}>
+            {CLASSES.map((c) => (
+              <Link key={c} href={href({ class: c })} className={`pill ${cls === c ? 'on' : ''}`} aria-current={cls === c ? 'true' : undefined} data-action="pay.class" data-class={c}>
+                {c === 'all' ? m('allClasses') : msg(locale, `membership.classes.${c}`)}
+              </Link>
+            ))}
+          </nav>
+          <nav className="pills" aria-label={m('categoryLabel')}>
+            {CATEGORIES.map((c) => (
+              <Link key={c} href={href({ category: c })} className={`pill ${category === c ? 'on' : ''}`} aria-current={category === c ? 'true' : undefined} data-action="pay.category" data-category={c}>
+                {m(`categories.${c}`)}
+                {c !== 'all' && ` · ${pkr(sum(allRows.filter((v) => paidOf(v) && v.ref_type === c)))}`}
+              </Link>
+            ))}
+          </nav>
+        </section>
         <div style={{ marginBottom: 18 }}>
           <BankCard locale={locale} bank={bank} canEdit={staffLevel(session.access, 'plat') >= 2} />
         </div>

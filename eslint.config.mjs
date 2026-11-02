@@ -59,6 +59,7 @@ const SERVICE_ROLE_PATHS = [
   'lib/certificates/admin/**',
   'lib/demo/admin/**',
   'lib/site/admin/**',
+  'lib/content/admin/**',
   // Ask MCCI AI: the per-person question limit (api.rate_limit_take), after requireUser()
   'lib/assistant/admin/**',
   'lib/whatsapp/admin/**',
@@ -68,6 +69,8 @@ const config = [
   {
     ignores: [
       '.next/**',
+      '.claude/**',
+      'Login Page Design/**',
       'node_modules/**',
       'reference/**',
       'mcci-digital-prototypes/**',

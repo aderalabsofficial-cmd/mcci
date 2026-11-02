@@ -291,6 +291,7 @@ export function SettingsForm({
   locale: Locale;
   s: {
     sendingEnabled: boolean;
+    dailyLimit: number;
     ratePerMinute: number;
     maxCampaign: number;
     approvalThreshold: number;
@@ -313,6 +314,10 @@ export function SettingsForm({
               data-field="sending-enabled"
             />
             {m('sendingEnabled')}
+          </label>
+          <label className="form-field">
+            {m('dailyLimit')}
+            <input type="number" name="dailyLimit" min={1} defaultValue={s.dailyLimit} data-field="daily-limit" />
           </label>
           <label className="form-field">
             {m('rate')}

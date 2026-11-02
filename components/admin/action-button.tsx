@@ -6,7 +6,7 @@ import { useFlash } from '@/components/admin/flash';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
-import { renewMember, restoreMember, setBlacklist } from '@/lib/members/actions';
+import { setBlacklist } from '@/lib/members/actions';
 import { cancelVoucher, counterPayment, reissueVoucher, rejectPayment, verifyPayment } from '@/lib/payments/actions';
 import { revokeDocument } from '@/lib/temp/actions';
 import { callAction } from '@/lib/client/call-action';
@@ -19,8 +19,6 @@ export type StaffAction =
   | 'psid.cancel'
   | 'psid.gen'
   | 'qr.revoke'
-  | 'reg.renew'
-  | 'reg.restore'
   | 'reg.blacklist'
   | 'reg.whitelist';
 
@@ -32,8 +30,6 @@ const FIELDS: Record<StaffAction, Field[]> = {
   'psid.cancel': ['reason'],
   'psid.gen': [],
   'qr.revoke': ['reason'],
-  'reg.renew': [],
-  'reg.restore': ['reason'],
   'reg.blacklist': ['reason'],
   'reg.whitelist': ['reason'],
 };
@@ -81,13 +77,9 @@ export function ActionButton({
               ? cancelVoucher(locale, target, v.reason)
               : action === 'psid.gen'
                 ? reissueVoucher(locale, target)
-                : action === 'reg.renew'
-                        ? renewMember(locale, target)
-                        : action === 'reg.restore'
-                          ? restoreMember(locale, target, v.reason)
-                          : action === 'reg.blacklist' || action === 'reg.whitelist'
-                            ? setBlacklist(locale, target, action === 'reg.blacklist', v.reason)
-                            : revokeDocument(locale, target, v.reason),
+                : action === 'reg.blacklist' || action === 'reg.whitelist'
+                  ? setBlacklist(locale, target, action === 'reg.blacklist', v.reason)
+                  : revokeDocument(locale, target, v.reason),
     );
     setBusy(false);
     if (!r.ok) return setError(r.message);

@@ -41,6 +41,13 @@ const RULES: { mime: string; ext: string[]; kind: MediaKind; max: number; magic:
     magic: (b) => (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) || (b[0] === 0xff && ((b[1] ?? 0) & 0xe0) === 0xe0),
   },
   {
+    mime: 'audio/mp4',
+    ext: ['m4a'],
+    kind: 'audio',
+    max: 16 * 1024 * 1024,
+    magic: (b) => b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70,
+  },
+  {
     mime: 'audio/ogg',
     ext: ['ogg'],
     kind: 'audio',

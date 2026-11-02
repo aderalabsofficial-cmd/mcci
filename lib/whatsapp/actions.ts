@@ -450,6 +450,7 @@ export async function saveWhatsappSettings(_: ActionResult | null, form: FormDat
     const db = await createClient();
     const { error } = await db.schema('api').rpc('wa_settings_save', {
       p_values: {
+        dailyLimit: Number(text(form, 'dailyLimit')),
         ratePerMinute: Number(text(form, 'ratePerMinute')),
         maxCampaign: Number(text(form, 'maxCampaign')),
         approvalThreshold: Number(text(form, 'approvalThreshold')),

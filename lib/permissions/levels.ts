@@ -20,6 +20,9 @@ export const STAFF_MODULES = [
   'plat',
   'biz',
   'out',
+  'fin',
+  'vot',
+  'chg',
 ] as const;
 export const COMPANY_AREAS = ['mship', 'svc', 'docs', 'pay', 'events', 'profile'] as const;
 export type StaffModule = (typeof STAFF_MODULES)[number];

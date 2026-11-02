@@ -42,6 +42,14 @@ const BADGE: Record<StaffRow['status'], string> = {
   Disabled: 'badge',
 };
 
+function designationHintOf(locale: Locale, name: string) {
+  try {
+    return msg(locale, `access.designations.${name}`);
+  } catch {
+    return msg(locale, 'access.staff.customDesignation');
+  }
+}
+
 /** Prototype access.js `staff` page: KPIs, staff table (row opens the person), limits by designation. */
 export function StaffScreen({
   locale,
@@ -488,7 +496,7 @@ function PersonDialog({
           </div>
         ))}
       </dl>
-      <p className="text-[13.5px] text-muted">{msg(locale, `access.designations.${row.designation}`)}</p>
+      <p className="text-[13.5px] text-muted">{designationHintOf(locale, row.designation)}</p>
       {row.self && <p className="text-[13.5px] text-muted">{t('yourself')}</p>}
 
       {editable && (

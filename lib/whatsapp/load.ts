@@ -46,6 +46,7 @@ export async function loadSettings() {
   if (error) throw new Error(`settings: ${error.code}`);
   return data as unknown as {
     sendingEnabled: boolean;
+    dailyLimit: number;
     ratePerMinute: number;
     maxCampaign: number;
     approvalThreshold: number;

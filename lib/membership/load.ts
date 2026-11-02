@@ -284,8 +284,10 @@ export interface MyMembership {
   class: 'Corporate' | 'Associate';
   women: boolean;
   status: 'Permanent' | 'Temporary' | 'Expired' | 'Suspended' | 'Revoked' | 'TempExpired';
-  since: string;
+  since: string | null;
   valid_to: string;
+  id: string;
+  company_id: string;
   company: string;
   demo: boolean;
   /** proposer / seconder requests waiting for this person's company */
@@ -306,7 +308,7 @@ export const loadMyMembership = cache(async (): Promise<MyMembership | null> => 
   const supabase = await createClient();
   const { data } = await supabase
     .from('members')
-    .select('id, member_no, class, women, status, since, valid_to, companies(name, demo)')
+    .select('id, company_id, member_no, class, women, status, since, valid_to, companies(name, demo)')
     .in('company_id', companyIds);
   const rows = (data ?? []).sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
   const m = rows[0];
@@ -324,6 +326,8 @@ export const loadMyMembership = cache(async (): Promise<MyMembership | null> => 
     status: m.status,
     since: m.since,
     valid_to: m.valid_to,
+    id: m.id,
+    company_id: m.company_id,
     company: c?.name ?? '',
     demo: c?.demo ?? false,
     pendingEndorsements: count ?? 0,

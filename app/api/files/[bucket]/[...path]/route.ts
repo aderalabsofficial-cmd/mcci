@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 
 const NO_STORE = { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' };
-const BUCKETS = new Set(['application-docs', 'receipts', 'service-docs', 'form-snapshots']);
+const BUCKETS = new Set(['application-docs', 'receipts', 'service-docs', 'form-snapshots', 'member-docs', 'finance-docs']);
 
 const TYPE: Record<string, string> = {
   pdf: 'application/pdf',

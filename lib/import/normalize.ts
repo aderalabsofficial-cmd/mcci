@@ -271,8 +271,11 @@ export function normalizeRow(cells: Partial<Record<Field | 'representative_cnic'
   const validTo = raw.valid_to ? parseDate(cells.valid_to) : null;
   if (!raw.valid_to) err('valid_to', 'required');
   else if (!validTo) err('valid_to', 'date');
-  const since = raw.member_since ? parseDate(cells.member_since) : null;
-  if (raw.member_since && !since) err('member_since', 'date');
+  // a legacy register may say "Old" or leave it blank: the date is set later from SECP or FBR records, never guessed
+  const unknownSince = !raw.member_since || /^(old|n\/?a|-+)$/i.test(raw.member_since.trim());
+  const since = unknownSince ? null : parseDate(cells.member_since);
+  if (!unknownSince && !since) err('member_since', 'date');
+  if (unknownSince) warn('member_since', 'no_enrollment_date');
   if (since && validTo && since > validTo) err('member_since', 'since_after_valid');
 
   let status = parseStatus(raw.status ?? '');

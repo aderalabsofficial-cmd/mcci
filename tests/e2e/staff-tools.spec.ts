@@ -12,9 +12,11 @@ test.beforeEach(({}, info) => {
 
 test('reports show aggregate sections and download as CSV', async ({ page }) => {
   await signInAs(page, 'sg');
-  await page.goto('/admin/reports');
-  for (const s of ['membership', 'pipeline', 'payments', 'services', 'committee', 'verification'])
-    await expect(page.locator(`[data-report="${s}"]`)).toBeVisible();
+  const pillars = { membership: ['membership', 'pipeline', 'committee'], services: ['services', 'verification'], accounts: ['payments'] };
+  for (const [pillar, sections] of Object.entries(pillars)) {
+    await page.goto(`/admin/reports?pillar=${pillar}`);
+    for (const s of sections) await expect(page.locator(`[data-report="${s}"]`)).toBeVisible();
+  }
   const csv = await page.request.get('/api/reports?from=2026-01-01&to=2026-12-31');
   expect(csv.status()).toBe(200);
   expect(csv.headers()['content-type']).toContain('text/csv');

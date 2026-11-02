@@ -12,6 +12,14 @@ import { STAFF_MODULES, type Level } from '@/lib/permissions/levels';
 import { resetRoleLimits, saveRoleLimits } from '@/lib/staff/actions';
 import { cn } from '@/lib/utils';
 
+function designationHint(locale: Locale, name: string) {
+  try {
+    return msg(locale, `access.designations.${name}`);
+  } catch {
+    return msg(locale, 'access.staff.customDesignation');
+  }
+}
+
 const SG = 'Secretary General';
 
 /**
@@ -104,7 +112,7 @@ export function LimitsCard({
                   <th scope="row" className="px-1.5 py-2 text-start align-top text-[13px]">
                     <b>{d.name}</b>
                     <small className="block font-normal text-muted">
-                      {msg(locale, `access.designations.${d.name}`)}
+                      {designationHint(locale, d.name)}
                     </small>
                     {n > 0 && (
                       <small className="block font-bold text-[#8a5f12]">{t('unsaved', { n: String(n) })}</small>

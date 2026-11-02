@@ -59,6 +59,27 @@ export const loadPosts = cache(async (limit = 30): Promise<PublicPost[]> => {
   return (data ?? []) as PublicPost[];
 });
 
+export interface PublicMedia {
+  id: string;
+  post_id: string | null;
+  event_id: string | null;
+  kind: 'image' | 'video' | 'file';
+  path: string;
+  file_name: string;
+  caption: string | null;
+}
+
+/** what MCCI published with its posts and events; row-level security shows a draft post's media to staff only */
+export const loadPublicMedia = cache(async (): Promise<PublicMedia[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('content_media')
+    .select('id, post_id, event_id, kind, path, file_name, caption')
+    .order('sort');
+  if (error) throw new Error(`media: ${error.message}`);
+  return (data ?? []) as PublicMedia[];
+});
+
 export interface PublicEvent {
   id: string;
   title: string;

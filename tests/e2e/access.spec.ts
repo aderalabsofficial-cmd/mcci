@@ -204,16 +204,18 @@ test.describe('Company Profile', () => {
     await ctx.close();
   });
 
-  test('the Owner requests a change of particulars; it shows as pending', async ({ page }) => {
+  test('the Owner declares a change with its document; it shows as waiting for review', async ({ page }) => {
     await signInAs(page, 'member');
     await page.goto('/portal/profile');
-    await page.getByRole('button', { name: 'Request change of Business Telephone No.' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Request a change' });
-    await dialog.getByLabel('New value').fill('061-1234567');
-    await dialog.getByLabel('Reason (optional)').fill('New landline');
-    await dialog.locator('[data-action="profile.change.send"]').click();
-    await expect(page.getByRole('status')).toContainText('Change request sent to MCCI');
-    await expect(page.getByText('1 change pending')).toBeVisible();
-    await expect(page.getByText('061-1234567')).toBeVisible();
+    await expect(page.locator('[data-action="profile.change"]')).toHaveCount(0); // the old request had no reviewer
+    await page.locator('[data-action="chg.open"]').click();
+    const dialog = page.getByRole('dialog');
+    await dialog.locator('[data-field="change-summary"]').fill('New landline');
+    await dialog.locator('[data-field="change-tel"]').fill('061-1234567');
+    await dialog.locator('[data-field="change-document"]').setInputFiles({ name: 'bill.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 test') });
+    await expect(dialog.locator('[data-uploaded="bill.pdf"]')).toBeVisible({ timeout: 20_000 });
+    await dialog.locator('[data-action="chg.submit"]').click();
+    await expect(page.getByRole('status').filter({ hasText: 'sent to MCCI' })).toBeVisible();
+    await expect(page.locator('[data-my-declaration="Pending"]')).toContainText('New landline');
   });
 });

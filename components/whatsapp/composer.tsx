@@ -182,7 +182,9 @@ export function CampaignComposer({
   return (
     <div className="card wa-composer" data-composer>
       <div className="ch">
-        <h3>{m('title')}</h3>
+        <h3>
+          <span className="wa-step">2</span> {m('title')}
+        </h3>
       </div>
       <div className="biz-rule">
         <label className="form-field">

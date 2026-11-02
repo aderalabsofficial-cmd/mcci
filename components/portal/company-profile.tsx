@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, Pencil, User } from 'lucide-react';
+import { Mail, User } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { ActionForm, Hidden } from '@/components/shared/action-form';
 import { Bi } from '@/components/shared/bi';
@@ -10,7 +10,6 @@ import type { ActionResult } from '@/lib/access/result';
 import {
   inviteCompanyUser,
   removeCompanyUser,
-  requestParticularChange,
   resendCompanyInvite,
   revokeCompanyInvite,
   setUrduFirst,
@@ -58,13 +57,11 @@ export function CompanyProfile({
   const t = (k: string, vars?: Record<string, string>) => msg(locale, `access.company.${k}`, vars);
   const both = (path: string) => ({ en: msg('en', path), ur: msg('ur', path) });
   const [notice, setNotice] = useState<ActionResult | null>(null);
-  const [changing, setChanging] = useState<ParticularField | null>(null);
   const [inviting, setInviting] = useState(false);
   const [open, setOpen] = useState<Person | null>(null);
   const done = (r: ActionResult) => {
     setNotice(r);
     if (r.ok) {
-      setChanging(null);
       setInviting(false);
       setOpen(null);
     }
@@ -91,18 +88,6 @@ export function CompanyProfile({
                 <dt className="text-[12px] text-muted">{t(`fields.${f}`)}</dt>
                 <dd className="flex items-center justify-between gap-2">
                   <span className="min-w-0 font-semibold break-words">{show(f)}</span>
-                  {canManage && (
-                    <button
-                      type="button"
-                      className="-my-2 grid size-[var(--tap)] shrink-0 place-items-center rounded-[10px] text-muted hover:bg-hover"
-                      data-action="profile.change"
-                      aria-label={t('requestChange', { field: t(`fields.${f}`) })}
-                      title={t('requestChange', { field: t(`fields.${f}`) })}
-                      onClick={() => setChanging(f)}
-                    >
-                      <Pencil className="size-4" aria-hidden />
-                    </button>
-                  )}
                 </dd>
               </div>
             ))}
@@ -285,50 +270,6 @@ export function CompanyProfile({
           </Card>
         </div>
       </div>
-
-      {changing && (
-        <Modal
-          open
-          onOpenChange={(o) => !o && setChanging(null)}
-          title={t('changeTitle')}
-          intro={t('changeIntro')}
-          closeLabel={msg(locale, 'common.close')}
-        >
-          <DialogForm
-            action={requestParticularChange}
-            onDone={done}
-            values={{ locale, company: companyId, field: changing }}
-          >
-            {(busy, error) => (
-              <>
-                <p className="text-[14px]">
-                  <span className="text-muted">{t('current')}: </span>
-                  <b>{t(`fields.${changing}`)}</b> — {show(changing)}
-                </p>
-                <label className="form-field">
-                  {t('newValue')}
-                  <input
-                    name="value"
-                    required
-                    maxLength={500}
-                    type={changing === 'established' ? 'date' : changing === 'email' ? 'email' : 'text'}
-                  />
-                </label>
-                <label className="form-field">
-                  {t('reason')}
-                  <textarea name="reason" maxLength={500} />
-                </label>
-                <FormMessage result={error} />
-                <Footer cancel={t('cancel')} onCancel={() => setChanging(null)}>
-                  <button className="btn btn-primary" data-action="profile.change.send" disabled={busy}>
-                    {busy ? t('working') : t('sendChange')}
-                  </button>
-                </Footer>
-              </>
-            )}
-          </DialogForm>
-        </Modal>
-      )}
 
       {inviting && (
         <Modal

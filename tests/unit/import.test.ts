@@ -9,6 +9,7 @@ const codes = (r: { issues: { code: string; level: string }[] }, level?: string)
   r.issues.filter((i) => !level || i.level === level).map((i) => i.code);
 
 const good = {
+  member_since: '1 April 2015',
   membership_no: 'MCCI-C-1134',
   class: 'Corporate',
   company_name: 'Alpha Textiles (Pvt) Ltd',

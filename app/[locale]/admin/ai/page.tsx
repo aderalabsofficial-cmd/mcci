@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { Kpi } from '@/components/review/kpi';
+import { VoterList } from '@/components/reports/voter-list';
 import { guardStaff } from '@/components/services/staff-page';
+import { loadVoterList, VOTER_RESULTS, type VoterResult } from '@/lib/voter/load';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ cutoff?: string; class?: string; result?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'aiInsights.title') };
@@ -30,13 +32,20 @@ const docLabel = (locale: 'en' | 'ur', key: string) => {
  * apply. Reports ≥ 1 (ai_extractions are readable with Reports or Membership ≥ 1; certificate scans with
  * Certificates ≥ 1 — a part the person may not read is simply left out). Counts only: no applicant's data is shown.
  */
-export default async function AiInsightsPage({ params }: Props) {
+export default async function AiInsightsPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const session = await requireUser();
   const g = guardStaff(session, locale, 'rep', 'aiInsights.title');
   if (g.denied) return g.denied;
   const m = (k: string, v?: Record<string, string>) => msg(locale, `aiInsights.${k}`, v);
+  const sp = await searchParams;
+  const voterLevel = staffLevel(session.access, 'vot');
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+  const cutoff = /^\d{4}-\d{2}-\d{2}$/.test(sp.cutoff ?? '') ? sp.cutoff! : today;
+  const cls = sp.class === 'Corporate' || sp.class === 'Associate' ? sp.class : null;
+  const result: VoterResult = (VOTER_RESULTS as readonly string[]).includes(sp.result ?? '') ? (sp.result as VoterResult) : 'eligible';
+  const voters = voterLevel >= 1 ? await loadVoterList(cutoff, cls) : null;
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
   const supabase = await createClient();
   const [{ data: reads }, scans] = await Promise.all([
@@ -93,6 +102,9 @@ export default async function AiInsightsPage({ params }: Props) {
           />
         )}
       </div>
+      {voters && (
+        <VoterList locale={locale} rows={voters} cutoff={cutoff} cls={cls} result={result} basePath="/admin/ai" canExport={voterLevel >= 2} />
+      )}
       <div className="gr" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 16 }}>
         <section className="card" aria-labelledby="ai-docs">
           <div className="ch">

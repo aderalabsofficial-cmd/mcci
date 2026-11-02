@@ -1,8 +1,10 @@
 'use client';
 
 import { Bell, Check, Mail, Pencil, Plus, Send } from 'lucide-react';
-import { type ReactNode, useState, useTransition } from 'react';
+import { type ReactNode, useState, useTransition, useRef } from 'react';
 import { ActionNotice } from '@/components/shared/action-notice';
+import { MediaField, type MediaFieldHandle } from '@/components/content/media';
+import type { ContentMediaRow } from '@/lib/content/media';
 import { Modal } from '@/components/shared/modal';
 import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
@@ -194,7 +196,8 @@ export interface EventEdit {
 }
 
 /** ev.create / ev.edit */
-export function EventForm({ locale, event }: { locale: Locale; event?: EventEdit }) {
+export function EventForm({ locale, event, media }: { locale: Locale; event?: EventEdit; media?: ContentMediaRow[] }) {
+  const mediaRef = useRef<MediaFieldHandle>(null);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `eng.events.${k}`, v);
   const a = useAction(locale);
   const [open, setOpen] = useState(false);
@@ -239,8 +242,11 @@ export function EventForm({ locale, event }: { locale: Locale; event?: EventEdit
             if (e?.id) fd.set('id', e.id);
             setInner(null);
             const r = await a.run('save', () => saveEvent(fd));
-            if (r?.ok) setOpen(false);
-            else if (r) setInner(r);
+            if (r?.ok) {
+              const failed = await mediaRef.current?.upload(e?.id ?? (r as { id?: string }).id ?? '');
+              if (failed?.length) setInner({ ok: false, message: msg(locale, 'eng.media.someFailed', { names: failed.join(', ') }) });
+              else setOpen(false);
+            } else if (r) setInner(r);
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
@@ -280,6 +286,7 @@ export function EventForm({ locale, event }: { locale: Locale; event?: EventEdit
           <label className="flex items-center gap-2">
             <input type="checkbox" name="published" defaultChecked={e?.published ?? true} /> {m('form.published')}
           </label>
+          <MediaField ref={mediaRef} locale={locale} owner="event" existing={media} />
           <ActionNotice locale={locale} note={inner} />
           <div className="flex justify-end">
             <button type="submit" className="btn btn-primary" data-action="ev.save" disabled={a.locked}>
@@ -496,7 +503,8 @@ export interface PostEdit {
 }
 
 /** post.create / post.edit */
-export function PostForm({ locale, post }: { locale: Locale; post?: PostEdit }) {
+export function PostForm({ locale, post, media }: { locale: Locale; post?: PostEdit; media?: ContentMediaRow[] }) {
+  const mediaRef = useRef<MediaFieldHandle>(null);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `eng.content.${k}`, v);
   const a = useAction(locale);
   const [open, setOpen] = useState(false);
@@ -541,8 +549,11 @@ export function PostForm({ locale, post }: { locale: Locale; post?: PostEdit }) 
             if (p?.id) fd.set('id', p.id);
             setInner(null);
             const r = await a.run('save', () => savePost(fd));
-            if (r?.ok) setOpen(false);
-            else if (r) setInner(r);
+            if (r?.ok) {
+              const failed = await mediaRef.current?.upload(p?.id ?? (r as { id?: string }).id ?? '');
+              if (failed?.length) setInner({ ok: false, message: msg(locale, 'eng.media.someFailed', { names: failed.join(', ') }) });
+              else setOpen(false);
+            } else if (r) setInner(r);
           }}
         >
           <div className="grid gap-3 sm:grid-cols-2">
@@ -583,6 +594,7 @@ export function PostForm({ locale, post }: { locale: Locale; post?: PostEdit }) 
             {m('form.bodyUr')}
             <textarea name="body_ur" rows={6} maxLength={20000} defaultValue={p?.body_ur} dir="rtl" lang="ur" />
           </label>
+          <MediaField ref={mediaRef} locale={locale} owner="post" existing={media} />
           <ActionNotice locale={locale} note={inner} />
           <div className="flex justify-end">
             <button type="submit" className="btn btn-primary" data-action="post.save" disabled={a.locked}>

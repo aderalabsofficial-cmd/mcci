@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { EventForm } from '@/components/engagement/forms';
+import type { ContentMediaRow } from '@/lib/content/media';
 import { guardStaff } from '@/components/services/staff-page';
 import { EventsCalendar } from '@/components/site/events-calendar';
 import { asLocale } from '@/i18n/locale';
@@ -38,6 +39,7 @@ export default async function AdminEventsPage({ params }: Props) {
       .order('starts_at', { ascending: false }),
     supabase.from('event_registrations').select('event_id'),
   ]);
+  const { data: mediaRows } = await supabase.from('content_media').select('id, event_id, kind, path, file_name, caption').not('event_id', 'is', null).order('sort');
   const rows = events ?? [];
   const when = (iso: string) =>
     new Date(iso).toLocaleString(locale === 'ur' ? 'ur-PK' : 'en-GB', {
@@ -119,6 +121,7 @@ export default async function AdminEventsPage({ params }: Props) {
                         {canEdit && (
                           <EventForm
                             locale={locale}
+                            media={(mediaRows ?? []).filter((x) => x.event_id === e.id) as ContentMediaRow[]}
                             event={{
                               id: e.id,
                               title: e.title,

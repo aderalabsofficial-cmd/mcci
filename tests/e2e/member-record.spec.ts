@@ -14,16 +14,16 @@ test('the register opens a member record; every section opens; the actions are t
   test.skip(!id, 'needs the e2e member row');
   await signInAs(page, 'sg');
   await page.goto('/admin/members');
-  await page.locator(`a[data-action="member.open"][href*="${id}"]`).click();
+  await page.locator(`a[data-action="member.open"][href*="${id}"]`).first().click();
   await expect(page).toHaveURL(new RegExp(`/admin/member\\?id=${id}`), { timeout: 20_000 });
-  await expect(page.locator('.mr-grid')).toBeVisible();
+  await expect(page.locator('.mr-grid').first()).toBeVisible();
   await expect(page.locator(`[data-member] [data-action^="reg."]`).first()).toBeVisible();
   for (const tab of ['partners', 'documents', 'certificates', 'payments', 'history', 'particulars']) {
     await page.locator(`[data-action="member.tab"][href$="tab=${tab}"]`).click();
     await expect(page).toHaveURL(new RegExp(`tab=${tab}`));
     await expect(page.locator(`[data-action="member.tab"][href$="tab=${tab}"]`)).toHaveAttribute('aria-current', 'page');
   }
-  // without a member: a pointer to the register
+  // without a member: the register itself
   await page.goto('/admin/member');
-  await expect(page.locator('.card a[href="/admin/members"]')).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/members/);
 });
