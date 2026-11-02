@@ -198,6 +198,18 @@ export type Database = {
 "company_user_update":
 { Args: { "p_active": boolean,"p_company": string,"p_role": Database["public"]['Enums']["company_role"],"p_user": string }; Returns: undefined
                            },
+"content_media_caption":
+{ Args: { "p_caption": string,"p_id": string,"p_sort": number }; Returns: undefined
+                           },
+"content_media_remove":
+{ Args: { "p_id": string }; Returns: string
+                           },
+"declaration_decide":
+{ Args: { "p_approve": boolean,"p_id": string,"p_note"?: string }; Returns: undefined
+                           },
+"declaration_submit":
+{ Args: { "p_company": string,"p_context": string,"p_docs": Json,"p_fields": Json,"p_summary": string }; Returns: string
+                           },
 "demo_add":
 { Args: { "p_class": Database["public"]['Enums']["member_class"],"p_company": string,"p_days"?: number,"p_kind": string,"p_owner_email": string,"p_owner_name": string,"p_rep": string }; Returns: {
               "company_id": string,"invitation_id": string,"member_no": string,"token": string
@@ -220,6 +232,9 @@ export type Database = {
 { Args: { "p_apply"?: boolean,"p_companies": (string)[] }; Returns: {
               "item": string,"kind": string,"n": number
             }[]
+                           },
+"designation_add":
+{ Args: { "p_copy_from": string,"p_name": string,"p_seniority": number }; Returns: undefined
                            },
 "doc_review":
 { Args: { "p_document": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
@@ -285,6 +300,45 @@ export type Database = {
 "file_access":
 { Args: { "p_bucket": string,"p_mode": string,"p_path": string }; Returns: boolean
                            },
+"fin_account_add":
+{ Args: { "p_group": string,"p_name": string,"p_name_ur": string }; Returns: string
+                           },
+"fin_bank_balance_save":
+{ Args: { "p_bank": string,"p_month": string,"p_note": string,"p_paisa": number }; Returns: undefined
+                           },
+"fin_bank_opening_save":
+{ Args: { "p_bank": string,"p_opening_on": string,"p_paisa": number,"p_reason": string }; Returns: undefined
+                           },
+"fin_books":
+{ Args: { "p_to": string }; Returns: {
+              "bank_id": string,"paisa": number
+            }[]
+                           },
+"fin_entry_add":
+{ Args: { "p_account": string,"p_bank": string,"p_date": string,"p_name": string,"p_note": string,"p_paisa": number,"p_party": string,"p_path": string,"p_reference": string }; Returns: string
+                           },
+"fin_entry_verify":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"fin_entry_void":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"fin_figures":
+{ Args: { "p_from": string,"p_to": string,"p_verified_only"?: boolean }; Returns: {
+              "account_id": string,"month": string,"paisa": number
+            }[]
+                           },
+"fin_membership_breakdown":
+{ Args: { "p_from": string,"p_to": string }; Returns: {
+              "category": string,"class": string,"paisa": number,"vouchers": number
+            }[]
+                           },
+"fin_month_set":
+{ Args: { "p_closed": boolean,"p_month": string,"p_note": string }; Returns: undefined
+                           },
+"fin_settings":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "import_commit":
 { Args: { "p_confirm": string,"p_import": string }; Returns: {
               "created": number,"failed": number,"skipped": number,"updated": number
@@ -348,11 +402,23 @@ export type Database = {
 "member_blacklist":
 { Args: { "p_member": string,"p_note": string,"p_on": boolean }; Returns: undefined
                            },
+"member_enrollment_set":
+{ Args: { "p_fbr": string,"p_member": string,"p_reason"?: string,"p_secp": string }; Returns: string
+                           },
+"member_renew_declared":
+{ Args: { "p_company": string,"p_docs": Json,"p_fields": Json,"p_from"?: string,"p_member": string,"p_reason"?: string,"p_summary": string,"p_to"?: string }; Returns: string
+                           },
 "member_renew_start":
-{ Args: { "p_member": string }; Returns: string
+{ Args: { "p_declaration"?: string,"p_from"?: string,"p_member": string,"p_no_change"?: boolean,"p_reason"?: string,"p_to"?: string }; Returns: string
                            },
 "member_restore":
 { Args: { "p_member": string,"p_reason": string }; Returns: string
+                           },
+"member_restore_quote":
+{ Args: { "p_member": string }; Returns: Json
+                           },
+"member_restore_start":
+{ Args: { "p_docs": Json,"p_member": string,"p_reason"?: string }; Returns: string
                            },
 "my_access":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -434,6 +500,12 @@ export type Database = {
               "address": string,"blacklisted": boolean,"class": string,"company": string,"email": string,"gst": string,"member_no": string,"ntn": string,"rep_name": string,"sector": string,"since": string,"status": string,"tel": string,"valid_to": string,"women": boolean
             }[]
                            },
+"renewal_opens_on":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"renewal_opens_save":
+{ Args: { "p_day": string,"p_reason": string }; Returns: undefined
+                           },
 "role_permission_set":
 { Args: { "p_designation": string,"p_level": number,"p_module": string }; Returns: undefined
                            },
@@ -448,6 +520,9 @@ export type Database = {
                            },
 "seg_save":
 { Args: { "p_def": Json,"p_description": string,"p_id": string,"p_name": string }; Returns: string
+                           },
+"service_assignees_set":
+{ Args: { "p_reason": string,"p_service": string,"p_users": (string)[] }; Returns: undefined
                            },
 "settings_bank":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -491,6 +566,9 @@ export type Database = {
                            },
 "staff_mfa_reset":
 { Args: { "p_user": string }; Returns: undefined
+                           },
+"staff_override_set":
+{ Args: { "p_level": number,"p_module": string,"p_reason": string,"p_user": string }; Returns: undefined
                            },
 "staff_update":
 { Args: { "p_active": boolean,"p_designation": string,"p_user": string }; Returns: undefined
@@ -583,6 +661,14 @@ export type Database = {
 "ticket_resolve":
 { Args: { "p_note": string,"p_ticket": string }; Returns: {
               "email_id": number,"name": string,"ticket": string,"to_email": string
+            }[]
+                           },
+"voter_export_log":
+{ Args: { "p_class": string,"p_count": number,"p_cutoff": string,"p_result": string }; Returns: undefined
+                           },
+"voter_list":
+{ Args: { "p_class"?: string,"p_cutoff": string }; Returns: {
+              "blacklisted": boolean,"class": string,"company": string,"enrollment_source": string,"member_id": string,"member_no": string,"reason": string,"rep_name": string,"restored_at": string,"since": string,"status": string,"valid_to": string,"women": boolean
             }[]
                            },
 "voucher_cancel":
@@ -993,6 +1079,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"change_declarations": {
+                  Row: {
+                    "company_id": string,"context": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"decision_note": string | null,"documents": NonNullable<Json>,"fields": NonNullable<Json>,"id": string,"member_id": string | null,"requested_by": string | null,"status": string,"summary": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"context"?: string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"documents"?: NonNullable<Json>,"fields"?: NonNullable<Json>,"id"?: string,"member_id"?: string | null,"requested_by"?: string | null,"status"?: string,"summary": string
+                  }
+                  Update: {
+                    "company_id"?: string,"context"?: string,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_note"?: string | null,"documents"?: NonNullable<Json>,"fields"?: NonNullable<Json>,"id"?: string,"member_id"?: string | null,"requested_by"?: string | null,"status"?: string,"summary"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "change_declarations_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "change_declarations_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "change_declarations_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "change_declarations_requested_by_fkey"
+      columns: ["requested_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"change_requests": {
                   Row: {
                     "company_id": string,"created_at": string,"decided_at": string | null,"decided_by": string | null,"field": string,"id": string,"new_value": string,"old_value": string | null,"reason": string | null,"requested_by": string | null,"status": string
@@ -1176,6 +1300,38 @@ isOneToOne: false
                     {
       foreignKeyName: "consents_user_id_fkey"
       columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"content_media": {
+                  Row: {
+                    "bytes": number,"caption": string | null,"created_at": string,"event_id": string | null,"file_name": string,"id": string,"kind": string,"mime": string,"path": string,"post_id": string | null,"sort": number,"uploaded_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bytes": number,"caption"?: string | null,"created_at"?: string,"event_id"?: string | null,"file_name": string,"id"?: string,"kind": string,"mime": string,"path": string,"post_id"?: string | null,"sort"?: number,"uploaded_by"?: string | null
+                  }
+                  Update: {
+                    "bytes"?: number,"caption"?: string | null,"created_at"?: string,"event_id"?: string | null,"file_name"?: string,"id"?: string,"kind"?: string,"mime"?: string,"path"?: string,"post_id"?: string | null,"sort"?: number,"uploaded_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "content_media_event_id_fkey"
+      columns: ["event_id"]
+isOneToOne: false
+      referencedRelation: "events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_media_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "content_media_uploaded_by_fkey"
+      columns: ["uploaded_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -1425,6 +1581,144 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"fin_accounts": {
+                  Row: {
+                    "active": boolean,"auto_source": string | null,"created_at": string,"group_code": string,"id": string,"name_en": string,"name_ur": string | null,"sort": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"auto_source"?: string | null,"created_at"?: string,"group_code": string,"id"?: string,"name_en": string,"name_ur"?: string | null,"sort"?: number
+                  }
+                  Update: {
+                    "active"?: boolean,"auto_source"?: string | null,"created_at"?: string,"group_code"?: string,"id"?: string,"name_en"?: string,"name_ur"?: string | null,"sort"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fin_accounts_group_code_fkey"
+      columns: ["group_code"]
+isOneToOne: false
+      referencedRelation: "fin_groups"
+      referencedColumns: ["code"]
+    }
+                  ]
+                },"fin_bank_balances": {
+                  Row: {
+                    "balance_paisa": number,"bank_id": string,"entered_at": string,"entered_by": string | null,"month": string,"note": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "balance_paisa": number,"bank_id": string,"entered_at"?: string,"entered_by"?: string | null,"month": string,"note"?: string | null
+                  }
+                  Update: {
+                    "balance_paisa"?: number,"bank_id"?: string,"entered_at"?: string,"entered_by"?: string | null,"month"?: string,"note"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fin_bank_balances_bank_id_fkey"
+      columns: ["bank_id"]
+isOneToOne: false
+      referencedRelation: "fin_banks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fin_bank_balances_entered_by_fkey"
+      columns: ["entered_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fin_banks": {
+                  Row: {
+                    "active": boolean,"id": string,"is_default": boolean,"name": string,"opening_paisa": number,"sort": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"id"?: string,"is_default"?: boolean,"name": string,"opening_paisa"?: number,"sort"?: number
+                  }
+                  Update: {
+                    "active"?: boolean,"id"?: string,"is_default"?: boolean,"name"?: string,"opening_paisa"?: number,"sort"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"fin_closed_months": {
+                  Row: {
+                    "closed_at": string,"closed_by": string | null,"month": string,"note": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "closed_at"?: string,"closed_by"?: string | null,"month": string,"note"?: string | null
+                  }
+                  Update: {
+                    "closed_at"?: string,"closed_by"?: string | null,"month"?: string,"note"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fin_closed_months_closed_by_fkey"
+      columns: ["closed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fin_entries": {
+                  Row: {
+                    "account_id": string,"amount_paisa": number,"attachment_name": string | null,"attachment_path": string | null,"bank_id": string | null,"created_at": string,"created_by": string | null,"entry_no": string,"id": string,"note": string | null,"on_date": string,"party": string | null,"reference": string | null,"status": string,"verified_at": string | null,"verified_by": string | null,"void_reason": string | null,"voided_at": string | null,"voided_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "account_id": string,"amount_paisa": number,"attachment_name"?: string | null,"attachment_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"entry_no": string,"id"?: string,"note"?: string | null,"on_date": string,"party"?: string | null,"reference"?: string | null,"status"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                  }
+                  Update: {
+                    "account_id"?: string,"amount_paisa"?: number,"attachment_name"?: string | null,"attachment_path"?: string | null,"bank_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"entry_no"?: string,"id"?: string,"note"?: string | null,"on_date"?: string,"party"?: string | null,"reference"?: string | null,"status"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"void_reason"?: string | null,"voided_at"?: string | null,"voided_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "fin_entries_account_id_fkey"
+      columns: ["account_id"]
+isOneToOne: false
+      referencedRelation: "fin_accounts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fin_entries_bank_id_fkey"
+      columns: ["bank_id"]
+isOneToOne: false
+      referencedRelation: "fin_banks"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fin_entries_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fin_entries_verified_by_fkey"
+      columns: ["verified_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "fin_entries_voided_by_fkey"
+      columns: ["voided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"fin_groups": {
+                  Row: {
+                    "code": string,"kind": string,"name_en": string,"name_ur": string | null,"sort": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"kind": string,"name_en": string,"name_ur"?: string | null,"sort"?: number
+                  }
+                  Update: {
+                    "code"?: string,"kind"?: string,"name_en"?: string,"name_ur"?: string | null,"sort"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"import_rows": {
                   Row: {
                     "confidence": number | null,"created_member": string | null,"data": NonNullable<Json>,"decision": string,"import_id": string,"invitation_id": string | null,"invite_status": string | null,"invited_at": string | null,"issues": NonNullable<Json>,"match": string,"match_member": string | null,"raw": Json | null,"result": string | null,"row_no": number
@@ -1595,14 +1889,14 @@ isOneToOne: false
                   ]
                 },"members": {
                   Row: {
-                    "blacklist_note": string | null,"blacklisted": boolean,"blacklisted_at": string | null,"class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at": string,"id": string,"imported": boolean,"member_no": string,"public_listing": boolean,"rep_name": string,"restored_at": string | null,"serial": string | null,"since": string,"status": Database["public"]['Enums']["member_status"],"suspended_reason": string | null,"valid_to": string,"whitelist_note": string | null,"whitelisted_at": string | null,"women": boolean
+                    "blacklist_note": string | null,"blacklisted": boolean,"blacklisted_at": string | null,"class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at": string,"enrollment_source": string,"fbr_registered_on": string | null,"id": string,"imported": boolean,"member_no": string,"public_listing": boolean,"rep_name": string,"restored_at": string | null,"secp_incorporated_on": string | null,"serial": string | null,"since": string | null,"status": Database["public"]['Enums']["member_status"],"suspended_reason": string | null,"valid_from": string | null,"valid_to": string,"whitelist_note": string | null,"whitelisted_at": string | null,"women": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "blacklist_note"?: string | null,"blacklisted"?: boolean,"blacklisted_at"?: string | null,"class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at"?: string,"id"?: string,"imported"?: boolean,"member_no": string,"public_listing"?: boolean,"rep_name": string,"restored_at"?: string | null,"serial"?: string | null,"since": string,"status": Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_to": string,"whitelist_note"?: string | null,"whitelisted_at"?: string | null,"women"?: boolean
+                    "blacklist_note"?: string | null,"blacklisted"?: boolean,"blacklisted_at"?: string | null,"class": Database["public"]['Enums']["member_class"],"company_id": string,"created_at"?: string,"enrollment_source"?: string,"fbr_registered_on"?: string | null,"id"?: string,"imported"?: boolean,"member_no": string,"public_listing"?: boolean,"rep_name": string,"restored_at"?: string | null,"secp_incorporated_on"?: string | null,"serial"?: string | null,"since"?: string | null,"status": Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_from"?: string | null,"valid_to": string,"whitelist_note"?: string | null,"whitelisted_at"?: string | null,"women"?: boolean
                   }
                   Update: {
-                    "blacklist_note"?: string | null,"blacklisted"?: boolean,"blacklisted_at"?: string | null,"class"?: Database["public"]['Enums']["member_class"],"company_id"?: string,"created_at"?: string,"id"?: string,"imported"?: boolean,"member_no"?: string,"public_listing"?: boolean,"rep_name"?: string,"restored_at"?: string | null,"serial"?: string | null,"since"?: string,"status"?: Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_to"?: string,"whitelist_note"?: string | null,"whitelisted_at"?: string | null,"women"?: boolean
+                    "blacklist_note"?: string | null,"blacklisted"?: boolean,"blacklisted_at"?: string | null,"class"?: Database["public"]['Enums']["member_class"],"company_id"?: string,"created_at"?: string,"enrollment_source"?: string,"fbr_registered_on"?: string | null,"id"?: string,"imported"?: boolean,"member_no"?: string,"public_listing"?: boolean,"rep_name"?: string,"restored_at"?: string | null,"secp_incorporated_on"?: string | null,"serial"?: string | null,"since"?: string | null,"status"?: Database["public"]['Enums']["member_status"],"suspended_reason"?: string | null,"valid_from"?: string | null,"valid_to"?: string,"whitelist_note"?: string | null,"whitelisted_at"?: string | null,"women"?: boolean
                   }
                   Relationships: [
                     {
@@ -1610,6 +1904,38 @@ isOneToOne: false
       columns: ["company_id"]
 isOneToOne: false
       referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"membership_requests": {
+                  Row: {
+                    "arrears": NonNullable<Json>,"created_at": string,"created_by": string | null,"declaration_id": string | null,"documents": NonNullable<Json>,"id": string,"kind": string,"member_id": string,"no_change": boolean | null,"paid_at": string | null,"reason": string | null,"status": string,"valid_from": string | null,"valid_to": string | null,"voucher_no": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "arrears"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"declaration_id"?: string | null,"documents"?: NonNullable<Json>,"id"?: string,"kind": string,"member_id": string,"no_change"?: boolean | null,"paid_at"?: string | null,"reason"?: string | null,"status"?: string,"valid_from"?: string | null,"valid_to"?: string | null,"voucher_no"?: string | null
+                  }
+                  Update: {
+                    "arrears"?: NonNullable<Json>,"created_at"?: string,"created_by"?: string | null,"declaration_id"?: string | null,"documents"?: NonNullable<Json>,"id"?: string,"kind"?: string,"member_id"?: string,"no_change"?: boolean | null,"paid_at"?: string | null,"reason"?: string | null,"status"?: string,"valid_from"?: string | null,"valid_to"?: string | null,"voucher_no"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "membership_requests_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "membership_requests_declaration_id_fkey"
+      columns: ["declaration_id"]
+isOneToOne: false
+      referencedRelation: "change_declarations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "membership_requests_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
       referencedColumns: ["id"]
     }
                   ]
@@ -2103,6 +2429,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"service_assignees": {
+                  Row: {
+                    "service_key": string,"set_at": string,"set_by": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "service_key": string,"set_at"?: string,"set_by"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "service_key"?: string,"set_at"?: string,"set_by"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "service_assignees_service_key_fkey"
+      columns: ["service_key"]
+isOneToOne: false
+      referencedRelation: "service_types"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "service_assignees_set_by_fkey"
+      columns: ["set_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "service_assignees_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "staff"
+      referencedColumns: ["user_id"]
+    }
+                  ]
                 },"service_documents": {
                   Row: {
                     "created_at": string,"file_name": string | null,"id": string,"key": string,"path": string,"request_id": string,"uploaded_by": string | null
@@ -2233,14 +2591,14 @@ isOneToOne: false
                   ]
                 },"service_types": {
                   Row: {
-                    "active": boolean,"docs": NonNullable<Json>,"fee": number,"fields": NonNullable<Json>,"full_name_en": string | null,"key": string,"name_en": string,"name_ur": string | null,"sla_hours": number,"sort": number
+                    "active": boolean,"docs": NonNullable<Json>,"fee": number,"fields": NonNullable<Json>,"fin_auto": string,"full_name_en": string | null,"key": string,"name_en": string,"name_ur": string | null,"sla_hours": number,"sort": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "active"?: boolean,"docs": NonNullable<Json>,"fee"?: number,"fields": NonNullable<Json>,"full_name_en"?: string | null,"key": string,"name_en": string,"name_ur"?: string | null,"sla_hours"?: number,"sort"?: number
+                    "active"?: boolean,"docs": NonNullable<Json>,"fee"?: number,"fields": NonNullable<Json>,"fin_auto"?: string,"full_name_en"?: string | null,"key": string,"name_en": string,"name_ur"?: string | null,"sla_hours"?: number,"sort"?: number
                   }
                   Update: {
-                    "active"?: boolean,"docs"?: NonNullable<Json>,"fee"?: number,"fields"?: NonNullable<Json>,"full_name_en"?: string | null,"key"?: string,"name_en"?: string,"name_ur"?: string | null,"sla_hours"?: number,"sort"?: number
+                    "active"?: boolean,"docs"?: NonNullable<Json>,"fee"?: number,"fields"?: NonNullable<Json>,"fin_auto"?: string,"full_name_en"?: string | null,"key"?: string,"name_en"?: string,"name_ur"?: string | null,"sla_hours"?: number,"sort"?: number
                   }
                   Relationships: [
                     
@@ -2400,6 +2758,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"voter_list_exports": {
+                  Row: {
+                    "at": string,"class": string | null,"cutoff": string,"exported_by": string | null,"id": number,"result": string,"row_count": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"class"?: string | null,"cutoff": string,"exported_by"?: string | null,"id"?: never,"result": string,"row_count": number
+                  }
+                  Update: {
+                    "at"?: string,"class"?: string | null,"cutoff"?: string,"exported_by"?: string | null,"id"?: never,"result"?: string,"row_count"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "voter_list_exports_exported_by_fkey"
+      columns: ["exported_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"whatsapp_attachments": {
                   Row: {

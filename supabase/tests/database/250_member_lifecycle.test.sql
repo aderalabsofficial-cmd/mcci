@@ -27,7 +27,7 @@ select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_blac
 
 -- ───────── renewal ─────────
 select throws_ok($$ select tests.exec_as(tests.id('auditor'), 'select api.member_renew_start(tests.id(''member_b''))') $$, '42501', null, 'read-only staff cannot renew');
-select lives_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_renew_start(tests.id(''member_b''))') $$, 'the officer starts the renewal');
+select lives_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_renew_start(tests.id(''member_b''), null, null, true)') $$, 'the officer starts the renewal, with the declaration');
 select results_eq($$ select amount, status::text, jsonb_array_length(lines) from public.payment_vouchers where ref_type = 'renewal' and ref_id = tests.id('member_b') $$,
   $$ values (12000, 'Unpaid', 1) $$, 'a renewal voucher: the annual subscription only');
 select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_renew_start(tests.id(''member_b''))') $$, 'P0001', null, 'one open renewal voucher at a time');
@@ -39,13 +39,17 @@ select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_rene
 
 -- ───────── restoration ─────────
 update public.members set status = 'Expired', valid_to = '2024-03-31' where id = tests.id('member_e');
-select throws_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select api.member_restore(tests.id(''member_e''), ''Dues for 2024-26 paid at the counter'')') $$, '42501', null, 'Accounts (reg 1) cannot restore');
-select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_restore(tests.id(''member_e''), ''x'')') $$, 'P0001', null, 'a reason is required');
-select lives_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_restore(tests.id(''member_e''), ''Dues for 2024-26 paid at the counter, receipt 5512'')') $$, 'the Membership Officer restores by hand');
-select results_eq($$ select status::text, valid_to = private.year_end_of(current_date), restored_at is not null from public.members where id = tests.id('member_e') $$,
-  $$ values ('Permanent', true, true) $$, 'active to this year''s 31 March');
-select ok((select count(*) from public.audit_log where object = 'members' and reason like 'restored by the Membership Officer:%') >= 1, 'audited with the reason');
-select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_restore(tests.id(''member_e''), ''again please'')') $$, 'P0001', null, 'an active membership is not restored');
+create temp table t_rd on commit drop as
+  select jsonb_build_array(jsonb_build_object('path', m.company_id::text || '/taxreturns/a.pdf', 'name', 'a')) as docs from public.members m where m.id = tests.id('member_e');
+grant select on t_rd to authenticated;
+select throws_ok($$ select tests.exec_as(tests.id('accounts_staff'), 'select api.member_restore_start(tests.id(''member_e''), (select docs from t_rd))') $$, '42501', null, 'Accounts (reg 1) cannot restore');
+select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_restore_start(tests.id(''member_e''), ''[]'')') $$, 'P0001', null, 'tax returns are required');
+select lives_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_restore_start(tests.id(''member_e''), (select docs from t_rd))') $$, 'the Membership Officer issues the restoration voucher');
+select results_eq($$ select status::text, restored_at is null from public.members where id = tests.id('member_e') $$,
+  $$ values ('Expired', true) $$, 'not restored until the payment is verified');
+select ok((select count(*) from public.audit_log where object = 'membership_requests' and reason like 'restoration%') >= 1, 'audited');
+select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.member_restore(tests.id(''member_e''), ''again please'')') $$, '42501', null, 'restoring by hand is gone');
+update public.members set status = 'Permanent', valid_to = private.year_end_of(current_date) where id = tests.id('member_e');
 
 -- ───────── demo members ─────────
 update public.companies set demo = true, demo_expires_at = now() + interval '7 days' where id = tests.id('company_e');

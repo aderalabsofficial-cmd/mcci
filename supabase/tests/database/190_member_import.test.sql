@@ -67,7 +67,7 @@ select is(tests.num_as(tests.id('mo'), 'select count(*) from api.import_commit((
 select results_eq($$ select m.member_no, m.class::text, m.status::text, m.rep_name, m.valid_to, m.since, m.imported, m.public_listing, c.name, c.ntn, c.tel
                      from public.members m join public.companies c on c.id = m.company_id where m.member_no in ('MCCI-C-7001', 'MCCI-A-0099') order by 1 desc $$,
   $$ values ('MCCI-C-7001', 'Corporate', 'Permanent', 'Rep G', '2027-03-31'::date, '2015-04-01'::date, true, false, 'Gamma Mills (Pvt) Ltd', 'NTN-G', '0300-1234567'),
-            ('MCCI-A-0099', 'Associate', 'Suspended', 'Rep D', '2027-03-31'::date, (now() at time zone 'Asia/Karachi')::date, true, false, 'Delta Traders', null, null) $$,
+            ('MCCI-A-0099', 'Associate', 'Suspended', 'Rep D', '2027-03-31'::date, null::date, true, false, 'Delta Traders', null, null) $$,
   'numbers, classes and statuses exactly as in the file; marked imported; not listed publicly');
 select is((select rep_name from public.members where member_no = 'MCCI-C-9001'), 'Rep B', 'the existing member is unchanged');
 select ok((select last_value >= 7001 from public.member_no_c), 'the Corporate number sequence moved past the imported number');

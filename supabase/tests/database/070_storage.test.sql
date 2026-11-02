@@ -17,7 +17,7 @@ insert into storage.objects (bucket_id, name) values
 
 -- buckets
 select is((select count(*) from storage.buckets where id in ('application-docs','form-snapshots','receipts','certificates','service-docs','imports','cms')), 7::bigint, 'seven buckets');
-select is((select count(*) from storage.buckets where public), 1::bigint, 'only cms is public');
+select is((select count(*) from storage.buckets where public), 2::bigint, 'only cms and what MCCI publishes on posts are public');
 select is((select file_size_limit from storage.buckets where id = 'application-docs'), 10485760::bigint, '10 MB limit (docs/01)');
 
 -- NT-70: company isolation
