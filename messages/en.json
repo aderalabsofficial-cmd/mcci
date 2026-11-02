@@ -2878,6 +2878,8 @@
       "class_mismatch": "Class does not match the Membership No. (C = Corporate, A = Associate)",
       "status": "Status must be Permanent, Expired or Suspended",
       "status_inferred": "No status in the file: worked out from the valid-to date",
+      "valid_to_from_status": "No valid-to date in the file: taken from the renewal year in its status",
+      "valid_to_from_register": "No valid-to date in the file: taken from the membership year in its title",
       "expired_but_permanent": "Marked Permanent but the valid-to date has passed",
       "date": "{field} is not a date we can read",
       "since_after_valid": "Member since is after valid to",
