@@ -1,8 +1,9 @@
 # 30 · WhatsApp communication (owner brief of 30 Oct 2026)
 
 MCCI owns contacts, consent, campaigns and history. The IQPigeon WhatsApp API only delivers. The IQPigeon CRM is not
-involved. This module is **tested against a stand-in provider only**: no real WhatsApp message has been sent, because
-MCCI has no account on the provider yet (§5).
+involved. Automated tests use a stand-in provider. MCCI's account and official number are now on the live provider
+(§9), but no real WhatsApp message has been sent: there are no approved templates or consented recipients yet, sending
+is off, and the provider defects in §6 are not fixed.
 
 ## 1. Architecture
 
@@ -16,7 +17,7 @@ Business logic depends only on `lib/whatsapp/provider/types.ts`. `tests/e2e/fake
 the real routes, envelope, Idempotency-Key replay and 202 behaviour.
 
 Secrets live only in the server environment: `IQPIGEON_API_URL`, `IQPIGEON_API_KEY`, `IQPIGEON_CONNECTION_ID`,
-`IQPIGEON_PHONE_NUMBER_ID`, `IQPIGEON_WEBHOOK_SECRET`. `CRON_SECRET` and `APP_URL` already exist. The settings screen shows
+`IQPIGEON_PHONE_NUMBER_ID`, `IQPIGEON_WEBHOOK_SECRET`. `APP_URL` already exists; `CRON_SECRET` was added on the server on 2 Nov 2026 (§9). The settings screen shows
 Set or Not set, never a value.
 
 ## 2. The provider's actual API (source at `b225748`)
@@ -190,3 +191,35 @@ are fixed; two (`services.spec`, `verify.spec`) passed when re-run alone. The sp
 provider does not return them; no virus scan of uploads, as the server has no scanner; no choice of an existing MCCI document
 as an attachment, only uploads; failure breakdown shows provider codes as they come; "Communication Reports" are the dashboard
 and per-campaign results, with no separate date-range report.
+
+## 9. Connection status (owner's brief of 2 Nov 2026, migration 0620)
+
+**Why the site said "Not configured" with the keys in place.** The credentials were fine. The banner shows the result
+saved in `whatsapp_health`, and that had last been written on 31 Oct, before the values were complete. Nothing checked
+again until someone pressed Test connection. Opening the WhatsApp overview or Settings, or a worker tick, now checks
+again when the saved result says not configured or is more than 10 minutes old. A failed check never blocks the page.
+
+**Where the settings live.**
+
+| | Local | Production |
+|---|---|---|
+| File the app reads | `.env.local` | `/etc/mcci-web/env`, `/etc/mcci-web/release.env` |
+| `.env.iqpigeon.local` | Not read by the app. Input to `scripts/ops/whatsapp-env.sh`, which copies it to production | Not present |
+| Provider in tests | `tests/e2e/fake-iqpigeon.mjs` | `https://whatsappapi.iqpigeon.com` |
+
+Secret values are never shown, logged or stored in this repository. Keep `IQPIGEON_PHONE_NUMBER_ID` in
+`.env.iqpigeon.local` equal to the connection's phone number ID before running that script: a wrong value makes the
+connection test fail and refuses every webhook as another account's.
+
+**Settings shows these as separate facts:** provider connected; MCCI's number verified; approved templates available;
+contacts with consent; sending switched on. Being connected never turns sending on, and nothing turns it on by itself.
+
+**The provider's webhook test.** IQPigeon's dashboard shows its webhook as working only after its own test is delivered.
+That test is signed and names no number, so the route used to refuse it as another account's. A signed `webhook.test` now
+answers 200 and records the time; nothing from it is kept. An unsigned one gets 401.
+
+**Templates.** The provider's list gives name, language, status, category and ID only. Wording, buttons and variables are
+MCCI's own record beside it. Saving them never approves anything; status comes only from the provider's list.
+
+**Message types.** Text, template, image, document, audio and video: what the provider offers. It has no interactive
+messages, so the composer does not offer them.
