@@ -350,7 +350,7 @@ export function ImportPreview({
       {status === 'committed' && invites && (
         <div
           className="banner"
-          style={{ marginTop: 14, background: '#e8f0fb', color: '#0b2a5b', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}
+          style={{ marginTop: 14, background: 'var(--hov)', color: 'var(--t)', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}
           data-invites={invites.waiting + invites.failed} aria-live="polite">
           <b>
             <Mail size={16} aria-hidden /> {m('invite.title')}

@@ -132,4 +132,4 @@ export function Card({
   );
 }
 
-export const C = { GR: '#1fa34a', BL: '#3b82f6', OR: '#f59e0b', PU: '#8b5cf6', RD: '#ef4444', TL: '#14b8a6', PK: '#ec4899', GD: '#c8963e', CB: '#1b4f9c' };
+export const C = { GR: '#1fa34a', BL: '#3b82f6', OR: '#f59e0b', PU: '#8b5cf6', RD: '#ef4444', TL: '#14b8a6', PK: '#ec4899', GD: '#c8963e', CB: '#007845' };

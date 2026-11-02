@@ -130,7 +130,7 @@ export function StaffScreen({
         />
         <Kpi
           icon={<Shield className="size-6" aria-hidden />}
-          tone="#1b4f9c"
+          tone="#007845"
           label={t('kpiYou')}
           value={me.name.split(' ')[0] || '—'}
           hint={me.designation}

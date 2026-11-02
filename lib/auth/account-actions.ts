@@ -6,7 +6,7 @@ import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 import { createClient, createStatelessClient } from '@/lib/supabase/server';
-import { classifyIdentifier } from './identifier';
+import { classifyIdentifier, normalizeMobile } from './identifier';
 
 /**
  * Forgot / reset password and account registration (docs/16 C1, action register.start). Supabase Auth sends the
@@ -83,13 +83,21 @@ const registerSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().toLowerCase().email().max(254),
   password: newPassword,
+  businessName: z.string().trim().max(200),
+  mobile: z.string().trim().max(30),
 });
 
 export async function registerAccount(_: AccountFormState, form: FormData): Promise<AccountFormState> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));
   const password = String(form.get('password') ?? '');
   if (password !== String(form.get('confirm') ?? '')) return { error: msg(locale, 'auth.resetPage.mismatch') };
-  const parsed = registerSchema.safeParse({ fullName: form.get('fullName'), email: form.get('email'), password });
+  const parsed = registerSchema.safeParse({
+    fullName: form.get('fullName'),
+    email: form.get('email'),
+    password,
+    businessName: form.get('businessName') ?? '',
+    mobile: form.get('mobile') ?? '',
+  });
   if (!parsed.success) {
     const weak = parsed.error.issues.some((i) => i.path[0] === 'password');
     return { error: msg(locale, weak ? 'auth.registerPage.weak' : 'auth.errors.required') };
@@ -102,7 +110,13 @@ export async function registerAccount(_: AccountFormState, form: FormData): Prom
     options: {
       emailRedirectTo: confirmLink(locale, '/portal'),
       // profiles.full_name and profiles.lang come from this metadata (trigger handle_new_user, migration 0120)
-      data: { full_name: parsed.data.fullName, lang: locale },
+      // business_name and mobile only fill in the first draft of the membership form (startApplication)
+      data: {
+        full_name: parsed.data.fullName,
+        lang: locale,
+        business_name: parsed.data.businessName,
+        mobile: normalizeMobile(parsed.data.mobile) ?? '',
+      },
     },
   });
   if (error?.code === 'weak_password') return { error: msg(locale, 'auth.registerPage.weak') };

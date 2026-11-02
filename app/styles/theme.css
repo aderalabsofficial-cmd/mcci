@@ -1,0 +1,163 @@
+/*
+ * The green brand identity (owner, Nov 2026; logo green from the front-end design) and clear separation in light mode.
+ * Colours live in the tokens in app/globals.css. This file only holds what proto.css and site.css write as a fixed
+ * value (they are generated from the prototype and not edited by hand). Loaded after them on every layout that
+ * shows them.
+ *
+ *   page (--bg)  <  card (--card, with --sh-card)  <  input (--input-bg, with --input-b at 3:1)
+ *   text --t 15:1, --m 5:1 on cards and page; white on --brand 5.6:1, on the sidebar 8:1 (WCAG AA)
+ */
+
+/* ── primary actions: green with white text ── */
+.proto .btn-gold,
+.btn.btn-gold {
+  background: linear-gradient(135deg, var(--em), var(--em-2));
+  color: #fff;
+  box-shadow: 0 8px 20px var(--brand-glow);
+}
+/* the "what to do now" card is itself coloured, so its button stays gold with dark text to stand out */
+.proto .next .btn-gold {
+  background: linear-gradient(135deg, var(--amber), var(--gold));
+  color: #2a1d05;
+}
+
+/* ── selected tabs, chips and pills: white on green ── */
+.proto .tabs button.on,
+.proto .chip.on,
+.proto .pills .pill.on,
+.proto .biz .on i {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.proto .ptabs a.on {
+  color: var(--gt);
+  border-color: var(--brand);
+}
+.proto .ptabs em,
+.proto .nb {
+  background: var(--brand);
+  color: #fff;
+}
+.proto .tabs button:hover,
+.proto .kcard:hover,
+.proto .cd:hover {
+  border-color: var(--brand);
+}
+
+/* ── the blue gradients of the prototype ── */
+.proto .hz {
+  background: linear-gradient(120deg, #003d24, #005c35 55%, #007845);
+}
+.proto .next.blue {
+  background: linear-gradient(120deg, #003d24, #007845);
+}
+.proto .mcard,
+.proto .tflow i,
+.proto .eav {
+  background: linear-gradient(135deg, #003d24, #007845);
+}
+.proto .prow .pph .pn {
+  background: var(--nv, #005c35);
+}
+.proto .paper:after {
+  background: linear-gradient(transparent, rgba(0, 120, 69, 0.28), transparent);
+}
+.proto .ai-bot {
+  background: rgba(0, 120, 69, 0.09);
+}
+
+/* ── separation: cards lift off the page ── */
+.proto .card,
+.proto .kpi,
+.proto .kc,
+.proto .kcard,
+.site .sc,
+.site .xstat {
+  box-shadow: var(--sh-card);
+}
+.proto .card .card {
+  box-shadow: none;
+}
+
+/* ── tables: a head you can tell from the rows ── */
+.proto .tw th {
+  background: var(--th);
+  color: var(--t);
+  border-bottom: 1px solid var(--b-strong);
+}
+.proto .tw td {
+  border-bottom-color: var(--b);
+}
+.proto .tw tbody tr:hover {
+  box-shadow: inset 3px 0 var(--brand);
+}
+.proto .tw tbody tr.st:hover {
+  box-shadow: none;
+}
+
+/* ── inputs: white on the card, with a border you can see (WCAG 1.4.11) ── */
+.proto
+  :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not(
+    [type='color']
+  ),
+.form-field :is(input, select, textarea) {
+  background: var(--input-bg);
+  border-color: var(--input-b);
+}
+.site .ask input {
+  border-color: transparent;
+  background: transparent;
+}
+.proto :is(input, select, textarea):focus-visible,
+.form-field :is(input, select, textarea):focus {
+  outline: 0;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.proto ::placeholder {
+  color: var(--m);
+  opacity: 1;
+}
+.proto .sw {
+  background: var(--input-b);
+}
+
+/* ── focus ring: green reads at 3:1 on every light surface, the mint in dark ── */
+.proto :focus-visible,
+aside :focus-visible {
+  outline-color: var(--ring);
+}
+aside :focus-visible {
+  outline-color: #fff;
+}
+
+/* ── public inner pages: the navy blocks of the old home ── */
+.site .xmarq,
+.site .xcta2 {
+  background: linear-gradient(120deg, #003d24, #005c35);
+}
+.site .xstat b {
+  color: var(--gt);
+}
+.site .xlive {
+  color: #0d1a14;
+}
+.site .sx:not(.xdark) .xend-s > i,
+.site .xtl-s i {
+  background: linear-gradient(135deg, #003d24, #007845);
+}
+.site .urdu-cd {
+  background: linear-gradient(135deg, #04130d, #0b3b29 60%, #005c35);
+}
+
+/* ── the "what to do now" card, in the brand colour (its button stays gold to stand out) ── */
+.proto .next.gold {
+  background: linear-gradient(120deg, #003d24, #007845);
+}
+
+/* ── headings carry the page: bold English titles (Nastaleeq stays regular, it has no bold) ── */
+html[lang='en'] .proto :is(.ph h1, .ch h3, .hz h1, .next-b h2) {
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}

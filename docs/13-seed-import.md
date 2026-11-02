@@ -23,6 +23,14 @@ Template columns (first row headers):
 sector, address, ntn, gst, representative_name, representative_cnic, mobile, email, member_since (yyyy-mm-dd),
 valid_to (yyyy-mm-dd), status (Permanent|Expired|Suspended), certificate_serial`
 
+MCCI's own registers (Corporate and Associate, 2026-27) are read as they are: a title, a two-row header (a group such as
+"Authorized Representative" over "Name", "Mobile", "Email"), then the members. There is no class column (it comes from
+the number, A-1234 / C-123) and no valid-to column: it comes from the status ("Renewal 2026-27" ends 31 March 2027) or the
+year in the title, always as a warning in the preview. "Renewal", "Restoration" and "New Membership" mean Permanent; a
+renewal for a year that has ended means Expired. The representative's mobile and email come first, then the business's
+own. Not kept, because the register has no place for them: mailing address, particulars, establishment date, fax,
+website, father's name, home address, designation, proposer, seconder and payment details. CNIC is never kept (D-M7).
+
 Process: upload → server parses (SheetJS) → validation report (duplicates, bad formats, missing email, unknown
 class) shown as a table with row numbers → staff fix or skip rows → **Commit** creates companies, members and an
 `Owner` invitation per email (sent later in a controlled batch). Import is idempotent on `membership_no`

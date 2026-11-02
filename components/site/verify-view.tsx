@@ -46,7 +46,7 @@ export function VerifyView({
   const pattern = v?.certificate_ref ? rosette(v.certificate_ref, 220) : null;
   return (
     <div className="proto">
-      <section className="relative isolate overflow-hidden bg-[#0b2a5b] pt-[calc(var(--xh)+28px)] pb-10 text-white">
+      <section className="relative isolate overflow-hidden bg-navy-800 pt-[calc(var(--xh)+28px)] pb-10 text-white">
         <div className="mx-auto w-full max-w-[920px] px-[var(--gutter)] sm:px-6">
           <h1 className="text-[30px] leading-tight font-extrabold sm:text-[44px]">{m('title')}</h1>
           <p lang={other} className="mt-1 text-[18px] text-white/85">

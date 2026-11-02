@@ -32,17 +32,45 @@ test.describe('desktop shells', () => {
     await expect(page.locator('[data-action="lang.toggle"]:visible')).toHaveCount(0);
   });
 
-  test('public: header is transparent over the hero and turns solid after scrolling', async ({ page }) => {
-    await open(page, '/');
+  test('public: the inner pages keep the header that turns solid; the home page has the design one, which stays', async ({ page }) => {
+    await open(page, '/about');
     const header = page.locator('header').first();
     await expect(header).not.toHaveAttribute('data-solid');
     await page.mouse.wheel(0, 600);
     await expect(header).toHaveAttribute('data-solid', 'true');
+    await open(page, '/');
+    const home = page.locator('header.hdr');
+    await expect(home).not.toHaveClass(/scrolled/);
+    await page.mouse.wheel(0, 600);
+    await expect(home).toHaveClass(/scrolled/);
+    await expect(home).toBeInViewport();
     await expect(page.getByRole('contentinfo')).toBeVisible();
     await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Staff portal' })).toHaveAttribute(
       'href',
       '/admin',
     );
+  });
+
+  test('home header: the full menu on every laptop width, the toggle only below 1024 px, nothing off the edge', async ({ page }) => {
+    for (const url of ['/', '/ur'])
+      for (const [width, full] of [
+        [1920, true],
+        [1366, true],
+        [1280, true],
+        [1200, true],
+        [1024, true],
+        [1023, false],
+        [768, false],
+        [412, false],
+        [360, false],
+      ] as const) {
+        await page.setViewportSize({ width, height: 800 });
+        await open(page, url);
+        await expect(page.locator('.hdr-nav'), `${url} at ${width}`).toBeVisible({ visible: full });
+        await expect(page.locator('.menu-btn'), `${url} at ${width}`).toBeVisible({ visible: !full });
+        const over = await page.locator('.hdr-bar').evaluate((bar) => bar.scrollWidth - bar.clientWidth);
+        expect(over, `${url} at ${width}`).toBeLessThanOrEqual(0);
+      }
   });
 
   test('language switch moves to Urdu (RTL) and back', async ({ page }) => {

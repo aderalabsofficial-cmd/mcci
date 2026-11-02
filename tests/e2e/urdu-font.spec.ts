@@ -16,11 +16,21 @@ test.describe('Urdu font', () => {
     expect(res.headers()['cache-control']).toBe('public, max-age=31536000, immutable');
   });
 
-  test('is what Urdu pages render with', async ({ page }) => {
-    await open(page, '/ur/portal');
-    const loaded = await page.evaluate(() =>
-      [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Jameel Noori Nastaleeq' && f.status === 'loaded'),
-    );
-    expect(loaded).toBe(true);
+  for (const url of ['/ur/portal', '/ur', '/ur/login', '/ur/register'])
+    test(`is what ${url} renders with`, async ({ page }) => {
+      await open(page, url);
+      const loaded = await page.evaluate(() =>
+        [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Jameel Noori Nastaleeq' && f.status === 'loaded'),
+      );
+      expect(loaded).toBe(true);
+    });
+
+  test('the owner\'s design loads no script or font from another site', async ({ page, baseURL }) => {
+    const outside: string[] = [];
+    page.on('request', (r) => {
+      if (/^https?:/.test(r.url()) && new URL(r.url()).hostname !== new URL(baseURL!).hostname) outside.push(r.url());
+    });
+    for (const url of ['/', '/ur', '/login', '/register']) await open(page, url);
+    expect(outside).toEqual([]);
   });
 });

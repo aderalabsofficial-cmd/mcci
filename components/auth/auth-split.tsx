@@ -1,37 +1,41 @@
-import Image from 'next/image';
 import type { ReactNode } from 'react';
+import { AuthArt } from '@/components/auth/auth-art';
+import { LangToggle } from '@/components/shared/lang-toggle';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
+import '@/app/styles/landing.css';
+
+/** "Back to website" and the language switch, at the top of a sign-in pane */
+export function AuthTop({ locale }: { locale: Locale }) {
+  return (
+    <div className="au-top">
+      <Link className="au-back" href="/" data-action="nav">
+        <svg className="au-arrow" viewBox="0 0 24 24" aria-hidden>
+          <path d="M19 12H5M11 6l-6 6 6 6" />
+        </svg>
+        <span>{msg(locale, 'landing.au.back')}</span>
+      </Link>
+      <LangToggle variant="slide" />
+    </div>
+  );
+}
 
 /**
- * The prototype's login layout (site/login `.lg2`): a brand panel — logo, "Welcome to the digital Chamber.", the
- * tagline in English and Urdu — next to the form column (max 520 px). Stacked on phones. Shared by every auth page.
+ * The owner's sign-in design for a page with one form (forgot, reset, 2-step, invitation, staff): the photo panel next
+ * to the form. /login and /register have their sliding version (components/auth/auth-switch.tsx). The staff page is
+ * linked from nowhere and links to nowhere (lib/auth/staff-path.ts), so it has no top row: `top={false}`.
  */
-export function AuthSplit({ locale, children }: { locale: Locale; children: ReactNode }) {
+export function AuthSplit({ locale, top = true, children }: { locale: Locale; top?: boolean; children: ReactNode }) {
   return (
-    <div className="grid min-h-svh grid-cols-1 md:grid-cols-2">
-      <div className="relative flex flex-col justify-center overflow-hidden bg-[linear-gradient(150deg,#0b2a5b,#1b4f9c_60%,#1fa6a0)] px-[30px] pt-[calc(var(--appbar-h)+40px)] pb-10 text-white md:p-[60px] md:pt-[120px]">
-        <Link href="/" className="inline-flex w-fit" aria-label={msg(locale, 'brand.name')}>
-          <Image
-            src="/images/logo-white.png"
-            width={96}
-            height={96}
-            alt={msg(locale, 'brand.logoAlt')}
-            className="h-16 w-auto md:h-24"
-            priority
-          />
-        </Link>
-        <h1 className="mt-[30px] text-[32px] leading-[1.1] font-extrabold tracking-[-0.02em] md:text-[44px]">
-          {msg(locale, 'auth.welcome')}
-        </h1>
-        {locale === 'en' && <p className="mt-3 max-w-[440px] text-[15px] text-white/90">{msg('en', 'auth.tagline')}</p>}
-        <p lang="ur" dir="rtl" className="mt-3 max-w-[440px] text-[17px] leading-[1.9] text-white">
-          {msg('ur', 'auth.tagline')}
-        </p>
-      </div>
-      <div className="mx-auto flex w-full max-w-[520px] flex-col justify-center px-[30px] py-10 md:p-[60px]">
-        {children}
+    <div className="lp">
+      <div className="au-shell" data-mode="signin">
+        <div className="au-pane au-up au-empty" aria-hidden />
+        <div className="au-pane au-in">
+          {top && <AuthTop locale={locale} />}
+          <div className="au-card">{children}</div>
+        </div>
+        <AuthArt locale={locale} solo />
       </div>
     </div>
   );

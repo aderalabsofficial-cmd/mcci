@@ -1,10 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { BUILT_ROUTES, localized, LOCALES, open } from './helpers';
+import { AUDIT_ROUTES, localized, LOCALES, open } from './helpers';
 
 // docs/10-testing.md: zero serious or critical axe violations on every page.
 test.describe('accessibility (axe)', () => {
-  for (const route of BUILT_ROUTES)
+  for (const route of AUDIT_ROUTES)
     for (const locale of LOCALES)
       test(`${localized(route, locale)}`, async ({ page }) => {
         await open(page, localized(route, locale));

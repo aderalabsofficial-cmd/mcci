@@ -13,7 +13,7 @@ const env = readLocalEnv();
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'desktop project only'));
 
 const PAGES: [string, RegExp][] = [
-  ['/', /Multan’s trade/],
+  ['/', /Multan/],
   ['/about', /About MCCI/],
   ['/membership', /Membership/],
   ['/services', /Digital Services/],
@@ -37,17 +37,47 @@ test('every public page opens in English and Urdu, with the Urdu page right-to-l
   }
 });
 
-test('home: counters, services and journey; the live panel shows tokens, never company names', async ({ page }) => {
+test('home: the hero stats, services and fees; the live panels show tokens, never company names', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.xstat')).not.toHaveCount(0);
-  await expect(page.locator('.sc[href^="/service?s="]')).toHaveCount(7);
-  await expect(page.locator('.steps8 [role="listitem"]')).toHaveCount(6);
-  await expect(page.locator('.xlive')).not.toContainText('Company A');
-  await expect(page.locator('.xlive')).not.toContainText('DEMO');
+  // the figures are the server's own numbers (with the database: below), and nothing says "sample" about them
+  await expect(page.locator('.hero-live [data-stat="issued"]')).toHaveText(/^[\d,]+$/);
+  await expect(page.locator('.hero-live [data-stat="open"]')).toHaveText(/^[\d,]+$/);
+  await expect(page.locator('.kpi')).toHaveCount(4);
+  await expect(page.locator('.svc[href^="/service?s="]')).toHaveCount(7);
+  await expect(page.locator('#fee-table tbody tr')).toHaveCount(3);
+  for (const panel of ['.hero-live', '.desk-feed']) {
+    await expect(page.locator(panel)).not.toContainText('Company A');
+    await expect(page.locator(panel)).not.toContainText('DEMO');
+  }
+  await page.locator('.hero-live a[href="/live"]').click();
+  await expect(page).toHaveURL(/\/live$/);
+  await page.goto('/');
   // verify box goes to /verify
   await page.getByLabel('Document code').fill('MCCI-QR-ABCDE-23456');
   await page.locator('[data-action="verify.go"]').click();
   await expect(page).toHaveURL(/\/verify\?c=MCCI-QR-ABCDE-23456/);
+});
+
+test('home: every way in goes to a real page', async ({ page }) => {
+  await page.goto('/');
+  const hrefs = await page.locator('main a[href], header a[href], footer a[href]').evaluateAll((list) =>
+    [...new Set(list.map((a) => a.getAttribute('href')!))],
+  );
+  for (const href of hrefs) {
+    if (href.startsWith('#')) {
+      await expect(page.locator(href), href).toHaveCount(1);
+      continue;
+    }
+    if (!href.startsWith('/') || href === '/admin') continue; // tel:, mailto:, the credit; /admin answers 404 when signed out
+    expect((await page.request.get(href)).status(), href).toBe(200);
+  }
+  // Member login leads to the sign-in page; Become a member to sign-up
+  await page.locator('.hdr-login').click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.goto('/');
+  await page.locator('.qa[href="/register"]').click();
+  await expect(page).toHaveURL(/\/register$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create your account');
 });
 
 test('membership: fees add up, documents change with the business type, FAQ opens', async ({ page }) => {
@@ -178,6 +208,28 @@ test.describe('with the local database', () => {
       expect(c).toHaveLength(1);
       await admin.from('tickets').delete().eq('name', `Visitor ${tag}`);
     });
+  });
+
+  test('home: the hero and the desk show exactly what api.site_stats says', async ({ page }) => {
+    const { data } = await admin.schema('api').rpc('site_stats');
+    const stats = data![0]!;
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await expect(page.locator('.hero-live [data-stat="issued"]')).toHaveText(stats.services_issued.toLocaleString('en-US'));
+    await expect(page.locator('.hero-live [data-stat="open"]')).toHaveText(stats.services_open.toLocaleString('en-US'));
+    await expect(page.locator('[data-kpi="k1"] .kpi-num')).toHaveText(stats.services_issued.toLocaleString('en-US'));
+    await expect(page.locator('[data-kpi="k4"] .kpi-num')).toHaveText(stats.members.toLocaleString('en-US'));
+  });
+
+  test('home: a complaint from the form becomes a ticket', async ({ page }) => {
+    const tag = `t${randomUUID().slice(0, 6)}`;
+    await page.goto('/#complaints');
+    await page.getByLabel('Your name').fill(`Visitor ${tag}`);
+    await page.getByLabel('Mobile or email').fill('0300-1234567');
+    await page.getByLabel('Your message').fill('My request is waiting for a reply.');
+    await page.locator('[data-contact="home"] [data-action="contact.send"]').click();
+    await expect(page.locator('[data-outcome="ok"]')).toContainText(/ticket number is TK-/);
+    await admin.from('tickets').delete().eq('name', `Visitor ${tag}`);
   });
 
   test('live board: figures and the anonymised feed', async ({ page }) => {

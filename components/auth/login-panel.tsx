@@ -2,26 +2,67 @@
 
 import { PasswordField } from '@/components/shared/password-field';
 import { Mail } from 'lucide-react';
-import { useActionState, useId, useState } from 'react';
+import { type InputHTMLAttributes, type ReactNode, useActionState, useState } from 'react';
 import { guardForm } from '@/lib/client/call-action';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { requestEmailCode, signInMember, signInStaff, verifyEmailCode, type AuthFormState } from '@/lib/auth/actions';
+import { msg } from '@/lib/nav/model';
 
-export interface LoginText {
-  tabs: { member: string; applicant: string };
-  identifier: string;
-  password: string;
-  signIn: string;
-  emailCode: string;
-  forgot: string;
-  applicantIntro: string;
-  startApplication: string;
-  working: string;
-  code: { title: string; sent: string; label: string; verify: string; other: string };
+/** the design's field icons */
+export const FieldIcon = {
+  person: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  lock: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  ),
+  shield: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  ),
+  mail: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-10 7L2 7" />
+    </svg>
+  ),
+  phone: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M11 18h2" />
+    </svg>
+  ),
+  building: (
+    <svg viewBox="0 0 24 24" aria-hidden>
+      <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
+    </svg>
+  ),
+};
+
+/** The design's floating-label field: the label sits inside the input and rises when there is text. */
+export function FloatField({
+  label,
+  icon,
+  bad,
+  ...input
+}: { label: string; icon: ReactNode; bad?: boolean } & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className={`fl ${bad ? 'bad' : ''}`}>
+      <input placeholder=" " aria-invalid={bad || undefined} {...input} />
+      <span>{label}</span>
+      {icon}
+    </label>
+  );
 }
-
-type Tab = 'member' | 'applicant';
 
 export function Alert({ text }: { text?: string }) {
   if (!text) return null;
@@ -36,22 +77,23 @@ export function Alert({ text }: { text?: string }) {
 }
 
 /**
- * The prototype's login card (site/login): Member login and New applicant. Staff sign in on their own page
- * (StaffLoginForm below, owner's request of 29 Oct 2026). Each form posts to a server action; nothing is decided in the
- * browser.
+ * The design's sign-in form, on the same server actions as before: password, or a 6-digit code by email. Staff sign in
+ * on their own page (StaffLoginForm below, owner's request of 29 Oct 2026). Each form posts to a server action; nothing
+ * is decided in the browser. New applicants go to the Sign Up side of the page.
  */
 export function LoginPanel({
   locale,
-  text,
+  tabs,
   next,
   notice,
+  onSignUp,
 }: {
   locale: Locale;
-  text: LoginText;
+  tabs: ReactNode;
   next?: string;
   notice?: string;
+  onSignUp: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>('member');
   const [member, memberAction, memberPending] = useActionState<AuthFormState, FormData>(
     guardForm(locale, signInMember),
     {},
@@ -65,7 +107,8 @@ export function LoginPanel({
     {},
   );
   const [showCode, setShowCode] = useState(true);
-  const ids = { tabs: useId(), panel: useId() };
+  const t = (k: string) => msg(locale, `auth.${k}`);
+  const m = (k: string) => msg(locale, `landing.au.${k}`);
 
   const codeEmail = codeVerify.email ?? codeReq.email;
   const codeStep = showCode && (codeVerify.step === 'code' || codeReq.step === 'code') && codeEmail;
@@ -75,10 +118,6 @@ export function LoginPanel({
       {next && <input type="hidden" name="next" value={next} />}
     </>
   );
-  const tabs: [Tab, string][] = [
-    ['member', text.tabs.member],
-    ['applicant', text.tabs.applicant],
-  ];
 
   return (
     <div>
@@ -90,72 +129,69 @@ export function LoginPanel({
           {notice}
         </p>
       )}
-      <div className="pill-tabs" role="tablist" id={ids.tabs}>
-        {tabs.map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            aria-controls={`${ids.panel}-${id}`}
-            id={`${ids.tabs}-${id}`}
-            data-action="tab"
-            onClick={() => setTab(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div role="tabpanel" id={`${ids.panel}-member`} aria-labelledby={`${ids.tabs}-member`} hidden={tab !== 'member'}>
+      {tabs}
+      <div role="tabpanel" aria-label={t('tabs.member')}>
+        <h1>{m('in_title')}</h1>
+        <p className="au-sub">{m('in_sub')}</p>
         {codeStep ? (
-          <form action={codeVerifyAction} className="grid gap-[14px]">
+          <form action={codeVerifyAction}>
             {hidden}
             <input type="hidden" name="email" value={codeEmail} />
-            <h2 className="text-[18px] font-extrabold">{text.code.title}</h2>
-            <p className="text-[14px] text-muted">{text.code.sent.replace('{email}', codeEmail)}</p>
-            <label className="form-field">
-              {text.code.label}
-              <input
-                name="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="\d{6}"
-                maxLength={6}
-                required
-              />
-            </label>
+            <h2>{t('code.title')}</h2>
+            <p className="au-sub">{t('code.sent').replace('{email}', codeEmail)}</p>
+            <FloatField
+              label={t('code.label')}
+              icon={FieldIcon.shield}
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="\d{6}"
+              maxLength={6}
+              required
+            />
             <Alert text={codeVerify.error} />
-            <div className="flex flex-wrap gap-2">
-              <button className="btn btn-primary btn-big" data-action="login.otp" disabled={codeVerifyPending}>
-                {codeVerifyPending ? text.working : text.code.verify}
+            <div className="au-actions">
+              <button className="au-btn au-btn-full" data-action="login.otp" disabled={codeVerifyPending}>
+                {codeVerifyPending ? t('working') : t('code.verify')}
               </button>
-              <button type="button" className="btn btn-big" onClick={() => setShowCode(false)}>
-                {text.code.other}
+              <button type="button" className="au-btn au-btn-ghost au-btn-full" data-action="login.otp.back" onClick={() => setShowCode(false)}>
+                {t('code.other')}
               </button>
             </div>
           </form>
         ) : (
-          <form action={memberAction} className="grid gap-[14px]">
+          <form action={memberAction}>
             {hidden}
-            <label className="form-field">
-              {text.identifier}
-              <input name="identifier" autoComplete="username" required maxLength={254} />
-            </label>
+            <FloatField
+              label={t('identifier')}
+              icon={FieldIcon.person}
+              name="identifier"
+              autoComplete="username"
+              required
+              maxLength={254}
+            />
             <PasswordField
               locale={locale}
-              label={text.password}
+              className="fl fl-pw"
+              label={t('password')}
+              icon={FieldIcon.lock}
               name="password"
+              placeholder=" "
               autoComplete="current-password"
               maxLength={200}
             />
+            <div className="au-row">
+              <Link href="/login/forgot" className="au-link" data-action="nav">
+                {t('forgot')}
+              </Link>
+            </div>
             <Alert text={member.error ?? codeReq.error} />
-            <div className="mt-1 flex flex-wrap gap-2">
-              <button className="btn btn-primary btn-big" data-action="login.member" disabled={memberPending}>
-                {memberPending ? text.working : text.signIn}
+            <div className="au-actions">
+              <button className="au-btn au-btn-full" data-action="login.member" disabled={memberPending}>
+                {memberPending ? t('working') : t('signIn')}
               </button>
               <button
-                className="btn btn-big"
+                className="au-btn au-btn-ghost au-btn-full"
                 formAction={(fd) => {
                   setShowCode(true);
                   codeReqAction(fd);
@@ -165,31 +201,18 @@ export function LoginPanel({
                 disabled={codeReqPending}
               >
                 <Mail className="size-4" aria-hidden />
-                {codeReqPending ? text.working : text.emailCode}
+                {codeReqPending ? t('working') : t('emailCode')}
               </button>
             </div>
-            <Link
-              href="/login/forgot"
-              className="inline-flex min-h-[44px] items-center text-[14px] font-semibold text-gold-text underline-offset-4 hover:underline"
-            >
-              {text.forgot}
-            </Link>
           </form>
         )}
       </div>
-
-      <div
-        role="tabpanel"
-        id={`${ids.panel}-applicant`}
-        aria-labelledby={`${ids.tabs}-applicant`}
-        hidden={tab !== 'applicant'}
-      >
-        <p>{text.applicantIntro}</p>
-        <br />
-        <Link href="/register" className="btn btn-gold btn-big" data-action="register.start">
-          {text.startApplication}
-        </Link>
-      </div>
+      <p className="au-alt">
+        <span>{m('in_new')}</span>{' '}
+        <button type="button" data-action="tab" onClick={onSignUp}>
+          {m('in_new_link')}
+        </button>
+      </p>
     </div>
   );
 }

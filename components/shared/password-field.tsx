@@ -14,11 +14,14 @@ import { msg } from '@/lib/nav/model';
 export function PasswordField({
   locale,
   label,
+  icon,
   className = 'form-field',
   ...input
 }: {
   locale: Locale;
   label: ReactNode;
+  /** the leading icon of the sign-in design's floating-label fields */
+  icon?: ReactNode;
   className?: string;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
   const [shown, setShown] = useState(false);
@@ -28,6 +31,7 @@ export function PasswordField({
   return (
     <label className={className}>
       <span id={`${inputId}-l`}>{label}</span>
+      {icon}
       <span className="pw-wrap">
         <input
           {...input}

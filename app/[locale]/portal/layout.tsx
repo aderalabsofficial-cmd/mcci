@@ -9,6 +9,7 @@ import { IDLE_MS } from '@/lib/session/idle';
 import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
 import '@/app/styles/mobile.css';
+import '@/app/styles/theme.css';
 import { MobileTables } from '@/components/shared/mobile-tables';
 
 /**

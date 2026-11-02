@@ -1,8 +1,8 @@
 import { test } from '@playwright/test';
-import { BUILT_ROUTES, expectNoOrphans, localized, LOCALES, open } from './helpers';
+import { AUDIT_ROUTES, expectNoOrphans, localized, LOCALES, open } from './helpers';
 
 test.describe('orphan audit', () => {
-  for (const route of BUILT_ROUTES)
+  for (const route of AUDIT_ROUTES)
     for (const locale of LOCALES)
       test(`${localized(route, locale)}`, async ({ page, isMobile }) => {
         await open(page, localized(route, locale));

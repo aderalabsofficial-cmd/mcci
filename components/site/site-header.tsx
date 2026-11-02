@@ -12,7 +12,7 @@ import type { NavItem } from '@/lib/nav/model';
 import { cn } from '@/lib/utils';
 
 /**
- * Public header (prototype .xnv): transparent over the hero, solid navy + blur after 40 px of scroll, 84 → 68 px.
+ * Public header (prototype .xnv): transparent over the hero, solid green + blur after 40 px of scroll, 84 → 68 px.
  * Below 1181 px the links move into a menu sheet (action menu.toggle).
  */
 export function SiteHeader({
@@ -69,7 +69,7 @@ export function SiteHeader({
       className={cn(
         'pt-safe fixed inset-x-0 top-0 z-50 transition-[background,box-shadow] duration-300',
         solid &&
-          'bg-[rgba(8,26,60,.86)] shadow-[0_10px_40px_rgba(2,10,30,.35)] backdrop-blur-[18px] backdrop-saturate-[1.4]',
+          'bg-[rgba(0,61,36,.9)] shadow-[0_10px_40px_rgba(2,18,10,.35)] backdrop-blur-[18px] backdrop-saturate-[1.4]',
       )}
     >
       <div
@@ -137,7 +137,7 @@ export function SiteHeader({
               side="end"
               closeLabel={text.close}
               aria-describedby={undefined}
-              className="border-white/10 bg-[rgba(8,26,60,.97)] px-4 pt-16 pb-6 text-white"
+              className="border-white/10 bg-[rgba(0,61,36,.97)] px-4 pt-16 pb-6 text-white"
             >
               <SheetTitle className="sr-only">{text.menu}</SheetTitle>
               <ul className="flex flex-col">

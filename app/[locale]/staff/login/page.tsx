@@ -35,7 +35,7 @@ export default async function StaffLoginPage({ params, searchParams }: Props) {
 
   const t = (k: string) => msg(locale, `auth.${k}`);
   return (
-    <AuthSplit locale={locale}>
+    <AuthSplit locale={locale} top={false}>
       <h2 className="text-[24px] font-extrabold">{t('staffPage.title')}</h2>
       {locale === 'en' && (
         <p lang="ur" dir="rtl" className="text-[16px] leading-[1.9] text-muted">

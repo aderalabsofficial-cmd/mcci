@@ -86,12 +86,40 @@ function failure(locale: Locale, error: unknown, what: string): WizResult {
 // ───────── start ─────────
 
 /** register.start / "Start my application": the open application, or a new applicant company + draft */
+/**
+ * What the person typed at sign-up (business name, mobile, their name) starts their first draft, so they need not type
+ * it twice. Only blank fields of a draft are filled; they can change everything, and a failure here costs nothing.
+ */
+async function fillFromSignup(supabase: Awaited<ReturnType<typeof createClient>>) {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const meta = data.user?.user_metadata as { business_name?: string; mobile?: string; full_name?: string } | undefined;
+    if (!data.user || !meta?.business_name) return;
+    const { data: app } = await supabase
+      .from('applications')
+      .select('id, form')
+      .eq('created_by', data.user.id)
+      .eq('stage', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!app) return;
+    const form = (app.form ?? {}) as Record<string, unknown>;
+    const fill = { name: meta.business_name, rep: meta.full_name, mobile: meta.mobile };
+    const blank = Object.fromEntries(Object.entries(fill).filter(([k, v]) => v && !form[k]));
+    if (Object.keys(blank).length) await supabase.from('applications').update({ form: json({ ...form, ...blank }) }).eq('id', app.id);
+  } catch (error) {
+    console.error('app_start: sign-up details not copied', (error as { code?: string })?.code);
+  }
+}
+
 export async function startApplication(form: FormData): Promise<void> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));
   await requireUser();
   const supabase = await createClient();
   const { error } = await supabase.schema('api').rpc('app_start');
   if (error && error.hint !== 'already_member') throw new Error(`app_start: ${error.message}`);
+  if (!error) await fillFromSignup(supabase);
   refresh();
   redirect({ href: error ? '/portal/membership' : '/portal/join', locale });
 }
