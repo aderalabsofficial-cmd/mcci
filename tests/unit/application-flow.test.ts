@@ -166,7 +166,10 @@ describe('missing items (same codes as private.app_missing)', () => {
   });
 
   it('a sales-tax registered business must add the sales tax certificate; rejected files do not count', () => {
-    expect(missing({ ...complete, form: { ...complete.form, salesTax: true } }, PROP)).toEqual(['field:stWef', 'doc:st']);
+    expect(missing({ ...complete, form: { ...complete.form, salesTax: true } }, PROP)).toEqual([
+      'field:stWef',
+      'doc:st',
+    ]);
     expect(missing({ ...complete, form: { ...complete.form, salesTax: true, stWef: '2020-07-01' } }, PROP)).toEqual([
       'doc:st',
     ]);
@@ -224,7 +227,12 @@ describe('nature of business and journey', () => {
     const all = SECTORS.flatMap((x) => x.items as readonly string[]);
     for (const gone of ['bank-financial-institution', 'auto-dealer', 'management-consultancy', 'builder-and-developer'])
       expect(all).not.toContain(gone);
-    for (const added of ['builders-and-contractors', 'pharmaceutical-company', 'general-consultancy', 'car-dealers-and-showrooms'])
+    for (const added of [
+      'builders-and-contractors',
+      'pharmaceutical-company',
+      'general-consultancy',
+      'car-dealers-and-showrooms',
+    ])
       expect(all).toContain(added);
     expect(SECTORS.find((x) => x.k === 'media')?.items).toEqual(['printing-and-publishing', 'advertising-and-media']);
     expect(new Set(all).size).toBe(all.length);

@@ -39,9 +39,15 @@ test('every public page opens in English and Urdu, with the Urdu page right-to-l
   }
 });
 
-test('about: office-bearers and Secretariat by name, history, objectives and facilities from the earlier site', async ({ page }) => {
+test('about: office-bearers and Secretariat by name, history, objectives and facilities from the earlier site', async ({
+  page,
+}) => {
   await page.goto('/about');
-  await expect(page.locator('[data-group="bearers"] h3')).toHaveText(['Dr. Muhammad Shafiq Khan Pitafi', 'Azhar Mumtaz Tipu', 'Abdul Wahab']);
+  await expect(page.locator('[data-group="bearers"] h3')).toHaveText([
+    'Dr. Muhammad Shafiq Khan Pitafi',
+    'Azhar Mumtaz Tipu',
+    'Abdul Wahab',
+  ]);
   await expect(page.locator('[data-group="secretariat"] .pc')).toHaveCount(4);
   await expect(page.locator('#history li')).toHaveCount(5);
   await expect(page.locator('#history')).toContainText('1959');
@@ -76,9 +82,9 @@ test('home: the hero stats, services and fees; the live panels show tokens, neve
 
 test('home: every way in goes to a real page', async ({ page }) => {
   await page.goto('/');
-  const hrefs = await page.locator('main a[href], header a[href], footer a[href]').evaluateAll((list) =>
-    [...new Set(list.map((a) => a.getAttribute('href')!))],
-  );
+  const hrefs = await page
+    .locator('main a[href], header a[href], footer a[href]')
+    .evaluateAll((list) => [...new Set(list.map((a) => a.getAttribute('href')!))]);
   for (const href of hrefs) {
     if (href.startsWith('#')) {
       await expect(page.locator(href), href).toHaveCount(1);
@@ -112,7 +118,9 @@ test('membership: fees add up, documents change with the business type, FAQ open
   await expect(q.locator('p')).toBeVisible();
 });
 
-test('service detail: documents and fields from the service list; Apply now leads to sign-in and the request', async ({ page }) => {
+test('service detail: documents and fields from the service list; Apply now leads to sign-in and the request', async ({
+  page,
+}) => {
   await page.goto('/service?s=co');
   await expect(page.getByRole('main')).toContainText('Commercial invoice');
   await page.locator('[data-action="svc.new"]').click();
@@ -231,7 +239,9 @@ test.describe('with the local database', () => {
     const stats = data![0]!;
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
-    await expect(page.locator('.hero-live [data-stat="issued"]')).toHaveText(stats.services_issued.toLocaleString('en-US'));
+    await expect(page.locator('.hero-live [data-stat="issued"]')).toHaveText(
+      stats.services_issued.toLocaleString('en-US'),
+    );
     await expect(page.locator('.hero-live [data-stat="open"]')).toHaveText(stats.services_open.toLocaleString('en-US'));
     await expect(page.locator('[data-kpi="k1"] .kpi-num')).toHaveText(stats.services_issued.toLocaleString('en-US'));
     await expect(page.locator('[data-kpi="k4"] .kpi-num')).toHaveText(stats.members.toLocaleString('en-US'));

@@ -23,7 +23,15 @@ describe('payment voucher helpers (lib/committee/voucher.ts)', () => {
     expect(bankDetails(placeholder)).toBeNull();
     expect(bankDetails({ ...placeholder, confirmed: 'true' })).toBeNull();
     expect(bankDetails({ ...placeholder, confirmed: true, iban: ' ' })).toBeNull();
-    expect(bankDetails({ name: 'Bank X', title: 'MCCI', iban: 'PK36 SCBL 0000 0011 2345 6702', branch: 'Multan', confirmed: true })).toEqual({
+    expect(
+      bankDetails({
+        name: 'Bank X',
+        title: 'MCCI',
+        iban: 'PK36 SCBL 0000 0011 2345 6702',
+        branch: 'Multan',
+        confirmed: true,
+      }),
+    ).toEqual({
       bank: 'Bank X',
       title: 'MCCI',
       iban: 'PK36 SCBL 0000 0011 2345 6702',
@@ -36,7 +44,13 @@ describe('payment voucher helpers (lib/committee/voucher.ts)', () => {
     expect(lineKey({ key: 'admission', label: 'Admission fee', amount: 5000 })).toBe('admission');
     expect(lineKey({ key: 'something', label: 'X', amount: 1 })).toBeNull();
     expect(lineKey({ label: 'Admission', amount: 5000 })).toBeNull();
-    expect(linesTotal([{ label: 'a', amount: 5000 }, { label: 'b', amount: 12000 }, { label: 'c', amount: 500 }])).toBe(17500);
+    expect(
+      linesTotal([
+        { label: 'a', amount: 5000 },
+        { label: 'b', amount: 12000 },
+        { label: 'c', amount: 500 },
+      ]),
+    ).toBe(17500);
   });
 
   it('shows dates in Asia/Karachi', () => {
@@ -81,7 +95,16 @@ describe('membership_approved_voucher email (lib/committee/emails.ts)', () => {
 
   it('with a confirmed account: the bank, title and IBAN', () => {
     const mail = voucherEmail(
-      { ...base, bank: { name: 'Bank X', title: 'MCCI', iban: 'PK36 SCBL 0000 0011 2345 6702', branch: 'Multan', confirmed: true } },
+      {
+        ...base,
+        bank: {
+          name: 'Bank X',
+          title: 'MCCI',
+          iban: 'PK36 SCBL 0000 0011 2345 6702',
+          branch: 'Multan',
+          confirmed: true,
+        },
+      },
       env,
     );
     expect(mail.text).toContain('PK36 SCBL 0000 0011 2345 6702');

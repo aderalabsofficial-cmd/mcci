@@ -38,11 +38,22 @@ test.beforeAll(async () => {
   if (!env) return;
   admin = createClient(env.url, env.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
   for (const p of [sg, member]) {
-    const { data, error } = await admin.auth.admin.createUser({ email: p.email, password: p.password, email_confirm: true });
+    const { data, error } = await admin.auth.admin.createUser({
+      email: p.email,
+      password: p.password,
+      email_confirm: true,
+    });
     expect(error).toBeNull();
     p.id = data.user!.id;
     // what a self-registered, email-confirmed account carries (as in production: about 190 bytes)
-    const meta = { sub: p.id, lang: 'en', email: p.email, full_name: 'Secretary General of the Chamber', email_verified: true, phone_verified: false };
+    const meta = {
+      sub: p.id,
+      lang: 'en',
+      email: p.email,
+      full_name: 'Secretary General of the Chamber',
+      email_verified: true,
+      phone_verified: false,
+    };
     expect((await admin.auth.admin.updateUserById(p.id, { user_metadata: meta })).error).toBeNull();
   }
   expect((await admin.from('staff').insert({ user_id: sg.id, designation: 'Secretary General' })).error).toBeNull();
@@ -69,7 +80,10 @@ async function signIn(page: Page, tab: 'member' | 'staff', who: { email: string;
     await page.getByLabel('Password', { exact: true }).fill(who.password);
   } else {
     await page.getByLabel('Mobile, email or member ID').fill(who.email);
-    await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(who.password);
+    await page
+      .getByRole('tabpanel', { name: 'Member login' })
+      .getByLabel('Password', { exact: true })
+      .fill(who.password);
   }
   const page_ = tab === 'staff' ? '/staff/login' : '/login';
   const posted = page.waitForResponse((r) => r.request().method() === 'POST' && new URL(r.url()).pathname === page_);

@@ -25,13 +25,26 @@ const PNG = Buffer.from(
 );
 const tag = randomUUID().slice(0, 6);
 let admin: SupabaseClient;
-type Person = { id: string; email: string; password: string; company: string; app: string; voucher: string; no: string };
+type Person = {
+  id: string;
+  email: string;
+  password: string;
+  company: string;
+  app: string;
+  voucher: string;
+  no: string;
+};
 const people: Person[] = [];
 
 async function approvedApplicant(name: string, i: number): Promise<Person> {
   const email = `e2e-pay-${randomUUID().slice(0, 8)}@test.local`;
   const password = randomBytes(18).toString('base64url');
-  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: name } });
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: name },
+  });
   expect(error).toBeNull();
   const company = randomUUID();
   await admin.from('companies').insert({ id: company, name: `${name} (draft)`, biz_type: 'prop' });
@@ -74,7 +87,10 @@ async function approvedApplicant(name: string, i: number): Promise<Person> {
 test.beforeAll(async () => {
   if (!env) return;
   admin = createClient(env.url, env.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
-  people.push(await approvedApplicant(`Counter Traders ${tag}`, 1), await approvedApplicant(`Upload Traders ${tag}`, 2));
+  people.push(
+    await approvedApplicant(`Counter Traders ${tag}`, 1),
+    await approvedApplicant(`Upload Traders ${tag}`, 2),
+  );
 });
 
 test.afterAll(async () => {
@@ -126,7 +142,10 @@ const yearEnd = (d: Date) => {
   return `${k.getUTCFullYear() + (k.getUTCMonth() >= 3 ? 1 : 0)}-03-31`;
 };
 
-test('A. counter payment → membership active; blacklist blocks renewal; whitelist, renew, restore', async ({ page, browser }) => {
+test('A. counter payment → membership active; blacklist blocks renewal; whitelist, renew, restore', async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(180_000);
   const p = people[0]!;
 
@@ -139,7 +158,9 @@ test('A. counter payment → membership active; blacklist blocks renewal; whitel
   // Accounts (the SG has every level) record the payment received at the counter → active at once
   await signInAs(page, 'sg');
   await page.goto('/admin/psid');
-  await act(page, `[data-voucher="${p.voucher}"]`, 'psid.markpaid', { 'Bank / counter receipt reference': 'MCCI-CASH-0001' });
+  await act(page, `[data-voucher="${p.voucher}"]`, 'psid.markpaid', {
+    'Bank / counter receipt reference': 'MCCI-CASH-0001',
+  });
   await expect(flash(page)).toContainText(`membership ${p.no} is now active`);
   const { data: a } = await admin.from('applications').select('stage, member_id').eq('id', p.app).single();
   expect(a!.stage).toBe('permanent');
@@ -176,10 +197,17 @@ test('A. counter payment → membership active; blacklist blocks renewal; whitel
   await expect(flash(page)).toContainText('Whitelisting recorded');
   await renew();
   await expect(page.getByRole('status').filter({ hasText: /Renewal voucher PV-\d{4}-\d+ issued/ })).toBeVisible();
-  const { data: rv } = await admin.from('payment_vouchers').select('voucher_no, amount').eq('ref_type', 'renewal').eq('ref_id', a!.member_id).single();
+  const { data: rv } = await admin
+    .from('payment_vouchers')
+    .select('voucher_no, amount')
+    .eq('ref_type', 'renewal')
+    .eq('ref_id', a!.member_id)
+    .single();
   expect(rv!.amount).toBe(7000);
   await page.goto('/admin/psid');
-  await act(page, `[data-voucher="${rv!.voucher_no}"]`, 'psid.markpaid', { 'Bank / counter receipt reference': 'MCCI-CASH-0002' });
+  await act(page, `[data-voucher="${rv!.voucher_no}"]`, 'psid.markpaid', {
+    'Bank / counter receipt reference': 'MCCI-CASH-0002',
+  });
   await expect(flash(page)).toContainText('Payment verified');
   const next = `${Number(yearEnd(new Date()).slice(0, 4)) + 1}-03-31`;
   expect((await admin.from('members').select('valid_to').eq('id', a!.member_id).single()).data!.valid_to).toBe(next);
@@ -230,24 +258,33 @@ test('B. bank confirmed → receipt upload, reject with reason, upload again, ve
     const mp = await asMember(browser, p);
     await mp.goto('/portal/payments');
     await expect(mp.getByRole('main')).toContainText('PK36 SCBL 0000 0011 2345 6702');
-    await mp.getByLabel('Photo or PDF of the paid bank slip').setInputFiles({ name: 'slip.png', mimeType: 'image/png', buffer: PNG });
+    await mp
+      .getByLabel('Photo or PDF of the paid bank slip')
+      .setInputFiles({ name: 'slip.png', mimeType: 'image/png', buffer: PNG });
     await mp.locator('[data-action="pay.upload"]').click();
     // the page now shows the receipt with Accounts (the form is gone: nothing more to upload)
     await expect(mp.getByRole('main')).toContainText('MCCI Accounts are verifying it');
 
     // Accounts reject it with a reason; the member sees why and uploads again
     await page.goto('/admin/payments');
-    await act(page, `[data-voucher="${p.voucher}"]`, 'pay.reject', { 'Reason (the member will see it)': 'The amount is not readable' });
+    await act(page, `[data-voucher="${p.voucher}"]`, 'pay.reject', {
+      'Reason (the member will see it)': 'The amount is not readable',
+    });
     await expect(flash(page)).toContainText('not accepted');
     await mp.goto('/portal/payments');
     await expect(mp.getByRole('main')).toContainText('The amount is not readable');
-    await mp.getByLabel('Photo or PDF of the paid bank slip').setInputFiles({ name: 'slip2.png', mimeType: 'image/png', buffer: PNG });
+    await mp
+      .getByLabel('Photo or PDF of the paid bank slip')
+      .setInputFiles({ name: 'slip2.png', mimeType: 'image/png', buffer: PNG });
     await mp.locator('[data-action="pay.upload"]').click();
     await expect(mp.getByRole('main')).toContainText('MCCI Accounts are verifying it');
 
     // Accounts open the receipt and verify → the membership is active
     await page.goto('/admin/payments');
-    await expect(page.locator(`[data-voucher="${p.voucher}"] [data-action="psid.view"]`)).toHaveAttribute('href', /receipts/);
+    await expect(page.locator(`[data-voucher="${p.voucher}"] [data-action="psid.view"]`)).toHaveAttribute(
+      'href',
+      /receipts/,
+    );
     await act(page, `[data-voucher="${p.voucher}"]`, 'pay.verify');
     await expect(flash(page)).toContainText(`membership ${p.no} is now active`);
     const { data: mails } = await admin.from('email_log').select('template_key, status').eq('application_id', p.app);

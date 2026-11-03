@@ -32,7 +32,9 @@ test.describe('desktop shells', () => {
     await expect(page.locator('[data-action="lang.toggle"]:visible')).toHaveCount(0);
   });
 
-  test('public: the inner pages keep the header that turns solid; the home page has the design one, which stays', async ({ page }) => {
+  test('public: the inner pages keep the header that turns solid; the home page has the design one, which stays', async ({
+    page,
+  }) => {
     await open(page, '/about');
     const header = page.locator('header').first();
     await expect(header).not.toHaveAttribute('data-solid');
@@ -51,7 +53,9 @@ test.describe('desktop shells', () => {
     );
   });
 
-  test('home header: the full menu on every laptop width, the toggle only below 1024 px, nothing off the edge', async ({ page }) => {
+  test('home header: the full menu on every laptop width, the toggle only below 1024 px, nothing off the edge', async ({
+    page,
+  }) => {
     test.setTimeout(120_000); // 18 page loads, measured at up to 6 s each when the other worker is busy
     for (const url of ['/', '/ur'])
       for (const [width, full] of [

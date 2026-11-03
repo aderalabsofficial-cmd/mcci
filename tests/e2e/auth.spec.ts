@@ -132,7 +132,9 @@ test('sign up: two steps, no class question, friendly checks before anything is 
   await expect(page.getByLabel('Business name')).toHaveValue('E2E Traders');
 });
 
-test('sign in and sign up slide on one page; the address follows and each route opens on its own form', async ({ page }) => {
+test('sign in and sign up slide on one page; the address follows and each route opens on its own form', async ({
+  page,
+}) => {
   await page.goto('/login');
   await expect(page.getByRole('tab')).toHaveText(['Sign In', 'Sign Up']);
   await page.getByRole('tab', { name: 'Sign Up' }).click();

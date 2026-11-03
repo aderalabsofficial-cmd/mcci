@@ -22,7 +22,12 @@ const password = randomBytes(18).toString('base64url');
 const people = {
   proposer: { email: `demo-p-${tag}@test.local`, company: `Alpha ${tag}`, rep: `Demo Proposer ${tag}`, kind: 'member' },
   seconder: { email: `demo-s-${tag}@test.local`, company: `Beta ${tag}`, rep: `Demo Seconder ${tag}`, kind: 'member' },
-  applicant: { email: `demo-a-${tag}@test.local`, company: `Gamma ${tag}`, rep: `Demo Applicant ${tag}`, kind: 'applicant' },
+  applicant: {
+    email: `demo-a-${tag}@test.local`,
+    company: `Gamma ${tag}`,
+    rep: `Demo Applicant ${tag}`,
+    kind: 'applicant',
+  },
 } as const;
 let admin: SupabaseClient;
 
@@ -35,13 +40,20 @@ test.afterAll(async () => {
   // safety net if the test stopped before "Remove all demo data"
   const { data: cos } = await admin.from('companies').select('id').like('name', `%${tag}`);
   for (const c of cos ?? []) {
-    await admin.from('endorsements').delete().in('endorser_member_id', (await admin.from('members').select('id').eq('company_id', c.id)).data?.map((m) => m.id) ?? []);
+    await admin
+      .from('endorsements')
+      .delete()
+      .in(
+        'endorser_member_id',
+        (await admin.from('members').select('id').eq('company_id', c.id)).data?.map((m) => m.id) ?? [],
+      );
     await admin.from('applications').delete().eq('company_id', c.id);
     await admin.from('members').delete().eq('company_id', c.id);
     await admin.from('companies').delete().eq('id', c.id);
   }
   const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
-  for (const u of users?.users ?? []) if (u.email?.endsWith(`-${tag}@test.local`)) await admin.auth.admin.deleteUser(u.id);
+  for (const u of users?.users ?? [])
+    if (u.email?.endsWith(`-${tag}@test.local`)) await admin.auth.admin.deleteUser(u.id);
 });
 
 async function mail(to: string, pattern: RegExp): Promise<string> {
@@ -105,21 +117,39 @@ test('demo members: added by the SG, sign in on their own, propose and second wi
   const applicant = await activate(browser, people.applicant.email);
 
   // the demo applicant's form (set up directly: the wizard itself is covered by application.spec)
-  const { data: co } = await admin.from('companies').select('id').eq('name', `DEMO — ${people.applicant.company}`).single();
+  const { data: co } = await admin
+    .from('companies')
+    .select('id')
+    .eq('name', `DEMO — ${people.applicant.company}`)
+    .single();
   const { data: u } = await admin.from('company_users').select('user_id').eq('company_id', co!.id).single();
   const { data: app, error } = await admin
     .from('applications')
-    .insert({ company_id: co!.id, created_by: u!.user_id, stage: 'draft', form: { biz: 'prop', step: 3, name: `Gamma ${tag}`, rep: people.applicant.rep } })
+    .insert({
+      company_id: co!.id,
+      created_by: u!.user_id,
+      stage: 'draft',
+      form: { biz: 'prop', step: 3, name: `Gamma ${tag}`, rep: people.applicant.rep },
+    })
     .select('id')
     .single();
   expect(error).toBeNull();
 
   await applicant.goto('/portal/join');
-  for (const [role, who] of [['proposer', people.proposer], ['seconder', people.seconder]] as const) {
+  for (const [role, who] of [
+    ['proposer', people.proposer],
+    ['seconder', people.seconder],
+  ] as const) {
     await applicant.locator(`[data-role="${role}"] [data-action="end.pick"]`).click();
     const d = applicant.getByRole('dialog');
     await expect(d.locator('[data-member^="DEMO-A-"]')).toHaveCount(2);
-    const no = (await admin.from('members').select('member_no, companies!inner(name)').eq('companies.name', `DEMO — ${who.company}`).single()).data!.member_no;
+    const no = (
+      await admin
+        .from('members')
+        .select('member_no, companies!inner(name)')
+        .eq('companies.name', `DEMO — ${who.company}`)
+        .single()
+    ).data!.member_no;
     await d.locator(`[data-member="${no}"] [data-action="end.compose"]`).click();
     await d.locator('[data-action="end.compose"]').click();
     await expect(applicant.locator(`[data-role="${role}"]`)).toContainText(who.rep);
@@ -158,11 +188,25 @@ test('a self-registered applicant marked as demo by the SG can choose the demo m
   test.setTimeout(180_000);
   // someone who signed up on their own (as on production): a real company, a draft application
   const email = `demo-r-${tag}@test.local`;
-  const { data: u, error: ue } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: `Self ${tag}` } });
+  const { data: u, error: ue } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: `Self ${tag}` },
+  });
   expect(ue).toBeNull();
-  const { data: co } = await admin.from('companies').insert({ name: `Delta ${tag}`, biz_type: 'prop' }).select('id').single();
+  const { data: co } = await admin
+    .from('companies')
+    .insert({ name: `Delta ${tag}`, biz_type: 'prop' })
+    .select('id')
+    .single();
   await admin.from('company_users').insert({ company_id: co!.id, user_id: u.user!.id, role: 'Owner' });
-  await admin.from('applications').insert({ company_id: co!.id, created_by: u.user!.id, stage: 'draft', form: { biz: 'prop', step: 3, name: `Delta ${tag}`, rep: `Self ${tag}` } });
+  await admin.from('applications').insert({
+    company_id: co!.id,
+    created_by: u.user!.id,
+    stage: 'draft',
+    form: { biz: 'prop', step: 3, name: `Delta ${tag}`, rep: `Self ${tag}` },
+  });
 
   // a demo member to choose
   await signInAs(page, 'sg');
@@ -181,7 +225,10 @@ test('a self-registered applicant marked as demo by the SG can choose the demo m
   const applicant = await (await browser.newContext()).newPage();
   await applicant.goto('/login');
   await applicant.getByLabel('Mobile, email or member ID').fill(email);
-  await applicant.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(password);
+  await applicant
+    .getByRole('tabpanel', { name: 'Member login' })
+    .getByLabel('Password', { exact: true })
+    .fill(password);
   await applicant.locator('[data-action="login.member"]').click();
   await expect(applicant).toHaveURL(/\/portal/, { timeout: 20_000 });
   await applicant.goto('/portal/join');

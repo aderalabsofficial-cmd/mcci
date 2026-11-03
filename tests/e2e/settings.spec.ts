@@ -20,7 +20,9 @@ test('the Secretary General changes the process time with a reason; it is saved 
   await page.reload();
   await expect(page.locator('[data-settings="sla"] [name="processDays"]')).toHaveValue('12');
   // out of range: refused by the database, nothing saved
-  await page.locator('[data-settings="sla"] [name="hours"]').evaluate((el: HTMLInputElement) => el.removeAttribute('max'));
+  await page
+    .locator('[data-settings="sla"] [name="hours"]')
+    .evaluate((el: HTMLInputElement) => el.removeAttribute('max'));
   await page.locator('[data-settings="sla"] [name="hours"]').fill('500');
   await page.locator('[data-settings="sla"] [data-action="settings.save"]').click();
   await expect(page.locator('[data-settings="sla"]').getByRole('alert')).toContainText('hours');

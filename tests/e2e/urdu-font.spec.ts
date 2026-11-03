@@ -20,12 +20,14 @@ test.describe('Urdu font', () => {
     test(`is what ${url} renders with`, async ({ page }) => {
       await open(page, url);
       const loaded = await page.evaluate(() =>
-        [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Jameel Noori Nastaleeq' && f.status === 'loaded'),
+        [...document.fonts].some(
+          (f) => f.family.replace(/"/g, '') === 'Jameel Noori Nastaleeq' && f.status === 'loaded',
+        ),
       );
       expect(loaded).toBe(true);
     });
 
-  test('the owner\'s design loads no script or font from another site', async ({ page, baseURL }) => {
+  test("the owner's design loads no script or font from another site", async ({ page, baseURL }) => {
     const outside: string[] = [];
     page.on('request', (r) => {
       if (/^https?:/.test(r.url()) && new URL(r.url()).hostname !== new URL(baseURL!).hostname) outside.push(r.url());

@@ -16,7 +16,11 @@ test.skip(!env, 'needs the local Supabase stack (MCCI_IT_LOCAL=1 with its URL an
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'desktop project only'));
 
 let admin: SupabaseClient;
-const person = { id: '', email: `e2e-rel-${randomUUID().slice(0, 8)}@test.local`, password: randomBytes(18).toString('base64url') };
+const person = {
+  id: '',
+  email: `e2e-rel-${randomUUID().slice(0, 8)}@test.local`,
+  password: randomBytes(18).toString('base64url'),
+};
 let company = '';
 let draftApp = '';
 let reviewApp = '';
@@ -38,7 +42,12 @@ test.beforeAll(async () => {
   await admin.from('company_users').insert({ company_id: company, user_id: person.id, role: 'Owner' });
   const { data: d } = await admin
     .from('applications')
-    .insert({ company_id: company, created_by: person.id, stage: 'draft', form: { biz: 'prop', step: 2, name: 'Before' } })
+    .insert({
+      company_id: company,
+      created_by: person.id,
+      stage: 'draft',
+      form: { biz: 'prop', step: 2, name: 'Before' },
+    })
     .select('id')
     .single();
   draftApp = d!.id;
@@ -47,7 +56,14 @@ test.beforeAll(async () => {
   await admin.from('companies').insert({ id: other, name: 'Reliability Review Co', biz_type: 'prop' });
   const { data: r } = await admin
     .from('applications')
-    .insert({ company_id: other, created_by: person.id, stage: 'submitted', submitted_at: new Date().toISOString(), class: 'Associate', form: { biz: 'prop', name: 'Reliability Review Co' } })
+    .insert({
+      company_id: other,
+      created_by: person.id,
+      stage: 'submitted',
+      submitted_at: new Date().toISOString(),
+      class: 'Associate',
+      form: { biz: 'prop', name: 'Reliability Review Co' },
+    })
     .select('id, token')
     .single();
   reviewApp = r!.id;
@@ -67,7 +83,10 @@ const formName = async () =>
 async function signIn(page: Page) {
   await page.goto('/login');
   await page.getByLabel('Mobile, email or member ID').fill(person.email);
-  await page.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(person.password);
+  await page
+    .getByRole('tabpanel', { name: 'Member login' })
+    .getByLabel('Password', { exact: true })
+    .fill(person.password);
   await page.locator('[data-action="login.member"]').click();
   await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
 }
@@ -76,15 +95,23 @@ async function signIn(page: Page) {
 const staleBuild = (page: Page) =>
   page.route('**/*', (route) =>
     route.request().method() === 'POST' && route.request().headers()['next-action']
-      ? route.fulfill({ status: 404, headers: { 'x-nextjs-action-not-found': '1', 'content-type': 'text/plain' }, body: 'Server action not found.' })
+      ? route.fulfill({
+          status: 404,
+          headers: { 'x-nextjs-action-not-found': '1', 'content-type': 'text/plain' },
+          body: 'Server action not found.',
+        })
       : route.continue(),
   );
 const cutOff = (page: Page) =>
   page.route('**/*', (route) =>
-    route.request().method() === 'POST' && route.request().headers()['next-action'] ? route.abort('connectionreset') : route.continue(),
+    route.request().method() === 'POST' && route.request().headers()['next-action']
+      ? route.abort('connectionreset')
+      : route.continue(),
   );
 
-test('application form open across a release: the edit is kept, said so, and saved after the reload', async ({ page }) => {
+test('application form open across a release: the edit is kept, said so, and saved after the reload', async ({
+  page,
+}) => {
   test.setTimeout(120_000);
   await signIn(page);
   await page.goto('/portal/join');
@@ -96,7 +123,9 @@ test('application form open across a release: the edit is kept, said so, and sav
   const line = page.locator('.wz-save');
   await expect(line).toHaveAttribute('data-state', 'stale');
   await expect(line).toContainText('MCCI Digital was updated');
-  await expect(page.getByRole('main').getByRole('alert').filter({ hasText: 'Nothing was saved by this click' })).toBeVisible();
+  await expect(
+    page.getByRole('main').getByRole('alert').filter({ hasText: 'Nothing was saved by this click' }),
+  ).toBeVisible();
   expect(await formName()).toBe('Before');
 
   await page.unroute('**/*');

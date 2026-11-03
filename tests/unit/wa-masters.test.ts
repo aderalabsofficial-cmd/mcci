@@ -8,8 +8,26 @@ const master: Master = {
   slots: [
     { n: 1, key: 'contact_person', source: 'recipient', example_en: 'Ahmed', example_ur: 'احمد' },
     { n: 2, key: 'subject', source: 'field', max: 80, required: true, example_en: 'Renewal', example_ur: 'تجدید' },
-    { n: 3, key: 'deadline', source: 'field', max: 40, required: false, default_en: 'None', default_ur: 'کوئی نہیں', example_en: 'By 31 Dec', example_ur: '31 دسمبر' },
-    { n: 4, key: 'link', source: 'field', max: 200, required: true, example_en: 'https://x.org', example_ur: 'https://x.org' },
+    {
+      n: 3,
+      key: 'deadline',
+      source: 'field',
+      max: 40,
+      required: false,
+      default_en: 'None',
+      default_ur: 'کوئی نہیں',
+      example_en: 'By 31 Dec',
+      example_ur: '31 دسمبر',
+    },
+    {
+      n: 4,
+      key: 'link',
+      source: 'field',
+      max: 200,
+      required: true,
+      example_en: 'https://x.org',
+      example_ur: 'https://x.org',
+    },
   ],
   versions: [
     {
@@ -65,7 +83,11 @@ describe('master wording (same rules as api.wa_master_save)', () => {
 
 describe('preview and submission', () => {
   it('fills from recipient values and fields; a missing value shows by name, never blank', () => {
-    const text = fillMaster(master.versions[0]!.body, master.slots, { subject: 'تجدید', deadline: 'کوئی نہیں', link: 'https://x.org' });
+    const text = fillMaster(master.versions[0]!.body, master.slots, {
+      subject: 'تجدید',
+      deadline: 'کوئی نہیں',
+      link: 'https://x.org',
+    });
     expect(text).toContain('[contact_person]');
     expect(text).toContain('تجدید');
     expect(text).not.toMatch(/\{\{\d+\}\}/);

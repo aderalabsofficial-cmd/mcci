@@ -28,10 +28,21 @@ test.beforeAll(async () => {
   admin = createClient(env.url, env.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const owner = readAccounts().member!.id;
   await admin.from('companies').insert({ id: company, name: `Confidential ${company.slice(0, 6)}`, biz_type: 'prop' });
-  await admin.from('applications').insert({ id: app, company_id: company, created_by: owner, stage: 'review', submitted_at: new Date().toISOString(), form: { biz: 'prop', name: 'Confidential Traders' } });
-  const png = await sharp({ create: { width: 400, height: 260, channels: 3, background: { r: 200, g: 220, b: 240 } } }).png().toBuffer();
+  await admin.from('applications').insert({
+    id: app,
+    company_id: company,
+    created_by: owner,
+    stage: 'review',
+    submitted_at: new Date().toISOString(),
+    form: { biz: 'prop', name: 'Confidential Traders' },
+  });
+  const png = await sharp({ create: { width: 400, height: 260, channels: 3, background: { r: 200, g: 220, b: 240 } } })
+    .png()
+    .toBuffer();
   await admin.storage.from('application-docs').upload(path, png, { contentType: 'image/png', upsert: true });
-  await admin.from('application_documents').insert({ application_id: app, key: 'cnic', path, file_name: 'cnic.png', mime: 'image/png' });
+  await admin
+    .from('application_documents')
+    .insert({ application_id: app, key: 'cnic', path, file_name: 'cnic.png', mime: 'image/png' });
 });
 
 test.afterAll(async () => {
@@ -41,7 +52,9 @@ test.afterAll(async () => {
   await admin.from('companies').delete().eq('id', company);
 });
 
-test('the Membership Officer views watermarked copies only; download and storage links are refused', async ({ page }) => {
+test('the Membership Officer views watermarked copies only; download and storage links are refused', async ({
+  page,
+}) => {
   test.setTimeout(90_000);
   await signInAs(page, 'staff');
   const token = (await admin.from('applications').select('token').eq('id', app).single()).data!.token;
@@ -56,7 +69,9 @@ test('the Membership Officer views watermarked copies only; download and storage
   expect(seen.headers()['content-disposition']).toBe('inline');
   expect((await page.request.get(`${file}?download=1`)).status()).toBe(403);
   // a made-up path or another bucket
-  expect((await page.request.get(`/api/files/application-docs/${company}/applications/${app}/../../x`)).status()).not.toBe(200);
+  expect(
+    (await page.request.get(`/api/files/application-docs/${company}/applications/${app}/../../x`)).status(),
+  ).not.toBe(200);
   expect((await page.request.get(`/api/files/certificates/scans/x/original.png`)).status()).toBe(403);
   // the register export
   expect((await page.request.get('/api/register/export')).status()).toBe(200);
@@ -84,7 +99,12 @@ test('the IT Convener downloads the original and exports the register; every att
   expect((await csv.text()).split('\n').length).toBeGreaterThan(2);
 
   const { data: log } = await admin.from('file_access_log').select('mode, allowed, designation').eq('path', path);
-  expect(log!.filter((x) => x.mode === 'download' && !x.allowed).map((x) => x.designation).sort()).toEqual(['Membership Officer', 'Secretary General']);
+  expect(
+    log!
+      .filter((x) => x.mode === 'download' && !x.allowed)
+      .map((x) => x.designation)
+      .sort(),
+  ).toEqual(['Membership Officer', 'Secretary General']);
   expect(log!.filter((x) => x.mode === 'download' && x.allowed).map((x) => x.designation)).toEqual(['IT Convener']);
   expect(log!.some((x) => x.mode === 'view' && x.allowed && x.designation === 'Membership Officer')).toBe(true);
 });

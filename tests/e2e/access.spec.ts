@@ -125,7 +125,9 @@ test.describe('Staff & Roles', () => {
     await expect(page.getByRole('button', { name: `E2E Third ${run}` })).toHaveCount(0);
   });
 
-  test('limits by designation: changes wait for Save on that designation and the password; undo; reset needs it too', async ({ page }) => {
+  test('limits by designation: changes wait for Save on that designation and the password; undo; reset needs it too', async ({
+    page,
+  }) => {
     await signInAs(page, 'sg');
     await page.goto('/admin/staff');
     const row = page.locator('[data-designation="Front Desk / Data Entry"]');
@@ -212,7 +214,9 @@ test.describe('Company Profile', () => {
     const dialog = page.getByRole('dialog');
     await dialog.locator('[data-field="change-summary"]').fill('New landline');
     await dialog.locator('[data-field="change-tel"]').fill('061-1234567');
-    await dialog.locator('[data-field="change-document"]').setInputFiles({ name: 'bill.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 test') });
+    await dialog
+      .locator('[data-field="change-document"]')
+      .setInputFiles({ name: 'bill.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 test') });
     await expect(dialog.locator('[data-uploaded="bill.pdf"]')).toBeVisible({ timeout: 20_000 });
     await dialog.locator('[data-action="chg.submit"]').click();
     await expect(page.getByRole('status').filter({ hasText: 'sent to MCCI' })).toBeVisible();

@@ -44,7 +44,9 @@ const csv = [
   'MCCI-C-77,Corporate,N,,pvt,No Company,,,31/03/2027,Permanent',
 ].join('\r\n');
 
-test('import: preview checks every row, nothing is written before IMPORT, numbers kept, rolled back', async ({ page }) => {
+test('import: preview checks every row, nothing is written before IMPORT, numbers kept, rolled back', async ({
+  page,
+}) => {
   test.setTimeout(120_000);
   await signInAs(page, 'sg');
   await page.goto('/admin/import');
@@ -54,7 +56,9 @@ test('import: preview checks every row, nothing is written before IMPORT, number
   await d.locator('[data-action="imp.file.confirm"]').click();
   await expect(page).toHaveURL(/\/admin\/import\?id=/);
   const preview = page.locator('[data-import-preview]');
-  await expect(preview.locator('[data-outcome="ok"]')).toContainText('Read 3 rows: 2 new, 1 already in the register, 0 possible duplicates, 1 with errors');
+  await expect(preview.locator('[data-outcome="ok"]')).toContainText(
+    'Read 3 rows: 2 new, 1 already in the register, 0 possible duplicates, 1 with errors',
+  );
 
   const row = (n: number) => preview.locator(`tr[data-row="${n}"]`);
   await expect(row(1)).toHaveAttribute('data-decision', 'create');
@@ -78,29 +82,55 @@ test('import: preview checks every row, nothing is written before IMPORT, number
   await expect(c.locator('[data-action="imp.commit.confirm"]')).toBeDisabled();
   await c.getByLabel('Type IMPORT to confirm').fill('IMPORT');
   await c.locator('[data-action="imp.commit.confirm"]').click();
-  await expect(preview.locator('[data-outcome="ok"]')).toContainText('Imported: 1 created, 0 updated, 2 skipped, 0 failed');
+  await expect(preview.locator('[data-outcome="ok"]')).toContainText(
+    'Imported: 1 created, 0 updated, 2 skipped, 0 failed',
+  );
   await expect(preview).toHaveAttribute('data-status', 'committed');
   // every imported member is invited by email right away (migration 0406)
-  await expect(preview.locator('[data-outcome="ok"]')).toContainText('Invitations: 1 sent, 0 not delivered', { timeout: 30_000 });
+  await expect(preview.locator('[data-outcome="ok"]')).toContainText('Invitations: 1 sent, 0 not delivered', {
+    timeout: 30_000,
+  });
   await expect(preview.locator('[data-invites]')).toContainText('1 sent');
   await expect(preview.locator('[data-action="imp.invite"]')).toBeDisabled();
   await expect
-    .poll(async () => {
-      const list = await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)).json();
-      for (const x of list.messages ?? []) {
-        const msg = await (await fetch(`${MAILPIT}/api/v1/message/${x.ID}`)).json();
-        if (/\/invite\/\S+/.test(msg.Text ?? '') && (msg.Text ?? '').includes(company)) return true;
-      }
-      return false;
-    }, { timeout: 20_000 })
+    .poll(
+      async () => {
+        const list = await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)).json();
+        for (const x of list.messages ?? []) {
+          const msg = await (await fetch(`${MAILPIT}/api/v1/message/${x.ID}`)).json();
+          if (/\/invite\/\S+/.test(msg.Text ?? '') && (msg.Text ?? '').includes(company)) return true;
+        }
+        return false;
+      },
+      { timeout: 20_000 },
+    )
     .toBe(true);
-  const { data: inv } = await admin.from('invitations').select('company_role, status, expires_at, companies!inner(name)').eq('companies.name', company).single();
+  const { data: inv } = await admin
+    .from('invitations')
+    .select('company_role, status, expires_at, companies!inner(name)')
+    .eq('companies.name', company)
+    .single();
   expect(inv).toMatchObject({ company_role: 'Owner', status: 'Invited' });
   expect(new Date(inv!.expires_at).getTime()).toBeGreaterThan(Date.now() + 29 * 86_400_000);
 
-  const { data: m } = await admin.from('members').select('member_no, class, status, rep_name, since, valid_to, imported, public_listing, companies(name)').eq('member_no', no).single();
-  expect(m).toMatchObject({ member_no: no, class: 'Associate', status: 'Permanent', rep_name: 'Rep Import', since: '2016-04-01', valid_to: '2027-03-31', imported: true, public_listing: false });
-  expect((await admin.from('members').select('rep_name').eq('member_no', 'MCCI-C-9001').single()).data?.rep_name).toBe('Rep B');
+  const { data: m } = await admin
+    .from('members')
+    .select('member_no, class, status, rep_name, since, valid_to, imported, public_listing, companies(name)')
+    .eq('member_no', no)
+    .single();
+  expect(m).toMatchObject({
+    member_no: no,
+    class: 'Associate',
+    status: 'Permanent',
+    rep_name: 'Rep Import',
+    since: '2016-04-01',
+    valid_to: '2027-03-31',
+    imported: true,
+    public_listing: false,
+  });
+  expect((await admin.from('members').select('rep_name').eq('member_no', 'MCCI-C-9001').single()).data?.rep_name).toBe(
+    'Rep B',
+  );
   await page.goto('/admin/members');
   await expect(page.getByRole('main').locator('table').first()).toContainText(no);
 
@@ -118,17 +148,29 @@ test('import: a file that is not a spreadsheet is refused whatever its name', as
   await page.goto('/admin/import');
   await page.locator('[data-action="imp.file"]').click();
   const d = page.getByRole('dialog');
-  await d.getByLabel('File').setInputFiles({ name: 'members.csv', mimeType: 'text/csv', buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]) });
+  await d.getByLabel('File').setInputFiles({
+    name: 'members.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0]),
+  });
   await d.locator('[data-action="imp.file.confirm"]').click();
-  await expect(d.locator('[data-outcome="refused"]')).toContainText('Only CSV, Excel (.xlsx, .xls) or PDF files can be imported.');
+  await expect(d.locator('[data-outcome="refused"]')).toContainText(
+    'Only CSV, Excel (.xlsx, .xls) or PDF files can be imported.',
+  );
 });
 
-test('import: a PDF directory is read by AI only after consent; uncertain rows are not selected; discarded', async ({ page }) => {
+test('import: a PDF directory is read by AI only after consent; uncertain rows are not selected; discarded', async ({
+  page,
+}) => {
   await signInAs(page, 'sg');
   await page.goto('/admin/import');
   await page.locator('[data-action="imp.file"]').click();
   const d = page.getByRole('dialog');
-  await d.getByLabel('File').setInputFiles({ name: 'directory.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n% scanned directory (test)\n%%EOF\n') });
+  await d.getByLabel('File').setInputFiles({
+    name: 'directory.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4\n% scanned directory (test)\n%%EOF\n'),
+  });
   // the consent tick is required for a PDF
   await expect(d.getByLabel(/send it to OpenAI/)).toBeVisible();
   await d.getByLabel(/send it to OpenAI/).check();
@@ -138,7 +180,9 @@ test('import: a PDF directory is read by AI only after consent; uncertain rows a
   await expect(preview).toContainText('Read by AI from a PDF');
   await expect(preview.locator('tr[data-row="1"]')).toHaveAttribute('data-decision', 'create');
   await expect(preview.locator('tr[data-row="2"]')).toHaveAttribute('data-decision', 'skip');
-  await expect(preview.locator('tr[data-row="2"] [data-issue="low_confidence"]')).toContainText('AI was not sure about Valid till');
+  await expect(preview.locator('tr[data-row="2"] [data-issue="low_confidence"]')).toContainText(
+    'AI was not sure about Valid till',
+  );
   await expect(preview.locator('tr[data-row="1"]')).toContainText('2027-03-31');
 
   await preview.locator('[data-action="imp.discard"]').click();

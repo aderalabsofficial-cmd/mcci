@@ -81,16 +81,14 @@ const inbound = (from: string, text: string) =>
   });
 const tick = (page: Page) => page.request.post('/api/cron/whatsapp', { headers: { Authorization: `Bearer ${CRON}` } });
 const grant = (i: number, categories = ['announcements', 'membership', 'events', 'opportunities']) =>
-  admin
-    .from('outreach_consents')
-    .insert({
-      company_id: companies[i],
-      phone: phone(i),
-      status: 'granted',
-      method: 'written',
-      evidence: 'E2E form',
-      categories,
-    });
+  admin.from('outreach_consents').insert({
+    company_id: companies[i],
+    phone: phone(i),
+    status: 'granted',
+    method: 'written',
+    evidence: 'E2E form',
+    categories,
+  });
 
 test.beforeAll(async () => {
   if (!accounts.backend) return;
@@ -184,7 +182,9 @@ test('connection is healthy only when every step passes; secrets never reach the
   // a long address wraps inside its box on a phone
   const size = page.viewportSize();
   await page.setViewportSize({ width: 375, height: 812 });
-  const wide = await page.locator('.kv').evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
+  const wide = await page
+    .locator('.kv')
+    .evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length);
   expect(wide).toBe(0);
   if (size) await page.setViewportSize(size);
   await page.locator('[data-action="wa.test"]').click();
@@ -516,17 +516,15 @@ test('pause stops submission, an outage waits without resending, cancel keeps wh
       })
       .select('id')
       .single();
-    await db
-      .from('whatsapp_campaign_recipients')
-      .insert(
-        [0, 1, 2].map((i) => ({
-          campaign_id: camp!.id,
-          company_id: companies[i],
-          member_no: memberNos[i],
-          business_name: names[i],
-          phone: phone(i),
-        })),
-      );
+    await db.from('whatsapp_campaign_recipients').insert(
+      [0, 1, 2].map((i) => ({
+        campaign_id: camp!.id,
+        company_id: companies[i],
+        member_no: memberNos[i],
+        business_name: names[i],
+        phone: phone(i),
+      })),
+    );
     return camp!.id as string;
   };
   const id = await mk('Control');
@@ -644,7 +642,10 @@ test('master templates: English and Urdu, approval only from the provider, field
 
   // the audience, set here whatever earlier tests left: 0 consented with an open conversation, 1 consented without
   // one, 2 opted out, 3 never consented
-  await admin.from('outreach_suppressions').delete().in('phone', [phone(0), phone(1)]);
+  await admin
+    .from('outreach_suppressions')
+    .delete()
+    .in('phone', [phone(0), phone(1)]);
   await grant(0, ['announcements']);
   await grant(1, ['announcements']);
   await grant(2, ['announcements']);
@@ -652,7 +653,10 @@ test('master templates: English and Urdu, approval only from the provider, field
   await admin
     .from('outreach_suppressions')
     .upsert({ phone: phone(2), reason: 'E2E opt-out', source: 'staff', active: true }, { onConflict: 'phone' });
-  await admin.from('whatsapp_conversations').update({ last_inbound_at: null }).in('phone', [phone(1), phone(2), phone(3)]);
+  await admin
+    .from('whatsapp_conversations')
+    .update({ last_inbound_at: null })
+    .in('phone', [phone(1), phone(2), phone(3)]);
   expect((await postEvent(page, inbound(phone(0), 'Hello MCCI'))).status()).toBe(200);
 
   const f = encodeURIComponent(JSON.stringify(filterOf()));
@@ -684,7 +688,10 @@ test('master templates: English and Urdu, approval only from the provider, field
   await c.locator('[data-action="wa.master.create"]').click();
   await expect(page.locator('[data-campaign-status="draft"]')).toBeVisible();
   const id = new URL(page.url()).searchParams.get('id')!;
-  const { data: rec } = await admin.from('whatsapp_campaign_recipients').select('company_id, kind, status, reason').eq('campaign_id', id);
+  const { data: rec } = await admin
+    .from('whatsapp_campaign_recipients')
+    .select('company_id, kind, status, reason')
+    .eq('campaign_id', id);
   const of = (i: number) => rec!.find((r) => r.company_id === companies[i])!;
   expect(of(0)).toMatchObject({ kind: 'text', status: 'pending' });
   expect(of(1)).toMatchObject({ kind: 'template', status: 'pending' });
@@ -724,7 +731,10 @@ test('campaign readiness: every figure says where it comes from; an administrato
     await page.goto('/admin/whatsapp/readiness');
     await expect(page.locator('[data-section="account"] [data-source="confirmed"]')).toBeVisible();
     await expect(page.locator('[data-section="capacity"] [data-source="counted"]')).toBeVisible();
-    await expect(page.locator('[data-value-verification]')).toHaveAttribute('data-value-verification', original!.verification);
+    await expect(page.locator('[data-value-verification]')).toHaveAttribute(
+      'data-value-verification',
+      original!.verification,
+    );
     await expect(page.locator('[data-issue="statuses"], [data-issue="verification"]').first()).toBeVisible();
     const week = await page.locator('[data-value-week]').getAttribute('data-value-week');
 
@@ -733,7 +743,9 @@ test('campaign readiness: every figure says where it comes from; an administrato
     await page.locator('[data-field="quota-verification"]').selectOption('verified');
     await page.locator('[data-field="quota-note"]').fill(`E2E ${tag}: WhatsApp Manager shows Tier 2K`);
     await page.locator('[data-action="wa.quota.confirm"]').click();
-    await expect(page.locator('[data-section="confirm"]').getByRole('status')).toContainText('Account figures confirmed');
+    await expect(page.locator('[data-section="confirm"]').getByRole('status')).toContainText(
+      'Account figures confirmed',
+    );
     await expect(page.locator('[data-value-limit]')).toHaveAttribute('data-value-limit', '2000');
     await expect(page.locator('[data-value-target]')).toHaveAttribute('data-value-target', '1000');
     await expect(page.locator('[data-issue="verification"]')).toHaveCount(0);

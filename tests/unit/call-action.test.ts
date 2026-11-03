@@ -5,14 +5,22 @@ import { callAction, classifyActionError, guardForm } from '@/lib/client/call-ac
 
 describe('server-action calls from the browser (lib/client/call-action.ts)', () => {
   it('a tab from an older release is "stale"; any other failed call is "unconfirmed"', () => {
-    expect(classifyActionError(new UnrecognizedActionError('Server Action "x" was not found on the server.'))).toBe('stale');
+    expect(classifyActionError(new UnrecognizedActionError('Server Action "x" was not found on the server.'))).toBe(
+      'stale',
+    );
     expect(classifyActionError(new TypeError('Failed to fetch'))).toBe('unconfirmed');
     expect(classifyActionError(new DOMException('The operation was aborted.', 'AbortError'))).toBe('unconfirmed');
   });
 
   it('passes the server’s own answer through, success or refusal', async () => {
-    expect(await callAction('en', async () => ({ ok: true, message: 'Document accepted.' }))).toEqual({ ok: true, message: 'Document accepted.' });
-    expect(await callAction('en', async () => ({ ok: false, message: 'Not allowed' }))).toEqual({ ok: false, message: 'Not allowed' });
+    expect(await callAction('en', async () => ({ ok: true, message: 'Document accepted.' }))).toEqual({
+      ok: true,
+      message: 'Document accepted.',
+    });
+    expect(await callAction('en', async () => ({ ok: false, message: 'Not allowed' }))).toEqual({
+      ok: false,
+      message: 'Not allowed',
+    });
   });
 
   it('turns a failed call into an explicit failure — never success, never silence', async () => {
@@ -50,7 +58,9 @@ describe('server-action calls from the browser (lib/client/call-action.ts)', () 
         throw thrown;
       }),
     ).rejects.toBe(thrown);
-    await expect(guardForm<{ error?: string }>('en', async () => Promise.reject(thrown))({}, new FormData())).rejects.toBe(thrown);
+    await expect(
+      guardForm<{ error?: string }>('en', async () => Promise.reject(thrown))({}, new FormData()),
+    ).rejects.toBe(thrown);
   });
 });
 

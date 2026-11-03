@@ -54,13 +54,25 @@ describe('the Profit & Loss statement', () => {
     expect(st.resultCells).toEqual([256_58, 500_00]);
   });
   it('shows a loss when expense is more than receipts, and keeps nil lines in place', () => {
-    const loss = buildStatement(groups, accounts, [{ account_id: 'salary', month: '2026-09-01', paisa: 5 }], '2026-09-01', '2026-09-30');
+    const loss = buildStatement(
+      groups,
+      accounts,
+      [{ account_id: 'salary', month: '2026-09-01', paisa: 5 }],
+      '2026-09-01',
+      '2026-09-30',
+    );
     expect(loss.result).toBe(-5);
     expect(loss.expenses[1]?.rows[0]?.total).toBe(0);
   });
   it('a retired account with figures still appears; one without does not', () => {
     const retired = [...accounts, { ...acc('old', 'A', 2), active: false }, { ...acc('gone', 'A', 3), active: false }];
-    const s = buildStatement(groups, retired, [{ account_id: 'old', month: '2026-09-01', paisa: 1 }], '2026-09-01', '2026-09-30');
+    const s = buildStatement(
+      groups,
+      retired,
+      [{ account_id: 'old', month: '2026-09-01', paisa: 1 }],
+      '2026-09-01',
+      '2026-09-30',
+    );
     expect(s.expenses[0]?.rows.map((r) => r.id)).toEqual(['salary', 'old']);
   });
   it('months cross a year end', () => {
@@ -105,7 +117,7 @@ describe('amounts', () => {
   it('refuses what is not a positive amount', () => {
     for (const bad of ['', '0', '-5', 'abc', '1.234', '1e5']) expect(parseRupees(bad)).toBeNull();
   });
-  it('prints as MCCI\'s statement does', () => {
+  it("prints as MCCI's statement does", () => {
     expect(formatPaisa(0)).toBe('-');
     expect(formatPaisa(123400)).toBe('1,234');
     expect(formatPaisa(434420, true)).toBe('(4,344.20)');
@@ -143,7 +155,10 @@ describe('uploads are judged by their bytes', () => {
   it('published media: no SVG, and a renamed file is refused', () => {
     expect(checkContentMedia('a.pdf', pdf)).toMatchObject({ ok: true, kind: 'file' });
     expect(checkContentMedia('a.jpg', exe)).toEqual({ ok: false, reason: 'type' });
-    expect(checkContentMedia('a.svg', new TextEncoder().encode('<svg onload=alert(1)>'))).toEqual({ ok: false, reason: 'type' });
+    expect(checkContentMedia('a.svg', new TextEncoder().encode('<svg onload=alert(1)>'))).toEqual({
+      ok: false,
+      reason: 'type',
+    });
   });
 });
 
@@ -184,7 +199,15 @@ describe('audience tabs', () => {
   });
   it('a filter the tabs cannot show opens the detailed builder', () => {
     expect(isTabFilter(withTab({ groups: [] }, 'city', 'Multan'))).toBe(true);
-    expect(isTabFilter({ groups: [{ match: 'all', exclude: true, rules: [{ field: 'city', op: 'in', value: ['Multan'] }] }] })).toBe(false);
-    expect(isTabFilter({ groups: [{ match: 'all', exclude: false, rules: [{ field: 'rep_name', op: 'contains', value: 'A' }] }] })).toBe(false);
+    expect(
+      isTabFilter({
+        groups: [{ match: 'all', exclude: true, rules: [{ field: 'city', op: 'in', value: ['Multan'] }] }],
+      }),
+    ).toBe(false);
+    expect(
+      isTabFilter({
+        groups: [{ match: 'all', exclude: false, rules: [{ field: 'rep_name', op: 'contains', value: 'A' }] }],
+      }),
+    ).toBe(false);
   });
 });

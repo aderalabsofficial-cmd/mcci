@@ -2,7 +2,14 @@ import * as XLSX from 'xlsx';
 import { describe, expect, it } from 'vitest';
 import en from '@/messages/en.json';
 import ur from '@/messages/ur.json';
-import { findHeader, normalizeRow, normalizeSheet, parseDate, parseMemberNo, TEMPLATE_HEADERS } from '@/lib/import/normalize';
+import {
+  findHeader,
+  normalizeRow,
+  normalizeSheet,
+  parseDate,
+  parseMemberNo,
+  TEMPLATE_HEADERS,
+} from '@/lib/import/normalize';
 import { checkImportFile, readSheet, sniffImport } from '@/lib/import/parse';
 
 const codes = (r: { issues: { code: string; level: string }[] }, level?: string) =>
@@ -34,7 +41,11 @@ describe('member numbers: kept exactly, only written the standard way', () => {
     expect(parseMemberNo('MCCI-A-0012', '').value).toBe('MCCI-A-0012');
   });
   it('digits without a class are not turned into a number', () => {
-    expect(normalizeRow({ ...good, membership_no: '1134', class: '' }).issues.some((i) => i.field === 'membership_no' && i.level === 'error')).toBe(true);
+    expect(
+      normalizeRow({ ...good, membership_no: '1134', class: '' }).issues.some(
+        (i) => i.field === 'membership_no' && i.level === 'error',
+      ),
+    ).toBe(true);
   });
 });
 
@@ -60,12 +71,23 @@ describe('row checks', () => {
   it('a complete row has no issues', () => {
     const r = normalizeRow(good);
     expect(r.issues).toEqual([]);
-    expect(r.data).toMatchObject({ membership_no: 'MCCI-C-1134', class: 'Corporate', business_type: 'pvt', status: 'Permanent', valid_to: '2027-03-31' });
+    expect(r.data).toMatchObject({
+      membership_no: 'MCCI-C-1134',
+      class: 'Corporate',
+      business_type: 'pvt',
+      status: 'Permanent',
+      valid_to: '2027-03-31',
+    });
   });
   it('missing required values are errors', () => {
     const r = normalizeRow({ membership_no: 'MCCI-C-1', class: 'Corporate' });
     expect(codes(r, 'error')).toEqual(expect.arrayContaining(['required']));
-    expect(r.issues.filter((i) => i.code === 'required').map((i) => i.field).sort()).toEqual(['company_name', 'representative_name', 'status', 'valid_to']);
+    expect(
+      r.issues
+        .filter((i) => i.code === 'required')
+        .map((i) => i.field)
+        .sort(),
+    ).toEqual(['company_name', 'representative_name', 'status', 'valid_to']);
   });
   it('class that disagrees with the number is an error', () => {
     expect(codes(normalizeRow({ ...good, class: 'Associate' }), 'error')).toContain('class_mismatch');
@@ -114,7 +136,16 @@ describe('sheets', () => {
   it('finds the header below a title, by many spellings, and ignores other columns', () => {
     const rows = [
       ['Multan Chamber — member list 2026'],
-      ['Membership No.', 'Name of Firm', 'Authorised Representative', 'Category', 'Valid Upto', 'Status', 'Remarks', 'CNIC'],
+      [
+        'Membership No.',
+        'Name of Firm',
+        'Authorised Representative',
+        'Category',
+        'Valid Upto',
+        'Status',
+        'Remarks',
+        'CNIC',
+      ],
       ['MCCI-C-1134', 'Alpha', 'Ahmed', 'Corporate', '31/03/2027', 'Active', 'ok', '36302-1234567-1'],
       ['', '', '', '', '', '', '', ''],
     ];
@@ -123,12 +154,22 @@ describe('sheets', () => {
     if ('problem' in out) throw new Error(out.problem);
     expect(out.rows).toHaveLength(1);
     expect(out.ignored).toEqual(['Remarks']);
-    expect(out.rows[0]!.data).toMatchObject({ membership_no: 'MCCI-C-1134', company_name: 'Alpha', status: 'Permanent', valid_to: '2027-03-31' });
+    expect(out.rows[0]!.data).toMatchObject({
+      membership_no: 'MCCI-C-1134',
+      company_name: 'Alpha',
+      status: 'Permanent',
+      valid_to: '2027-03-31',
+    });
     // the representative's CNIC is never kept
     expect(JSON.stringify(out.rows[0])).not.toContain('36302');
   });
   it('reports a file without a header or rows', () => {
-    expect(normalizeSheet([['a', 'b'], ['1', '2']])).toEqual({ problem: 'no_header' });
+    expect(
+      normalizeSheet([
+        ['a', 'b'],
+        ['1', '2'],
+      ]),
+    ).toEqual({ problem: 'no_header' });
     expect(normalizeSheet([TEMPLATE_HEADERS])).toEqual({ problem: 'empty' });
   });
   it('the template header row maps every column', () => {
@@ -138,7 +179,9 @@ describe('sheets', () => {
 });
 
 describe('file types come from the bytes, not the name', () => {
-  const csv = new TextEncoder().encode(`﻿${TEMPLATE_HEADERS.join(',')}\r\nMCCI-A-0012,Associate,N,Beta,prop,,,,,Sara,,,,,2027-03-31,Permanent,\r\n`);
+  const csv = new TextEncoder().encode(
+    `﻿${TEMPLATE_HEADERS.join(',')}\r\nMCCI-A-0012,Associate,N,Beta,prop,,,,,Sara,,,,,2027-03-31,Permanent,\r\n`,
+  );
   it('CSV keeps cells as written', () => {
     expect(sniffImport(csv, 'list.csv')).toBe('csv');
     const rows = readSheet(csv, 'csv');
@@ -148,7 +191,28 @@ describe('file types come from the bytes, not the name', () => {
     expect(out.rows[0]!.data.membership_no).toBe('MCCI-A-0012');
   });
   it('xlsx and xls are read the same way', () => {
-    const ws = XLSX.utils.aoa_to_sheet([TEMPLATE_HEADERS, ['MCCI-C-1134', 'Corporate', 'Y', 'Alpha', 'pvt', '', '', '', '', 'Ahmed', '', '', '', '', new Date(2027, 2, 31), 'Permanent', '']]);
+    const ws = XLSX.utils.aoa_to_sheet([
+      TEMPLATE_HEADERS,
+      [
+        'MCCI-C-1134',
+        'Corporate',
+        'Y',
+        'Alpha',
+        'pvt',
+        '',
+        '',
+        '',
+        '',
+        'Ahmed',
+        '',
+        '',
+        '',
+        '',
+        new Date(2027, 2, 31),
+        'Permanent',
+        '',
+      ],
+    ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Members');
     for (const type of ['xlsx', 'xls'] as const) {
@@ -166,7 +230,9 @@ describe('file types come from the bytes, not the name', () => {
     expect(checkImportFile(new TextEncoder().encode('MZ…'), 'list.exe')).toEqual({ problem: 'type' });
     expect(checkImportFile(new Uint8Array(), 'a.csv')).toEqual({ problem: 'empty' });
     expect(checkImportFile(new Uint8Array(11 * 1024 * 1024), 'a.csv')).toEqual({ problem: 'tooBig' });
-    expect(checkImportFile(new TextEncoder().encode('%PDF-1.7 trailer << /Encrypt 5 0 R >>'), 'a.pdf')).toEqual({ problem: 'encrypted' });
+    expect(checkImportFile(new TextEncoder().encode('%PDF-1.7 trailer << /Encrypt 5 0 R >>'), 'a.pdf')).toEqual({
+      problem: 'encrypted',
+    });
   });
   it('a broken spreadsheet is reported, not thrown', () => {
     expect(readSheet(new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3]), 'xlsx')).toEqual({ problem: 'unreadable' });
@@ -175,8 +241,26 @@ describe('file types come from the bytes, not the name', () => {
 
 describe('messages', () => {
   it('every check code has English and Urdu text', () => {
-    const all = ['required', 'membership_no', 'membership_no_written', 'duplicate_in_file', 'class', 'class_from_number', 'class_mismatch', 'status',
-      'status_inferred', 'expired_but_permanent', 'date', 'since_after_valid', 'business_type', 'business_type_inferred', 'email', 'no_email', 'ntn', 'low_confidence'];
+    const all = [
+      'required',
+      'membership_no',
+      'membership_no_written',
+      'duplicate_in_file',
+      'class',
+      'class_from_number',
+      'class_mismatch',
+      'status',
+      'status_inferred',
+      'expired_but_permanent',
+      'date',
+      'since_after_valid',
+      'business_type',
+      'business_type_inferred',
+      'email',
+      'no_email',
+      'ntn',
+      'low_confidence',
+    ];
     for (const c of all) {
       expect((en.imp.issues as Record<string, string>)[c]).toBeTruthy();
       expect((ur.imp.issues as Record<string, string>)[c]).toBeTruthy();

@@ -40,7 +40,10 @@ test('staff publish an event; a member registers once', async ({ page, browser }
   await member.close();
 });
 
-test('a member raises a ticket; staff find it, reply and resolve it; the member sees both', async ({ page, browser }) => {
+test('a member raises a ticket; staff find it, reply and resolve it; the member sees both', async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(120_000);
   const member = await browser.newPage();
   await signInAs(member, 'member');

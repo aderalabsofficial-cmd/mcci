@@ -9,9 +9,12 @@ describe('QR verification link (docs/08 "QR & verification")', () => {
     expect(verifyUrl('MCCI-QR-ABCDE-23456', env({ APP_URL: 'https://app.example.test/' }))).toBe(
       'https://app.example.test/verify/MCCI-QR-ABCDE-23456',
     );
-    expect(verifyUrl('MCCI-QR-ABCDE-23456', env({ APP_URL: 'https://x.test', VERIFY_BASE_URL: 'https://mcci.org.pk/verify/' }))).toBe(
-      'https://mcci.org.pk/verify/MCCI-QR-ABCDE-23456',
-    );
+    expect(
+      verifyUrl(
+        'MCCI-QR-ABCDE-23456',
+        env({ APP_URL: 'https://x.test', VERIFY_BASE_URL: 'https://mcci.org.pk/verify/' }),
+      ),
+    ).toBe('https://mcci.org.pk/verify/MCCI-QR-ABCDE-23456');
   });
 
   it('renders an SVG QR on the server', async () => {

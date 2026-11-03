@@ -30,5 +30,8 @@ for (const [name, route] of Object.entries(SHELLS))
   test(`screenshot ${name}`, async ({ page }, info) => {
     await open(page, route);
     await page.waitForTimeout(400); // let entrance transitions settle
-    await page.screenshot({ path: `test-results/shells/${name}-${info.project.name}.png`, fullPage: info.project.name !== 'desktop' });
+    await page.screenshot({
+      path: `test-results/shells/${name}-${info.project.name}.png`,
+      fullPage: info.project.name !== 'desktop',
+    });
   });

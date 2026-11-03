@@ -46,8 +46,22 @@ async function application(name: string) {
   const at = new Date().toISOString();
   const expires = new Date(Date.now() + 7 * 86_400_000).toISOString();
   await admin.from('endorsements').insert([
-    { application_id: data!.id, role: 'proposer', endorser_member_id: member, status: 'Approved', decided_at: at, expires_at: expires },
-    { application_id: data!.id, role: 'seconder', endorser_member_id: member, status: 'Approved', decided_at: at, expires_at: expires },
+    {
+      application_id: data!.id,
+      role: 'proposer',
+      endorser_member_id: member,
+      status: 'Approved',
+      decided_at: at,
+      expires_at: expires,
+    },
+    {
+      application_id: data!.id,
+      role: 'seconder',
+      endorser_member_id: member,
+      status: 'Approved',
+      decided_at: at,
+      expires_at: expires,
+    },
   ]);
   apps.push({ id: data!.id, token: data!.token, name });
   return apps[apps.length - 1]!;
@@ -145,7 +159,9 @@ test('the officer forwards with the number; the Convener approves: voucher and e
   // the dialog stays open with what was typed: correct it (any case, with or without the dash)
   await d.getByLabel(/Membership number/).fill(number.toLowerCase().replace('-', ' '));
   await d.locator('[data-action="adm.forward.confirm"]').click();
-  await expect(main(page).getByRole('status').first()).toContainText(`Forwarded to the Membership Committee with No. ${number}.`);
+  await expect(main(page).getByRole('status').first()).toContainText(
+    `Forwarded to the Membership Committee with No. ${number}.`,
+  );
   expect(await stage(file.id)).toEqual({ stage: 'committee', member_no: number });
 
   // on the desk at once; the SG sees it but cannot decide; the Convener approves
@@ -177,7 +193,9 @@ test('the officer forwards with the number; the Convener approves: voucher and e
     .eq('application_id', file.id)
     .eq('template_key', 'membership_approved_voucher');
   expect(mails).toEqual([{ template_key: 'membership_approved_voucher', status: 'sent' }]);
-  const found = await (await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${applicant.email}`)}`)).json();
+  const found = await (
+    await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${applicant.email}`)}`)
+  ).json();
   expect(found.messages?.[0]?.Subject).toContain(number);
 
   // the applicant: what to do now, Payments, Urdu message
@@ -185,7 +203,10 @@ test('the officer forwards with the number; the Convener approves: voucher and e
   const ap = await ctx.newPage();
   await ap.goto('/login');
   await ap.getByLabel('Mobile, email or member ID').fill(applicant.email);
-  await ap.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(applicant.password);
+  await ap
+    .getByRole('tabpanel', { name: 'Member login' })
+    .getByLabel('Password', { exact: true })
+    .fill(applicant.password);
   await ap.locator('[data-action="login.member"]').click();
   await expect(ap).toHaveURL(/\/portal$/, { timeout: 20_000 });
   await expect(ap.getByRole('main')).toContainText(v!.voucher_no);
@@ -214,7 +235,10 @@ test('the Convener returns a file to the officer, then declines one with a reaso
   await row().locator('[data-decision="Returned"]').click();
   await page.locator('[data-action="cmt.decide.confirm"]').click();
   await expect(page.getByRole('dialog').getByRole('alert')).toContainText('reason');
-  await page.getByRole('dialog').getByLabel(/Membership Officer check/).fill('Check the NTN on the certificate again');
+  await page
+    .getByRole('dialog')
+    .getByLabel(/Membership Officer check/)
+    .fill('Check the NTN on the certificate again');
   await page.locator('[data-action="cmt.decide.confirm"]').click();
   await expect(main(page).getByRole('status').first()).toContainText('Returned to the Membership Officer.');
   expect(await stage(file.id)).toEqual({ stage: 'proposer', member_no: number });
@@ -222,7 +246,10 @@ test('the Convener returns a file to the officer, then declines one with a reaso
   await admin.from('applications').update({ stage: 'committee' }).eq('id', file.id);
   await page.reload();
   await row().locator('[data-decision="Rejected"]').click();
-  await page.getByRole('dialog').getByLabel(/Reason/).fill('Outside the Chamber’s jurisdiction');
+  await page
+    .getByRole('dialog')
+    .getByLabel(/Reason/)
+    .fill('Outside the Chamber’s jurisdiction');
   await page.locator('[data-action="cmt.decide.confirm"]').click();
   await expect(main(page).getByRole('status').first()).toContainText('Declined — the applicant has been told.');
   // a declined file keeps its number reserved unless MCCI allows re-use (settings.membership.releaseNumberOnDecline)

@@ -21,7 +21,10 @@ test('the register opens a member record; every section opens; the actions are t
   for (const tab of ['partners', 'documents', 'certificates', 'payments', 'history', 'particulars']) {
     await page.locator(`[data-action="member.tab"][href$="tab=${tab}"]`).click();
     await expect(page).toHaveURL(new RegExp(`tab=${tab}`));
-    await expect(page.locator(`[data-action="member.tab"][href$="tab=${tab}"]`)).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator(`[data-action="member.tab"][href$="tab=${tab}"]`)).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   }
   // without a member: the register itself
   await page.goto('/admin/member');

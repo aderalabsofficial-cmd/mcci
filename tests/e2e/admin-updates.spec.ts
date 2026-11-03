@@ -96,7 +96,10 @@ test('the voter list follows the rules, with filters, reasons and a logged expor
   const csv = await res.text();
   expect(csv).toContain(ids.exact!.no);
   expect(csv).not.toContain(ids.late!.no);
-  const { count } = await admin.from('voter_list_exports').select('id', { count: 'exact', head: true }).eq('cutoff', '2028-07-13');
+  const { count } = await admin
+    .from('voter_list_exports')
+    .select('id', { count: 'exact', head: true })
+    .eq('cutoff', '2028-07-13');
   expect(count).toBeGreaterThan(0);
 });
 
@@ -131,7 +134,9 @@ test('register: search and tabs; a click opens the record; a legacy date comes f
   await expect(page).toHaveURL(/admin\/members/);
 });
 
-test('renewal: declaration required; period editable with a reason; a declared change reaches the queue and the profile', async ({ page }) => {
+test('renewal: declaration required; period editable with a reason; a declared change reaches the queue and the profile', async ({
+  page,
+}) => {
   await signInAs(page, 'sg');
   await admin.from('members').update({ valid_to: '2026-03-31' }).eq('id', ids.assoc!.member);
   await page.goto(`/admin/member?id=${ids.assoc!.member}`);
@@ -145,11 +150,18 @@ test('renewal: declaration required; period editable with a reason; a declared c
   await expect(d.locator('[data-uploaded="doc.pdf"]')).toBeVisible();
   await d.locator('[data-action="reg.renew.confirm"]').click();
   await expect(d.getByRole('alert')).toContainText(/reason/i); // the changed date needs its reason
-  expect((await admin.from('change_declarations').select('id').eq('company_id', ids.assoc!.company)).data).toHaveLength(0); // and nothing is left behind
+  expect((await admin.from('change_declarations').select('id').eq('company_id', ids.assoc!.company)).data).toHaveLength(
+    0,
+  ); // and nothing is left behind
   await d.locator('[data-field="renew-reason"]').fill('DGTO order of 5 January');
   await d.locator('[data-action="reg.renew.confirm"]').click();
   await expect(page.getByRole('status').filter({ hasText: /Renewal voucher PV-/ })).toBeVisible();
-  const { data: q } = await admin.from('membership_requests').select('valid_from, no_change, declaration_id').eq('member_id', ids.assoc!.member).eq('status', 'open').single();
+  const { data: q } = await admin
+    .from('membership_requests')
+    .select('valid_from, no_change, declaration_id')
+    .eq('member_id', ids.assoc!.member)
+    .eq('status', 'open')
+    .single();
   expect(q).toMatchObject({ valid_from: '2027-01-15', no_change: false });
   expect(q!.declaration_id).toBeTruthy();
 
@@ -157,20 +169,29 @@ test('renewal: declaration required; period editable with a reason; a declared c
   const card = page.locator(`[data-declaration="${q!.declaration_id}"]`);
   await expect(card).toContainText('New representative appointed');
   await expect(card).toContainText(`New Rep ${tag}`);
-  expect((await admin.from('members').select('rep_name').eq('id', ids.assoc!.member).single()).data!.rep_name).toBe('Rep assoc');
+  expect((await admin.from('members').select('rep_name').eq('id', ids.assoc!.member).single()).data!.rep_name).toBe(
+    'Rep assoc',
+  );
   await card.locator('[data-action="chg.reject"]').click();
   await expect(card.getByRole('alert')).toContainText(/reason/i); // a refusal needs its reason
   await card.locator('[data-action="chg.approve"]').click();
   await expect(page.locator(`[data-declaration="${q!.declaration_id}"][data-status="Approved"]`)).toBeVisible();
-  expect((await admin.from('members').select('rep_name').eq('id', ids.assoc!.member).single()).data!.rep_name).toBe(`New Rep ${tag}`);
+  expect((await admin.from('members').select('rep_name').eq('id', ids.assoc!.member).single()).data!.rep_name).toBe(
+    `New Rep ${tag}`,
+  );
 
   // it stays in the member's history
   await page.goto(`/admin/member?id=${ids.assoc!.member}&tab=history`);
-  await expect(page.locator(`[data-section="history"] [data-declaration="${q!.declaration_id}"]`)).toContainText('Approved');
+  await expect(page.locator(`[data-section="history"] [data-declaration="${q!.declaration_id}"]`)).toContainText(
+    'Approved',
+  );
   await expect(page.locator('[data-section="history"] [data-request="renewal"]')).toContainText('15 Jan 2027');
 });
 
-test('Accounts: an expense on MCCI\'s chart reaches the statement and the Trial Balance; verified by someone else', async ({ page, browser }) => {
+test("Accounts: an expense on MCCI's chart reaches the statement and the Trial Balance; verified by someone else", async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(120_000);
   await signInAs(page, 'sg');
   await page.goto('/admin/finance');
@@ -206,16 +227,28 @@ test('Accounts: an expense on MCCI\'s chart reaches the statement and the Trial 
   await signInAs(other, 'president');
   await other.goto('/admin/finance?tab=entries&preset=year');
   await expect(other.locator('[data-action="fin.entry.save"]')).toHaveCount(0);
-  await expect(other.locator('[data-entry]', { hasText: `MEPCO ${tag}` }).locator('[data-action="fin.entry.verify"]')).toHaveCount(0);
-  await admin.from('staff_permission_overrides').insert({ user_id: accounts.president!.id, module: 'fin', level: 3, reason: 'e2e' });
+  await expect(
+    other.locator('[data-entry]', { hasText: `MEPCO ${tag}` }).locator('[data-action="fin.entry.verify"]'),
+  ).toHaveCount(0);
+  await admin
+    .from('staff_permission_overrides')
+    .insert({ user_id: accounts.president!.id, module: 'fin', level: 3, reason: 'e2e' });
   await other.reload();
-  await other.locator('[data-entry]', { hasText: `MEPCO ${tag}` }).locator('[data-action="fin.entry.verify"]').click();
-  await expect(other.locator('[data-entry][data-status="Verified"]', { hasText: `MEPCO ${tag}` })).toBeVisible({ timeout: 20_000 });
+  await other
+    .locator('[data-entry]', { hasText: `MEPCO ${tag}` })
+    .locator('[data-action="fin.entry.verify"]')
+    .click();
+  await expect(other.locator('[data-entry][data-status="Verified"]', { hasText: `MEPCO ${tag}` })).toBeVisible({
+    timeout: 20_000,
+  });
   await admin.from('staff_permission_overrides').delete().eq('user_id', accounts.president!.id).eq('module', 'fin');
   await second.close();
 
   await page.goto('/admin/finance?tab=entries');
-  await page.locator('[data-entry]', { hasText: `MEPCO ${tag}` }).locator('[data-action="fin.entry.void"]').click();
+  await page
+    .locator('[data-entry]', { hasText: `MEPCO ${tag}` })
+    .locator('[data-action="fin.entry.void"]')
+    .click();
   const d = page.getByRole('dialog');
   await d.locator('[data-action="fin.entry.void.confirm"]').click();
   await expect(d.getByRole('alert')).toContainText(/reason/i);
@@ -232,7 +265,14 @@ test('payments filter by class and by admission, renewal or restoration', async 
   await expect(page).toHaveURL(/class=Associate/);
   await page.locator('[data-action="pay.category"][data-category="renewal"]').click();
   await expect(page).toHaveURL(/class=Associate.*category=renewal/);
-  const voucher = (await admin.from('membership_requests').select('voucher_no').eq('member_id', ids.assoc!.member).eq('kind', 'renewal').single()).data!.voucher_no;
+  const voucher = (
+    await admin
+      .from('membership_requests')
+      .select('voucher_no')
+      .eq('member_id', ids.assoc!.member)
+      .eq('kind', 'renewal')
+      .single()
+  ).data!.voucher_no;
   await expect(page.locator(`[data-voucher="${voucher}"]`).first()).toBeVisible();
   await page.locator('[data-action="pay.class"][data-class="Corporate"]').click();
   await expect(page.locator(`[data-voucher="${voucher}"]`)).toHaveCount(0);
@@ -271,7 +311,9 @@ test('access: a new designation and a service officer, each after the password',
   await signInAs(page, 'sg');
   const sg = accounts.sg!;
   // other specs use this account's password in the same run; the limit of 5 tries in 15 minutes is tested elsewhere
-  execSync(process.env.MCCI_IT_SQL_CMD ?? '', { input: "delete from private.rate_limits where bucket like 'reauth:%';" });
+  execSync(process.env.MCCI_IT_SQL_CMD ?? '', {
+    input: "delete from private.rate_limits where bucket like 'reauth:%';",
+  });
   await page.goto('/admin/staff');
   const name = `Media Officer ${tag}`;
   const card = page.locator('[data-section="add-designation"]');
@@ -308,9 +350,15 @@ test('WhatsApp audience: tabs instead of dropdowns; WhatsApp settings carry the 
   await expect(tabs.locator('select')).toHaveCount(0);
   await tabs.locator('[data-tab="member_class"][data-value="Corporate"]').click();
   await expect(page).toHaveURL(/member_class/);
-  await expect(tabs.locator('[data-tab="member_class"][data-value="Corporate"]')).toHaveAttribute('aria-current', 'true');
+  await expect(tabs.locator('[data-tab="member_class"][data-value="Corporate"]')).toHaveAttribute(
+    'aria-current',
+    'true',
+  );
   await tabs.locator('[data-tab="renewal"][data-value="lapsed"]').click();
-  await expect(tabs.locator('[data-tab="member_class"][data-value="Corporate"]')).toHaveAttribute('aria-current', 'true');
+  await expect(tabs.locator('[data-tab="member_class"][data-value="Corporate"]')).toHaveAttribute(
+    'aria-current',
+    'true',
+  );
   await expect(tabs.locator('[data-tab="renewal"][data-value="lapsed"]')).toHaveAttribute('aria-current', 'true');
   await tabs.locator('[data-action="wa.tabs.clear"]').click();
   await expect(tabs.locator('[data-tab="member_class"][data-value="all"]')).toHaveAttribute('aria-current', 'true');

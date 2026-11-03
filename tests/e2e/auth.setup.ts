@@ -117,7 +117,10 @@ setup('create e2e accounts and sign in through the UI', async ({ browser }) => {
   const mp = await member.newPage();
   await mp.goto('/login');
   await mp.getByLabel('Mobile, email or member ID').fill(accounts.member!.email);
-  await mp.getByRole('tabpanel', { name: 'Member login' }).getByLabel('Password', { exact: true }).fill(accounts.member!.password);
+  await mp
+    .getByRole('tabpanel', { name: 'Member login' })
+    .getByLabel('Password', { exact: true })
+    .fill(accounts.member!.password);
   await mp.locator('[data-action="login.member"]').click();
   await expect(mp).toHaveURL(/\/portal$/);
   await member.storageState({ path: STATE.member });

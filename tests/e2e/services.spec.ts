@@ -17,7 +17,11 @@ test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'deskto
 test.describe.configure({ mode: 'serial' });
 
 let admin: SupabaseClient;
-const pdf = (name: string) => ({ name, mimeType: 'application/pdf', buffer: Buffer.from(`%PDF-1.4\n% ${name}\n%%EOF\n`) });
+const pdf = (name: string) => ({
+  name,
+  mimeType: 'application/pdf',
+  buffer: Buffer.from(`%PDF-1.4\n% ${name}\n%%EOF\n`),
+});
 
 test.beforeAll(() => {
   admin = createClient(env!.url, env!.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
@@ -32,7 +36,11 @@ test.afterAll(async ({}, info) => {
   const ids = (reqs ?? []).map((r) => r.id);
   if (ids.length) {
     await admin.from('payment_vouchers').delete().eq('ref_type', 'service').in('ref_id', ids);
-    const { data: docs } = await admin.from('service_requests').select('issued_doc').in('id', ids).not('issued_doc', 'is', null);
+    const { data: docs } = await admin
+      .from('service_requests')
+      .select('issued_doc')
+      .in('id', ids)
+      .not('issued_doc', 'is', null);
     await admin.from('service_requests').update({ issued_doc: null }).in('id', ids);
     await admin.from('service_requests').delete().in('id', ids);
     // the issued letters (registry documents) refer to the test member: removed with the requests
@@ -60,7 +68,10 @@ async function startRequest(page: Page, service: string) {
 // one action was measured at 15.8 s, and successful, when the other worker was busy; assertions stay as they were
 const SAVED = { timeout: 45_000 };
 
-test('a request from start to issued letter: return, correction, fee at the counter, signature, public verification', async ({ page, browser }) => {
+test('a request from start to issued letter: return, correction, fee at the counter, signature, public verification', async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(180_000);
   await memberPage(page);
   await startRequest(page, 'co');
@@ -111,18 +122,32 @@ test('a request from start to issued letter: return, correction, fee at the coun
   await expect(sg.locator('[data-action="svc.sign"]')).toBeDisabled();
 
   // Accounts record the fee at the counter
-  const { data: v } = await admin.from('payment_vouchers').select('voucher_no').eq('ref_type', 'service').eq('ref_id', req!.id).single();
+  const { data: v } = await admin
+    .from('payment_vouchers')
+    .select('voucher_no')
+    .eq('ref_type', 'service')
+    .eq('ref_id', req!.id)
+    .single();
   await sg.goto('/admin/psid');
   await sg.locator(`[data-voucher="${v!.voucher_no}"] [data-action="psid.markpaid"]`).first().click();
   await sg.getByRole('dialog').getByLabel('Bank / counter receipt reference').fill('MCCI-CASH-SVC-1');
   await sg.locator('[data-action="psid.markpaid.confirm"]').click();
-  await expect.poll(async () => (await admin.from('payment_vouchers').select('status').eq('voucher_no', v!.voucher_no).single()).data?.status).toBe('Paid');
+  await expect
+    .poll(
+      async () =>
+        (await admin.from('payment_vouchers').select('status').eq('voucher_no', v!.voucher_no).single()).data?.status,
+    )
+    .toBe('Paid');
 
   // the signatory signs from the queue; the letter is a QR document
   await sg.goto('/admin/approvals');
   await sg.locator(`[data-request="${token}"] [data-action="svc.sign"]`).click();
   await expect(sg.locator('[data-outcome="ok"]')).toContainText('Signed and issued: MCCI-QR-');
-  const { data: done } = await admin.from('service_requests').select('status, documents:issued_doc(code, kind, status)').eq('token', token).single();
+  const { data: done } = await admin
+    .from('service_requests')
+    .select('status, documents:issued_doc(code, kind, status)')
+    .eq('token', token)
+    .single();
   const doc = done!.documents as unknown as { code: string; kind: string; status: string };
   expect([done!.status, doc.kind, doc.status]).toEqual(['Issued', 'letter', 'Valid']);
 
@@ -169,8 +194,15 @@ test('each of the seven services can be requested, approved and issued', async (
   }
 });
 
-test('a member cannot see another company’s request, and staff without the services module are refused', async ({ page }) => {
-  const { data: other } = await admin.from('service_requests').select('token').neq('company_id', readAccounts().companyId).limit(1).maybeSingle();
+test('a member cannot see another company’s request, and staff without the services module are refused', async ({
+  page,
+}) => {
+  const { data: other } = await admin
+    .from('service_requests')
+    .select('token')
+    .neq('company_id', readAccounts().companyId)
+    .limit(1)
+    .maybeSingle();
   await memberPage(page);
   if (other) {
     await page.goto(`/portal/application?t=${other.token}`);

@@ -79,10 +79,17 @@ export async function expectNoHorizontalOverflow(page: Page) {
     inner: [...document.querySelectorAll<HTMLElement>('main *')]
       .filter((el) => {
         const o = getComputedStyle(el).overflowX;
-        return (o === 'auto' || o === 'scroll') && el.scrollWidth > el.clientWidth + 2 && el.offsetParent !== null && !el.closest('[data-scroll-x]');
+        return (
+          (o === 'auto' || o === 'scroll') &&
+          el.scrollWidth > el.clientWidth + 2 &&
+          el.offsetParent !== null &&
+          !el.closest('[data-scroll-x]')
+        );
       })
       .slice(0, 5)
-      .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')} (${el.scrollWidth} > ${el.clientWidth})`),
+      .map(
+        (el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')} (${el.scrollWidth} > ${el.clientWidth})`,
+      ),
   }));
   expect(scrollWidth, `page is ${scrollWidth}px wide in a ${clientWidth}px viewport`).toBeLessThanOrEqual(clientWidth);
   if (clientWidth <= 640) expect(inner, `sections that scroll sideways at ${clientWidth}px`).toEqual([]);

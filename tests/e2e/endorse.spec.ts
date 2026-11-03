@@ -98,7 +98,13 @@ test.afterAll(async () => {
   await admin.from('endorsements').delete().eq('application_id', appId);
   await admin.from('email_log').delete().eq('application_id', appId);
   await admin.from('applications').delete().eq('id', appId);
-  await admin.from('members').delete().in('member_no', endorsers.map((e) => e.memberNo));
+  await admin
+    .from('members')
+    .delete()
+    .in(
+      'member_no',
+      endorsers.map((e) => e.memberNo),
+    );
   for (const p of people) {
     await admin.from('notifications').delete().eq('user_id', p.id);
     await admin.from('companies').delete().eq('id', p.company);
@@ -148,7 +154,11 @@ test('applicant asks a proposer and a seconder; both approve in their portal; th
     await dialog.locator('[data-action="end.compose"]').click();
     await expect(page.getByRole('main').getByRole('status')).toContainText('Request sent');
     await expect(page.locator(`[data-role="${role}"]`)).toContainText(who.rep);
-    const { data } = await admin.from('endorsements').select('role, status').eq('application_id', appId).eq('role', role);
+    const { data } = await admin
+      .from('endorsements')
+      .select('role, status')
+      .eq('application_id', appId)
+      .eq('role', role);
     expect(data).toEqual([{ role, status: 'Pending' }]);
   }
 

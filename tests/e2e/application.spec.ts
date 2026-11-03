@@ -239,7 +239,10 @@ test('LLP is Corporate; a registered AOP asks Form C, an unregistered one does n
   test.setTimeout(90_000);
   await applicant(page, 'Hina Malik');
   await startApplication(page);
-  await page.getByTestId('category').getByRole('button', { name: /^Manufacturing/ }).click();
+  await page
+    .getByTestId('category')
+    .getByRole('button', { name: /^Manufacturing/ })
+    .click();
   await page.getByRole('button', { name: /^LLP/ }).click();
   await expect(page.locator('.feebox')).toContainText('Corporate');
   await expect(page.getByTestId('body-corporate')).toBeVisible();
@@ -273,7 +276,10 @@ test('partners / directors: rows open (Managing Partner first), each with their 
   page.on('pageerror', (e) => crashes.push(e.message));
   await applicant(page, 'Bilal Ahmed');
   await startApplication(page);
-  await page.getByTestId('category').getByRole('button', { name: /^Manufacturing/ }).click();
+  await page
+    .getByTestId('category')
+    .getByRole('button', { name: /^Manufacturing/ })
+    .click();
   await page.getByRole('button', { name: /^Partnership \/ AOP/ }).click();
   await page.getByRole('button', { name: /^Registered AOP/ }).click();
   await saved(page);
@@ -307,10 +313,18 @@ test('partners / directors: rows open (Managing Partner first), each with their 
   // a large stamp photo stays inside its box (29 Oct 2026: it overflowed the box on this step)
   await page.locator('[data-action="wiz.step"]').nth(4).click();
   const bigStamp = await sharp({ create: { width: 1600, height: 1600, channels: 3, background: '#ffffff' } })
-    .composite([{ input: { create: { width: 1200, height: 1200, channels: 3, background: '#3b3bd6' } }, top: 200, left: 200 }])
+    .composite([
+      { input: { create: { width: 1200, height: 1200, channels: 3, background: '#3b3bd6' } }, top: 200, left: 200 },
+    ])
     .png()
     .toBuffer();
-  await choose(page, () => page.locator('[data-action="wiz.stamp.upload"]').click(), 'stamp.png', 'image/png', bigStamp);
+  await choose(
+    page,
+    () => page.locator('[data-action="wiz.stamp.upload"]').click(),
+    'stamp.png',
+    'image/png',
+    bigStamp,
+  );
   const stampBox = page.locator('.sigbox').nth(1);
   await expect(stampBox.locator('img')).toBeVisible({ timeout: 20_000 });
   const [box, img] = [await stampBox.boundingBox(), await stampBox.locator('img').boundingBox()];

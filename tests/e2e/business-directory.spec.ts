@@ -239,7 +239,10 @@ test('exports: preview, three formats, formula protection, and a log entry', asy
   await expect(page.locator('[data-export-log] tbody tr').first()).toBeVisible();
 });
 
-test('permission boundaries: officer without sensitive columns, view-only staff without contacts, members refused', async ({ page, browser }) => {
+test('permission boundaries: officer without sensitive columns, view-only staff without contacts, members refused', async ({
+  page,
+  browser,
+}) => {
   await signInAs(page, 'staff');
   const filter = { groups: [] };
   await page.goto('/admin/business-directory/exports');
