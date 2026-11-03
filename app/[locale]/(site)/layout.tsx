@@ -8,6 +8,7 @@ import { LandingHeader } from '@/components/landing/landing-header';
 import { SiteChrome } from '@/components/site/site-chrome';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteFx } from '@/components/site/site-fx';
+import { NewsTicker } from '@/components/site/news-ticker';
 import { SiteHeader } from '@/components/site/site-header';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
@@ -64,13 +65,20 @@ export default async function SiteLayout({
     );
   }
 
+  const ticker = <NewsTicker locale={locale} />;
   return (
     <>
       <SiteChrome
-        landing={<LandingHeader locale={locale} />}
+        landing={
+          <>
+            {ticker}
+            <LandingHeader locale={locale} />
+          </>
+        }
         site={
           <SiteHeader
             locale={locale}
+            ticker={ticker}
             nav={siteNavModel(locale)}
             login={loginModel(locale)}
             text={{

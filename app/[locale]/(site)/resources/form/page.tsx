@@ -22,7 +22,7 @@ export default async function BlankFormPage({ params }: Props) {
   const m = (k: string) => msg(locale, `site.resources.${k}`);
   return (
     <SitePage locale={locale}>
-      <div className="wr no-print" style={{ paddingTop: 'calc(var(--xh) + 28px)', paddingBottom: 16 }}>
+      <div className="wr no-print" style={{ paddingTop: 'calc(var(--xh) + var(--tk, 0px) + 28px)', paddingBottom: 16 }}>
         <div className="ph">
           <div>
             <h1>{m('formTitle')}</h1>

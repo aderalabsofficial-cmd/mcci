@@ -270,11 +270,17 @@ export default async function HomePage({ params }: Props) {
                   ['president-shafiq-khan-pitafi', 'pres_name', 'role_p', 640, 848],
                   ['svp-azhar-mumtaz-tipu', 'svp_name', 'role_svp', 640, 800],
                   ['vp-abdul-wahab', 'vp_name', 'role_vp', 640, 788],
+                  // no photo yet: the design's initials tile (.avatar span) until MCCI provides one
+                  [null, 'sg_name', 'role_sg', 0, 0],
                 ] as const
               ).map(([img, name, role, w, h]) => (
-                <div className="person" key={img}>
+                <div className="person" key={name} data-bearer={role}>
                   <div className="avatar">
-                    <Image src={IMG(img)} alt={m(name)} width={w} height={h} sizes="(max-width: 900px) 33vw, 200px" />
+                    {img ? (
+                      <Image src={IMG(img)} alt={m(name)} width={w} height={h} sizes="(max-width: 900px) 25vw, 160px" />
+                    ) : (
+                      <span aria-hidden>{m('sg_initials')}</span>
+                    )}
                   </div>
                   <b>{m(name)}</b>
                   <span>{m(role)}</span>

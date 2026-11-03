@@ -16,6 +16,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Track | `site/track/` | `/track` | Public token tracking (stage and time only) |
 | Live board | `site/live/` | `/live` | Lobby-screen board of chamber activity (anonymised) |
 | News & Events | `site/news/` | `/news` | News posts and events calendar |
+| News ticker (every public page) | — (mcci.org.pk, owner 3 Nov 2026) | above the header | The newest published posts (up to 8) run in a bar above the header, each opening its post; "Latest" opens News; pause button; still for reduced motion; no bar when nothing is published or the read fails. EN + UR (right to left). Not in the Android app shell |
 | Resources | `site/resources/` | `/resources` | Downloads: blank official form, checklists, guides |
 | Contact | `site/contact/` | `/contact` | Contact form and complaint desk (create tickets) |
 | Login | `site/login/` | `/login` | Member login (password / email code), register (start application), staff login |

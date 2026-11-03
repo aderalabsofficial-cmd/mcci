@@ -335,6 +335,9 @@ Acceptance rule: every `Build` row has a server action or route handler, an auth
 | id | Phase | Label | Planned endpoint | Tables | Who | Behaviour in the real system |
 |---|---|---|---|---|---|---|
 | `post.view` | Build | Read news / post | `GET /api/posts/{id}` | posts | Public | CMS content |
+| `ticker.post` | Build | Open a post from the news ticker | — (link to `/news?post={id}`) | posts | Public | Same as post.view |
+| `ticker.all` | Build | All news (ticker label) | — (link to `/news#latest`) | posts | Public | Opens News & Notifications |
+| `ticker.pause` | Build | Pause / play the news ticker | — | — | Public | Stops and restarts the movement (WCAG 2.2.2) |
 | `post.create` | Build | Create post | `POST/PATCH /api/post` | post | Staff | Simulated in prototype |
 | `post.edit` | Build | Edit post | `POST/PATCH /api/post` | post | Staff | Simulated in prototype |
 

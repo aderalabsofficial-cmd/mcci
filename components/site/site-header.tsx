@@ -2,7 +2,7 @@
 
 import { LogIn } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { LangToggle } from '@/components/shared/lang-toggle';
 import { NavEntry } from '@/components/shared/nav-entry';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -13,17 +13,20 @@ import { cn } from '@/lib/utils';
 
 /**
  * Public header (prototype .xnv): transparent over the hero, solid green + blur after 40 px of scroll, 84 → 68 px.
- * Below 1181 px the links move into a menu sheet (action menu.toggle).
+ * Below 1181 px the links move into a menu sheet (action menu.toggle). The news ticker, when there is news, runs on
+ * top inside the same fixed header; heroes add its height (--tk) to theirs.
  */
 export function SiteHeader({
   locale,
   nav,
   login,
   text,
+  ticker,
 }: {
   locale: Locale;
   nav: NavItem[];
   login: NavItem;
+  ticker?: ReactNode;
   text: {
     name: string;
     tagline: string;
@@ -72,6 +75,7 @@ export function SiteHeader({
           'bg-[rgba(0,61,36,.9)] shadow-[0_10px_40px_rgba(2,18,10,.35)] backdrop-blur-[18px] backdrop-saturate-[1.4]',
       )}
     >
+      {ticker}
       <div
         className={cn(
           'mx-auto flex max-w-[1240px] items-center gap-[18px] px-[var(--gutter)] transition-[height] duration-300 sm:px-6',

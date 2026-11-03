@@ -67,6 +67,10 @@ test('home: the hero stats, services and fees; the live panels show tokens, neve
   await expect(page.locator('.svc[href^="/service?s="]')).toHaveCount(7);
   await expect(page.locator('#fee-table tbody tr')).toHaveCount(3);
   await expect(page.locator('[data-read-failed]')).toHaveCount(0);
+  // office-bearers: President, Senior Vice President, Vice President and the Secretary General, no empty place
+  await expect(page.locator('.bearers .person')).toHaveCount(4);
+  await expect(page.locator('[data-bearer="role_sg"]')).toContainText('Muhammad Shafiq');
+  await expect(page.locator('[data-bearer="role_sg"]')).toContainText('Secretary General');
   for (const panel of ['.hero-live', '.desk-feed']) {
     await expect(page.locator(panel)).not.toContainText('Company A');
     await expect(page.locator(panel)).not.toContainText('DEMO');
@@ -139,6 +143,74 @@ test.describe('with the local database', () => {
   let admin: SupabaseClient;
   test.beforeAll(() => {
     admin = createClient(env!.url, env!.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  });
+
+  test('news ticker: the newest posts above the header in both languages; it pauses, and stands still for reduced motion', async ({
+    page,
+  }) => {
+    const tag = randomUUID().slice(0, 6);
+    const ahead = new Date(Date.now() + 60_000).toISOString(); // newest, so it is among the posts the bar shows
+    const { data: post, error } = await admin
+      .from('posts')
+      .insert({
+        category: 'Notice',
+        title: `Ticker notice ${tag}`,
+        title_ur: `ٹکر اعلان ${tag}`,
+        body: 'Test post for the ticker.',
+        body_ur: 'ٹکر کی جانچ',
+        status: 'Live',
+        published_at: ahead,
+      })
+      .select('id')
+      .single();
+    expect(error).toBeNull();
+    try {
+      // home: the bar sits on top, the sticky header directly under it, and a post opens on the News page
+      await page.goto('/');
+      const bar = page.locator('[data-ticker]');
+      const item = bar.locator(`a[data-post="${post!.id}"]:not([tabindex="-1"])`);
+      await expect(item).toContainText(`Ticker notice ${tag}`);
+      await expect(item).toContainText('Notice');
+      const tb = (await bar.boundingBox())!;
+      const hb = (await page.locator('.lp .hdr').boundingBox())!;
+      expect(tb.y).toBe(0);
+      expect(Math.abs(hb.y - (tb.y + tb.height))).toBeLessThanOrEqual(1);
+      const run = bar.locator('.tk-run');
+      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('tk-run');
+
+      // pause (WCAG 2.2.2): the button says what it does next
+      const pause = bar.locator('[data-action="ticker.pause"]');
+      await pause.click();
+      await expect(pause).toHaveAttribute('aria-pressed', 'true');
+      await expect(pause).toHaveAccessibleName('Play the news ticker');
+      expect(await run.evaluate((e) => getComputedStyle(e).animationPlayState)).toBe('paused');
+      await expect(item).toHaveAttribute('href', `/news?post=${post!.id}#post`);
+      await expect(bar.locator('[data-action="ticker.all"]')).toHaveAttribute('href', '/news#latest');
+
+      // an inner page in Urdu: the Urdu title, right to left, inside the fixed header, the hero clear of both
+      await page.goto('/ur/about');
+      await expect(bar.locator(`a[data-post="${post!.id}"]:not([tabindex="-1"])`)).toContainText(`ٹکر اعلان ${tag}`);
+      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('tk-run-rtl');
+      await expect(page.locator('header [data-ticker]')).toHaveCount(1);
+      const header = (await page.locator('header:has([data-ticker])').boundingBox())!;
+      const h1 = (await page.getByRole('heading', { level: 1 }).boundingBox())!;
+      expect(h1.y).toBeGreaterThanOrEqual(header.y + header.height);
+
+      // reduced motion, in Urdu as well as English: nothing moves, no copy, no pause button
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto('/ur/about');
+      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('none');
+      await page.goto('/en/about');
+      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('none');
+      await expect(bar.locator('.tk-list[aria-hidden]')).toBeHidden();
+      await expect(bar.locator('[data-action="ticker.pause"]')).toBeHidden();
+      // standing still, the newest post is first in the bar: it opens on the News page
+      await bar.locator(`a[data-post="${post!.id}"]:not([tabindex="-1"])`).click();
+      await expect(page).toHaveURL(new RegExp(`/news\\?post=${post!.id}`));
+      await expect(page.getByRole('main')).toContainText(`Ticker notice ${tag}`);
+    } finally {
+      await admin.from('posts').delete().eq('id', post!.id);
+    }
   });
 
   test('directory: listed members only, searchable; details show public fields', async ({ page }) => {

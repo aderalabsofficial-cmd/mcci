@@ -330,6 +330,9 @@
     "role_p": "President",
     "role_svp": "Senior Vice President",
     "role_vp": "Vice President",
+    "sg_name": "Muhammad Shafiq",
+    "role_sg": "Secretary General",
+    "sg_initials": "MS",
     "vision_eyebrow": "Our vision",
     "vision_q": "A Multan where every business, from the smallest shop to the largest mill, is connected to the world.",
     "work_eyebrow": "What we do",
@@ -3574,7 +3577,14 @@
       }
     },
     "pageFailed": "This page could not open just now",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "ticker": {
+      "label": "Latest news from the chamber",
+      "latest": "Latest",
+      "all": "All news and notifications",
+      "pause": "Pause the news ticker",
+      "play": "Play the news ticker"
+    }
   },
   "svc": {
     "apply": {
