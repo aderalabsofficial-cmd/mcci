@@ -391,6 +391,7 @@
     "feed_title": "Latest activity",
     "feed_note": "Token, service, status and time only. No names are shown.",
     "feed_none": "No activity yet. New activity appears here as it happens.",
+    "read_failed": "This part could not load just now. It will try again shortly.",
     "svc_eyebrow": "Online services",
     "svc_title": "Request it tonight. Have it tomorrow.",
     "svc_sub": "Each request gets a token you can track, and a response within 24 hours.",

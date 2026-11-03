@@ -14,6 +14,7 @@ import { loadPublicSettings } from '@/lib/membership/load';
 import { msg } from '@/lib/nav/model';
 import { siteFeed, siteStats, type FeedRow } from '@/lib/site/admin';
 import { loadEvents, loadLaunchAt, loadPosts, loadServices, postCategory, type ServiceType } from '@/lib/site/load';
+import { readOr } from '@/lib/site/read-or';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -63,7 +64,8 @@ function TitleLine({ text, delay, animate }: { text: string; delay: number; anim
  * Public home: the owner's front-end design (Nov 2026), wired to the app. The hero's live panel, the member figures
  * and the live desk read api.site_stats / api.site_feed (official members only, demo data excluded); services, fees,
  * news and events come from the same tables as their own pages. A figure the database cannot give is left out, never
- * shown as a sample. Every control is a real route or a real server action.
+ * shown as a sample. Every control is a real route or a real server action. A read that fails costs only its own
+ * section, which says so and fills in again at the next refresh; the rest of the page still opens.
  */
 export default async function HomePage({ params }: Props) {
   const locale = asLocale((await params).locale);
@@ -72,29 +74,37 @@ export default async function HomePage({ params }: Props) {
   const [stats, feed, services, posts, events, settings, launchAt] = await Promise.all([
     siteStats(),
     siteFeed(5),
-    loadServices(),
-    loadPosts(30),
-    loadEvents(),
-    loadPublicSettings(),
-    loadLaunchAt(),
+    readOr('services', loadServices()),
+    readOr('posts', loadPosts(30)),
+    readOr('events', loadEvents()),
+    readOr('settings', loadPublicSettings()),
+    readOr('launch', loadLaunchAt()),
   ]);
   const showCountdown = launchAt !== null && Date.parse(launchAt) > Date.now();
-  const f = settings.fees;
-  const fees = [
-    { key: 'f1', d: 'f1d', fee: f.Corporate, hi: false },
-    { key: 'f2', d: 'f2d', fee: f.Associate, hi: false },
-    { key: 'f3', d: 'f3d', fee: f.Women, hi: true },
-  ].map((x) => ({ ...x, total: x.fee.admission + x.fee.subscription + x.fee.card }));
+  const f = settings?.fees;
+  const fees = f
+    ? [
+        { key: 'f1', d: 'f1d', fee: f.Corporate, hi: false },
+        { key: 'f2', d: 'f2d', fee: f.Associate, hi: false },
+        { key: 'f3', d: 'f3d', fee: f.Women, hi: true },
+      ].map((x) => ({ ...x, total: x.fee.admission + x.fee.subscription + x.fee.card }))
+    : null;
   const svcName = (s: ServiceType) => (locale === 'ur' ? s.name_ur || s.name_en : s.name_en);
   const feedName = (r: FeedRow) => {
     if (r.kind === 'membership') return msg(locale, 'site.live.membership');
-    const s = services.find((x) => x.key === r.kind);
-    return s ? svcName(s) : r.kind;
+    const s = services?.find((x) => x.key === r.kind);
+    if (s) return svcName(s);
+    return hasCopy(r.kind) ? m(`svc_${r.kind}`) : r.kind;
   };
   const t = (en: string, ur: string | null) => (locale === 'ur' ? ur || en : en);
-  const news = posts.filter((p) => p.category !== 'Notice' && p.category !== 'Circular').slice(0, 3);
-  const notices = posts.filter((p) => p.category === 'Notice' || p.category === 'Circular').slice(0, 4);
-  const upcoming = events.filter((e) => Date.parse(e.starts_at) >= Date.now()).slice(0, 3);
+  const news = posts?.filter((p) => p.category !== 'Notice' && p.category !== 'Circular').slice(0, 3) ?? [];
+  const notices = posts?.filter((p) => p.category === 'Notice' || p.category === 'Circular').slice(0, 4) ?? [];
+  const upcoming = events?.filter((e) => Date.parse(e.starts_at) >= Date.now()).slice(0, 3) ?? [];
+  const unavailable = (
+    <p className="read-failed" role="status" data-read-failed>
+      {m('read_failed')}
+    </p>
+  );
   const karachi = (iso: string, opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(locale === 'ur' ? 'ur-PK' : 'en-GB', { timeZone: 'Asia/Karachi', ...opts }).format(new Date(iso));
   const latest = feed[0];
@@ -435,7 +445,8 @@ export default async function HomePage({ params }: Props) {
                 <span>{m('dt_fee')}</span>
                 <span>{m('dt_target')}</span>
               </div>
-              {services.map((s) => (
+              {!services && unavailable}
+              {services?.map((s) => (
                 <div className="dt-row" key={s.key} data-ratio={Math.min(1, s.sla_hours / 24)}>
                   <span>{svcName(s)}</span>
                   <b>{n(s.fee)}</b>
@@ -487,8 +498,9 @@ export default async function HomePage({ params }: Props) {
             </div>
             <p className="sec-sub">{m('svc_sub')}</p>
           </div>
+          {!services && unavailable}
           <div className="svc-grid">
-            {services.map((s) => (
+            {services?.map((s) => (
               <Link className="svc" id={`svc-${s.key}`} key={s.key} href={`/service?s=${s.key}`}>
                 <span className="svc-ico">{SVC_CODE[s.key] ?? s.key.slice(0, 2).toUpperCase()}</span>
                 <h3>{svcName(s)}</h3>
@@ -543,7 +555,8 @@ export default async function HomePage({ params }: Props) {
             </div>
           </div>
           <div className="fees" id="classes">
-            {fees.map((x) => (
+            {!fees && unavailable}
+            {fees?.map((x) => (
               <div className={`fee ${x.hi ? 'fee-hi' : ''}`} key={x.key}>
                 <span>{m(x.key)}</span>
                 <b>
@@ -552,33 +565,35 @@ export default async function HomePage({ params }: Props) {
                 <em>{m(x.d)}</em>
               </div>
             ))}
-            <div className="fee-table" id="fee-table">
-              <div className="ft-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{m('ft_class')}</th>
-                      <th>{m('ft_adm')}</th>
-                      <th>{m('ft_ann')}</th>
-                      <th>{m('ft_card')}</th>
-                      <th>{m('ft_total')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fees.map((x) => (
-                      <tr key={x.key}>
-                        <td>{m(x.key)}</td>
-                        <td>{n(x.fee.admission)}</td>
-                        <td>{n(x.fee.subscription)}</td>
-                        <td>{n(x.fee.card)}</td>
-                        <td><b>{n(x.total)}</b></td>
+            {fees && f && (
+              <div className="fee-table" id="fee-table">
+                <div className="ft-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>{m('ft_class')}</th>
+                        <th>{m('ft_adm')}</th>
+                        <th>{m('ft_ann')}</th>
+                        <th>{m('ft_card')}</th>
+                        <th>{m('ft_total')}</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {fees.map((x) => (
+                        <tr key={x.key}>
+                          <td>{m(x.key)}</td>
+                          <td>{n(x.fee.admission)}</td>
+                          <td>{n(x.fee.subscription)}</td>
+                          <td>{n(x.fee.card)}</td>
+                          <td><b>{n(x.total)}</b></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="fee-note">{m('fee_note', { extra: n(f.extraCard) })}</p>
               </div>
-              <p className="fee-note">{m('fee_note', { extra: n(f.extraCard) })}</p>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -595,7 +610,9 @@ export default async function HomePage({ params }: Props) {
               {m('news_all')}
             </Link>
           </div>
-          {news.length ? (
+          {!posts ? (
+            unavailable
+          ) : news.length ? (
             <div className="news-grid">
               {news.map((p, i) => (
                 <Link className={`nw ${i === 0 ? 'nw-lg' : ''}`} href={`/news?post=${p.id}`} key={p.id} data-action="post.view">
@@ -614,7 +631,9 @@ export default async function HomePage({ params }: Props) {
           <div className="boards">
             <div className="board">
               <h3>{m('notices_title')}</h3>
-              {notices.length ? (
+              {!posts ? (
+                unavailable
+              ) : notices.length ? (
                 notices.map((p) => (
                   <Link className="doc" href={`/news?post=${p.id}`} key={p.id} data-action="post.view">
                     <i>{p.category ? postCategory(p.category, locale) : ''}</i>
@@ -627,7 +646,9 @@ export default async function HomePage({ params }: Props) {
             </div>
             <div className="board">
               <h3>{m('events_title')}</h3>
-              {upcoming.length ? (
+              {!events ? (
+                unavailable
+              ) : upcoming.length ? (
                 upcoming.map((e) => (
                   <div className="event" key={e.id}>
                     <div className="date">

@@ -45,6 +45,7 @@ test('home: the hero stats, services and fees; the live panels show tokens, neve
   await expect(page.locator('.kpi')).toHaveCount(4);
   await expect(page.locator('.svc[href^="/service?s="]')).toHaveCount(7);
   await expect(page.locator('#fee-table tbody tr')).toHaveCount(3);
+  await expect(page.locator('[data-read-failed]')).toHaveCount(0);
   for (const panel of ['.hero-live', '.desk-feed']) {
     await expect(page.locator(panel)).not.toContainText('Company A');
     await expect(page.locator(panel)).not.toContainText('DEMO');
