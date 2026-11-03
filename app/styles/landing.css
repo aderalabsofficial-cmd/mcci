@@ -261,6 +261,7 @@ html[lang="ur"] .lp .claim-txt strong{font:400 clamp(1.2rem,2vw,1.6rem)/1.6 var(
 .lp .avatar{position:relative;aspect-ratio:4/5;max-width:100%;border-radius:18px;overflow:hidden;background:linear-gradient(155deg,#0f8a52,#05442a);display:grid;place-items:center;isolation:isolate}
 .lp .avatar::before{content:"";position:absolute;inset:-20%;z-index:-1;background:var(--tiles) 0 0/64px 64px;opacity:.25}
 .lp .avatar span{font:800 1.5rem var(--display);color:#fff;letter-spacing:.02em}
+html[lang="ur"] .lp .avatar span{font:400 1.7rem/1.6 var(--urdu);letter-spacing:0}
 .lp .person b{font:700 .9rem/1.3 var(--display);margin-top:4px}
 .lp .person > span{font-size:.78rem;color:var(--tx-mute)}
 .lp .vision-card{padding:24px;border-radius:18px;background:var(--white);border:1px solid var(--line);display:grid;gap:10px}
@@ -545,7 +546,7 @@ html[lang="ur"] .lp .hero-lead{font-size:1.12rem;line-height:2.1}
 html[lang="ur"] .lp .hero-claim{font-weight:400;font-size:1.12rem}
 html[lang="ur"] .lp .hdr-name b{line-height:1.4}html[lang="ur"] .lp .hdr-name small{font-size:.8rem;line-height:1.3;margin-top:0}
 /* numbers, codes and the English credit stay in the Latin faces */
-html[lang="ur"] .lp .kpi-num,html[lang="ur"] .lp .hl-num,html[lang="ur"] .lp .dt-row b,html[lang="ur"] .lp .dt-bar em,html[lang="ur"] .lp .feed .tok,html[lang="ur"] .lp .feed .tm,html[lang="ur"] .lp .dg-pt b,html[lang="ur"] .lp .mem-num,html[lang="ur"] .lp .fee b,html[lang="ur"] .lp .date b,html[lang="ur"] .lp .avatar span,html[lang="ur"] .lp .svc-ico{font-family:var(--display)}
+html[lang="ur"] .lp .kpi-num,html[lang="ur"] .lp .hl-num,html[lang="ur"] .lp .dt-row b,html[lang="ur"] .lp .dt-bar em,html[lang="ur"] .lp .feed .tok,html[lang="ur"] .lp .feed .tm,html[lang="ur"] .lp .dg-pt b,html[lang="ur"] .lp .mem-num,html[lang="ur"] .lp .fee b,html[lang="ur"] .lp .date b,html[lang="ur"] .lp .svc-ico{font-family:var(--display)}
 html[lang="ur"] .lp .verify input,html[lang="ur"] .lp .lang-en,html[lang="ur"] .lp .credit,html[lang="ur"] .lp .doc i{font-family:var(--sans)}
 html[lang="ur"] .lp .lang-ur{font-size:.94rem}
 html[lang="ur"] .lp .lang-en{font-size:.68rem}
