@@ -7,7 +7,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Screen | Prototype path | Route in app | What it does |
 |---|---|---|---|
 | Home | `site/home/` | `/` | Full-width MCCI hero under a transparent header, live activity, counters, membership journey, member-to-member endorsement, temporary → permanent, services, verify, news, Urdu launch countdown |
-| About | `site/about/` | `/about` | Mission, leadership, committees |
+| About | `site/about/` | `/about` | Mission, leadership and Secretariat, history, objectives, facilities (library, facilitation desks) |
 | Membership | `site/membership/` | `/membership` | Classes & class rule, fee schedule from the form, documents by business type, 8-step journey with temporary membership, FAQ |
 | Services | `site/services/` | `/services` | The seven chamber services |
 | Service detail | `site/service/` | `/service` | Requirements and how it works for one service; apply |

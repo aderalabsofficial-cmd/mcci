@@ -89,6 +89,7 @@
   .site .xhero.home h1 {font-size: 30px; line-height: 1.15}
   .site .xhero.sub {padding: calc(var(--xh) + 14px) 0 40px}
   .site .g2, .site .g3, .site .g4 {grid-template-columns: 1fr 1fr; gap: 8px}
+  .site .g2.about-stack {grid-template-columns: 1fr} /* About's facility cards carry lists: too narrow side by side */
   .site .sc {padding: 12px; border-radius: 14px}
   .site .sc > i {width: 36px; height: 36px; border-radius: 11px; margin-bottom: 8px}
   .site .sc > i svg {width: 20px; height: 20px}

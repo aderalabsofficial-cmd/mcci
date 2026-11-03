@@ -37,6 +37,19 @@ test('every public page opens in English and Urdu, with the Urdu page right-to-l
   }
 });
 
+test('about: office-bearers and Secretariat by name, history, objectives and facilities from the earlier site', async ({ page }) => {
+  await page.goto('/about');
+  await expect(page.locator('[data-group="bearers"] h3')).toHaveText(['Dr. Muhammad Shafiq Khan Pitafi', 'Azhar Mumtaz Tipu', 'Abdul Wahab']);
+  await expect(page.locator('[data-group="secretariat"] .pc')).toHaveCount(4);
+  await expect(page.locator('#history li')).toHaveCount(5);
+  await expect(page.locator('#history')).toContainText('1959');
+  await expect(page.locator('#objectives .sc')).toHaveCount(6);
+  await expect(page.locator('#facilities')).toContainText('Mughis A. Sheikh Trade Library');
+  await expect(page.locator('#facilities')).toContainText('SMEDA');
+  await page.goto('/contact');
+  await expect(page.locator('#touch')).toContainText('Sunday closed');
+});
+
 test('home: the hero stats, services and fees; the live panels show tokens, never company names', async ({ page }) => {
   await page.goto('/');
   // the figures are the server's own numbers (with the database: below), and nothing says "sample" about them

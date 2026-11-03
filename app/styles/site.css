@@ -247,3 +247,8 @@
   .proto .vf-result {grid-template-columns:1fr}
   .proto .vf-pattern {max-width:240px;margin:0 auto}
 }
+
+/* About: the Secretariat under the office-bearers, and the lists inside the facility cards */
+.site .about-sub {text-align:center;font-size:22px;font-weight:800;margin:34px 0 16px}
+.site .about-list {margin:4px 0 0;padding-inline-start:20px;list-style:disc;color:var(--m)}
+.site .about-list li {padding:3px 0}
