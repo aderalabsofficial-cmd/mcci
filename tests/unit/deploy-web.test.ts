@@ -74,6 +74,8 @@ describe('systemd unit and release script', () => {
     expect(release).toContain('install --frozen-lockfile');
     expect(release).toMatch(/failed its health check[\s\S]+switch_to "\$prev"/);
     expect(release).toContain('merge-base --is-ancestor');
+    // each build carries its commit, so tabs from an older release reload (lib/net/skew.ts)
+    expect(release).toContain('NEXT_DEPLOYMENT_ID="$short"');
   });
 
   it('trusts the proxy header only because the app listens on loopback behind nginx', () => {

@@ -87,6 +87,8 @@ export default defineConfig({
       // (lib/email/send.ts); OPENAI_*: AI reading goes to tests/e2e/fake-openai.mjs
       env: {
         MCCI_E2E: '1',
+        // as a release build: tests/e2e/skew.spec.ts plays a tab from an older release
+        NEXT_DEPLOYMENT_ID: 'e2e-build',
         // as behind nginx in production: tests that need their own rate-limit bucket send X-Real-IP (site.spec contact)
         TRUST_PROXY_CLIENT_IP: '1',
         // the suite signs staff in many times from one address (lib/auth/admin/staff-throttle.ts)

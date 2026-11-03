@@ -43,7 +43,7 @@ browser ─ https ─> nginx :443 app.mcci.aderalabs.tech           (mcci.aderal
 | `deploy/web/nginx/app.mcci.aderalabs.tech.conf` (stage 2) | same path, replacing stage 1 |
 | `deploy/web/mcci-web.service` | `/etc/systemd/system/mcci-web.service` |
 | `deploy/web/env.example` | filled in by the owner as `/etc/mcci-web/env` (root, 0600) |
-| `scripts/deploy/release.sh` | run from a checkout: build → switch → health check → automatic rollback |
+| `scripts/deploy/release.sh` | run from a checkout: build → switch → health check → automatic rollback. Builds with `NEXT_DEPLOYMENT_ID=<commit>`: a browser tab opened on an older release reloads its page instead of sending old server actions (`lib/net/skew.ts`, added 3 Nov 2026 after one such action looped until it timed out) |
 | `scripts/selfhost/migrate.sh` | applies pending migrations through `compose.sh psql-file`, one transaction each |
 | `scripts/selfhost/first-secretary-general.sh` | one-off: the first Secretary General |
 

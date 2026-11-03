@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { routing } from './i18n/routing';
 import { STAFF_LOGIN_PAGE, staffLoginPath } from './lib/auth/staff-path';
 import { publicLocation } from './lib/net/public-url';
+import { DEPLOYMENT_HEADER, isStaleClient, staleAnswer } from './lib/net/skew';
 import { updateSession } from './lib/supabase/middleware';
 
 const intl = createIntlMiddleware(routing);
@@ -11,6 +12,12 @@ const intl = createIntlMiddleware(routing);
 const PROTECTED = /^\/(?:ur\/)?(?:portal|admin)(?:\/|$)/;
 
 export async function middleware(request: NextRequest) {
+  // a tab from before the last release: load the page afresh rather than run old code against the new (lib/net/skew.ts)
+  if (isStaleClient(request.headers.get(DEPLOYMENT_HEADER), process.env.NEXT_DEPLOYMENT_ID)) {
+    const page = request.nextUrl.pathname + request.nextUrl.search;
+    const { status, headers } = staleAnswer(request.headers.has('next-action'), page);
+    return new NextResponse(null, { status, headers });
+  }
   return toPublicHost(request, await handle(request));
 }
 

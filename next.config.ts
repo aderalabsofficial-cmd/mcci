@@ -6,6 +6,8 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // the release's commit (scripts/deploy/release.sh): pages from an older release reload instead (lib/net/skew.ts)
+  deploymentId: process.env.NEXT_DEPLOYMENT_ID || undefined,
   // document uploads go through server actions: 10 MB files (docs/08) + form overhead; nginx allows 11m
   experimental: { serverActions: { bodySizeLimit: '11mb' } },
   // native image processing (passport photo, signature, stamp) stays a Node dependency, not bundled

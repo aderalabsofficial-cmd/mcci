@@ -109,7 +109,9 @@ short=${sha:0:7}
 log "installing dependencies and building $short (as mcci-web)"
 # devDependencies are needed to build (TypeScript, Tailwind), so NODE_ENV is set only for the build itself
 as_app bash -c 'cd "$1" && shift && "$@" install --frozen-lockfile >/dev/null' _ "$work" "${PNPM[@]}"
-as_app env NODE_ENV=production NEXT_PUBLIC_SUPABASE_URL="$public_url" NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$public_key" \
+# NEXT_DEPLOYMENT_ID: tabs opened on an older release reload instead of running its actions here (lib/net/skew.ts)
+as_app env NODE_ENV=production NEXT_DEPLOYMENT_ID="$short" \
+  NEXT_PUBLIC_SUPABASE_URL="$public_url" NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$public_key" \
   bash -c 'cd "$1" && shift && "$@" build' _ "$work" "${PNPM[@]}"
 mv "$work" "$ROOT/releases/$short"
 trap - EXIT
