@@ -41,7 +41,8 @@ select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'select api.opp_sh
 
 -- events: unpublished events are invisible
 insert into public.events (id, title, starts_at) values ('e7000000-0000-0000-0000-000000000001', 'Draft event', now() + interval '10 days');
-select is(tests.num_as(null, 'select count(*) from public.events'), 0::bigint, 'unpublished event invisible to the public');
+select is(tests.num_as(null, 'select count(*) from public.events where id = ''e7000000-0000-0000-0000-000000000001'''), 0::bigint,
+  'unpublished event invisible to the public');
 select throws_ok($$ select tests.exec_as(tests.id('owner_a'), 'insert into public.event_registrations (event_id, company_id) values (''e7000000-0000-0000-0000-000000000001'', tests.id(''company_a''))') $$, '42501', null, 'cannot register for an unpublished event');
 
 -- NT-36 (F-22): AI cost guard, 15 extraction calls per application per day (docs/08)

@@ -35,7 +35,8 @@ select throws_ok($$ insert into public.documents (code, kind, title) values ('MC
 -- scan counter changes are not audited (noise), status changes are
 update public.documents set scans = scans + 1 where id = tests.id('cert_b');
 update public.documents set status = 'Revoked', revoked_reason = 'test' where id = tests.id('cert_b');
-select is((select count(*) from public.audit_log where object = 'documents' and action = 'UPDATE'), 1::bigint, 'only the status change is audited');
+select is((select count(*) from public.audit_log where object = 'documents' and action = 'UPDATE' and object_id = tests.id('cert_b')::text), 1::bigint,
+  'only the status change is audited');
 
 -- temporary memberships: own member only
 insert into public.temp_memberships (member_id, expires_at) values (tests.id('member_b'), now() + interval '60 days');

@@ -32,7 +32,7 @@ select is(tests.num_as(tests.id('services_a'), 'select count(*) from public.paym
 select is(tests.num_as(tests.id('accounts_a'), 'select count(*) from public.payment_vouchers'), 2::bigint, 'Accounts user sees company vouchers');
 select is(tests.num_as(tests.id('viewer_a'), 'select count(*) from public.payment_vouchers'), 2::bigint, 'Viewer (pay 1) sees them read-only');
 select is(tests.num_as(tests.id('owner_b'), 'select count(*) from public.payment_vouchers'), 0::bigint, 'other company sees none');
-select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from public.payment_vouchers'), 2::bigint, 'Accounts Officer (pay 3) sees all');
+select is(tests.num_as(tests.id('accounts_staff'), 'select count(*) from public.payment_vouchers'), (select count(*) from public.payment_vouchers), 'Accounts Officer (pay 3) sees all');
 select is(tests.num_as(tests.id('cs'), 'select count(*) from public.payment_vouchers'), 0::bigint, 'Committee Secretary (pay 0) sees none');
 
 -- voucher numbers: PV-<year>-<counter>, never truncated
