@@ -77,8 +77,8 @@ firewall, Supabase stack and other sites not touched; jobs stay off; no data del
 Live checks passed, signed out: public pages 200; unknown reference "not found"; portal redirects to login; admin 404
 (by design); queue, reports, certificate and file routes refuse; demo 401 (its Basic Auth); no `mcci-web` errors.
 
-Still open: signed-in pages not checked live (needs the owner or staff); `QR_SIGNING_KEY` not set, so certificates
-cannot be issued yet and altered QR signatures are not yet refused; print-and-scan test on the real paper.
+Still open: signed-in pages not checked live (needs the owner or staff); print-and-scan test on the real paper.
+`QR_SIGNING_KEY` was set on 3 Nov 2026 (docs/26 §4): altered QR signatures are refused live.
 
 ## 4. Deployment (docs/20, docs/25 §4 — needs the owner's approval)
 

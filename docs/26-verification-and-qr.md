@@ -93,6 +93,17 @@ certificate and use "Replace QR copy", which signs with the current key (no bulk
 are affected). There is no key id in v1; a rotation scheme (`v2` with a key id) is a later change. Set the key **before** the first certificate is
 stamped, so no unsigned QR is ever printed.
 
+**Set in production, 3 Nov 2026** (the Convener saw "the QR signing key is not set"). Before: no `QR_SIGNING_KEY` in
+`/etc/mcci-web/env` or its earlier copy, none in the running app, no key file, 0 issued documents, 2 certificate scans
+(1 extracted, 1 rejected, none stamped): nothing had been signed, so this was a first key, not a rotation. Done as
+step 1 above: key `/root/mcci-qr-signing-key.pem` (600 root, Ed25519, public key sha256 `ee7340af6dd3de9b…`); encrypted
+copy `/var/lib/mcci-selfhost/backups/keys/mcci-qr-signing-key-20261103.pem.gpg` (AES256, the backup sets' passphrase,
+decrypt checked); one line added to the env file (previous file kept as `env.before-qr`, every other line unchanged);
+`mcci-web` restarted, healthy. Checked live: a forged signature is now refused (`tampered`), a signature made with the
+key is accepted, typed references still work; the scans' rows and files are unchanged. The encrypted copy sits on the
+same server as the backups: copy it off the server with them. Not yet checked: issuing a real certificate from the
+Convener screen (needs a signed-in staff member).
+
 ## 5. Tests
 
 - pgTAP `320_public_verification` (30): server-only functions, minimal projection, Active / Temporary / Expired /

@@ -2,7 +2,8 @@
 # Copies the IQPIGEON_* values from the git-ignored .env.iqpigeon.local to the live server's /etc/mcci-web/env, then
 # restarts mcci-web only. Prints names, never values. The owner runs it, so the values never pass through chat or the repo.
 #   bash scripts/ops/whatsapp-env.sh           check the file, change the server
-#   bash scripts/ops/whatsapp-env.sh --check   check the file only
+#   bash scripts/ops/whatsapp-env.sh --check   check the file only (and its phone number ID against the server)
+#   bash scripts/ops/whatsapp-env.sh --replace-phone-id   only when MCCI's number really changed
 set -euo pipefail
 
 FILE="${MCCI_WA_ENV_FILE:-$(dirname "$0")/../../.env.iqpigeon.local}"
@@ -37,6 +38,17 @@ for k in $KEYS; do
   lines+="$k=$v"$'\n'
 done
 [ "$bad" = 0 ] || { echo "Nothing was changed on the server."; exit 1; }
+
+# The phone number ID is the one value that has gone wrong (3 Nov 2026: the file held a Meta asset id). A different ID
+# would make the app refuse every webhook, so a change of it must be asked for by name. IDs are not secrets.
+new_pnid=$(printf '%s' "$lines" | sed -n 's/^IQPIGEON_PHONE_NUMBER_ID=//p')
+cur_pnid=$($SSH "sed -n 's/^IQPIGEON_PHONE_NUMBER_ID=//p' ${MCCI_REMOTE_ENV:-/etc/mcci-web/env} | tail -n 1" 2>/dev/null || true)
+if [ -n "$cur_pnid" ] && [ -n "$new_pnid" ] && [ "$new_pnid" != "$cur_pnid" ] && [ "${2:-${1:-}}" != "--replace-phone-id" ]; then
+  echo "The file's IQPIGEON_PHONE_NUMBER_ID ($new_pnid) differs from the live server's ($cur_pnid),"
+  echo "which IQPigeon confirms for MCCI's connection. Correct the file, or add --replace-phone-id if the number changed."
+  echo "Nothing was changed on the server."
+  exit 1
+fi
 [ "${1:-}" != "--check" ] || { echo "The file is ready. Nothing was changed on the server."; exit 0; }
 
 # values travel over stdin, so they appear in no command line; the file keeps its owner and permissions
