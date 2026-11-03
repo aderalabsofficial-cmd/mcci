@@ -13,6 +13,7 @@ import { trustedClientIp } from '@/lib/net/client-ip';
 import { msg } from '@/lib/nav/model';
 import { siteFeed, trackToken, type TrackResult } from '@/lib/site/admin';
 import { loadServices, type ServiceType } from '@/lib/site/load';
+import { readOr } from '@/lib/site/read-or';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ t?: string }> };
 
@@ -22,12 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic';
 
-function Result({ locale, result, services }: { locale: Locale; result: TrackResult; services: ServiceType[] }) {
+function Result({ locale, result, services }: { locale: Locale; result: TrackResult; services: ServiceType[] | null }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `site.track.${k}`, v);
   if (result.kind !== 'found') return <p className="em" data-track={result.kind}>{m(result.kind)}</p>;
   const r = result.row;
   const day = (d: string | null) => (d ? voucherDate(d, locale) : '');
-  const svc = services.find((s) => s.key === r.kind);
+  const svc = services?.find((s) => s.key === r.kind);
   return (
     <div data-track="found" data-status={r.status}>
       <h3 style={{ fontWeight: 800, fontSize: 18 }}>{r.kind === 'membership' ? m('membership') : svc ? serviceName(svc, locale) : r.kind}</h3>
@@ -60,7 +61,7 @@ export default async function TrackPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
   const m = (k: string) => msg(locale, `site.track.${k}`);
   const token = ((await searchParams).t ?? '').slice(0, 40);
-  const [services, feed] = await Promise.all([loadServices(), siteFeed(8)]);
+  const [services, feed] = await Promise.all([readOr('services', loadServices()), siteFeed(8)]);
   const result = token ? await trackToken(token, trustedClientIp(await headers()) ?? 'unknown') : null;
   return (
     <SitePage locale={locale}>

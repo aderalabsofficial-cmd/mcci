@@ -685,6 +685,9 @@ export type Database = {
               "amount": number,"bank": Json,"company": string,"created_at": string,"due_at": string,"lines": Json,"member_no": string,"ref_type": string,"status": string,"token": string,"voucher_no": string
             }[]
                            },
+"wa_audience_breakdown":
+{ Args: { "p_category": string,"p_def": Json,"p_excluded": (string)[],"p_ids": (string)[],"p_q": string }; Returns: Json
+                           },
 "wa_audience_preview":
 { Args: { "p_category": string,"p_def": Json,"p_excluded": (string)[],"p_ids": (string)[],"p_kind": string,"p_q": string,"p_template": string }; Returns: Json
                            },
@@ -694,11 +697,17 @@ export type Database = {
 "wa_campaign_create":
 { Args: { "p_attachment": string,"p_body": string,"p_category": string,"p_def": Json,"p_excluded": (string)[],"p_ids": (string)[],"p_kind": string,"p_mode": string,"p_name": string,"p_purpose": string,"p_q": string,"p_segment": string,"p_template": string }; Returns: string
                            },
+"wa_campaign_create_master":
+{ Args: { "p_body": string,"p_def": Json,"p_excluded": (string)[],"p_fields": Json,"p_ids": (string)[],"p_language": string,"p_master": string,"p_mixed": boolean,"p_mode": string,"p_name": string,"p_purpose": string,"p_q": string,"p_segment": string }; Returns: string
+                           },
 "wa_campaign_decide":
 { Args: { "p_approve": boolean,"p_id": string,"p_reason": string }; Returns: undefined
                            },
 "wa_campaign_options":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"wa_campaign_schedule":
+{ Args: { "p_id": string }; Returns: Json
                            },
 "wa_campaign_start":
 { Args: { "p_at": string,"p_confirm": number,"p_id": string }; Returns: undefined
@@ -736,6 +745,12 @@ export type Database = {
 "wa_health_mark":
 { Args: { "p_detail"?: Json,"p_error": string,"p_status": string,"p_steps": Json }; Returns: undefined
                            },
+"wa_master_save":
+{ Args: { "p_body": string,"p_footer": string,"p_header": string,"p_key": string,"p_language": string }; Returns: number
+                           },
+"wa_masters":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "wa_member_consent":
 { Args: { "p_categories": (string)[],"p_company": string,"p_grant": boolean,"p_name": string,"p_phone": string }; Returns: undefined
                            },
@@ -744,6 +759,12 @@ export type Database = {
                            },
 "wa_note_add":
 { Args: { "p_body": string,"p_id": string }; Returns: undefined
+                           },
+"wa_quota_confirm":
+{ Args: { "p": Json }; Returns: undefined
+                           },
+"wa_quota_status":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "wa_readiness":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -2813,14 +2834,14 @@ isOneToOne: false
                   ]
                 },"whatsapp_campaign_recipients": {
                   Row: {
-                    "business_name": string,"campaign_id": string,"company_id": string | null,"id": string,"member_no": string | null,"message_id": string | null,"phone": string | null,"reason": string | null,"status": string,"updated_at": string
+                    "business_name": string,"campaign_id": string,"company_id": string | null,"id": string,"kind": string | null,"member_no": string | null,"message_id": string | null,"phone": string | null,"reason": string | null,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "business_name": string,"campaign_id": string,"company_id"?: string | null,"id"?: string,"member_no"?: string | null,"message_id"?: string | null,"phone"?: string | null,"reason"?: string | null,"status"?: string,"updated_at"?: string
+                    "business_name": string,"campaign_id": string,"company_id"?: string | null,"id"?: string,"kind"?: string | null,"member_no"?: string | null,"message_id"?: string | null,"phone"?: string | null,"reason"?: string | null,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "business_name"?: string,"campaign_id"?: string,"company_id"?: string | null,"id"?: string,"member_no"?: string | null,"message_id"?: string | null,"phone"?: string | null,"reason"?: string | null,"status"?: string,"updated_at"?: string
+                    "business_name"?: string,"campaign_id"?: string,"company_id"?: string | null,"id"?: string,"kind"?: string | null,"member_no"?: string | null,"message_id"?: string | null,"phone"?: string | null,"reason"?: string | null,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -2839,14 +2860,14 @@ isOneToOne: false
                   ]
                 },"whatsapp_campaigns": {
                   Row: {
-                    "approved_at": string | null,"approved_by": string | null,"attachment_id": string | null,"body": string | null,"category": string,"created_at": string,"created_by": string | null,"filter": NonNullable<Json>,"finished_at": string | null,"id": string,"message_kind": string,"mode": string,"name": string,"purpose": string | null,"reject_reason": string | null,"scheduled_at": string | null,"segment_id": string | null,"started_at": string | null,"status": string,"template_id": string | null
+                    "approved_at": string | null,"approved_by": string | null,"attachment_id": string | null,"body": string | null,"category": string,"created_at": string,"created_by": string | null,"fields": NonNullable<Json>,"filter": NonNullable<Json>,"finished_at": string | null,"id": string,"language": string | null,"master_key": string | null,"message_kind": string,"mode": string,"name": string,"purpose": string | null,"reject_reason": string | null,"scheduled_at": string | null,"segment_id": string | null,"started_at": string | null,"status": string,"template_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved_at"?: string | null,"approved_by"?: string | null,"attachment_id"?: string | null,"body"?: string | null,"category": string,"created_at"?: string,"created_by"?: string | null,"filter"?: NonNullable<Json>,"finished_at"?: string | null,"id"?: string,"message_kind": string,"mode"?: string,"name": string,"purpose"?: string | null,"reject_reason"?: string | null,"scheduled_at"?: string | null,"segment_id"?: string | null,"started_at"?: string | null,"status"?: string,"template_id"?: string | null
+                    "approved_at"?: string | null,"approved_by"?: string | null,"attachment_id"?: string | null,"body"?: string | null,"category": string,"created_at"?: string,"created_by"?: string | null,"fields"?: NonNullable<Json>,"filter"?: NonNullable<Json>,"finished_at"?: string | null,"id"?: string,"language"?: string | null,"master_key"?: string | null,"message_kind": string,"mode"?: string,"name": string,"purpose"?: string | null,"reject_reason"?: string | null,"scheduled_at"?: string | null,"segment_id"?: string | null,"started_at"?: string | null,"status"?: string,"template_id"?: string | null
                   }
                   Update: {
-                    "approved_at"?: string | null,"approved_by"?: string | null,"attachment_id"?: string | null,"body"?: string | null,"category"?: string,"created_at"?: string,"created_by"?: string | null,"filter"?: NonNullable<Json>,"finished_at"?: string | null,"id"?: string,"message_kind"?: string,"mode"?: string,"name"?: string,"purpose"?: string | null,"reject_reason"?: string | null,"scheduled_at"?: string | null,"segment_id"?: string | null,"started_at"?: string | null,"status"?: string,"template_id"?: string | null
+                    "approved_at"?: string | null,"approved_by"?: string | null,"attachment_id"?: string | null,"body"?: string | null,"category"?: string,"created_at"?: string,"created_by"?: string | null,"fields"?: NonNullable<Json>,"filter"?: NonNullable<Json>,"finished_at"?: string | null,"id"?: string,"language"?: string | null,"master_key"?: string | null,"message_kind"?: string,"mode"?: string,"name"?: string,"purpose"?: string | null,"reject_reason"?: string | null,"scheduled_at"?: string | null,"segment_id"?: string | null,"started_at"?: string | null,"status"?: string,"template_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -2867,6 +2888,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "whatsapp_campaigns_master_key_fkey"
+      columns: ["master_key"]
+isOneToOne: false
+      referencedRelation: "whatsapp_masters"
+      referencedColumns: ["key"]
     },{
       foreignKeyName: "whatsapp_campaigns_segment_id_fkey"
       columns: ["segment_id"]
@@ -2920,6 +2947,52 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"whatsapp_master_versions": {
+                  Row: {
+                    "body": string,"footer": string | null,"header": string,"language": string,"master_key": string,"updated_at": string,"updated_by": string | null,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"footer"?: string | null,"header": string,"language": string,"master_key": string,"updated_at"?: string,"updated_by"?: string | null,"version"?: number
+                  }
+                  Update: {
+                    "body"?: string,"footer"?: string | null,"header"?: string,"language"?: string,"master_key"?: string,"updated_at"?: string,"updated_by"?: string | null,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_master_versions_master_key_fkey"
+      columns: ["master_key"]
+isOneToOne: false
+      referencedRelation: "whatsapp_masters"
+      referencedColumns: ["key"]
+    },{
+      foreignKeyName: "whatsapp_master_versions_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"whatsapp_masters": {
+                  Row: {
+                    "key": string,"meta_category": string,"name": string,"slots": NonNullable<Json>,"sort": number,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "key": string,"meta_category": string,"name": string,"slots": NonNullable<Json>,"sort"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "key"?: string,"meta_category"?: string,"name"?: string,"slots"?: NonNullable<Json>,"sort"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_masters_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"whatsapp_message_events": {
                   Row: {
@@ -3036,6 +3109,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"whatsapp_quota": {
+                  Row: {
+                    "confirmed_at": string | null,"confirmed_by": string | null,"external_at": string | null,"external_recipients": number,"id": boolean,"note": string | null,"phone_quality": string,"portfolio_id": string | null,"source": string,"stale_days": number,"template_quality": string,"tier": string | null,"unique_limit": number | null,"verification": string,"waba_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "confirmed_at"?: string | null,"confirmed_by"?: string | null,"external_at"?: string | null,"external_recipients"?: number,"id"?: boolean,"note"?: string | null,"phone_quality"?: string,"portfolio_id"?: string | null,"source"?: string,"stale_days"?: number,"template_quality"?: string,"tier"?: string | null,"unique_limit"?: number | null,"verification"?: string,"waba_id"?: string | null
+                  }
+                  Update: {
+                    "confirmed_at"?: string | null,"confirmed_by"?: string | null,"external_at"?: string | null,"external_recipients"?: number,"id"?: boolean,"note"?: string | null,"phone_quality"?: string,"portfolio_id"?: string | null,"source"?: string,"stale_days"?: number,"template_quality"?: string,"tier"?: string | null,"unique_limit"?: number | null,"verification"?: string,"waba_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "whatsapp_quota_confirmed_by_fkey"
+      columns: ["confirmed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"whatsapp_templates": {
                   Row: {

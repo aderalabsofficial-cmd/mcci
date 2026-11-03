@@ -35,22 +35,22 @@ export interface Tracked {
 
 export const TOKEN = /^MCCI-\d{4}-(M-)?\d{4,6}$/;
 
-const EMPTY: SiteStats = { members: 0, corporate: 0, associate: 0, services_issued: 0, services_open: 0, applications_open: 0 };
-
-export const siteStats = cache(async (): Promise<SiteStats> => {
+/** null when the figures could not be read: a page says so, never shows zeros it does not know */
+export const siteStats = cache(async (): Promise<SiteStats | null> => {
   const { data, error } = await createAdminClient().schema('api').rpc('site_stats');
   if (error) {
     console.error('site.stats failed', error.code);
-    return EMPTY;
+    return null;
   }
-  return (data?.[0] as SiteStats | undefined) ?? EMPTY;
+  return (data?.[0] as SiteStats | undefined) ?? null;
 });
 
-export const siteFeed = cache(async (limit = 8): Promise<FeedRow[]> => {
+/** null when the feed could not be read, so "no activity yet" is said only when it is true */
+export const siteFeed = cache(async (limit = 8): Promise<FeedRow[] | null> => {
   const { data, error } = await createAdminClient().schema('api').rpc('site_feed', { p_limit: limit });
   if (error) {
     console.error('site.feed failed', error.code);
-    return [];
+    return null;
   }
   return (data ?? []) as FeedRow[];
 });

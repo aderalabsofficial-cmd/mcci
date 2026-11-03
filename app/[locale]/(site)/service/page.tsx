@@ -1,19 +1,20 @@
 import { CreditCard, Download, FileText, LogIn, Upload } from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { C, PageHero, Section, SitePage } from '@/components/site/blocks';
+import { C, PageHero, Section, SitePage, Unavailable } from '@/components/site/blocks';
 import { SERVICE_LOOK, serviceName } from '@/components/site/services';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
 import { loadServices } from '@/lib/site/load';
+import { readOr } from '@/lib/site/read-or';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ s?: string }> };
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const locale = asLocale((await params).locale);
   const key = (await searchParams).s;
-  const s = (await loadServices()).find((x) => x.key === key);
+  const s = (await readOr('services', loadServices()))?.find((x) => x.key === key);
   return { title: s ? serviceName(s, locale) : msg(locale, 'site.services.pageTitle') };
 }
 
@@ -31,10 +32,20 @@ const HOW = [
 export default async function ServicePage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  const services = await loadServices();
+  const services = await readOr('services', loadServices());
   const key = (await searchParams).s;
-  const s = services.find((x) => x.key === key) ?? services[0];
   const m = (k: string, v?: Record<string, string>) => msg(locale, `site.service.${k}`, v);
+  if (!services) {
+    return (
+      <SitePage locale={locale}>
+        <PageHero locale={locale} title="site.services.pageTitle" sub="site.services.pageSub" />
+        <Section n={1} title={m('need')} id="need">
+          <Unavailable locale={locale} />
+        </Section>
+      </SitePage>
+    );
+  }
+  const s = services.find((x) => x.key === key) ?? services[0];
   if (!s) {
     return (
       <SitePage locale={locale}>

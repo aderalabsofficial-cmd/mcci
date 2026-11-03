@@ -76,12 +76,13 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Segments | `admin/segments/` | `/admin/business-directory/segments` | Saved dynamic segments with live counts |
 | Exports | `admin/bizexports/` | `/admin/business-directory/exports` | Controlled, logged CSV, Excel and PDF exports |
 | WhatsApp | `admin/wadash/` | `/admin/whatsapp` | Connection state and aggregate figures (docs/30; no prototype screen) |
+| Campaign Readiness | `admin/wareadiness/` | `/admin/whatsapp/readiness` | Account limit and tier (confirmed, with source), capacity now, 7-day scaling, templates, status updates, open issues (docs/30 §11; no prototype screen) |
 | WhatsApp Inbox | `admin/wainbox/` | `/admin/whatsapp/inbox` | Replies, history, assignment, notes, linking unmatched numbers |
 | WhatsApp Campaigns | `admin/wacampaigns/` | `/admin/whatsapp/campaigns` | Campaign history |
-| New Campaign | `admin/wanew/` | `/admin/whatsapp/campaigns/new` | Audience, message, preview with reasons, draft |
+| New Campaign | `admin/wanew/` | `/admin/whatsapp/campaigns/new` | Audience, message (MCCI master template, approved template or free text), preview with reasons, audience groups, draft |
 | Campaign | `admin/wacampaign/` | `/admin/whatsapp/campaigns/view` | Approval, launch, pause, cancel, results per recipient |
 | Campaign History | `admin/wahistory/` | `/admin/whatsapp/campaigns/history` | Finished campaigns with their results (docs/30; no prototype screen) |
-| Message Templates | `admin/watemplates/` | `/admin/whatsapp/templates` | Sync status from the provider, record wording and variables |
+| Message Templates | `admin/watemplates/` | `/admin/whatsapp/templates` | The four MCCI master templates (EN + UR, what to submit to Meta, status from the provider, editing), sync, wording of other templates |
 | Consent Management | `admin/waconsent/` | `/admin/whatsapp/consent` | Consent per number, suppression list |
 | WhatsApp Settings | `admin/wasettings/` | `/admin/whatsapp/settings` | Connection test, masked credentials, limits |
 | AI Insights | `admin/ai/` | `/admin/ai` | How document reading performs; guardrails; voter list |

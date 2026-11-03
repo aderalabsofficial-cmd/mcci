@@ -9,7 +9,7 @@ import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 import { controlCampaign, runBatch, submitCampaign } from '@/lib/whatsapp/actions';
-import { loadCampaign, loadCampaignStats, loadRecipients, loadSettings } from '@/lib/whatsapp/load';
+import { loadCampaign, loadCampaignStats, loadRecipients, loadSchedule, loadSettings } from '@/lib/whatsapp/load';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ id?: string }> };
 
@@ -67,6 +67,10 @@ export default async function CampaignPage({ params, searchParams }: Props) {
   const out = g.level;
   const n = (k: string) => stats.status[k] ?? 0;
   const pending = n('pending');
+  // more recipients than the account may reach today: when the rest can go, window by window (an estimate)
+  const schedule = pending > 0 ? await loadSchedule(c.id) : null;
+  const sm = (k: string, v?: Record<string, string>) => msg(locale, `wa.schedule.${k}`, v);
+  const day = (iso: string) => new Date(iso).toLocaleString(locale === 'ur' ? 'ur-PK' : 'en-GB', { timeZone: 'Asia/Karachi' });
   const total = STATS.reduce((s, k) => s + n(k), 0);
   const template = c.whatsapp_templates as unknown as { name: string; language: string; body: string | null } | null;
   const preview = c.message_kind === 'template' ? (template?.body ?? template?.name ?? '') : (c.body ?? '');
@@ -198,6 +202,33 @@ export default async function CampaignPage({ params, searchParams }: Props) {
           <p className="muted">{m('waitingApproval')}</p>
         )}
       </div>
+      {schedule && (
+        <div className="card" data-section="schedule">
+          <div className="ch">
+            <h3>{sm('title')}</h3>
+          </div>
+          {schedule.problem ? (
+            <p className="banner orange" data-schedule-problem={schedule.problem}>
+              {sm('problem')}
+            </p>
+          ) : (
+            <>
+              <p data-schedule-waiting={schedule.waiting} data-schedule-places={schedule.needPlaces ?? 0}>
+                {sm('waiting', { n: String(schedule.waiting), places: String(schedule.needPlaces ?? 0) })}
+              </p>
+              <ul className="wa-blocked">
+                {schedule.windows.map((w, i) => (
+                  <li key={i} data-window={i} data-window-count={w.recipients}>
+                    {sm('window', { from: day(w.from), n: String(w.recipients) })}
+                  </li>
+                ))}
+              </ul>
+              {(schedule.beyond ?? 0) > 0 && <p className="muted">{sm('beyond', { n: String(schedule.beyond) })}</p>}
+            </>
+          )}
+          <p className="muted">{sm('note')}</p>
+        </div>
+      )}
       <div className="card" data-section="stats">
         <div className="ch">
           <h3>{m('resultsTitle')}</h3>

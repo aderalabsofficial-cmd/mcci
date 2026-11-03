@@ -107,7 +107,7 @@ export default async function HomePage({ params }: Props) {
   );
   const karachi = (iso: string, opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(locale === 'ur' ? 'ur-PK' : 'en-GB', { timeZone: 'Asia/Karachi', ...opts }).format(new Date(iso));
-  const latest = feed[0];
+  const latest = feed?.[0];
 
   return (
     <div className="lp">
@@ -169,20 +169,24 @@ export default async function HomePage({ params }: Props) {
             <span className="pulse" aria-hidden />
             <span>{m('hl_label')}</span>
           </p>
-          <div className="hl-stats">
-            <div>
-              <span className="hl-num" data-stat="issued" data-count={stats.services_issued}>
-                {n(stats.services_issued)}
-              </span>
-              <span className="hl-lbl">{m('hl_issued')}</span>
+          {stats ? (
+            <div className="hl-stats">
+              <div>
+                <span className="hl-num" data-stat="issued" data-count={stats.services_issued}>
+                  {n(stats.services_issued)}
+                </span>
+                <span className="hl-lbl">{m('hl_issued')}</span>
+              </div>
+              <div>
+                <span className="hl-num" data-stat="open" data-count={stats.services_open}>
+                  {n(stats.services_open)}
+                </span>
+                <span className="hl-lbl">{m('hl_open')}</span>
+              </div>
             </div>
-            <div>
-              <span className="hl-num" data-stat="open" data-count={stats.services_open}>
-                {n(stats.services_open)}
-              </span>
-              <span className="hl-lbl">{m('hl_open')}</span>
-            </div>
-          </div>
+          ) : (
+            unavailable
+          )}
           {latest && (
             <p className="hl-last" data-stat="latest">
               {m('hl_last', { service: feedName(latest), when: ago(latest.at, locale) })}
@@ -362,7 +366,7 @@ export default async function HomePage({ params }: Props) {
       </section>
 
       {/* ============ MEMBER STATS: left out until the register has members ============ */}
-      {stats.members > 0 && (
+      {stats && stats.members > 0 && (
         <section className="members" id="members">
           <div className="wrap">
             <div className="sec-head">
@@ -420,23 +424,27 @@ export default async function HomePage({ params }: Props) {
             <p className="sec-sub">{m('live_sub')}</p>
           </div>
 
-          <div className="kpis">
-            {(
-              [
-                ['k1', stats.services_issued],
-                ['k2', stats.services_open],
-                ['k3', stats.applications_open],
-                ['k4', stats.members],
-              ] as const
-            ).map(([k, value]) => (
-              <div className="kpi" key={k} data-kpi={k}>
-                <span className="kpi-lbl">{m(k)}</span>
-                <b className="kpi-num" data-count={value}>
-                  {n(value)}
-                </b>
-              </div>
-            ))}
-          </div>
+          {stats ? (
+            <div className="kpis">
+              {(
+                [
+                  ['k1', stats.services_issued],
+                  ['k2', stats.services_open],
+                  ['k3', stats.applications_open],
+                  ['k4', stats.members],
+                ] as const
+              ).map(([k, value]) => (
+                <div className="kpi" key={k} data-kpi={k}>
+                  <span className="kpi-lbl">{m(k)}</span>
+                  <b className="kpi-num" data-count={value}>
+                    {n(value)}
+                  </b>
+                </div>
+              ))}
+            </div>
+          ) : (
+            unavailable
+          )}
 
           <div className="desk">
             <div className="desk-table">
@@ -462,7 +470,9 @@ export default async function HomePage({ params }: Props) {
                 <span className="pulse" aria-hidden />
                 <span>{m('feed_title')}</span>
               </p>
-              {feed.length ? (
+              {!feed ? (
+                unavailable
+              ) : feed.length ? (
                 <ul className="feed" id="feed">
                   {feed.map((r) => (
                     <li key={r.token}>

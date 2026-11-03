@@ -169,6 +169,7 @@ export const SCREENS: readonly Screen[] = [
   s('admin', 'segments', '/admin/business-directory/segments', 'MB', 'list'),
   s('admin', 'bizexports', '/admin/business-directory/exports', 'MB', 'upload'),
   s('admin', 'wadash', '/admin/whatsapp', 'MC', 'chart'),
+  s('admin', 'wareadiness', '/admin/whatsapp/readiness', 'MC', 'chart'),
   s('admin', 'wainbox', '/admin/whatsapp/inbox', 'MC', 'inbox'),
   s('admin', 'wacampaigns', '/admin/whatsapp/campaigns', 'MC', 'mail'),
   s('admin', 'wanew', '/admin/whatsapp/campaigns/new', 'MC', 'pen'),
@@ -296,7 +297,7 @@ export const PAGE_TABS: Record<'portal' | 'admin', string[][]> = {
     ['staff', 'audit'],
     ['services', 'integrations'],
     ['bizdir', 'bizprofile', 'segments', 'bizexports'],
-    ['wadash', 'wainbox', 'wacampaigns', 'wanew', 'wahistory', 'watemplates', 'waconsent', 'segments', 'wasettings'],
+    ['wadash', 'wareadiness', 'wainbox', 'wacampaigns', 'wanew', 'wahistory', 'watemplates', 'waconsent', 'segments', 'wasettings'],
   ],
 };
 

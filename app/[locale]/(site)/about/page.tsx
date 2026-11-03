@@ -1,4 +1,15 @@
-import { BookOpen, Building2, FileSearch, Globe, Handshake, Landmark, Megaphone, Scale, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  BookOpen,
+  Building2,
+  FileSearch,
+  Globe,
+  Handshake,
+  Landmark,
+  Megaphone,
+  Scale,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { C, Card, PageHero, Section, SitePage } from '@/components/site/blocks';

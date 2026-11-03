@@ -310,3 +310,11 @@
   .proto .fin-table .fin-no {display:none}
   .proto .fin-table th, .proto .fin-table td {padding:5px 6px}
 }
+/* WhatsApp master templates (0630) */
+.proto .wa-master {display:grid;gap:12px}
+.proto .wa-master-version {border-top:1px solid var(--b);padding-top:12px;margin-top:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.proto .wa-master-version .ch {flex-wrap:wrap}
+.proto .wa-master-version h4 {min-width:0;overflow-wrap:anywhere}
+.proto .wa-examples {margin:6px 0 0;padding-inline-start:22px;display:grid;gap:2px}
+.proto .wa-slots {display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.proto .wa-slots .bd {white-space:normal;max-width:100%}

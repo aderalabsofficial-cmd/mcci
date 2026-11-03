@@ -182,6 +182,7 @@
       "segments": "Segments",
       "bizexports": "Exports",
       "wadash": "WhatsApp",
+      "wareadiness": "Campaign Readiness",
       "wainbox": "WhatsApp Inbox",
       "wacampaigns": "WhatsApp Campaigns",
       "wanew": "New Campaign",
@@ -241,6 +242,7 @@
       "segments": "Segments",
       "bizexports": "Exports",
       "wadash": "Overview",
+      "wareadiness": "Readiness",
       "wainbox": "Inbox",
       "wacampaigns": "Campaigns",
       "wanew": "New Message",
@@ -3570,7 +3572,9 @@
         "desc": "certificate, financial report, authority letter, MoU",
         "note": "Every attested document gets a verification QR"
       }
-    }
+    },
+    "pageFailed": "This page could not open just now",
+    "tryAgain": "Try again"
   },
   "svc": {
     "apply": {
@@ -5019,7 +5023,8 @@
       "window_closed": "Outside the 24-hour window: use an approved template",
       "missing_value": "A personalised value is missing",
       "number_changed": "The number changed after the audience was fixed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "quota": "The 24-hour limit of new recipients is reached. Try after the next window, or see Campaign Readiness."
     },
     "dash": {
       "title": "WhatsApp",
@@ -5191,7 +5196,8 @@
       "noTemplateClosed": "No template: free text (window closed)",
       "advanced": "More detailed filters",
       "sender": "Sends from: {sender}",
-      "senderUnknown": "The sending number is not confirmed yet. Run the connection test in Settings."
+      "senderUnknown": "The sending number is not confirmed yet. Run the connection test in Settings.",
+      "kindMaster": "MCCI master template"
     },
     "templates": {
       "title": "Message Templates",
@@ -5366,7 +5372,11 @@
       "noMember": "No member has that number.",
       "media_type": "This file type is not allowed, or the file is not what its name says.",
       "media_size": "This file is too large.",
-      "generic": "That did not work. Please try again."
+      "generic": "That did not work. Please try again.",
+      "field": "Check the field: {field}. It must be filled in, on one line, and not too long.",
+      "not_approved": "Meta has not approved this template version yet.",
+      "locked": "This wording is held by Meta and cannot change here.",
+      "wording": "The wording does not follow the template rules."
     },
     "done": {
       "accepted": "Accepted by the provider. Delivery updates will appear here.",
@@ -5389,7 +5399,9 @@
       "consent": "Consent recorded.",
       "memberGranted": "Thank you. Your choice is saved.",
       "memberWithdrawn": "You will not receive WhatsApp messages from MCCI.",
-      "settings": "Settings saved."
+      "settings": "Settings saved.",
+      "masterSaved": "Saved as version {version}. Submit it to Meta before it can be used.",
+      "quotaConfirmed": "Account figures confirmed."
     },
     "tabs": {
       "title": "Who should get this?",
@@ -5404,6 +5416,181 @@
         "city": "City",
         "sector": "Sector"
       }
+    },
+    "masters": {
+      "title": "MCCI master templates",
+      "sub": "Four reusable templates, one for each kind of message, in English and Urdu. Staff fill in the subject and details; the wording stays the same.",
+      "approvalNote": "A template written here is not a WhatsApp template until Meta approves it. Submit each language version in WhatsApp Manager with the details below; its status here comes only from Meta, through the provider.",
+      "metaCategory": {
+        "MARKETING": "Meta category: Marketing",
+        "UTILITY": "Meta category: Utility"
+      },
+      "purpose": {
+        "announcements": "Official circulars, institutional announcements, policy updates, important notices and general member communications.",
+        "membership": "Application updates, renewal notices, document requirements, payment and administrative notices, membership instructions. Sent only about the member’s own membership.",
+        "events": "Meetings, seminars, workshops, delegations, exhibitions and official invitations.",
+        "opportunities": "Trade and investment opportunities, business delegations, exhibitions and trade fairs, industry programmes and business development initiatives."
+      },
+      "variables": "Variables:",
+      "fromRecord": "from the member record",
+      "submission": "What to submit to Meta",
+      "submissionHow": "In WhatsApp Manager, Message templates, Create template: use exactly this name, category and language, paste the header, body and footer, and give these sample values.",
+      "sub_name": "Name",
+      "sub_category": "Category",
+      "sub_language": "Language",
+      "lockedMeta": "Meta holds this wording (approved or under review), so it cannot change here. A change means a new submission.",
+      "lockedLevel": "Only an administrator with Approve level can change the wording.",
+      "status": {
+        "LOCAL": "Not submitted to Meta",
+        "NOT_ON_PROVIDER": "Not on WhatsApp now",
+        "PENDING": "With Meta for review",
+        "IN_APPEAL": "Appeal with Meta",
+        "APPROVED": "Approved by Meta",
+        "REJECTED": "Rejected by Meta",
+        "PAUSED": "Paused by Meta",
+        "DISABLED": "Disabled by Meta",
+        "UNKNOWN": "Status not recognised"
+      },
+      "header": "Header",
+      "body": "Body",
+      "footer": "Footer",
+      "save": "Save this version",
+      "wording": {
+        "header": "The header needs 1 to 60 characters and no variables.",
+        "footer": "The footer can have up to 60 characters and no variables.",
+        "body": "The body needs 1 to 1,024 characters.",
+        "variables": "The body must use each of {{1}} to {{{n}}} exactly once, and no others.",
+        "placement": "A variable cannot start or end the body, or sit right next to another one."
+      },
+      "choose": "Template",
+      "language": "Language of the message",
+      "languages": {
+        "en": "English",
+        "ur": "Urdu"
+      },
+      "notApproved": "Meta has not approved this language version yet.",
+      "notApprovedLong": "Meta has not approved this language version yet, so no campaign can be made from it. You can fill it in and check the audience; free text still works for anyone with an open conversation.",
+      "optional": "optional",
+      "fields": {
+        "contact_person": "Contact person",
+        "business_name": "Business name",
+        "membership_number": "Membership number",
+        "subject": "Subject",
+        "summary": "Summary",
+        "details": "Details",
+        "deadline": "Deadline",
+        "event_name": "Event name",
+        "event_date": "Event date",
+        "event_time": "Event time",
+        "event_venue": "Venue",
+        "opportunity_title": "Opportunity",
+        "sector": "Sector",
+        "link": "Information or registration link"
+      },
+      "previewTitle": "The message as it will arrive",
+      "checkAudience": "Check the audience",
+      "fieldNeeded": "Check the field: {field}.",
+      "checkFirst": "Check the audience first.",
+      "mixedBodyNeeded": "Write the free-text message, or untick the free-text option.",
+      "breakdownTotal": "{n} businesses in this audience",
+      "groups": {
+        "free_text": "can receive free text (conversation open in the last 24 hours)",
+        "template_required": "need the approved template",
+        "no_consent": "have no consent for this kind of message",
+        "opted_out": "have opted out",
+        "invalid": "have no valid WhatsApp number"
+      },
+      "planTemplate": "{n} will receive the template; {skip} will not receive anything, each with the reason recorded.",
+      "planMixed": "{n} will receive a message (free text where the conversation is open, the template for the rest); {skip} will not, each with the reason recorded.",
+      "mixed": "Send free text to the {text} with an open conversation, and the template to the other {template}",
+      "mixedBody": "Free-text message for those with an open conversation",
+      "draftNote": "Creating the draft fixes the audience and each person’s message type. Nothing is sent until the campaign is started.",
+      "capacityLine": "Capacity now: {room} new recipients (limit {limit} in 24 hours). Recipients beyond it wait for the next window.",
+      "capacityUnknown": "The account limit is not confirmed: the draft can be made, but template messages to new recipients will wait until it is."
+    },
+    "readiness": {
+      "title": "Campaign Readiness",
+      "sub": "Whether MCCI can send, and how many people it can reach today. Each figure says where it comes from.",
+      "counted": "Counted by this system",
+      "sources": {
+        "meta_support": "Confirmed by Meta Support",
+        "admin": "Confirmed by an administrator from WhatsApp Manager",
+        "provider": "From the provider"
+      },
+      "issuesTitle": "Before a real campaign",
+      "issuesCount": "{n} to resolve",
+      "noIssues": "Nothing outstanding",
+      "issues": {
+        "verification": "MCCI Business Verification is not complete (Meta). Until then the limit stays low.",
+        "quota_unknown": "The account limit has not been confirmed. Template messages to new recipients are held.",
+        "quota_stale": "The account limit was confirmed too long ago. Confirm it again; until then template messages to new recipients are held.",
+        "connection": "The provider connection is not confirmed (WhatsApp Settings).",
+        "templates": "None of the eight MCCI master template versions is approved by Meta yet.",
+        "consent": "No member has given WhatsApp consent yet.",
+        "statuses": "No delivery status has arrived yet. Meta Support found the \"statuses\" webhook subscription missing: IQPigeon must subscribe it.",
+        "sending": "Sending is switched off (WhatsApp Settings)."
+      },
+      "accountTitle": "Account and limit",
+      "portfolio": "Business portfolio",
+      "waba": "WhatsApp Business Account",
+      "verification": "Business Verification",
+      "verificationStates": {
+        "unknown": "Not known",
+        "not_verified": "Not completed",
+        "pending": "Under review",
+        "verified": "Verified"
+      },
+      "tier": "Messaging tier",
+      "limit": "Unique recipients per rolling 24 hours",
+      "confirmedAt": "Last confirmed",
+      "problem": {
+        "unknown": "No confirmed limit: template messages to new recipients are held until an administrator confirms it.",
+        "stale": "Confirmed more than {days} days ago: template messages to new recipients are held until it is confirmed again."
+      },
+      "capacityTitle": "Capacity now",
+      "used24": "Reached in the last 24 hours (this system)",
+      "external24": "Reached from other numbers or tools (recorded)",
+      "room": "New recipients still possible now",
+      "nextFree": "Next place frees up",
+      "waiting": "Campaign recipients waiting for capacity",
+      "eligible": "Members with consent, not opted out",
+      "capacityNote": "The limit is shared by every number in MCCI’s business portfolio. People already reached in the last 24 hours, and replies inside an open conversation, need no new place. When the limit is reached, recipients wait for the next window; none is skipped for it.",
+      "scalingTitle": "Scaling to the next tier",
+      "week": "Unique recipients in the last 7 days",
+      "weekTarget": "Meta’s target: half the current limit in 7 days",
+      "toTarget": "Still to reach the target",
+      "phoneQuality": "Phone number quality",
+      "templateQuality": "Template quality",
+      "lastTier": "Last confirmed tier",
+      "quality": {
+        "UNKNOWN": "Not known",
+        "HIGH": "High",
+        "MEDIUM": "Medium",
+        "LOW": "Low"
+      },
+      "scalingNote": "Meta raises the tier by itself when the target is met with Medium or High quality, usually within six hours. This system never raises the limit from its own count: confirm the new tier below once Meta shows it.",
+      "templatesTitle": "Templates and delivery updates",
+      "mastersApproved": "MCCI master versions approved",
+      "ofEight": "{n} of 8",
+      "templatesApproved": "All approved templates",
+      "statusEvents": "Delivery statuses received",
+      "lastStatus": "Last status received",
+      "confirmTitle": "Confirm the account figures",
+      "confirmSub": "Copy what WhatsApp Manager (Insights, messaging limit; Business Settings, verification) or Meta Support shows. Saving is recorded with your name, the source and your note.",
+      "external": "Recipients reached from other numbers in 24 hours",
+      "staleDays": "Ask to confirm again after (days)",
+      "source": "Source",
+      "note": "Note",
+      "notePlaceholder": "e.g. WhatsApp Manager, 4 Nov 2026: Tier 2K, quality High",
+      "confirm": "Confirm"
+    },
+    "schedule": {
+      "title": "When the waiting recipients can go",
+      "waiting": "{n} recipients waiting; {places} need a new place in the 24-hour limit.",
+      "window": "From {from}: up to {n}",
+      "beyond": "{n} more beyond these windows",
+      "problem": "The account limit is not confirmed or out of date, so no template recipient can be scheduled. See Campaign Readiness.",
+      "note": "An estimate at the confirmed limit. The dispatcher checks the capacity again before every batch."
     }
   },
   "voter": {

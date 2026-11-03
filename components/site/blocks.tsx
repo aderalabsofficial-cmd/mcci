@@ -132,4 +132,13 @@ export function Card({
   );
 }
 
+/** said in place of a section whose database read failed (lib/site/read-or.ts): never an empty list or a zero */
+export function Unavailable({ locale }: { locale: Locale }) {
+  return (
+    <p className="read-failed" role="status" data-read-failed>
+      {msg(locale, 'landing.read_failed')}
+    </p>
+  );
+}
+
 export const C = { GR: '#1fa34a', BL: '#3b82f6', OR: '#f59e0b', PU: '#8b5cf6', RD: '#ef4444', TL: '#14b8a6', PK: '#ec4899', GD: '#c8963e', CB: '#007845' };

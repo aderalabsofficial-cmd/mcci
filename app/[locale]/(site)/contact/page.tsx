@@ -4,8 +4,10 @@ import { setRequestLocale } from 'next-intl/server';
 import { PageHero, Section, SitePage } from '@/components/site/blocks';
 import { ContactForms } from '@/components/site/contact-forms';
 import { asLocale } from '@/i18n/locale';
+import { CHAMBER } from '@/lib/chamber';
 import { loadPublicSettings } from '@/lib/membership/load';
 import { msg } from '@/lib/nav/model';
+import { readOr } from '@/lib/site/read-or';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -18,7 +20,12 @@ export default async function ContactPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `site.contact.${k}`, v);
-  const { chamber } = await loadPublicSettings();
+  // settings unread: the chamber's published address, numbers and email (lib/chamber) still let people reach it
+  const chamber = (await readOr('settings', loadPublicSettings()))?.chamber ?? {
+    ...CHAMBER,
+    name: msg('en', 'brand.chamber'),
+    fax: '',
+  };
   const tel = chamber.tel.split(',')[0]!.replace(/[^\d+]/g, '');
   return (
     <SitePage locale={locale}>

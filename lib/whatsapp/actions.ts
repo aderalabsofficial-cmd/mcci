@@ -13,6 +13,7 @@ import type { Json } from '@/lib/supabase/types';
 import { dispatchPrepared, runTick } from '@/lib/whatsapp/admin/dispatch';
 import { testConnection } from '@/lib/whatsapp/admin/health';
 import { isConfigured, provider } from '@/lib/whatsapp/config';
+import { MASTER_KEYS } from '@/lib/whatsapp/masters';
 import { CATEGORIES } from '@/lib/whatsapp/media';
 
 /**
@@ -36,6 +37,9 @@ const HINT = [
   'nocontact',
   'phone',
   'closed',
+  'not_approved',
+  'locked',
+  'wording',
 ];
 
 function fail(locale: Locale, error: unknown, what: string): ActionResult {
@@ -46,6 +50,8 @@ function fail(locale: Locale, error: unknown, what: string): ActionResult {
   if (e?.code === '42501') return { ok: false, message: t('notAllowed') };
   if (e?.code === 'P0001' && e.hint?.startsWith('block_'))
     return { ok: false, message: msg(locale, `wa.block.${e.hint.slice(6)}`) };
+  if (e?.code === 'P0001' && e.hint?.startsWith('field_'))
+    return { ok: false, message: msg(locale, 'wa.errors.field', { field: msg(locale, `wa.masters.fields.${e.hint.slice(6)}`) }) };
   if (e?.code === 'P0001' && e.hint && HINT.includes(e.hint)) return { ok: false, message: t(e.hint) };
   console.error(`${what} failed`, e?.code);
   return { ok: false, message: t('generic') };
@@ -278,6 +284,134 @@ export async function runBatch(locale: Locale): Promise<ActionResult> {
     return done(locale, 'batch', { n: String(r.sent) });
   } catch (error) {
     return fail(locale, error, 'whatsapp batch');
+  }
+}
+
+/* ---------- master templates (0630, docs/30 §10) ---------- */
+
+export interface Breakdown {
+  total: number;
+  groups: Record<'free_text' | 'template_required' | 'no_consent' | 'opted_out' | 'invalid', number>;
+  rows: (AudienceRow & { group: string })[];
+}
+
+const breakdownInput = audience.pick({ q: true, ids: true, excluded: true, category: true });
+
+/** every business in the selection in exactly one group: free text possible, template needed, or why not */
+export async function audienceBreakdown(
+  locale: Locale,
+  input: z.input<typeof breakdownInput> & { filter: Filter },
+): Promise<ActionResult & { breakdown?: Breakdown }> {
+  try {
+    await requirePermission('out', 2);
+    const v = breakdownInput.parse(input);
+    const db = await createClient();
+    const { data, error } = await db.schema('api').rpc('wa_audience_breakdown', {
+      p_def: filterSchema.parse(input.filter) as unknown as Json,
+      p_q: v.q,
+      p_ids: v.ids as string[],
+      p_excluded: v.excluded,
+      p_category: v.category,
+    });
+    if (error) throw error;
+    return { ok: true, message: '', breakdown: data as unknown as Breakdown };
+  } catch (error) {
+    return fail(locale, error, 'whatsapp breakdown');
+  }
+}
+
+const masterCampaign = breakdownInput.extend({
+  name: z.string().trim().min(2).max(120),
+  purpose: z.string().trim().max(500),
+  mode: z.enum(['campaign', 'selective']),
+  master: z.enum(MASTER_KEYS),
+  language: z.enum(['en', 'ur']),
+  fields: z.record(z.string(), z.string().max(500)),
+  mixed: z.boolean(),
+  body: z.string().trim().max(4096),
+  segment: uuid.nullable(),
+});
+
+/** a draft from a master: its audience fixed, each recipient's message type fixed; nothing is sent */
+export async function createMasterCampaign(
+  locale: Locale,
+  input: z.input<typeof masterCampaign> & { filter: Filter },
+): Promise<ActionResult & { id?: string }> {
+  try {
+    await requirePermission('out', 2);
+    const v = masterCampaign.parse(input);
+    const db = await createClient();
+    const { data, error } = await db.schema('api').rpc('wa_campaign_create_master', {
+      p_name: v.name,
+      p_purpose: v.purpose,
+      p_mode: v.mode,
+      p_master: v.master,
+      p_language: v.language,
+      p_fields: v.fields as unknown as Json,
+      p_mixed: v.mixed,
+      p_body: v.body,
+      p_segment: v.segment as string,
+      p_def: filterSchema.parse(input.filter) as unknown as Json,
+      p_q: v.q,
+      p_ids: v.ids as string[],
+      p_excluded: v.excluded,
+    });
+    if (error) throw error;
+    refresh();
+    return { ...done(locale, 'campaignCreated'), id: data as string };
+  } catch (error) {
+    return fail(locale, error, 'whatsapp master campaign create');
+  }
+}
+
+/** an administrator (Approve level) changes a version that Meta has not approved or is not reviewing */
+export async function saveMasterVersion(_: ActionResult | null, form: FormData): Promise<ActionResult> {
+  const locale = localeOf(form);
+  try {
+    await requirePermission('out', 3);
+    const db = await createClient();
+    const { data, error } = await db.schema('api').rpc('wa_master_save', {
+      p_key: z.enum(MASTER_KEYS).parse(text(form, 'key')),
+      p_language: z.enum(['en', 'ur']).parse(text(form, 'language')),
+      p_header: text(form, 'header').slice(0, 60),
+      p_body: text(form, 'body').slice(0, 1024),
+      p_footer: text(form, 'footer').slice(0, 60),
+    });
+    if (error) throw error;
+    refresh();
+    return done(locale, 'masterSaved', { version: String(data) });
+  } catch (error) {
+    return fail(locale, error, 'whatsapp master save');
+  }
+}
+
+/* ---------- account limit (0640) ---------- */
+
+const quotaForm = z.object({
+  tier: z.string().trim().min(1).max(40),
+  limit: z.coerce.number().int().min(1).max(100_000_000),
+  verification: z.enum(['unknown', 'not_verified', 'pending', 'verified']),
+  phoneQuality: z.enum(['UNKNOWN', 'HIGH', 'MEDIUM', 'LOW']),
+  templateQuality: z.enum(['UNKNOWN', 'HIGH', 'MEDIUM', 'LOW']),
+  source: z.enum(['meta_support', 'admin']),
+  note: z.string().trim().min(3).max(300),
+  external: z.coerce.number().int().min(0).max(100_000_000),
+  staleDays: z.coerce.number().int().min(1).max(90),
+});
+
+/** an administrator records what Meta shows; nothing here is read from Meta, and nothing raises the limit by itself */
+export async function confirmQuota(_: ActionResult | null, form: FormData): Promise<ActionResult> {
+  const locale = localeOf(form);
+  try {
+    await requirePermission('plat', 3);
+    const v = quotaForm.parse(Object.fromEntries(form.entries()));
+    const db = await createClient();
+    const { error } = await db.schema('api').rpc('wa_quota_confirm', { p: v as unknown as Json });
+    if (error) throw error;
+    refresh();
+    return done(locale, 'quotaConfirmed');
+  } catch (error) {
+    return fail(locale, error, 'whatsapp quota confirm');
   }
 }
 

@@ -9,7 +9,9 @@ import type { Locale } from '@/i18n/routing';
 import { directoryQuery, type Filter, type Selection } from '@/lib/business/filters';
 import { callAction, type Outcome } from '@/lib/client/call-action';
 import { msg } from '@/lib/nav/model';
+import { MasterSection } from '@/components/whatsapp/masters';
 import { createCampaign, previewAudience, type AudiencePreview } from '@/lib/whatsapp/actions';
+import type { Master } from '@/lib/whatsapp/masters';
 import { CATEGORIES, MEDIA_ACCEPT, placeholders, renderPreview, renderTemplate, VARIABLES } from '@/lib/whatsapp/media';
 
 export interface TemplateOption {
@@ -93,6 +95,9 @@ export function CampaignComposer({
   templates,
   segment,
   sender,
+  masters,
+  appUrl,
+  capacity,
 }: {
   locale: Locale;
   filter: Filter;
@@ -100,6 +105,9 @@ export function CampaignComposer({
   templates: TemplateOption[];
   segment: string | null;
   sender: string | null;
+  masters: Master[];
+  appUrl: string;
+  capacity: { room: number; limit: number | null; problem: string | null };
 }) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `wa.composer.${k}`, v);
   const router = useRouter();
@@ -108,7 +116,7 @@ export function CampaignComposer({
   const [name, setName] = useState('');
   const [purpose, setPurpose] = useState('');
   const [category, setCategory] = useState<string>('announcements');
-  const [kind, setKind] = useState<'template' | 'text'>('template');
+  const [kind, setKind] = useState<'master' | 'template' | 'text'>(masters.length ? 'master' : 'template');
   const [template, setTemplate] = useState<string>(templates[0]?.id ?? '');
   const [body, setBody] = useState('');
   const [attachment, setAttachment] = useState<{ id: string; file_name: string } | null>(null);
@@ -144,7 +152,7 @@ export function CampaignComposer({
           ids,
           excluded: ex,
           category,
-          kind,
+          kind: kind === 'text' ? 'text' : 'template',
           template: kind === 'template' ? template : null,
         }),
       );
@@ -161,7 +169,7 @@ export function CampaignComposer({
           purpose,
           mode: useSel ? 'selective' : 'campaign',
           category: category as (typeof CATEGORIES)[number],
-          kind,
+          kind: kind === 'text' ? 'text' : 'template',
           template: kind === 'template' ? template : null,
           body,
           attachment: attachment?.id ?? null,
@@ -205,7 +213,7 @@ export function CampaignComposer({
             onChange={(e) => setPurpose(e.target.value)}
           />
         </label>
-        <label className="form-field">
+        <label className="form-field" hidden={kind === 'master'}>
           {m('category')}
           <select
             value={category}
@@ -252,6 +260,18 @@ export function CampaignComposer({
       </fieldset>
       <fieldset className="biz-values">
         <legend>{m('kind')}</legend>
+        {masters.length > 0 && (
+          <label className="biz-check">
+            <input
+              type="radio"
+              name="kind"
+              checked={kind === 'master'}
+              data-field="kind-master"
+              onChange={() => (setKind('master'), touch())}
+            />
+            {m('kindMaster')}
+          </label>
+        )}
         <label className="biz-check">
           <input
             type="radio"
@@ -273,7 +293,20 @@ export function CampaignComposer({
           {m('kindText')}
         </label>
       </fieldset>
-      {kind === 'template' ? (
+      {kind === 'master' && (
+        <MasterSection
+          locale={locale}
+          masters={masters}
+          appUrl={appUrl}
+          audience={{ filter, q, ids, excluded }}
+          name={name}
+          purpose={purpose}
+          mode={useSel ? 'selective' : 'campaign'}
+          segment={segment}
+          capacity={capacity}
+        />
+      )}
+      {kind === 'master' ? null : kind === 'template' ? (
         templates.length === 0 ? (
           <p className="banner orange" data-no-templates>
             {m('noTemplates')}
@@ -318,10 +351,12 @@ export function CampaignComposer({
       )}
       {missingBody && <p className="banner orange">{m('templateNoWording')}</p>}
       {unmapped.length > 0 && <p className="banner orange">{m('templateUnmapped', { n: unmapped.join(', ') })}</p>}
-      {(kind === 'text' || (tpl && tpl.header_type !== 'none' && tpl.header_type !== 'text')) && (
+      {kind !== 'master' && (kind === 'text' || (tpl && tpl.header_type !== 'none' && tpl.header_type !== 'text')) && (
         <AttachmentPicker locale={locale} value={attachment} onChange={setAttachment} />
       )}
 
+      {kind !== 'master' && (
+      <>
       <div className="pb">
         <button
           type="button"
@@ -428,6 +463,8 @@ export function CampaignComposer({
             <small className="muted">{m('firstRows', { n: String(preview.rows.length) })}</small>
           )}
         </div>
+      )}
+      </>
       )}
     </div>
   );

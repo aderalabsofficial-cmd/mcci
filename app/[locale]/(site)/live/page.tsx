@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { PageHero, Section, SitePage } from '@/components/site/blocks';
+import { PageHero, Section, SitePage, Unavailable } from '@/components/site/blocks';
 import { Feed } from '@/components/site/feed';
 import { LiveRefresh } from '@/components/site/live-refresh';
 import { asLocale } from '@/i18n/locale';
 import { msg } from '@/lib/nav/model';
 import { siteFeed, siteStats } from '@/lib/site/admin';
 import { loadServices } from '@/lib/site/load';
+import { readOr } from '@/lib/site/read-or';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -21,28 +22,36 @@ export default async function LivePage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const m = (k: string) => msg(locale, `site.board.${k}`);
-  const [stats, feed, services] = await Promise.all([siteStats(), siteFeed(12), loadServices()]);
-  const tiles = [
-    [stats.services_issued, 'issued'],
-    [stats.corporate, 'corporate'],
-    [stats.associate, 'associate'],
-    [stats.services_open + stats.applications_open, 'open'],
-  ] as const;
+  const [stats, feed, services] = await Promise.all([siteStats(), siteFeed(12), readOr('services', loadServices())]);
+  const tiles = stats
+    ? ([
+        [stats.services_issued, 'issued'],
+        [stats.corporate, 'corporate'],
+        [stats.associate, 'associate'],
+        [stats.services_open + stats.applications_open, 'open'],
+      ] as const)
+    : null;
   return (
     <SitePage locale={locale}>
       <LiveRefresh seconds={60} />
       <PageHero locale={locale} title="site.board.title" sub="site.board.sub" />
       <Section n={1} title={m('activity')} sub={m('activitySub')} id="activity">
-        <div className="g4" style={{ marginBottom: 20 }}>
-          {tiles.map(([n, k]) => (
-            <div className="card st" key={k} data-tile={k}>
-              <b style={{ fontSize: 30, fontWeight: 800 }}>{n.toLocaleString('en-US')}</b>
-              <small className="muted" style={{ display: 'block' }}>
-                {m(k)}
-              </small>
-            </div>
-          ))}
-        </div>
+        {tiles ? (
+          <div className="g4" style={{ marginBottom: 20 }}>
+            {tiles.map(([n, k]) => (
+              <div className="card st" key={k} data-tile={k}>
+                <b style={{ fontSize: 30, fontWeight: 800 }}>{n.toLocaleString('en-US')}</b>
+                <small className="muted" style={{ display: 'block' }}>
+                  {m(k)}
+                </small>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ marginBottom: 20 }}>
+            <Unavailable locale={locale} />
+          </div>
+        )}
         <div className="card">
           <div className="ch">
             <h3>{m('feed')}</h3>

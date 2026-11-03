@@ -1,13 +1,14 @@
 import { Award } from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { C, Card, PageHero, Section, SitePage } from '@/components/site/blocks';
+import { C, Card, PageHero, Section, SitePage, Unavailable } from '@/components/site/blocks';
 import { EventsCalendar } from '@/components/site/events-calendar';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { voucherDate } from '@/lib/committee/voucher';
 import { msg } from '@/lib/nav/model';
 import { loadEvents, loadPosts, loadPublicMedia, postCategory } from '@/lib/site/load';
+import { readOr } from '@/lib/site/read-or';
 import { MediaGallery } from '@/components/content/media';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ post?: string; channel?: string }> };
@@ -28,7 +29,14 @@ export default async function NewsPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const m = (k: string, v?: Record<string, string>) => msg(locale, `site.news.${k}`, v);
-  const [allPosts, events, sp, media] = await Promise.all([loadPosts(30), loadEvents(), searchParams, loadPublicMedia()]);
+  const [read, events, sp, readMedia] = await Promise.all([
+    readOr('posts', loadPosts(30)),
+    readOr('events', loadEvents()),
+    searchParams,
+    readOr('media', loadPublicMedia()),
+  ]);
+  const allPosts = read ?? [];
+  const media = readMedia ?? [];
   const channel = (CHANNELS as readonly string[]).includes(sp.channel ?? '') ? sp.channel! : 'all';
   const posts = channel === 'all' ? allPosts : allPosts.filter((p) => p.category === channel);
   const open = allPosts.find((p) => p.id === sp.post) ?? null;
@@ -66,7 +74,9 @@ export default async function NewsPage({ params, searchParams }: Props) {
             </Link>
           ))}
         </nav>
-        {posts.length ? (
+        {!read ? (
+          <Unavailable locale={locale} />
+        ) : posts.length ? (
           <div className="g3">
             {posts.map((p) => (
               <Card
@@ -88,24 +98,28 @@ export default async function NewsPage({ params, searchParams }: Props) {
         )}
       </Section>
       <Section n={2} title={m('upcoming')} alt id="events">
-        <EventsCalendar
-          locale={locale}
-          events={events.map((e) => ({
-            id: e.id,
-            title: t(e.title, e.title_ur),
-            day: new Date(e.starts_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }),
-            when: new Date(e.starts_at).toLocaleString(locale === 'ur' ? 'ur-PK' : 'en-GB', {
-              timeZone: 'Asia/Karachi',
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            venue: e.venue ?? '',
-            seats: e.seats ? m('seats', { n: String(e.seats) }) : '',
-          }))}
-          t={{ prev: m('prevMonth'), next: m('nextMonth'), dayEvents: m('dayEvents'), noDayEvents: m('noDayEvents'), noEvents: m('noEvents'), events: m('events') }}
-        />
+        {!events ? (
+          <Unavailable locale={locale} />
+        ) : (
+          <EventsCalendar
+            locale={locale}
+            events={events.map((e) => ({
+              id: e.id,
+              title: t(e.title, e.title_ur),
+              day: new Date(e.starts_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }),
+              when: new Date(e.starts_at).toLocaleString(locale === 'ur' ? 'ur-PK' : 'en-GB', {
+                timeZone: 'Asia/Karachi',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+              venue: e.venue ?? '',
+              seats: e.seats ? m('seats', { n: String(e.seats) }) : '',
+            }))}
+            t={{ prev: m('prevMonth'), next: m('nextMonth'), dayEvents: m('dayEvents'), noDayEvents: m('noDayEvents'), noEvents: m('noEvents'), events: m('events') }}
+          />
+        )}
       </Section>
     </SitePage>
   );

@@ -31,6 +31,8 @@ test('every public page opens in English and Urdu, with the Urdu page right-to-l
     await page.context().clearCookies(); // the language choice is remembered in a cookie
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(heading);
+    // a "could not load" note appears only when a read failed (lib/site/read-or.ts); never on a healthy page
+    await expect(page.locator('[data-read-failed]')).toHaveCount(0);
     await page.goto(`/ur${path === '/' ? '' : path}`);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

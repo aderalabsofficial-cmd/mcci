@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { expect, type Page, test } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -147,6 +148,8 @@ test.afterAll(async () => {
     .in('phone', [...phones, phone(90)]);
   await admin.from('outreach_suppressions').delete().in('phone', phones);
   await admin.from('whatsapp_templates').delete().like('name', `%${tag.toLowerCase()}%`);
+  // the masters go back to not submitted: the provider list in this test was the fake one
+  await admin.from('whatsapp_templates').update({ status: 'LOCAL', provider_id: null }).like('name', 'mcci_%');
   await admin.from('members').delete().in('company_id', companies);
   await admin.from('companies').delete().in('id', companies);
   if (accounts.companyId) await admin.from('outreach_contacts').delete().eq('company_id', accounts.companyId);
@@ -168,7 +171,8 @@ async function setSettings(page: Page, s: { sending?: boolean; threshold?: numbe
 
 test('connection is healthy only when every step passes; secrets never reach the page', async ({ page }) => {
   await signInAs(page, 'sg');
-  await page.goto('/admin/whatsapp/settings');
+  // start from sending off: a run stopped part-way through this file can leave it on
+  await setSettings(page, { sending: false });
   await expect(page.locator('[data-secret-state="true"]')).toHaveText('Set');
   // a tick box stays a tick box, with its words beside it, not a full-width field
   for (const field of ['sending-enabled', 'consent-open']) {
@@ -423,6 +427,8 @@ test('campaign: preview explains exclusions, approval by someone else, exact-cou
   const c = officer.locator('[data-composer]');
   await expect(c.locator('[data-sender]')).toContainText('+92 61 000000');
   await c.locator('[data-field="campaign-name"]').fill(`Renewal ${tag}`);
+  // the master template is the default; this campaign uses a plain approved template
+  await c.locator('[data-field="kind-template"]').check();
   await c.locator('[data-field="campaign-category"]').selectOption('membership');
   await c.locator('[data-field="campaign-template"]').selectOption({ label: `${TEMPLATE} · en · UTILITY` });
   await c.locator('[data-action="wa.audience.preview"]').click();
@@ -579,6 +585,7 @@ test('selecting in the directory carries to the composer; the new filters work',
     .check();
   await page.locator('[data-action="wa.compose.open"]').click();
   await expect(page.locator('[data-field="who-selected"]')).toBeChecked();
+  await page.locator('[data-field="kind-template"]').check();
   await page.locator('[data-field="campaign-template"]').selectOption({ label: `${TEMPLATE} · en · UTILITY` });
   await page.locator('[data-field="campaign-category"]').selectOption('membership');
   await page.locator('[data-action="wa.audience.preview"]').click();
@@ -603,6 +610,144 @@ test('selecting in the directory carries to the composer; the new filters work',
   await page.goto(`/admin/business-directory?f=${contacted}`);
   await expect(page.locator('[data-directory] tbody tr', { hasText: names[0]! })).toBeVisible();
   await expect(page.locator('[data-directory] tbody tr', { hasText: names[3]! })).toHaveCount(0);
+});
+
+test('master templates: English and Urdu, approval only from the provider, fields and preview, five audience groups, a reviewed mixed draft, fields reach the provider', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await signInAs(page, 'sg');
+  await setSettings(page, { sending: true, threshold: 10 });
+
+  // four masters, each in two languages; none is approved until the provider lists it
+  await page.goto('/admin/whatsapp/templates');
+  await expect(page.locator('[data-master]')).toHaveCount(4);
+  await expect(page.locator('[data-master-version]')).toHaveCount(8);
+  await expect(page.locator('[data-master="membership"] [data-meta-category="UTILITY"]')).toBeVisible();
+  await expect(page.locator('[data-master="events"] [data-meta-category="MARKETING"]')).toBeVisible();
+  await fake('/__test/templates', [
+    { name: TEMPLATE, language: 'en', status: 'APPROVED', category: 'UTILITY', id: 't1' },
+    { name: 'mcci_official_announcement', language: 'en', status: 'APPROVED', category: 'MARKETING', id: 'm1' },
+  ]);
+  await page.locator('[data-action="wa.templates.sync"]').click();
+  const card = page.locator('[data-master="announcements"]');
+  await expect(card.locator('[data-master-version="en"] [data-master-status="APPROVED"]')).toBeVisible();
+  await expect(card.locator('[data-master-version="ur"] [data-master-status="NOT_ON_PROVIDER"]')).toBeVisible();
+  await expect(card.locator('[data-master-version="en"] [data-master-locked="meta"]')).toBeVisible();
+  await card.locator('[data-master-version="ur"] [data-action="wa.master.submission"]').click();
+  await expect(card.locator('[data-submission="ur"]')).toContainText('mcci_official_announcement');
+  // an administrator may change wording Meta does not hold; a broken variable is refused before saving
+  const ur = card.locator('[data-master-version="ur"]');
+  await ur.locator('[data-field="master-body-ur"]').fill('{{1}} بغیر متن');
+  await expect(ur.locator('[data-wording-problem]')).toBeVisible();
+  await expect(ur.locator('[data-action="wa.master.save"]')).toBeDisabled();
+
+  // the audience, set here whatever earlier tests left: 0 consented with an open conversation, 1 consented without
+  // one, 2 opted out, 3 never consented
+  await admin.from('outreach_suppressions').delete().in('phone', [phone(0), phone(1)]);
+  await grant(0, ['announcements']);
+  await grant(1, ['announcements']);
+  await grant(2, ['announcements']);
+  await admin.from('outreach_consents').delete().eq('company_id', companies[3]!);
+  await admin
+    .from('outreach_suppressions')
+    .upsert({ phone: phone(2), reason: 'E2E opt-out', source: 'staff', active: true }, { onConflict: 'phone' });
+  await admin.from('whatsapp_conversations').update({ last_inbound_at: null }).in('phone', [phone(1), phone(2), phone(3)]);
+  expect((await postEvent(page, inbound(phone(0), 'Hello MCCI'))).status()).toBe(200);
+
+  const f = encodeURIComponent(JSON.stringify(filterOf()));
+  await page.goto(`/admin/whatsapp/campaigns/new?f=${f}`);
+  const c = page.locator('[data-composer]');
+  await expect(c.locator('[data-field="kind-master"]')).toBeChecked();
+  await c.locator('[data-field="campaign-name"]').fill(`Office timings ${tag}`);
+  // Urdu is not approved: it can be prepared, never turned into a campaign
+  await c.locator('[data-field="master-language-ur"]').check();
+  await expect(c.locator('[data-master-not-approved]')).toBeVisible();
+  await expect(c.locator('[data-action="wa.master.create"]')).toBeDisabled();
+  await c.locator('[data-field="master-language-en"]').check();
+  await c.locator('[data-field="master-subject"]').fill('Revised office timings');
+  await c.locator('[data-field="master-summary"]').fill('From 1 December the Secretariat opens 9:00 am to 4:00 pm.');
+  await c.locator('[data-field="master-link"]').fill('https://example.org/news');
+  await expect(c.locator('[data-master-preview]')).toContainText('Subject: Revised office timings');
+  await c.locator('[data-action="wa.master.audience"]').click();
+  await expect(c.locator('[data-breakdown-total="4"]')).toBeVisible();
+  await expect(c.locator('[data-group="free_text"]')).toHaveAttribute('data-count', '1');
+  await expect(c.locator('[data-group="template_required"]')).toHaveAttribute('data-count', '1');
+  await expect(c.locator('[data-group="opted_out"]')).toHaveAttribute('data-count', '1');
+  await expect(c.locator('[data-group="no_consent"]')).toHaveAttribute('data-count', '1');
+  await expect(c.locator('[data-group="invalid"]')).toHaveAttribute('data-count', '0');
+  await expect(c.locator(`[data-recipient="${memberNos[3]}"]`)).toHaveAttribute('data-row-group', 'no_consent');
+  await expect(c.locator('[data-capacity]')).toBeVisible();
+  // mixed only when chosen: the free-text version starts from the same filled message
+  await c.locator('[data-field="master-mixed"]').check();
+  await expect(c.locator('[data-field="master-mixed-body"]')).toHaveValue(/Revised office timings/);
+  await c.locator('[data-action="wa.master.create"]').click();
+  await expect(page.locator('[data-campaign-status="draft"]')).toBeVisible();
+  const id = new URL(page.url()).searchParams.get('id')!;
+  const { data: rec } = await admin.from('whatsapp_campaign_recipients').select('company_id, kind, status, reason').eq('campaign_id', id);
+  const of = (i: number) => rec!.find((r) => r.company_id === companies[i])!;
+  expect(of(0)).toMatchObject({ kind: 'text', status: 'pending' });
+  expect(of(1)).toMatchObject({ kind: 'template', status: 'pending' });
+  expect(of(3)).toMatchObject({ status: 'skipped', reason: 'no_consent' }); // never silently left out
+
+  // launch: the template carries the fields, the open conversation gets the reviewed free text
+  const before = (await sent()).length;
+  await page.locator('[data-action="wa.campaign.submit"]').click();
+  await expect(page.locator('[data-campaign-status="approved"]')).toBeVisible();
+  await page.locator('[data-action="wa.campaign.start"]').click();
+  await page.locator('[data-action="wa.campaign.start.confirm"]').click();
+  await page.locator('[data-action="wa.campaign.batch"]').click();
+  await expect(page.locator('[data-campaign-status="completed"]')).toBeVisible({ timeout: 20_000 });
+  await expect.poll(async () => (await sent()).length).toBe(before + 2);
+  const out = (await sent()).slice(before);
+  const tpl = out.find((m) => m.to === phone(1))!;
+  expect(tpl.type).toBe('template');
+  expect(tpl.template!.name).toBe('mcci_official_announcement');
+  expect(tpl.template!.components[0]!.parameters.map((p) => p.text)).toEqual([
+    'Contact 1',
+    names[1],
+    'Revised office timings',
+    'From 1 December the Secretariat opens 9:00 am to 4:00 pm.',
+    'https://example.org/news',
+  ]);
+  const text = out.find((m) => m.to === phone(0))!;
+  expect(text.type).toBe('text');
+  expect(text.body).toContain('Revised office timings');
+});
+
+test('campaign readiness: every figure says where it comes from; an administrator confirms the limit; nothing is raised from counts', async ({
+  page,
+}) => {
+  const { data: original } = await admin.from('whatsapp_quota').select('*').single();
+  try {
+    await signInAs(page, 'sg');
+    await page.goto('/admin/whatsapp/readiness');
+    await expect(page.locator('[data-section="account"] [data-source="confirmed"]')).toBeVisible();
+    await expect(page.locator('[data-section="capacity"] [data-source="counted"]')).toBeVisible();
+    await expect(page.locator('[data-value-verification]')).toHaveAttribute('data-value-verification', original!.verification);
+    await expect(page.locator('[data-issue="statuses"], [data-issue="verification"]').first()).toBeVisible();
+    const week = await page.locator('[data-value-week]').getAttribute('data-value-week');
+
+    await page.locator('[data-field="quota-tier"]').fill('TIER_2K');
+    await page.locator('[data-field="quota-limit"]').fill('2000');
+    await page.locator('[data-field="quota-verification"]').selectOption('verified');
+    await page.locator('[data-field="quota-note"]').fill(`E2E ${tag}: WhatsApp Manager shows Tier 2K`);
+    await page.locator('[data-action="wa.quota.confirm"]').click();
+    await expect(page.locator('[data-section="confirm"]').getByRole('status')).toContainText('Account figures confirmed');
+    await expect(page.locator('[data-value-limit]')).toHaveAttribute('data-value-limit', '2000');
+    await expect(page.locator('[data-value-target]')).toHaveAttribute('data-value-target', '1000');
+    await expect(page.locator('[data-issue="verification"]')).toHaveCount(0);
+    await expect(page.locator('[data-value-week]')).toHaveAttribute('data-value-week', week!); // confirming changes no count
+    const { data: row } = await admin.from('whatsapp_quota').select('note, confirmed_by, source').single();
+    expect(row).toMatchObject({ note: `E2E ${tag}: WhatsApp Manager shows Tier 2K`, confirmed_by: accounts.sg!.id });
+    // the audit log is not granted to the service role: read it through the local SQL hook
+    const reason = execSync(process.env.MCCI_IT_SQL_CMD ?? '', {
+      input: "select reason from public.audit_log where object = 'whatsapp_quota' order by id desc limit 1;",
+    }).toString();
+    expect(reason).toContain(`E2E ${tag}`);
+  } finally {
+    await admin.from('whatsapp_quota').update(original!).eq('id', true);
+  }
 });
 
 test('member opt-in: closed until MCCI opens it, then the member chooses and can withdraw', async ({

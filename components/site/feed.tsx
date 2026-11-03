@@ -1,3 +1,4 @@
+import { Unavailable } from '@/components/site/blocks';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 import type { FeedRow } from '@/lib/site/admin';
@@ -24,13 +25,28 @@ export function ago(iso: string | null, locale: Locale): string {
   return rtf.format(Math.round(s / 86400), 'day');
 }
 
-/** the anonymised activity list (prototype live()): what, token, when, status — never a name */
-export function Feed({ locale, rows, services }: { locale: Locale; rows: FeedRow[]; services: ServiceType[] }) {
+const DESIGN_NAMES = ['co', 'ebil', 'visa', 'guar', 'sample', 'other', 'att'];
+
+/**
+ * The anonymised activity list (prototype live()): what, token, when, status — never a name. rows null: the feed could
+ * not be read; services null: the seven services keep the home page's names.
+ */
+export function Feed({
+  locale,
+  rows,
+  services,
+}: {
+  locale: Locale;
+  rows: FeedRow[] | null;
+  services: ServiceType[] | null;
+}) {
+  if (!rows) return <Unavailable locale={locale} />;
   if (!rows.length) return <p className="em">{msg(locale, 'site.live.none')}</p>;
   const name = (kind: string) => {
     if (kind === 'membership') return msg(locale, 'site.live.membership');
-    const s = services.find((x) => x.key === kind);
-    return s ? (locale === 'ur' ? s.name_ur || s.name_en : s.name_en) : kind;
+    const s = services?.find((x) => x.key === kind);
+    if (s) return locale === 'ur' ? s.name_ur || s.name_en : s.name_en;
+    return DESIGN_NAMES.includes(kind) ? msg(locale, `landing.svc_${kind}`) : kind;
   };
   return (
     <div className="feed" role="list">

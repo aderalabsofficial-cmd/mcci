@@ -237,3 +237,118 @@ member opt-in stay off. Meta has 0 templates and MCCI has 0 consents.
 Not checked live: the signed-in screens, and IQPigeon's own webhook test, which a person has to press in its dashboard.
 No real message has been sent. Before running `scripts/ops/whatsapp-env.sh` again, correct the phone number ID in
 `.env.iqpigeon.local`: it differs from the value on the server, which is the one the provider confirmed.
+
+### Phone number ID, 3 Nov 2026
+
+**Cause.** `.env.iqpigeon.local` held `1483566256955179`, the number in the owner's Meta screenshot address, not the phone
+number ID. IQPigeon reports `1462393916949933` for MCCI's connection `63acfb76-…`: the production app's own check (step
+"isolation", which compares the two) passed with it on 2 and 3 Nov. Production never had the wrong value; running the copy
+script with the old file would have put it there, and the app would then have refused every webhook.
+
+**Fix.** The local file now has `1462393916949933`. `scripts/ops/whatsapp-env.sh` refuses to change the phone number ID
+when it differs from the server's, unless `--replace-phone-id` is given because MCCI's number really changed; `--check`
+compares it too. What `1483566256955179` identifies in Meta (a portfolio or another asset) was not established.
+
+**Production settings.** All seven names the app reads are set: `IQPIGEON_API_URL`, `IQPIGEON_API_KEY`,
+`IQPIGEON_CONNECTION_ID`, `IQPIGEON_PHONE_NUMBER_ID`, `IQPIGEON_WEBHOOK_SECRET`, `CRON_SECRET`, `APP_URL`. Nothing is
+missing. Whether the local file's key and webhook secret equal production's was not compared.
+
+**Webhook test.** IQPigeon offers it only as a button on its signed-in dashboard (`POST /webhooks/{id}/test`, a web route
+with no API equivalent), so it needs the owner. `whatsapp_health.webhook_test_at` is still empty: no test has arrived.
+The only webhook requests in the server log on 3 Nov were the release checks' own unsigned probes, refused with 401.
+
+## 10. MCCI master templates (owner, 3 Nov 2026; migration 0630)
+
+Four reusable templates, one per campaign category, each in English (`en`) and Urdu (`ur`). Staff choose one, fill in
+the subject and details, and reach the same guided path as any campaign. Nobody creates a new template per message.
+
+| Category (composer) | Template name on Meta | Meta category | Variables in order |
+|---|---|---|---|
+| Official MCCI announcements | `mcci_official_announcement` | Marketing | contact person, business name, subject, summary, link |
+| Membership & administrative updates | `mcci_membership_update` | Utility | contact person, business name, membership number, subject, details, action needed (optional, default "None"), link |
+| Events & invitations | `mcci_event_invitation` | Marketing | contact person, business name, event, date, time, venue, confirm-by date, link |
+| Business opportunities & initiatives | `mcci_business_opportunity` | Marketing | contact person, business name, opportunity, sector, summary, last date, link |
+
+**Why these categories.** Membership updates concern the member's own membership (application, renewal, documents,
+payment): Utility. Announcements, invitations and opportunities are informational or promotional messages MCCI starts:
+Marketing. They are not forced into Utility. Meta may re-categorise on review; the category shown is the one Meta reports.
+
+**Variables carry structured content only.** Contact person, business name and membership number come from MCCI's
+records for each recipient. The other fields are short, single-line values with a fixed purpose and maximum length
+(subject 80, summary or details 500, names 80, date or time 40, venue 120, sector 60, link 200 and `https://` only);
+line breaks, tabs, five spaces in a row and `{{` are refused (Meta's parameter rules). The wording around them is fixed
+and approved by Meta, so a field cannot become an unrestricted free-form message.
+
+**Approval.** IQPigeon's API lists templates but cannot create or submit them (`POST /templates/sync` does nothing; its
+dashboard has no template pages). Each version is therefore submitted in WhatsApp Manager, Message templates, Create
+template, using the name, category, language, header, body, footer and sample values shown under "What to submit to
+Meta" on the Templates screen. Statuses arrive only through the provider sync: `LOCAL` (never submitted),
+`NOT_ON_PROVIDER`, `PENDING`, `APPROVED`, `REJECTED`, `PAUSED`, `DISABLED`. A campaign can be made from a version only
+when it is `APPROVED`. The English approval does not approve the Urdu version.
+
+**Editing.** Administrators with Approve level change a version's header, body or footer while Meta does not hold it
+(not approved, not under review). The body must use each of its variables exactly once, never first, last or next to
+another. Each save is a new version, audited. Approved or pending wording is locked; changing it means a new submission.
+The generic template editor cannot change a master's wording or variables.
+
+**Composer.** "MCCI master template" is the first message type. Staff pick the template and language, fill in the
+fields, see the message as it will arrive, then "Check the audience": every business in the selection is in exactly
+one group: can receive free text (conversation open in the last 24 hours), needs the template, no consent for this
+category, opted out, no valid number. Everyone who may receive it gets the template. Only if the operator ticks the
+mixed option, with both groups shown, do those with an open conversation get a reviewed free-text version instead;
+each recipient's type is fixed in the snapshot. Recipients who may not receive it are recorded as skipped with the
+reason. Individual messages use the same path with one business selected. Submission, approval above the size limit,
+scheduling, launch and the exact-count confirmation are unchanged. Consent, opt-out and approval are checked again
+immediately before each message is dispatched.
+
+**Status on 3 Nov 2026.** All eight versions are `LOCAL` locally and are not on the provider: none has been submitted to
+Meta, none is approved. TODO(MCCI): the Secretary General reviews the wording; then each version is submitted in
+WhatsApp Manager and the Templates screen is synchronised.
+
+## 11. Quota, scheduling and readiness (owner's directives of 3 Nov 2026; migration 0640)
+
+**What Meta Support confirmed (3 Nov 2026).** Business portfolio `1641814260669555`, WABA `937323199090897`, technology
+provider IQPigeon. Messaging tier: untiered, 250 unique recipients per rolling 24 hours, shared by every number in the
+portfolio. Business Verification not completed; after verification 2,000; then 10,000 automatically when quality is
+Medium or High and at least half the current limit (1,000) is reached within a seven-day moving period. Meta also found
+the `statuses` webhook subscription missing.
+
+**The quota service.** `public.whatsapp_quota` holds the portfolio, WABA, tier, limit, verification, phone and template
+quality, the source (Meta Support, an administrator from WhatsApp Manager, or the provider) with a note, who confirmed
+it and when. IQPigeon's API reports none of these, so they are entered and confirmed, never fetched or guessed. Seeded
+with Meta Support's figures above, dated 3 Nov 2026. Nothing raises the limit from MCCI's own counts: an administrator
+(Platform level 3) confirms a new tier on Campaign Readiness, audited with the note.
+
+- **What counts.** Unique numbers that received a template message (a conversation MCCI started) in the last 24 hours,
+  from this CRM, plus a recorded figure for other numbers or tools in the same portfolio (valid for 24 hours).
+  Repeat messages to the same person, and free text inside an open conversation, take no new place.
+- **Fail-safe.** No confirmed limit, or a confirmation older than the chosen number of days (default 7): template
+  messages to new recipients are held. Nothing is sent on a guess.
+- **Dispatch.** Before every batch the room is recalculated. A new template recipient with no room stays pending for
+  the next window: never skipped for capacity, never given a new idempotency key. Individual template messages obey the
+  same limit. MCCI's own daily cap (`dailyLimit`, WhatsApp Settings) stays as an extra brake; it has no built-in value.
+- **Campaign size.** Up to 5,000 selected members per campaign (`maxCampaign`, configurable). Approval by a second
+  person with Approve level above the size threshold is unchanged.
+- **Schedule.** Each campaign with waiting recipients shows, window by window, how many can go at the confirmed limit
+  (an estimate; the dispatcher decides at each batch). Pause, resume and cancel act on what has not gone.
+
+**Campaign Readiness** (`/admin/whatsapp/readiness`). Outstanding issues; account and limit (confirmed, with source and
+date); capacity now (counted: reached in 24 hours, other numbers, room, next free place, recipients waiting, members
+with consent); scaling (counted: unique recipients in 7 days, Meta's target of half the limit, remaining; quality and
+last tier as confirmed); master templates approved; delivery statuses received. Confirmation form for administrators.
+
+**Tests.** `supabase/tests/database/396_wa_quota.test.sql` runs 3,000 simulated businesses (created and rolled back in
+the test; no real member): 250 with 100 used by another number, usage older than 24 hours, stale and unknown limits,
+2,000, the rolling window, 10,000, seven-day use and target, one message per recipient, a new recipient refused when
+there is no room, consent and opt-out exclusions recorded, permissions.
+
+### Status, 3 Nov 2026
+
+| | |
+|---|---|
+| Implemented and tested (locally, mock provider) | Master templates EN + UR with approval gate, wording rules and Meta submission details; audience in five groups; reviewed mixed campaigns; quota with fail-safe, shared usage, rolling window and seven-day monitor; scheduling across windows; Campaign Readiness; consent, opt-out, idempotency, retries, pause/resume/cancel, approval and audit (earlier work) |
+| Configured, awaiting Meta approval | All eight master versions: submit each in WhatsApp Manager (details on the Templates screen); status `LOCAL` until then |
+| Awaiting MCCI Business Verification | The limit stays 250 until Meta verifies the portfolio; then confirm the new tier on Campaign Readiness |
+| Awaiting IQPigeon | Subscribe the `statuses` webhook field for MCCI's number (Meta Support finding); fix the open provider defects in §6 before a real campaign |
+| Awaiting member consent | No member has given WhatsApp consent; member opt-in stays closed until MCCI approves the consent wording |
+| Awaiting production acceptance | Not released; signed-in checks on the live site with an authorised staff account; no real bulk sending without the owner's explicit approval |

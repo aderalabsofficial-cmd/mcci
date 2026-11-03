@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import type { Master } from '@/lib/whatsapp/masters';
 
 /** WhatsApp reads through the person's own session: row-level security and api.wa_* decide what each designation sees. */
 export interface Dashboard {
@@ -89,6 +90,65 @@ export async function loadTemplates() {
   return data ?? [];
 }
 export type TemplateRow = Awaited<ReturnType<typeof loadTemplates>>[number];
+
+/** the account limit as last confirmed, and what this system counts itself (0640) */
+export interface QuotaStatus {
+  portfolioId: string | null;
+  wabaId: string | null;
+  tier: string | null;
+  limit: number | null;
+  verification: 'unknown' | 'not_verified' | 'pending' | 'verified';
+  phoneQuality: string;
+  templateQuality: string;
+  source: 'meta_support' | 'admin' | 'provider';
+  note: string | null;
+  confirmedAt: string | null;
+  confirmedBy: string | null;
+  staleDays: number;
+  problem: 'unknown' | 'stale' | null;
+  used24: number;
+  external24: number;
+  externalAt: string | null;
+  room: number;
+  nextFreeAt: string | null;
+  week: number;
+  weekTarget: number | null;
+  eligible: number;
+  templatesApproved: number;
+  mastersApproved: number;
+  statusEvents: number;
+  lastStatusAt: string | null;
+  waitingRecipients: number;
+  health: string | null;
+}
+export async function loadQuota(): Promise<QuotaStatus> {
+  const db = await createClient();
+  const { data, error } = await db.schema('api').rpc('wa_quota_status');
+  if (error) throw new Error(`quota: ${error.code}`);
+  return data as unknown as QuotaStatus;
+}
+
+export interface Schedule {
+  problem: 'unknown' | 'stale' | null;
+  waiting: number;
+  needPlaces?: number;
+  windows: { from: string; recipients: number }[];
+  beyond?: number;
+}
+export async function loadSchedule(id: string): Promise<Schedule> {
+  const db = await createClient();
+  const { data, error } = await db.schema('api').rpc('wa_campaign_schedule', { p_id: id });
+  if (error) throw new Error(`schedule: ${error.code}`);
+  return data as unknown as Schedule;
+}
+
+/** the four master templates with each language version's wording and the provider's status (0630) */
+export async function loadMasters(): Promise<Master[]> {
+  const db = await createClient();
+  const { data, error } = await db.schema('api').rpc('wa_masters');
+  if (error) throw new Error(`masters: ${error.code}`);
+  return (data ?? []) as unknown as Master[];
+}
 
 export async function loadCampaigns() {
   const db = await createClient();
