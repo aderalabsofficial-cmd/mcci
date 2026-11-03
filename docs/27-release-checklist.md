@@ -96,7 +96,7 @@ login; admin 404 (by design); no `mcci-web` errors after the switch.
 **Found at this release, not changed:** the production WhatsApp setting `sendingEnabled` is **on**. The audit log shows
 one change, 3 Nov 05:55 UTC, by a signed-in staff account through the Settings page ("WhatsApp settings changed"); it did
 not come from a release step or a test. With it on, staff can send individual template messages within the confirmed
-limit; campaigns still need approval and no template is approved. The owner decides whether it stays on.
+limit; campaigns still need approval and no template is approved. **Owner decided on 3 Nov to leave it on.**
 
 Before the release the full local suite had 20 failures, all traced: three real defects fixed in `9abab91` (Templates
 page width on phones, `wa_quota_confirm` without `WHERE` refused by safeupdate, two test faults); the rest were sign-in
