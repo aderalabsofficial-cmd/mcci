@@ -80,6 +80,29 @@ Live checks passed, signed out: public pages 200; unknown reference "not found";
 Still open: signed-in pages not checked live (needs the owner or staff); print-and-scan test on the real paper.
 `QR_SIGNING_KEY` was set on 3 Nov 2026 (docs/26 §4): altered QR signatures are refused live.
 
+## 3b. Deployed 3 Nov 2026 (owner approved): WhatsApp master templates, quota, Campaign Readiness
+
+`9abab91` is live; `7ff74ee` and `059f13b` kept for rollback. Tooling `/opt/mcci-deploy-9abab91` (clean); migration
+sha256 `6fcd37d3f5c73179` (0630) and `d32c079801f14a93` (0640) = the reviewed files. Backup `mcci-20261103T093524Z`
+verified, restore drill PASS (14 lines). 0630 and 0640 applied one at a time; 0 pending, history newest `20261112000640`.
+Checked after: 4 masters, 8 versions, all eight `mcci_*` templates `LOCAL` (none submitted to Meta, 0 approved);
+quota row UNTIERED / 250 / not_verified / meta_support, confirmed 3 Nov (stale after 10 Nov unless reconfirmed);
+no `anon` execute on any `api` function; every definer function pins `search_path`; 0 campaigns, 0 messages ever sent.
+Nginx, DNS, firewall, Supabase stack and other sites not touched; scheduled jobs not installed.
+
+Live checks passed, signed out: `/api/health` release `9abab91`; public pages 200 (EN and UR); portal redirects to
+login; admin 404 (by design); no `mcci-web` errors after the switch.
+
+**Found at this release, not changed:** the production WhatsApp setting `sendingEnabled` is **on**. The audit log shows
+one change, 3 Nov 05:55 UTC, by a signed-in staff account through the Settings page ("WhatsApp settings changed"); it did
+not come from a release step or a test. With it on, staff can send individual template messages within the confirmed
+limit; campaigns still need approval and no template is approved. The owner decides whether it stays on.
+
+Before the release the full local suite had 20 failures, all traced: three real defects fixed in `9abab91` (Templates
+page width on phones, `wa_quota_confirm` without `WHERE` refused by safeupdate, two test faults); the rest were sign-in
+and server-action stalls from memory pressure on the development PC (Postgres 10–18 s on one-row updates, auth
+timeouts). A clean full run on a less loaded machine or CI is still owed.
+
 ## 4. Deployment (docs/20, docs/25 §4 — needs the owner's approval)
 
 1. Fresh backup + verify + restore drill.
