@@ -819,3 +819,22 @@ checklist rows removed and audited; `notification_reads` new). Evidence: docs/25
 Rollback: `scripts/deploy/release.sh 662da8b` brings back the previous app; 0470–0510 stay (additive except the removed
 `pphoto` checklist rows and the staff / company separation), so the old app keeps working with them. The full rollback
 is restoring `mcci-20261029T091547Z`, which loses everything written after it.
+
+## Owner's tools before launch (4 Nov 2026)
+
+Both run on the server, by the owner, from `/opt/mcci-web/current` with `node --env-file=/etc/mcci-web/env`. Take and
+verify a backup first (`scripts/selfhost/backup.sh`). Neither is run by a release.
+
+**Demo accounts** (`scripts/ops/demo-accounts.mjs`, migration 0660): without arguments a dry run; `--apply` makes an
+applicant (with a demo company), a proposer and a seconder in each class (active demo members, DEMO- numbers) and
+staff in Accounts Officer, IT Convener, President (Signatory), Membership Officer and Membership Committee Convener —
+confirmed already, addresses at `demo.mcci.test`, passwords printed once to the terminal. Vice President and Assistant
+Secretary are skipped until MCCI creates those designations (with their permissions) in Staff & Audit. Staff still set
+up 2-step sign-in. `--remove` blocks their sign-in, deactivates the staff rows (kept for the audit log) and prints the
+demo purge for their companies.
+
+**Clean-up of test records** (`scripts/ops/launch-cleanup.mjs`, migration 0670): without arguments lists every company
+that is not demo and has no member; `--companies <ids>` checks the chosen ones; `--apply` marks them demo (refused,
+with nothing marked, when one holds a member, an application past draft, a payment voucher or a document); the removal
+is then `scripts/ops/demo-purge.mjs` (dry run, then `--apply`). Certificates are withdrawn and deleted on the
+Certificates screen instead (0650), keeping their audit trail.
