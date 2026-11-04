@@ -125,10 +125,11 @@ export async function startApplication(form: FormData): Promise<void> {
   await requireUser();
   const supabase = await createClient();
   const { error } = await supabase.schema('api').rpc('app_start');
-  if (error && error.hint !== 'already_member') throw new Error(`app_start: ${error.message}`);
+  if (error && error.hint !== 'already_member' && error.hint !== 'claim_pending') throw new Error(`app_start: ${error.message}`);
   if (!error) await fillFromSignup(supabase);
   refresh();
-  redirect({ href: error ? '/portal/membership' : '/portal/join', locale });
+  // an existing membership waiting for approval: the dashboard says so (migration 0680)
+  redirect({ href: error ? (error.hint === 'claim_pending' ? '/portal' : '/portal/membership') : '/portal/join', locale });
 }
 
 // ───────── draft autosave (wiz.step, wiz.next, wiz.save, wiz.biz, wiz.nat.*, wiz.juris, wiz.addr, wiz.flag, wiz.declare) ─────────

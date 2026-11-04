@@ -15,36 +15,35 @@
       </tr>
       <tr>
         <td style="padding: 24px">
-          <h1 style="font-size: 20px; margin: 0 0 12px">Confirm your email address</h1>
+          <h1 style="font-size: 20px; margin: 0 0 12px">Your sign-up code</h1>
           <p style="margin: 0 0 18px; line-height: 1.6">
-            Open the button below to activate your MCCI account ({{ .Email }}). Then continue with the membership form.
+            Type this code on the MCCI sign-up page to confirm your email address ({{ .Email }}). It works for one hour.
           </p>
-          <p style="margin: 0 0 22px">
-            <a
-              href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=signup&amp;next=/portal"
-              style="
-                display: inline-block;
-                padding: 12px 20px;
-                border-radius: 12px;
-                background: #1b4f9c;
-                color: #ffffff;
-                font-weight: bold;
-                text-decoration: none;
-              "
-            >
-              Confirm my email
-            </a>
+          <p
+            style="
+              margin: 0 0 22px;
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 8px;
+              color: #0b2a5b;
+              text-align: center;
+              background: #f3f6f2;
+              border-radius: 12px;
+              padding: 14px 0;
+            "
+          >
+            {{ .Token }}
           </p>
           <div
             dir="rtl"
             lang="ur"
             style="border-top: 1px solid #eadfc6; padding-top: 16px; line-height: 2; font-size: 16px"
           >
-            اپنا ایم سی سی آئی اکاؤنٹ فعال کرنے کے لیے اوپر والا بٹن کھولیں، پھر رکنیت کا فارم جاری رکھیں۔
+            اپنا ای میل ایڈریس تصدیق کرنے کے لیے یہ کوڈ ایم سی سی آئی کے سائن اپ صفحے پر لکھیں۔ یہ کوڈ ایک گھنٹے تک کام کرتا ہے۔
           </div>
           <p style="margin: 18px 0 0; font-size: 12px; color: #55687f">
-            If you did not create this account, ignore this email. · اگر آپ نے یہ اکاؤنٹ نہیں بنایا تو اس ای میل کو نظر
-            انداز کریں۔
+            Never share this code. If you did not sign up, ignore this email. · یہ کوڈ کسی کو نہ بتائیں۔ اگر آپ نے سائن اپ
+            نہیں کیا تو اس ای میل کو نظر انداز کریں۔
           </p>
         </td>
       </tr>

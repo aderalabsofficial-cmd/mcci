@@ -5,13 +5,13 @@ import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
-import { createClient, createStatelessClient } from '@/lib/supabase/server';
-import { classifyIdentifier, normalizeMobile } from './identifier';
+import { createClient } from '@/lib/supabase/server';
+import { classifyIdentifier } from './identifier';
 
 /**
- * Forgot / reset password and account registration (docs/16 C1, action register.start). Supabase Auth sends the
- * emails through ITS SMTP settings; links point at /auth/confirm on APP_URL — never at the request's Host header,
- * which a client controls.
+ * Forgot / reset password (docs/16 C1). Sign-up is lib/auth/signup-actions.ts (a code by email since 4 Nov 2026).
+ * Supabase Auth sends the emails through ITS SMTP settings; links point at /auth/confirm on APP_URL — never at the
+ * request's Host header, which a client controls.
  */
 export interface AccountFormState {
   error?: string;
@@ -77,78 +77,4 @@ export async function updatePassword(_: AccountFormState, form: FormData): Promi
   await supabase.auth.signOut({ scope: 'others' });
   redirect({ href: '/login', locale });
   return {};
-}
-
-const registerSchema = z.object({
-  fullName: z.string().trim().min(2).max(120),
-  email: z.string().trim().toLowerCase().email().max(254),
-  password: newPassword,
-  businessName: z.string().trim().max(200),
-  mobile: z.string().trim().max(30),
-});
-
-export async function registerAccount(_: AccountFormState, form: FormData): Promise<AccountFormState> {
-  const locale = asLocale(String(form.get('locale') ?? 'en'));
-  const password = String(form.get('password') ?? '');
-  if (password !== String(form.get('confirm') ?? '')) return { error: msg(locale, 'auth.resetPage.mismatch') };
-  const parsed = registerSchema.safeParse({
-    fullName: form.get('fullName'),
-    email: form.get('email'),
-    password,
-    businessName: form.get('businessName') ?? '',
-    mobile: form.get('mobile') ?? '',
-  });
-  if (!parsed.success) {
-    const weak = parsed.error.issues.some((i) => i.path[0] === 'password');
-    return { error: msg(locale, weak ? 'auth.registerPage.weak' : 'auth.errors.required') };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: confirmLink(locale, '/portal'),
-      // profiles.full_name and profiles.lang come from this metadata (trigger handle_new_user, migration 0120)
-      // business_name and mobile only fill in the first draft of the membership form (startApplication)
-      data: {
-        full_name: parsed.data.fullName,
-        lang: locale,
-        business_name: parsed.data.businessName,
-        mobile: normalizeMobile(parsed.data.mobile) ?? '',
-      },
-    },
-  });
-  if (error?.code === 'weak_password') return { error: msg(locale, 'auth.registerPage.weak') };
-  const text = mailError(locale, error);
-  if (text) {
-    if ((error?.status ?? 500) >= 500) console.error('auth: confirmation email not sent', error?.status);
-    return { error: text };
-  }
-  // An existing address gets the same answer (Auth does not reveal it either).
-  return { sentTo: parsed.data.email };
-}
-
-/**
- * "Didn't get the email? Send it again" after registering: a new confirmation link for an account that is not
- * confirmed yet. Auth allows one email per address per minute (429 → "too many attempts") and answers the same for
- * unknown or already-confirmed addresses, so nothing about other accounts is revealed. Cookie-less, so the first
- * link keeps working when the resend is refused; the new link is the MCCI template's token_hash link (any device).
- */
-export async function resendConfirmation(_: AccountFormState, form: FormData): Promise<AccountFormState> {
-  const locale = asLocale(String(form.get('locale') ?? 'en'));
-  const parsed = registerSchema.shape.email.safeParse(form.get('email'));
-  if (!parsed.success) return { error: msg(locale, 'auth.errors.required') };
-  const supabase = await createStatelessClient();
-  const { error } = await supabase.auth.resend({
-    type: 'signup',
-    email: parsed.data,
-    options: { emailRedirectTo: confirmLink(locale, '/portal') },
-  });
-  const text = mailError(locale, error);
-  if (text) {
-    if ((error?.status ?? 500) >= 500) console.error('auth: confirmation email not re-sent', error?.status);
-    return { sentTo: parsed.data, error: text };
-  }
-  return { sentTo: parsed.data, resent: true };
 }

@@ -46,6 +46,40 @@ export default async function PortalHomePage({ params }: Props) {
     .order('created_at', { ascending: false })
     .limit(4);
   const tel = settings.chamber.tel.split(',')[0]!.replace(/[^\d]/g, '');
+  // an existing member's claim (migration 0680): while it waits, nothing else is shown (owner, 4 Nov 2026)
+  const { data: claim } = !member && !app && session
+    ? await supabase
+        .from('membership_claims')
+        .select('status, member_no, company_name, note, created_at')
+        .eq('user_id', session.userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+  if (claim?.status === 'pending')
+    return (
+      <>
+        <div className="hello">
+          <div>
+            <h1>
+              <L
+                en={msg('en', 'membership.home.hello', { name: first })}
+                ur={msg('ur', 'membership.home.hello', { name: first })}
+              />
+            </h1>
+          </div>
+        </div>
+        <div className="banner orange" role="status" data-testid="claim-pending">
+          <Ic name="clock" color="#2a1d05" />
+          <span>
+            <b>
+              <L {...both('membership.home.claimPending')} />
+            </b>{' '}
+            {msg(locale, 'membership.home.claimPendingText', { what: claim.member_no ?? claim.company_name ?? '' })}
+          </span>
+        </div>
+      </>
+    );
   const asMember = member && (!app || ['withdrawn', 'draft', 'rejected', 'permanent'].includes(app.stage));
   const sub = asMember
     ? `${member.member_no} · ${msg(locale, `membership.classes.${member.class}`)}`
@@ -89,6 +123,16 @@ export default async function PortalHomePage({ params }: Props) {
         </a>
       </div>
 
+      {claim?.status === 'rejected' && (
+        <div className="banner red" role="alert" data-testid="claim-rejected">
+          <span>
+            <b>
+              <L {...both('membership.home.claimRejected')} />
+            </b>{' '}
+            {claim.note}
+          </span>
+        </div>
+      )}
       <HomeNext app={app} locale={locale} member={member} />
 
       {!asMember && app && app.stage !== 'draft' && app.stage !== 'withdrawn' && (

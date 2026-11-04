@@ -5,6 +5,7 @@ import { ActionButton } from '@/components/admin/action-button';
 import { FlashProvider } from '@/components/admin/flash';
 import { NoAccess } from '@/components/admin/no-access';
 import { AddMember } from '@/components/members/add-member';
+import { type ClaimRow, ClaimsCard } from '@/components/members/claims-card';
 import { DemoCard, type DemoRow, type MarkableRow } from '@/components/members/demo-card';
 import { RenewalSeason, RenewDialog, RestoreDialog } from '@/components/members/lifecycle';
 import { Kpi } from '@/components/review/kpi';
@@ -89,6 +90,25 @@ export default async function MembersPage({ params, searchParams }: Props) {
     label: [a.company, a.token, a.owner_email].filter(Boolean).join(' · '),
   }));
   const { data: opensOn } = level >= 3 ? await supabase.schema('api').rpc('renewal_opens_on') : { data: null };
+  // existing members who signed up and asked to be linked (0680), oldest first
+  const { data: claimRows } = await supabase
+    .from('membership_claims')
+    .select('id, class, member_no, company_name, match_member, created_at, profiles!membership_claims_user_id_fkey(full_name, email, mobile)')
+    .eq('status', 'pending')
+    .order('created_at');
+  const claims: ClaimRow[] = (claimRows ?? []).map((c) => {
+    const p = c.profiles as unknown as { full_name: string | null; email: string | null; mobile: string | null } | null;
+    return {
+      id: c.id,
+      person: p?.full_name ?? '—',
+      email: p?.email ?? '',
+      mobile: p?.mobile ?? '',
+      cls: c.class,
+      claimed: c.member_no ?? '',
+      company: c.company_name ?? '',
+      match: c.match_member,
+    };
+  });
   const invited = new Map((invites ?? []).map((i) => [i.company_id, i.status]));
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
   const rows = members ?? [];
@@ -148,6 +168,15 @@ export default async function MembersPage({ params, searchParams }: Props) {
             <RenewalSeason locale={locale} opensOn={opensOn} />
           </section>
         )}
+        <ClaimsCard
+          locale={locale}
+          rows={claims}
+          members={(members ?? []).map((r) => ({
+            id: r.id,
+            label: `${r.member_no} · ${(r.companies as unknown as { name: string } | null)?.name ?? ''}`,
+          }))}
+          canDecide={level >= 2}
+        />
         <div className="card">
           <div className="ch">
             <h3>{m('table')}</h3>

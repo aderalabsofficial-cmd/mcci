@@ -20,6 +20,8 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Resources | `site/resources/` | `/resources` | Downloads: blank official form, checklists, guides |
 | Contact | `site/contact/` | `/contact` | Contact form and complaint desk (create tickets) |
 | Login | `site/login/` | `/login` | Member login (password / email code), register (start application), staff login |
+| Finish sign-up | — (owner, 4 Nov 2026) | `/register/details` | After the emailed code: name, password, "Are you an existing member of MCCI?" (class, number in digits or company name). Only for an account that has not finished; the portal sends such an account here |
+| Claim pending | — (owner, 4 Nov 2026) | `/register/pending` | "Your account will be ready within 6 to 12 hours", then the home page |
 
 ## Member portal (17 screens)
 

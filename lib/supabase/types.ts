@@ -159,6 +159,12 @@ export type Database = {
               "class": string,"code": string,"company": string,"expires_at": string,"extended": boolean,"issued_at": string,"kind": string,"member_no": string,"status": string,"temp_status": string,"title": string,"valid_to": string,"voucher_no": string,"women": boolean
             }[]
                            },
+"claim_decide":
+{ Args: { "p_approve": boolean,"p_id": string,"p_member"?: string,"p_note"?: string,"p_role"?: Database["public"]['Enums']["company_role"] }; Returns: undefined
+                           },
+"claim_submit":
+{ Args: { "p_class": Database["public"]['Enums']["member_class"],"p_company": string,"p_digits": string }; Returns: string
+                           },
 "cmt_approve_all":
 { Args: { "p_meeting": string }; Returns: {
               "amount": number,"application_id": string,"decision": string,"due_at": string,"email_id": number,"lang": string,"member_no": string,"name": string,"next_meeting": string,"to_email": string,"token": string,"voucher_no": string
@@ -560,6 +566,9 @@ export type Database = {
                            },
 "settings_save":
 { Args: { "p_key": string,"p_reason"?: string,"p_value": Json }; Returns: Json
+                           },
+"signup_finish":
+{ Args: { "p_full_name": string,"p_mobile": string }; Returns: undefined
                            },
 "site_contact":
 { Args: { "p_body": string,"p_category": string,"p_contact": string,"p_kind": string,"p_name": string,"p_ref": string,"p_subject": string }; Returns: {
@@ -1959,6 +1968,44 @@ isOneToOne: false
       columns: ["company_id"]
 isOneToOne: false
       referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"membership_claims": {
+                  Row: {
+                    "class": Database["public"]['Enums']["member_class"],"company_name": string | null,"created_at": string,"decided_at": string | null,"decided_by": string | null,"digits": string | null,"id": string,"match_member": string | null,"member_id": string | null,"member_no": string | null,"note": string | null,"role": Database["public"]['Enums']["company_role"] | null,"status": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class": Database["public"]['Enums']["member_class"],"company_name"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"digits"?: string | null,"id"?: string,"match_member"?: string | null,"member_id"?: string | null,"member_no"?: string | null,"note"?: string | null,"role"?: Database["public"]['Enums']["company_role"] | null,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "class"?: Database["public"]['Enums']["member_class"],"company_name"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"digits"?: string | null,"id"?: string,"match_member"?: string | null,"member_id"?: string | null,"member_no"?: string | null,"note"?: string | null,"role"?: Database["public"]['Enums']["company_role"] | null,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "membership_claims_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "membership_claims_match_member_fkey"
+      columns: ["match_member"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "membership_claims_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "membership_claims_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]

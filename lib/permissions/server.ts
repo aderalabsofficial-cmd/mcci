@@ -1,4 +1,5 @@
 import 'server-only';
+import { signupUnfinished } from '@/lib/auth/signup';
 import { cache } from 'react';
 import { publicSupabaseEnv } from '@/lib/supabase/env';
 import { createClient } from '@/lib/supabase/server';
@@ -26,6 +27,8 @@ export interface Session {
   userId: string;
   aal: 'aal1' | 'aal2' | null;
   access: Access;
+  /** signed up by email code but not finished (lib/auth/signup.ts): the portal sends them to /register/details */
+  signupUnfinished: boolean;
 }
 
 /**
@@ -43,7 +46,12 @@ export const getSession = cache(async (): Promise<Session | null> => {
   if (rpcError) throw new Error(`api.my_access failed: ${rpcError.message}`);
   const access = accessSchema.parse(data);
   if (access.user_id !== userData.user.id) throw new Error('api.my_access returned another user');
-  return { userId: userData.user.id, aal: (aalData?.currentLevel ?? null) as Session['aal'], access };
+  return {
+    userId: userData.user.id,
+    aal: (aalData?.currentLevel ?? null) as Session['aal'],
+    access,
+    signupUnfinished: signupUnfinished(userData.user.user_metadata),
+  };
 });
 
 export async function requireUser(): Promise<Session> {

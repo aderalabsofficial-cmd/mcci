@@ -1,19 +1,14 @@
 'use client';
 
 import { PasswordField } from '@/components/shared/password-field';
-import { type ReactNode, useActionState, useState } from 'react';
+import { type ReactNode, useActionState, useEffect, useState } from 'react';
 import { FieldIcon, FloatField } from '@/components/auth/login-panel';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { normalizeMobile } from '@/lib/auth/identifier';
 import { msg } from '@/lib/nav/model';
-import {
-  registerAccount,
-  requestPasswordReset,
-  resendConfirmation,
-  updatePassword,
-  type AccountFormState,
-} from '@/lib/auth/account-actions';
+import { requestPasswordReset, updatePassword, type AccountFormState } from '@/lib/auth/account-actions';
+import { type SignupState, startSignup, verifySignupCode } from '@/lib/auth/signup-actions';
 
 function Alert({ text, tone = 'error' }: { text?: string; tone?: 'error' | 'ok' }) {
   if (!text) return null;
@@ -114,7 +109,7 @@ export function ResetForm({
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** the design's four-step strength meter, for the same rule the server enforces: 10 characters or it does not count */
-function passwordScore(v: string): number {
+export function passwordScore(v: string): number {
   if (v.length < 10) return 0;
   let s = 1;
   if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++;
@@ -124,21 +119,34 @@ function passwordScore(v: string): number {
 }
 
 /**
- * register.start, the design's sign-up in two steps (it had three; the class step is removed: the class follows from the
- * application form). "Creates account with email verification, then opens the guided form" (docs/catalogue/actions).
- * The browser's checks are for friendliness only: registerAccount checks everything again.
+ * register.start, the sign-up of 4 Nov 2026 (owner): mobile number and email, then the 6-digit code sent to the email
+ * (to the mobile once SMS masking is approved), then a welcome and "finish your sign-up" (/register/details: name,
+ * password, existing member or not). No company or representative name here: the application form reads them from the
+ * documents. The browser's checks are for friendliness only: lib/auth/signup-actions.ts checks everything again.
  */
 export function RegisterForm({ locale, tabs, onSignIn }: { locale: Locale; tabs: ReactNode; onSignIn: () => void }) {
-  const [state, action, pending] = useActionState<AccountFormState, FormData>(registerAccount, {});
-  const [step, setStep] = useState(0);
-  const [values, setValues] = useState({ businessName: '', fullName: '', mobile: '', email: '', password: '', confirm: '' });
+  const [state, action, pending] = useActionState<SignupState, FormData>(startSignup, {});
+  const [values, setValues] = useState({ mobile: '', email: '' });
   const [terms, setTerms] = useState(false);
   const [bad, setBad] = useState<Set<string>>(new Set());
   const [err, setErr] = useState('');
-  const t = (k: string) => msg(locale, `auth.registerPage.${k}`);
+  const [edit, setEdit] = useState(0);
+  const [seen, setSeen] = useState(0);
   const m = (k: string) => msg(locale, `landing.au.${k}`);
+  const t = (k: string) => msg(locale, `auth.signup.${k}`);
 
-  if (state.sentTo) return <RegisterSent locale={locale} email={state.sentTo} />;
+  // a code was sent (this answer, not one from before "use a different email")
+  const sentTo = state.sentTo && seen === edit && !pending ? state.sentTo : null;
+  if (sentTo)
+    return (
+      <SignupCode
+        locale={locale}
+        email={sentTo}
+        mobile={values.mobile}
+        steps={<SignupSteps locale={locale} at={1} />}
+        onChange={() => setEdit((n) => n + 1)}
+      />
+    );
 
   const field = (name: keyof typeof values) => ({
     name,
@@ -153,136 +161,69 @@ export function RegisterForm({ locale, tabs, onSignIn }: { locale: Locale; tabs:
       });
     },
   });
-  const problems = (names: (keyof typeof values)[]) => names.filter((n) => !values[n].trim());
-  const toAccount = () => {
-    const empty = problems(['businessName', 'fullName', 'mobile', 'email']);
-    if (empty.length) {
-      setBad(new Set(empty));
-      setErr(m('err_fields'));
-      return;
-    }
-    if (!normalizeMobile(values.mobile)) {
-      setBad(new Set(['mobile']));
-      setErr(m('err_mobile'));
-      return;
-    }
-    if (!EMAIL.test(values.email.trim())) {
-      setBad(new Set(['email']));
-      setErr(m('err_email'));
-      return;
-    }
-    setBad(new Set());
-    setErr('');
-    setStep(1);
-  };
   const check = (e: { preventDefault: () => void }) => {
-    if (step === 0) {
-      e.preventDefault();
-      toAccount();
-      return;
-    }
-    const empty = problems(['password', 'confirm']);
+    const empty = (['mobile', 'email'] as const).filter((n) => !values[n].trim());
     const message = empty.length
       ? m('err_fields')
-      : passwordScore(values.password) === 0
-        ? t('weak')
-        : values.password !== values.confirm
-          ? m('err_match')
+      : !normalizeMobile(values.mobile)
+        ? m('err_mobile')
+        : !EMAIL.test(values.email.trim())
+          ? m('err_email')
           : !terms
             ? m('err_terms')
             : '';
     if (message) {
       e.preventDefault();
-      setBad(new Set(empty.length ? empty : message === m('err_match') ? ['confirm'] : message === t('weak') ? ['password'] : []));
+      setBad(new Set(empty.length ? empty : message === m('err_mobile') ? ['mobile'] : message === m('err_email') ? ['email'] : []));
       setErr(message);
-    } else setErr('');
+      return;
+    }
+    setErr('');
+    setSeen(edit);
   };
-  const score = passwordScore(values.password);
 
   return (
     <>
       {tabs}
       <h1>{m('up_title')}</h1>
-      <p className="au-sub">{m('up_sub')}</p>
-      <ol className="au-steps" aria-label={m('steps')}>
-        {(['st1', 'st2'] as const).map((k, i) => (
-          <li key={k} className={i === step ? 'on' : i < step ? 'done' : ''} aria-current={i === step ? 'step' : undefined}>
-            <b>{i + 1}</b>
-            <span>{m(k)}</span>
-          </li>
-        ))}
-      </ol>
+      <p className="au-sub">{t('sub')}</p>
+      <SignupSteps locale={locale} at={0} />
       <form action={action} onSubmit={check} noValidate>
         <input type="hidden" name="locale" value={locale} />
-        <fieldset className={`au-step ${step === 0 ? 'on' : ''}`}>
-          <FloatField label={m('up_business')} icon={FieldIcon.building} autoComplete="organization" maxLength={200} {...field('businessName')} />
-          <FloatField label={t('name')} icon={FieldIcon.person} autoComplete="name" maxLength={120} {...field('fullName')} />
-          <div className="fl-row">
-            <FloatField label={m('up_mobile')} icon={FieldIcon.phone} type="tel" inputMode="tel" autoComplete="tel" maxLength={30} {...field('mobile')} />
-            <FloatField label={t('email')} icon={FieldIcon.mail} type="email" inputMode="email" autoComplete="email" maxLength={254} {...field('email')} />
-          </div>
-        </fieldset>
-        <fieldset className={`au-step ${step === 1 ? 'on' : ''}`}>
-          <PasswordField
-            locale={locale}
-            className={`fl fl-pw ${bad.has('password') ? 'bad' : ''}`}
-            label={t('password')}
-            icon={FieldIcon.lock}
-            name="password"
-            placeholder=" "
-            autoComplete="new-password"
-            minLength={10}
-            maxLength={200}
-            value={values.password}
-            onChange={field('password').onChange}
-          />
-          <div className="pw-meter" data-score={score}>
-            <i />
-            <i />
-            <i />
-            <i />
-            <span>{m(`pw_${score}`)}</span>
-          </div>
-          <PasswordField
-            locale={locale}
-            className={`fl fl-pw ${bad.has('confirm') ? 'bad' : ''}`}
-            label={t('confirm')}
-            icon={FieldIcon.shield}
-            name="confirm"
-            placeholder=" "
-            autoComplete="new-password"
-            minLength={10}
-            maxLength={200}
-            value={values.confirm}
-            onChange={field('confirm').onChange}
-          />
-          <label className="check">
-            <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
-            <span className="check-box" aria-hidden />
-            <span>{m('up_terms')}</span>
-          </label>
-        </fieldset>
+        <FloatField
+          label={m('up_mobile')}
+          icon={FieldIcon.phone}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          maxLength={30}
+          {...field('mobile')}
+        />
+        <FloatField
+          label={t('email')}
+          icon={FieldIcon.mail}
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          maxLength={254}
+          {...field('email')}
+        />
+        <p className="au-hint">{t('emailWhy')}</p>
+        <label className="check">
+          <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
+          <span className="check-box" aria-hidden />
+          <span>{m('up_terms')}</span>
+        </label>
         <p className="au-err" role="alert">
           {err || state.error}
         </p>
         <div className="au-actions">
-          {step === 1 && (
-            <button className="au-btn au-btn-ghost" type="button" data-action="register.back" onClick={() => setStep(0)}>
-              {m('up_prev')}
-            </button>
-          )}
-          {step === 0 ? (
-            <button className="au-btn" type="button" data-action="register.next" onClick={toAccount}>
-              <span>{m('up_next')}</span>
-              <svg className="au-arrow" viewBox="0 0 24 24" aria-hidden>
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </button>
-          ) : (
-            <button className="au-btn" type="submit" data-action="register.start" disabled={pending}>
-              {pending ? msg(locale, 'auth.working') : t('create')}
-            </button>
-          )}
+          <button className="au-btn" type="submit" data-action="register.start" disabled={pending}>
+            <span>{pending ? msg(locale, 'auth.working') : t('send')}</span>
+            <svg className="au-arrow" viewBox="0 0 24 24" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
         </div>
       </form>
       <p className="au-alt">
@@ -295,39 +236,110 @@ export function RegisterForm({ locale, tabs, onSignIn }: { locale: Locale; tabs:
   );
 }
 
-/** After registering: the design's tick, the "check your email" notice and a button to send the confirmation link again. */
-function RegisterSent({ locale, email }: { locale: Locale; email: string }) {
-  const [state, action, pending] = useActionState<AccountFormState, FormData>(resendConfirmation, {});
-  const t = (k: string) => msg(locale, `auth.registerPage.${k}`);
+/** the three steps of sign-up, with the current one marked */
+function SignupSteps({ locale, at }: { locale: Locale; at: number }) {
+  const t = (k: string) => msg(locale, `auth.signup.${k}`);
   return (
-    <div className="au-done">
-      <div className="burst" aria-hidden>
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
+    <ol className="au-steps" aria-label={msg(locale, 'landing.au.steps')}>
+      {(['step1', 'step2', 'step3'] as const).map((k, i) => (
+        <li key={k} className={i === at ? 'on' : i < at ? 'done' : ''} aria-current={i === at ? 'step' : undefined}>
+          <b>{i + 1}</b>
+          <span>{t(k)}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** register.code: the 6 digits from the email; then the welcome, and on to "finish your sign-up" */
+function SignupCode({
+  locale,
+  email,
+  mobile,
+  steps,
+  onChange,
+}: {
+  locale: Locale;
+  email: string;
+  mobile: string;
+  steps: ReactNode;
+  onChange: () => void;
+}) {
+  const [state, action, pending] = useActionState<SignupState, FormData>(verifySignupCode, {});
+  const [again, againAction, sending] = useActionState<SignupState, FormData>(startSignup, {});
+  const t = (k: string) => msg(locale, `auth.signup.${k}`);
+  const next = state.welcome ? state.next : undefined;
+  useEffect(() => {
+    if (!next) return;
+    // a full page load: the new session's cookies are in place for the next page
+    const go = setTimeout(() => window.location.assign(`${locale === 'ur' ? '/ur' : ''}${next}`), 2600);
+    return () => clearTimeout(go);
+  }, [next, locale]);
+
+  if (state.welcome)
+    return (
+      <div className="au-done au-welcome" data-testid="welcome" role="status">
+        <div className="burst" aria-hidden>
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
+        <svg className="tick" viewBox="0 0 80 80" aria-hidden>
+          <circle cx="40" cy="40" r="36" />
+          <path d="M24 41l11 11 22-24" />
+        </svg>
+        <h1>{t('welcome')}</h1>
+        <p className="au-sub">{t(next === '/portal' ? 'welcomeBack' : 'welcomeNext')}</p>
       </div>
-      <svg className="tick" viewBox="0 0 80 80" aria-hidden>
-        <circle cx="40" cy="40" r="36" />
-        <path d="M24 41l11 11 22-24" />
-      </svg>
-      <h1>{msg(locale, 'landing.au.done_up_t')}</h1>
+    );
+
+  return (
+    <>
+      <h1>{t('codeTitle')}</h1>
+      <p className="au-sub">{t('codeSent').replace('{email}', email)}</p>
+      {steps}
       <form action={action}>
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="email" value={email} />
-        <Alert tone="ok" text={(state.resent ? t('resent') : t('sent')).replace('{email}', email)} />
-        <Alert text={state.error} />
-        <button className="au-btn au-btn-ghost" data-action="register.resend" disabled={pending}>
-          {pending ? msg(locale, 'auth.working') : t('resend')}
+        <FloatField
+          label={t('code')}
+          icon={FieldIcon.shield}
+          name="code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="\d{6}"
+          maxLength={6}
+          required
+        />
+        <p className="au-err" role="alert">
+          {state.error}
+        </p>
+        <div className="au-actions">
+          <button className="au-btn au-btn-full" data-action="register.code" disabled={pending}>
+            {pending ? msg(locale, 'auth.working') : t('verify')}
+          </button>
+        </div>
+      </form>
+      <form action={againAction} className="au-alt">
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="email" value={email} />
+        <input type="hidden" name="mobile" value={mobile} />
+        <input type="hidden" name="resend" value="1" />
+        <Alert tone="ok" text={again.resent ? t('resent') : undefined} />
+        <Alert text={again.error} />
+        <button className="au-link" data-action="register.resend" disabled={sending}>
+          {sending ? msg(locale, 'auth.working') : t('resend')}
+        </button>{' '}
+        ·{' '}
+        <button type="button" className="au-link" data-action="register.change" onClick={onChange}>
+          {t('change')}
         </button>
       </form>
-      <Link href="/login" className="au-link" data-action="nav">
-        {t('haveAccount')}
-      </Link>
-    </div>
+    </>
   );
 }

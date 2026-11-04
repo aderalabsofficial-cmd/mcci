@@ -382,7 +382,11 @@ Acceptance rule: every `Build` row has a server action or route handler, an auth
 
 | id | Phase | Label | Planned endpoint | Tables | Who | Behaviour in the real system |
 |---|---|---|---|---|---|---|
-| `register.start` | Build | Start membership application | `POST /api/applications` | applications, auth.users | Public → applicant account | Creates account with email verification, then opens the guided form |
+| `register.start` | Build | Sign up: mobile and email, send code | `lib/auth/signup-actions.ts startSignup` | auth.users | Public | Owner, 4 Nov 2026: a 6-digit code by email (SMS once MCCI's masking is approved); no company or name asked here (read from the documents later). In the portal the same name starts the application |
+| `register.code` | Build | Enter the emailed code | `verifySignupCode` | auth | Public | Signs the person in; the welcome, then "finish your sign-up" |
+| `register.finish` | Build | Name, password, "Are you an existing member?" | `finishSignup` → `api.signup_finish`, `api.claim_submit` | profiles, membership_claims | New account | One account per mobile. No → the portal. Yes → class, number in digits (prefix shown) or company name → "ready within 6 to 12 hours", then the home page; the portal shows only "pending approval" |
+| `claim.approve` | Build | Link an existing member's account | `api.claim_decide` | membership_claims, company_users, notifications | Members Register, reg 2 | The register's match is preselected; the role is chosen; the person is told |
+| `claim.reject` | Build | Reject a membership claim | `api.claim_decide` | membership_claims, notifications | Members Register, reg 2 | With a reason the person reads in the portal; they may apply as a new member |
 
 ## `renew.*`
 

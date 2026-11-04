@@ -623,7 +623,57 @@
       "intro": "For MCCI staff only. Sign in with your staff email and password, then the code from your authenticator app. Attempts are limited and recorded."
     },
     "passwordShow": "Show password",
-    "passwordHide": "Hide password"
+    "passwordHide": "Hide password",
+    "signup": {
+      "sub": "Your mobile number and email. We send a 6-digit code to your email to confirm it is you.",
+      "email": "Email address",
+      "emailWhy": "For now the code comes by email. Soon it will also come by SMS to your mobile.",
+      "send": "Send code",
+      "step1": "Mobile & email",
+      "step2": "Code",
+      "step3": "Your details",
+      "codeTitle": "Enter your code",
+      "codeSent": "We sent a 6-digit code to {email}. It works for one hour.",
+      "code": "6-digit code",
+      "verify": "Confirm",
+      "resend": "Send the code again",
+      "resent": "A new code is on its way.",
+      "change": "Use a different email",
+      "codeFormat": "Type the 6 digits from the email.",
+      "codeWrong": "That code is not right or has expired. Check the email, or send a new code.",
+      "welcome": "Welcome to MCCI",
+      "welcomeNext": "Your email is confirmed. Let us finish your sign-up.",
+      "welcomeBack": "Your email is confirmed. Opening your portal.",
+      "finishTitle": "Finish your sign-up",
+      "finishSub": "Signed in as {email}. Your name, a password, and one question.",
+      "existingQ": "Are you an existing member of MCCI?",
+      "existingYes": "Yes, I am a member",
+      "existingNo": "No, I am new",
+      "classQ": "Your membership class",
+      "corporate": "Corporate",
+      "associate": "Associate",
+      "numberLabel": "Membership number (digits only)",
+      "numberHelp": "Type only the numbers. MCCI-C- or MCCI-A- is added for you.",
+      "companyLabel": "Company name (if you are not sure of the number)",
+      "claimWhy": "MCCI checks this against the register and links your account. You can leave the number empty and give the company name.",
+      "finish": "Finish sign-up",
+      "needAnswer": "Please answer: are you an existing member of MCCI?",
+      "needClass": "Please choose your membership class.",
+      "needNumber": "Please type your membership number, or your company name.",
+      "pendingTitle": "Thank you",
+      "pendingText": "Your account will be ready within 6 to 12 hours. MCCI is checking your membership and will link it to your account. We will tell you in your portal.",
+      "toHome": "Go to the home page",
+      "errors": {
+        "mobile_taken": "This mobile number already has an account. Sign in, or reset your password.",
+        "mobile": "Type a Pakistani mobile number, for example 0300-1234567.",
+        "name": "Please type your full name.",
+        "linked": "This account is already linked to a company.",
+        "pending": "Your membership claim is already waiting for approval.",
+        "digits": "The membership number has digits only.",
+        "required": "Please type your membership number, or your company name.",
+        "staff": "Staff accounts do not claim a membership."
+      }
+    }
   },
   "access": {
     "levels": {
@@ -1192,7 +1242,10 @@
         "helpSub": "Call · Email · Ask AI",
         "events": "Events",
         "eventsSub": "Trade events & meetings"
-      }
+      },
+      "claimPending": "Your existing membership is pending approval.",
+      "claimPendingText": "MCCI is checking {what} and will link it to your account, usually within 6 to 12 hours.",
+      "claimRejected": "Your membership claim was not approved."
     },
     "next": {
       "start": {
@@ -5962,6 +6015,42 @@
         "title": "Fees and chamber details",
         "how": "Settings. Fees, chamber details and the bank account."
       }
+    }
+  },
+  "claims": {
+    "title": "Existing members waiting for their account",
+    "help": "People who signed up and said they are already members. The register's closest match is chosen; check it, choose the role, and approve. Or reject with a reason; they are told in their portal.",
+    "none": "Nobody is waiting.",
+    "asked": "Asked for: {cls} · {what}",
+    "matched": "A matching member was found in the register.",
+    "noMatch": "No match in the register: choose the member yourself, or reject.",
+    "member": "Member",
+    "pickMember": "Choose the member…",
+    "role": "Role in the company",
+    "roles": {
+      "Owner": "Owner",
+      "Manager": "Manager",
+      "Accounts": "Accounts",
+      "Services": "Services",
+      "Viewer": "Viewer"
+    },
+    "approve": "Approve and link",
+    "reject": "Reject",
+    "rejectTitle": "Reject the claim of {name}",
+    "rejectHelp": "Say why, in plain words. The person reads it in their portal and can apply as a new member.",
+    "reason": "Reason",
+    "done": {
+      "approved": "Linked. The person now sees their membership.",
+      "rejected": "Rejected. The person has been told."
+    },
+    "errors": {
+      "notAllowed": "Your designation cannot do this.",
+      "fields": "Check the fields.",
+      "wrong_stage": "This claim was decided already.",
+      "not_found": "Choose the member first.",
+      "linked": "This account already belongs to a company.",
+      "reason_required": "Please give a reason.",
+      "generic": "Something went wrong. Please try again."
     }
   }
 }

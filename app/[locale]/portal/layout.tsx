@@ -29,6 +29,8 @@ export default async function PortalLayout({
   const session = await getSession();
   if (!session) redirect({ href: '/login?next=/portal', locale });
   if (session!.access.staff) redirect({ href: session!.aal === 'aal2' ? '/admin' : '/login/verify', locale });
+  // the code was right but sign-up is not finished (no password yet): that step first (owner, 4 Nov 2026)
+  if (session!.signupUnfinished) redirect({ href: '/register/details', locale });
   const company = session!.access.companies[0];
   return (
     <AreaShell

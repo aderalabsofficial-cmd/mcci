@@ -1,4 +1,7 @@
+import { randomInt, randomUUID } from 'node:crypto';
 import { expect, type Page, test } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
+import { readLocalEnv } from '../integration/local-env';
 import { totp } from '../support/totp';
 import { NO_BACKEND, readAccounts } from './accounts';
 import { signInAs } from './helpers';
@@ -11,6 +14,7 @@ import { signInAs } from './helpers';
  *   E2E_HOST=127.0.0.1 E2E_PORT=3000 pnpm test:e2e tests/e2e/auth.spec.ts --project=desktop
  */
 const accounts = readAccounts();
+const env = readLocalEnv();
 const MAILPIT = process.env.MAILPIT_URL;
 const ON_SITE_URL = process.env.E2E_HOST === '127.0.0.1' && process.env.E2E_PORT === '3000';
 const LINKS_REASON =
@@ -32,13 +36,26 @@ async function staffForm(page: Page, email: string, password: string) {
   await page.locator('[data-action="login.staff"]').click();
 }
 
-/** Sign up's first step (the design's "Business"); leaves the page on the password step. */
-async function fillBusinessStep(page: Page, name: string, email: string) {
-  await page.getByLabel('Business name').fill('E2E Traders');
-  await page.getByLabel('Your full name').fill(name);
-  await page.getByLabel('Mobile number').fill('0300-1234567');
-  await page.getByLabel('Email').fill(email);
-  await page.locator('[data-action="register.next"]').click();
+/** a mobile number no other test account uses */
+const freshMobile = () => `03${randomInt(10, 49)}${String(randomInt(0, 10_000_000)).padStart(7, '0')}`;
+
+/** Sign-up steps 1 and 2 (owner, 4 Nov 2026): mobile and email, then the 6-digit code from the email */
+async function signUpWithCode(page: Page, mobile: string, email: string) {
+  await page.goto('/register');
+  await page.getByLabel('Mobile number').fill(mobile);
+  await page.getByLabel('Email address').fill(email);
+  await page.getByLabel('I confirm the details I have given are correct.').check({ force: true });
+  // the local mail catcher is slow: Auth sometimes gives up after 10 s ("not available"), and the person simply tries again
+  const codeStep = page.getByRole('heading', { name: 'Enter your code' });
+  for (let i = 0; i < 3 && !(await codeStep.isVisible()); i++) {
+    await page.locator('[data-action="register.start"]').click();
+    await expect(codeStep.or(page.locator('.au-err').filter({ hasText: /not available/ }))).toBeVisible({ timeout: 20_000 });
+  }
+  await expect(codeStep).toBeVisible();
+  const mail = await mailTo(email);
+  const code = /\b(\d{6})\b/.exec(mail.Text)?.[1];
+  test.skip(!code, 'the local stack still sends the old confirmation email (link): load supabase/templates (restart)');
+  return code!;
 }
 
 /** The newest email to `address`, once at least `count` have arrived (Mailpit lists newest first). */
@@ -82,10 +99,8 @@ test('every password field has a show / hide eye (mouse, keyboard, English and U
   for (const [url, field] of [
     ['/login', 'Password'],
     ['/staff/login', 'Password'],
-    ['/register', 'Repeat the password'],
   ] as const) {
     await page.goto(url);
-    if (url === '/register') await fillBusinessStep(page, 'E2E Applicant', 'eye@test.local');
     const input = page.getByLabel(field, { exact: true });
     const eye = input.locator('xpath=following-sibling::button[@data-action="password.toggle"]');
     await input.fill('not-a-real-secret');
@@ -108,28 +123,22 @@ test('every password field has a show / hide eye (mouse, keyboard, English and U
   await expect(page.locator('[data-action="password.toggle"]').first()).toHaveAccessibleName('پاس ورڈ دکھائیں');
 });
 
-test('sign up: two steps, no class question, friendly checks before anything is sent', async ({ page }) => {
+test('sign up: mobile and email in three steps, no company or name yet, friendly checks before anything is sent', async ({
+  page,
+}) => {
   await page.goto('/register');
-  await expect(page.locator('.au-steps li')).toHaveCount(2);
-  await expect(page.locator('input[name="cls"]')).toHaveCount(0);
-  await page.locator('[data-action="register.next"]').click();
+  await expect(page.locator('.au-steps li')).toHaveCount(3);
+  await expect(page.getByLabel('Business name')).toHaveCount(0); // read from the documents later (owner, 4 Nov 2026)
+  await page.locator('[data-action="register.start"]').click();
   await expect(page.locator('.au-err')).toContainText('highlighted');
-  await page.getByLabel('Business name').fill('E2E Traders');
-  await page.getByLabel('Your full name').fill('E2E Applicant');
   await page.getByLabel('Mobile number').fill('12345');
-  await page.getByLabel('Email').fill('steps@test.local');
-  await page.locator('[data-action="register.next"]').click();
+  await page.getByLabel('Email address').fill('steps@test.local');
+  await page.locator('[data-action="register.start"]').click();
   await expect(page.locator('.au-err')).toContainText('mobile');
   await page.getByLabel('Mobile number').fill('0300-1234567');
-  await page.locator('[data-action="register.next"]').click();
-  await page.getByLabel('Password (at least 10 characters)').fill('E2e-password-123');
-  await page.getByLabel('Repeat the password').fill('E2e-password-123');
   await page.locator('[data-action="register.start"]').click();
   await expect(page.locator('.au-err')).toContainText('tick');
   await expect(page).toHaveURL(/\/register$/);
-  // back keeps what was typed
-  await page.locator('[data-action="register.back"]').click();
-  await expect(page.getByLabel('Business name')).toHaveValue('E2E Traders');
 });
 
 test('sign in and sign up slide on one page; the address follows and each route opens on its own form', async ({
@@ -139,9 +148,9 @@ test('sign in and sign up slide on one page; the address follows and each route 
   await expect(page.getByRole('tab')).toHaveText(['Sign In', 'Sign Up']);
   await page.getByRole('tab', { name: 'Sign Up' }).click();
   await expect(page).toHaveURL(/\/register$/);
-  await expect(page.getByLabel('Business name')).toBeVisible();
+  await expect(page.getByLabel('Email address')).toBeVisible();
   await page.reload();
-  await expect(page.getByLabel('Business name')).toBeVisible();
+  await expect(page.getByLabel('Email address')).toBeVisible();
   await page.getByRole('tab', { name: 'Sign In' }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByLabel('Mobile, email or member ID')).toBeVisible();
@@ -266,36 +275,101 @@ test.describe('with the local stack', () => {
     await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
   });
 
-  test('registration: inactive until the emailed confirmation link is opened, then signed in', async ({ page }) => {
+  test('sign-up: a code by email, the welcome, then name and password; a new applicant lands in the portal', async ({ page }) => {
+    test.skip(!MAILPIT, 'needs MAILPIT_URL');
     const email = `e2e-${accounts.run}-reg@test.local`;
-    await page.goto('/register');
-    await fillBusinessStep(page, 'E2E Applicant', email);
+    const mobile = freshMobile();
+    const code = await signUpWithCode(page, mobile, email);
+    // a wrong code is refused in plain words; the right one shows the welcome and opens the last step
+    await page.getByLabel('6-digit code').fill(code === '000000' ? '111111' : '000000');
+    await page.locator('[data-action="register.code"]').click();
+    await expect(page.getByRole('main').getByRole('alert')).toContainText('not right');
+    await page.getByLabel('6-digit code').fill(code);
+    await page.locator('[data-action="register.code"]').click();
+    await expect(page.getByTestId('welcome')).toContainText('Welcome to MCCI');
+    await expect(page).toHaveURL(/\/register\/details$/, { timeout: 20_000 });
+    // not finished: the portal sends them back here
+    await page.goto('/portal');
+    await expect(page).toHaveURL(/\/register\/details$/);
+    await page.getByLabel('Your full name').fill('E2E Applicant');
     await page.getByLabel('Password (at least 10 characters)').fill('E2e-password-123');
     await page.getByLabel('Repeat the password').fill('E2e-password-123');
-    await page.getByLabel('I confirm the details I have given are correct.').check({ force: true });
-    await page.locator('[data-action="register.start"]').click();
-    await expect(page.getByRole('main').getByRole('status')).toContainText(
-      `We have emailed a confirmation link to ${email}`,
-    );
-    // a lost email can be sent again (Auth limits emails per address and per hour, so it may answer "too many")
-    await page.locator('[data-action="register.resend"]').click();
-    const answer = page.getByRole('main').getByText(/sent the confirmation link to .+ again|Too many attempts/);
-    await expect(answer).toBeVisible();
-    // a second email replaces the first link, so only the newest one works
-    const emails = /sent the confirmation link/.test(await answer.innerText()) ? 2 : 1;
-    await memberForm(page, email, 'E2e-password-123');
-    await expect(page.getByRole('main').getByRole('alert')).toHaveText(
-      'Please confirm your email address first — open the link we emailed to you.',
-    );
-    test.skip(!ON_SITE_URL || !MAILPIT, LINKS_REASON);
-    const mail = await mailTo(email, emails);
-    expect(mail.Subject).toBeTruthy();
-    // a re-sent link only works on its own with the MCCI templates (token_hash); the default ones need the browser's
-    // PKCE verifier, which the cookie-less resend does not set
-    test.skip(emails === 2 && !/token_hash=/.test(mail.HTML), 'resent link needs the MCCI templates (token_hash)');
-    await page.goto(emailedLink(mail.HTML));
+    // every password field has its eye here too
+    await expect(page.locator('[data-action="password.toggle"]')).toHaveCount(2);
+    await page.locator('[data-action="register.finish"]').click();
+    await expect(page.locator('.au-err')).toContainText('existing member');
+    await page.locator('[data-action="register.member.no"]').click();
+    await page.locator('[data-action="register.finish"]').click();
     await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
     await expect(page.getByText('E2E Applicant').first()).toBeVisible();
+    // the mobile is theirs now: they sign in with it and the password
+    await page.context().clearCookies();
+    await memberForm(page, mobile, 'E2e-password-123');
+    await expect(page).toHaveURL(/\/portal$/, { timeout: 20_000 });
+  });
+
+  test('sign-up: an existing member claims their number; only "pending" until staff approve and link it', async ({
+    page,
+    browser,
+  }) => {
+    test.skip(!MAILPIT || !env, 'needs MAILPIT_URL and the local stack');
+    test.setTimeout(150_000);
+    const admin = createClient(env!.url, env!.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const digits = String(randomInt(70000, 99999));
+    const { data: co } = await admin
+      .from('companies')
+      .insert({ name: `Claim Mills ${digits}`, biz_type: 'pvt' })
+      .select('id')
+      .single();
+    const { data: mem } = await admin
+      .from('members')
+      .insert({ member_no: `MCCI-C-${digits}`, company_id: co!.id, class: 'Corporate', status: 'Permanent', rep_name: 'Rep', since: '2024-04-01', valid_to: '2099-03-31' })
+      .select('id')
+      .single();
+    const email = `e2e-claim-${randomUUID().slice(0, 8)}@test.local`;
+    try {
+      const code = await signUpWithCode(page, freshMobile(), email);
+      await page.getByLabel('6-digit code').fill(code);
+      await page.locator('[data-action="register.code"]').click();
+      await expect(page).toHaveURL(/\/register\/details$/, { timeout: 20_000 });
+      await page.getByLabel('Your full name').fill('Claiming Owner');
+      await page.getByLabel('Password (at least 10 characters)').fill('E2e-password-123');
+      await page.getByLabel('Repeat the password').fill('E2e-password-123');
+      await page.locator('[data-action="register.member.yes"]').click();
+      await page.locator('[data-action="register.class"]').first().click(); // Corporate
+      const number = page.getByLabel('Membership number (digits only)');
+      await number.fill(`C-${digits}x`);
+      await expect(number).toHaveValue(digits); // digits only; the prefix is shown, not typed
+      await page.locator('[data-action="register.finish"]').click();
+      await expect(page.getByTestId('claim-pending')).toContainText('6 to 12 hours');
+      // the portal shows only the note; a new application cannot be started meanwhile
+      await page.goto('/portal');
+      await expect(page.getByTestId('claim-pending')).toContainText(`MCCI-C-${digits}`);
+      await expect(page.locator('[data-action="register.start"]')).toHaveCount(0);
+
+      // staff: the register's match is chosen; approve links the account
+      const staff = await browser.newPage();
+      await signInAs(staff, 'sg');
+      await staff.goto('/admin/members');
+      const row = staff.locator(`[data-claim="${email}"]`);
+      await expect(row).toContainText(`MCCI-C-${digits}`);
+      await expect(row.locator('[data-field="claim-member"]')).toHaveValue(mem!.id);
+      await row.locator('[data-action="claim.approve"]').click();
+      await expect(staff.locator('[data-section="claims"]').getByRole('status')).toContainText('Linked');
+      await staff.close();
+      await page.goto('/portal');
+      await expect(page.getByTestId('claim-pending')).toHaveCount(0);
+      await expect(page.getByRole('main')).toContainText(`MCCI-C-${digits}`);
+    } finally {
+      const { data: users } = await admin.auth.admin.listUsers({ perPage: 200 });
+      const u = users?.users.find((x) => x.email === email);
+      if (u) {
+        await admin.from('company_users').delete().eq('user_id', u.id);
+        await admin.auth.admin.deleteUser(u.id);
+      }
+      await admin.from('members').delete().eq('id', mem!.id);
+      await admin.from('companies').delete().eq('id', co!.id);
+    }
   });
 
   test('password reset: emailed link → new password; the old one stops working', async ({ page }) => {
