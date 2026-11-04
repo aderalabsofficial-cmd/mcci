@@ -7,7 +7,7 @@ import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { dbErrorKey } from '@/lib/access/result';
-import { aiEnabled, aiModel, type Extracted, extractDocument, mergeExtraction, READABLE } from '@/lib/ai/extract';
+import { aiEnabled, aiModel, type Extracted, extractDocument, mergeExtraction, personKey, READABLE } from '@/lib/ai/extract';
 import { sendEmail } from '@/lib/email/send';
 import { checkUpload, EXT, type FileKind, MIME, sniff, type UploadProblem } from '@/lib/files/sniff';
 import { type AppForm, isBiz, MAX_PARTNERS } from '@/lib/flow/application';
@@ -107,7 +107,14 @@ async function fillFromSignup(supabase: Awaited<ReturnType<typeof createClient>>
     const form = (app.form ?? {}) as Record<string, unknown>;
     const fill = { name: meta.business_name, rep: meta.full_name, mobile: meta.mobile };
     const blank = Object.fromEntries(Object.entries(fill).filter(([k, v]) => v && !form[k]));
-    if (Object.keys(blank).length) await supabase.from('applications').update({ form: json({ ...form, ...blank }) }).eq('id', app.id);
+    // marked as copied from sign-up: what the documents say replaces them (lib/ai/extract.ts mergeExtraction)
+    const src = { ...((form.src as Record<string, string> | undefined) ?? {}) };
+    for (const k of Object.keys(blank)) if (k !== 'mobile') src[k] = 'signup';
+    if (Object.keys(blank).length)
+      await supabase
+        .from('applications')
+        .update({ form: json({ ...form, ...blank, src }) })
+        .eq('id', app.id);
   } catch (error) {
     console.error('app_start: sign-up details not copied', (error as { code?: string })?.code);
   }
@@ -592,17 +599,35 @@ export async function readWithAI(
       })
       .eq('id', appId);
     if (e3) throw e3;
+    // directors read from the documents: listed ones get a missing CNIC, the others are added in free places
     if (merged.directors.length && app.form.biz && app.form.biz !== 'prop') {
-      const { count } = await supabase
+      const { data: rows, error: e4 } = await supabase
         .from('application_partners')
-        .select('id', { count: 'exact', head: true })
+        .select('id, position, name, cnic')
         .eq('application_id', appId);
-      if (!count) {
-        await supabase
-          .from('application_partners')
-          .insert(
-            merged.directors.map((d, i) => ({ application_id: appId, position: i + 1, name: d.name, cnic: d.cnic })),
-          );
+      if (e4) throw e4;
+      const listed = rows ?? [];
+      const free = [1, 2, 3, 4, 5, 6].filter((n) => !listed.some((r) => r.position === n)).slice(0, MAX_PARTNERS);
+      for (const d of merged.directors) {
+        const same = listed.find(
+          (r) =>
+            (r.name && personKey(r.name) === personKey(d.name)) ||
+            (d.cnic && r.cnic && r.cnic.replace(/\D/g, '') === d.cnic.replace(/\D/g, '')),
+        );
+        if (same) {
+          if (!same.cnic?.trim() && d.cnic) await supabase.from('application_partners').update({ cnic: d.cnic }).eq('id', same.id);
+          continue;
+        }
+        const blank = listed.find((r) => !r.name?.trim());
+        if (blank) {
+          await supabase.from('application_partners').update({ name: d.name, cnic: d.cnic }).eq('id', blank.id);
+          blank.name = d.name;
+          continue;
+        }
+        const position = free.shift();
+        if (!position) break;
+        await supabase.from('application_partners').insert({ application_id: appId, position, name: d.name, cnic: d.cnic });
+        listed.push({ id: '', position, name: d.name, cnic: d.cnic });
       }
     }
     refresh();

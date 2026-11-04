@@ -26,6 +26,7 @@ interface Field {
   confidence: number;
 }
 export type Extracted = Record<string, Field | Field[] | { name: Field; cnic: Field }[]>;
+type Person = { name: Field; cnic: Field };
 
 const field = {
   type: 'object',
@@ -43,9 +44,15 @@ const obj = (props: Record<string, unknown>) => ({
 /** what to read from each document type (docs/08 schemas; keys map to applications.form in mergeExtraction) */
 export const SCHEMAS: Record<string, { schema: Record<string, unknown>; instructions: string }> = {
   cnic: {
-    schema: obj({ rep: field, cnic: field, dob: field, address: field }),
+    schema: obj({
+      rep: field,
+      cnic: field,
+      dob: field,
+      address: field,
+      holders: { type: 'array', maxItems: 8, items: obj({ name: field, cnic: field }) },
+    }),
     instructions:
-      'Pakistani CNIC (computerised national identity card) or passport. rep = the holder name in English; cnic = the 13-digit number formatted 12345-1234567-1; dob = date of birth as YYYY-MM-DD; address = the address printed on the card.',
+      'Pakistani CNIC (computerised national identity card) or passport; the file may hold the cards of several people (e.g. every director). rep = the name of the first card holder in English; cnic = the 13-digit number on that card formatted 12345-1234567-1; dob = their date of birth as YYYY-MM-DD; address = the address printed on that card; holders = every card holder in the file, each with name in English and CNIC formatted 12345-1234567-1.',
   },
   ntn: {
     schema: obj({ name: field, ntn: field, address: field, regDate: field }),
@@ -76,6 +83,17 @@ export const SCHEMAS: Record<string, { schema: Record<string, unknown>; instruct
     }),
     instructions:
       'SECP Form A / Form 9 (annual return / particulars of directors). name = company name; incNo = incorporation number; incDate = incorporation date as YYYY-MM-DD; directors = each director with name and CNIC formatted 12345-1234567-1.',
+  },
+  moa: {
+    schema: obj({
+      name: field,
+      incNo: field,
+      address: field,
+      objects: field,
+      directors: { type: 'array', maxItems: 8, items: obj({ name: field, cnic: field }) },
+    }),
+    instructions:
+      'Memorandum and Articles of Association of a company registered with the SECP (Pakistan). name = the company name; incNo = the incorporation / registration number if printed; address = the registered office address; objects = the main business the company is formed to carry on, in one short sentence from the first object clause; directors = every subscriber or first director named in the subscribers / directors table, with name in English and CNIC (or NIC) formatted 12345-1234567-1 when printed.',
   },
   bank: {
     schema: obj({ accountTitle: field, bank: field, iban: field }),
@@ -153,7 +171,23 @@ const MAP: { doc: string; from: string; to: keyof AppForm; priority: number }[] 
   { doc: 'st', from: 'name', to: 'name', priority: 1 },
   { doc: 'bank', from: 'accountTitle', to: 'name', priority: 1 },
   { doc: 'addr', from: 'address', to: 'address', priority: 2 },
+  { doc: 'moa', from: 'name', to: 'name', priority: 2 },
+  { doc: 'moa', from: 'address', to: 'address', priority: 1 },
+  { doc: 'moa', from: 'objects', to: 'particulars', priority: 1 },
 ];
+
+/** a name for matching people across documents: letters only, lower case, single spaces */
+export const personKey = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+const cnicDigits = (cnic: string | null | undefined) => (cnic ?? '').replace(/\D/g, '');
+const people = (list: unknown) =>
+  (Array.isArray(list) ? (list as Person[]) : [])
+    .map((d) => ({ name: val(d?.name)?.value ?? null, cnic: val(d?.cnic)?.value ?? null }))
+    .filter((d): d is { name: string; cnic: string | null } => Boolean(d.name));
 
 export interface MergeResult {
   form: Partial<AppForm>;
@@ -166,7 +200,8 @@ export interface MergeResult {
 /**
  * Combines the readings into form values. The NTN certificate wins the business name and address, the CNIC the
  * representative; otherwise the higher priority, then the higher confidence wins. A field the applicant has already
- * checked or typed (confidence 100, or a value without an AI confidence) is never overwritten.
+ * checked or typed (confidence 100, or a value without an AI confidence) is never overwritten; one only copied from the
+ * sign-up form (src "signup") is, because the documents are the record (owner, 4 Nov 2026).
  */
 export function mergeExtraction(
   readings: Record<string, Extracted>,
@@ -186,17 +221,29 @@ export function mergeExtraction(
   for (const [to, f] of best) {
     const had = String((current as Record<string, unknown>)[to] ?? '').trim();
     const conf = currentConfidence[to];
-    const userOwned = conf === 100 || (had !== '' && conf === undefined);
+    const fromSignup = current.src?.[to] === 'signup';
+    const userOwned = conf === 100 || (had !== '' && conf === undefined && !fromSignup);
     if (userOwned) continue;
     (out.form as Record<string, string>)[to] = f.value;
     out.confidence[to] = f.confidence;
     out.source[to] = f.doc;
     out.filled++;
   }
-  const dirs = (readings.forma?.directors ?? readings.inc?.directors ?? []) as { name: Field; cnic: Field }[];
-  for (const d of dirs.slice(0, 6)) {
-    const name = val(d.name);
-    if (name) out.directors.push({ name: name.value!, cnic: val(d.cnic)?.value ?? null });
+  // directors: the first document that names any (an empty list on one must not hide another's), CNICs completed
+  // from the CNIC copies by name
+  const lists = [readings.forma?.directors, readings.moa?.directors, readings.inc?.directors].map(people);
+  const holders = people(readings.cnic?.holders);
+  const firstCard = val(readings.cnic?.rep);
+  if (firstCard && !holders.some((h) => personKey(h.name) === personKey(firstCard.value!)))
+    holders.unshift({ name: firstCard.value!, cnic: val(readings.cnic?.cnic)?.value ?? null });
+  const cardOf = (name: string) => holders.find((h) => personKey(h.name) === personKey(name))?.cnic ?? null;
+  const seen = new Set<string>();
+  for (const d of lists.find((l) => l.length) ?? []) {
+    const key = personKey(d.name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.directors.push({ name: d.name, cnic: cnicDigits(d.cnic).length === 13 ? d.cnic : cardOf(d.name) });
+    if (out.directors.length >= 6) break;
   }
   return out;
 }

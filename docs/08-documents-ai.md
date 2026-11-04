@@ -12,6 +12,12 @@
   - `cnic` → `{ rep, cnic, dob?, address? }` · `ntn` → `{ name, ntn, address, regDate? }`
   - `st` (sales tax) → `{ gst, name }` · `inc`/`forma` (SECP) → `{ name, incNo, incDate, directors[] }`
   - `bank` → `{ accountTitle, bank, iban }` · `addr` (utility/lease) → `{ address }`
+  - `moa` (Memorandum & Articles) → `{ name, incNo, address, objects, directors[] }` (4 Nov 2026: a memorandum was not
+    read at all, so its directors never reached the form); `cnic` also returns `holders[]`, every card in the file
+- Directors (4 Nov 2026): from the first of Form A, memorandum, incorporation certificate that names any (an empty list
+  on one no longer hides the others), each once, a missing CNIC completed from the CNIC copies by name; listed partners
+  get a missing CNIC, the others are added in free places (up to 6), never only "when the list is empty".
+- Values copied from the sign-up form (`src: signup`) give way to the documents; typed or checked values never do.
 - Each field returns `{ value, confidence 0–100, sourceDoc }`. Merge rule: highest confidence wins; NTN certificate
   wins for business name + address; CNIC wins for representative.
 - Business rules after extraction: address on form vs NTN address → `addressMatchesNtn`; class rule; partners list
