@@ -102,7 +102,10 @@ test('a new applicant fills the whole form with AI help and submits (proprietors
   await expect(page.locator('[data-action="wiz.flag"]')).toHaveCount(2);
   await page.getByRole('button', { name: /^Wholesale & Distribution/ }).click();
   await page.getByRole('button', { name: 'Wholesaler', exact: true }).click();
-  await page.getByRole('group', { name: 'Eligibility' }).getByRole('button', { name: /^Yes/ }).click();
+  // the jurisdiction is a declaration the applicant ticks (owner, 4 Nov 2026), under the heading "Declaration"
+  await expect(page.getByRole('heading', { name: /^Declaration/ })).toBeVisible();
+  await page.locator('[data-action="wiz.juris"]').click();
+  await expect(page.locator('[data-action="wiz.juris"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.feebox')).toContainText('Associate');
   await expect(page.locator('.feebox')).toContainText('Rs. 11,500');
   await saved(page);
@@ -230,9 +233,66 @@ test('Pvt Ltd shows 11 documents; submitting with missing items lists them in pl
   await expect(missing).toContainText('Memorandum & Articles');
   await expect(missing).toContainText('At least two partners / directors');
   await expect(missing).toContainText('Company stamp / seal');
+  // submitting anyway: a red pop-up (not a note at the top) and back to the first step with a gap, marked red
   await page.locator('[data-action="wiz.submit"]').click();
-  await expect(page.getByRole('main').getByRole('alert')).toContainText('Some items are still missing');
+  const pop = page.getByTestId('problems');
+  await expect(pop).toBeVisible();
+  await expect(pop).toContainText('Main business category');
   await expect(page).toHaveURL(/\/portal\/join$/);
+  await pop.locator('[data-action="wiz.problems.show"]').click();
+  await expect(pop).toHaveCount(0);
+  await expect(page.getByTestId('category')).toHaveAttribute('data-need', 'true');
+  await expect(page.getByTestId('category')).toBeInViewport();
+});
+
+test('Next waits for the declaration and for every required document: a red pop-up, the gaps marked red and shown', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await applicant(page, 'Kashif Raza');
+  await startApplication(page);
+  await page.getByRole('button', { name: /^Non-manufacturing/ }).click();
+  await page.getByRole('button', { name: /^Proprietorship/ }).click();
+  await page.getByRole('button', { name: /^Wholesale & Distribution/ }).click();
+  await page.getByRole('button', { name: 'Wholesaler', exact: true }).click();
+  await saved(page);
+
+  // no tick on the declaration: Next stays, the pop-up says why
+  await page.locator('[data-action="wiz.next"]').click();
+  const pop = page.getByTestId('problems');
+  await expect(pop).toBeVisible();
+  await expect(pop).toContainText('Business within Multan Chamber jurisdiction');
+  await expect(pop).not.toContainText('Business type');
+  await pop.locator('[data-action="wiz.problems.show"]').click();
+  const decl = page.locator('[data-action="wiz.juris"]');
+  await expect(decl).toHaveAttribute('data-need', 'true');
+  await expect(decl).toBeFocused();
+  await expect(page.locator('[data-doc]')).toHaveCount(0);
+  await decl.click();
+  await expect(decl).not.toHaveAttribute('data-need', 'true'); // the red mark goes as soon as it is done
+  await saved(page);
+  await page.locator('[data-action="wiz.next"]').click();
+  await expect(page.locator('[data-doc]')).toHaveCount(6);
+
+  // one document only, then Next: every other required slot turns red, the first one comes into view
+  await choose(page, () => page.locator('[data-doc="cnic"] [data-action="wiz.doc.upload"]').click(), 'cnic.pdf', 'application/pdf', PDF);
+  await expect(page.locator('[data-doc="cnic"]')).toHaveClass(/\bok\b/, { timeout: 20_000 });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.locator('[data-action="wiz.next"]').click();
+  await expect(pop).toBeVisible();
+  await expect(pop).toContainText('NTN');
+  await expect(pop.locator('li')).toHaveCount(4); // ntn, addr, bank, photo (the tax return is optional)
+  await pop.locator('[data-action="wiz.problems.show"]').click();
+  await expect(page.locator('.slot[data-need]')).toHaveCount(4);
+  await expect(page.locator('[data-doc="cnic"]')).not.toHaveAttribute('data-need', 'true');
+  await expect(page.locator('.slot[data-need]').first()).toBeInViewport();
+  await expect(page.locator('.slot[data-need] .need-msg').first()).toContainText('Required');
+  await expect(page.getByRole('heading', { name: /Check your details/ })).toHaveCount(0);
+
+  // no soft copy: on a computer a QR code opens this page on the phone; uploading stays
+  await page.locator('[data-action="wiz.doc.phone"]').click();
+  await expect(page.locator('.slot-qr .qr svg')).toBeVisible();
+  await expect(page.locator('[data-doc="ntn"] [data-action="wiz.doc.upload"]')).toBeVisible();
 });
 
 test('LLP is Corporate; a registered AOP asks Form C, an unregistered one does not', async ({ page }) => {

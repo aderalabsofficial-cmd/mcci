@@ -96,6 +96,8 @@ Acceptance rule: every `Build` row has a server action or route handler, an auth
 | `cert.share` | Build | Copy verification link | `GET /api/verify/{code}` | documents | Public | Public page shows only document type, company, status and dates |
 | `cert.scan.pick` | UI | Choose scan of printed certificate | `POST /api/uploads` | — | — | Uploads to private bucket |
 | `cert.scan.sample` | Demo | Use sample scan | `—` | — | — | Not in production |
+| `cert.withdraw` | Build | Withdraw a confirmation (wrong company) | `api.cert_scan_withdraw` | certificate_scans, documents, members, notifications | Certificate approver (temp 3) | 0650: QR reference revoked, earlier certificate valid again, copied serial cleared, member told; scan back in review |
+| `cert.remove` | Build | Delete a scan uploaded by mistake | `api.cert_scan_remove` | certificate_scans, storage | temp 2 | 0650: not for a confirmed scan; files deleted, record and log kept; the same file may come again |
 
 ## `chart.*`
 
@@ -564,12 +566,15 @@ Acceptance rule: every `Build` row has a server action or route handler, an auth
 | id | Phase | Label | Planned endpoint | Tables | Who | Behaviour in the real system |
 |---|---|---|---|---|---|---|
 | `wiz.step` | UI | Go to wizard step | `PATCH /api/applications/{id}` | applications (draft) | — | Draft autosaved on every change |
-| `wiz.next` | Build | Next step | `PATCH /api/applications/{id}` | applications (draft) | Applicant | Validates the step server-side, autosaves the draft |
+| `wiz.next` | Build | Next step | `PATCH /api/applications/{id}` | applications (draft) | Applicant | Autosaves; stays on the step while one of its items is missing (red pop-up, `wiz.problems.show`); the step tabs may still look ahead and the server checks everything at submission |
 | `wiz.back` | UI | Previous step | `—` | — | — | Client-side |
 | `wiz.biz` | Build | Choose business type | `PATCH /api/applications/{id} {business_type}` | applications | Applicant | Sets legal form; document checklist and class rule recalculate |
 | `wiz.nat.sector` | Build | Choose nature of business (sector) | `PATCH /api/applications/{id} {sector}` | applications | Applicant | Sector list managed by MCCI in Settings; used for the directory and reports |
 | `wiz.nat.item` | Build | Choose what the business does (up to 3) | `PATCH /api/applications/{id} {activities}` | applications | Applicant | Saved with the application; fills Particulars of Business |
-| `wiz.juris` | Build | Confirm business is within Multan Chamber jurisdiction (TOR 11 b) | `PATCH /api/applications/{id}` | applications | Applicant | Eligibility rule from the form instructions |
+| `wiz.juris` | Build | Declaration: business within Multan Chamber jurisdiction (TOR 11 b), a check mark | `PATCH /api/applications/{id}` | applications | Applicant | Owner, 4 Nov 2026: a declaration, not yes/no; Next waits for it |
+| `wiz.problems.show` | Build | Show what is missing (red pop-up) | `—` | — | Applicant | Next / Submit stop at a gap: red pop-up, the gaps marked red, the first scrolled into view and focused |
+| `wiz.doc.camera` | Build | Take photo of a document (phone) | `POST /api/applications/{id}/documents` | application_documents | Applicant | Opens the back camera; upload stays |
+| `wiz.doc.phone` | Build | Use the phone camera (QR on a computer) | `—` | — | Applicant | QR of this page; sign in on the phone and photograph the papers |
 | `wiz.addr` | Build | Confirm business address matches the NTN certificate | `PATCH /api/applications/{id}` | applications | Applicant | Officer checks it against the uploaded NTN certificate |
 | `wiz.flag` | Build | Answer a yes / no question (manufacturing, women-owned, sales tax, turnover) | `PATCH /api/applications/{id}` | applications | Applicant | Recalculates Corporate / Associate class and fee |
 | `wiz.doc.upload` | Build | Upload a required document | `POST /api/applications/{id}/documents (multipart) → storage` | application_documents, storage.objects | Applicant | Virus-scanned, stored in a private bucket, queued for AI reading |

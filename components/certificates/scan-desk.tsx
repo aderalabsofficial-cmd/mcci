@@ -1,12 +1,19 @@
 'use client';
 
-import { Check, Upload, X } from 'lucide-react';
+import { Check, Trash2, Undo2, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { StampEditor } from '@/components/certificates/stamp-editor';
 import { Modal } from '@/components/shared/modal';
 import type { Locale } from '@/i18n/routing';
-import { type CertResult, confirmScan, rejectScan, uploadScans } from '@/lib/certificates/actions';
+import {
+  type CertResult,
+  confirmScan,
+  deleteScan,
+  rejectScan,
+  uploadScans,
+  withdrawScan,
+} from '@/lib/certificates/actions';
 import { callAction } from '@/lib/client/call-action';
 import { msg } from '@/lib/nav/model';
 
@@ -28,8 +35,11 @@ export interface ScanRow {
 /**
  * Certificate scans (docs/21 point 30, migration 0450): upload (one request per file), the AI reading with its
  * certainty, the matched member and every conflict; a person confirms (a conflict needs the approver's override with
- * a reason) or rejects. Buttons follow the level; the database refuses anything not allowed.
+ * a reason) or rejects. A scan confirmed for the wrong company is withdrawn by the approver and confirmed again for the
+ * right one; a scan uploaded by mistake is deleted (0650, each with a reason). Buttons follow the level; the database
+ * refuses anything not allowed.
  */
+type DialogKind = 'confirm' | 'reject' | 'withdraw' | 'remove';
 export function ScanDesk({
   locale,
   rows,
@@ -48,7 +58,7 @@ export function ScanDesk({
   const [, startTransition] = useTransition();
   const [note, setNote] = useState<CertResult | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [dialog, setDialog] = useState<{ kind: 'confirm' | 'reject'; row: ScanRow } | null>(null);
+  const [dialog, setDialog] = useState<{ kind: DialogKind; row: ScanRow } | null>(null);
   const [member, setMember] = useState('');
   const [override, setOverride] = useState(false);
   const [text, setText] = useState('');
@@ -74,7 +84,7 @@ export function ScanDesk({
     startTransition(() => router.refresh());
   };
 
-  const open = (kind: 'confirm' | 'reject', row: ScanRow) => {
+  const open = (kind: DialogKind, row: ScanRow) => {
     setMember(row.matched?.id ?? '');
     setOverride(false);
     setText('');
@@ -85,10 +95,15 @@ export function ScanDesk({
     if (!dialog) return;
     setBusy('dialog');
     setInner(null);
+    const id = dialog.row.id;
     const r =
       dialog.kind === 'confirm'
-        ? await callAction(locale, () => confirmScan(locale, dialog.row.id, member, override, text))
-        : await callAction(locale, () => rejectScan(locale, dialog.row.id, text));
+        ? await callAction(locale, () => confirmScan(locale, id, member, override, text))
+        : dialog.kind === 'withdraw'
+          ? await callAction(locale, () => withdrawScan(locale, id, text))
+          : dialog.kind === 'remove'
+            ? await callAction(locale, () => deleteScan(locale, id, text))
+            : await callAction(locale, () => rejectScan(locale, id, text));
     setBusy(null);
     if (!r.ok) return setInner(r.message ?? '');
     setDialog(null);
@@ -186,6 +201,30 @@ export function ScanDesk({
               )}
               {r.note && <small>{r.note}</small>}
             </div>
+            {r.status === 'confirmed' && canOverride && (
+              <div className="pb">
+                <button
+                  type="button"
+                  className="btn btn-w btn-danger"
+                  data-action="cert.withdraw"
+                  onClick={() => open('withdraw', r)}
+                >
+                  <Undo2 size={16} aria-hidden /> {m('withdraw')}
+                </button>
+              </div>
+            )}
+            {canWork && r.status !== 'confirmed' && (
+              <div className="pb">
+                <button
+                  type="button"
+                  className="btn btn-w"
+                  data-action="cert.remove"
+                  onClick={() => open('remove', r)}
+                >
+                  <Trash2 size={16} aria-hidden /> {m('remove')}
+                </button>
+              </div>
+            )}
             {r.status === 'confirmed' && r.code && (
               <StampEditor
                 locale={locale}
@@ -224,8 +263,8 @@ export function ScanDesk({
       <Modal
         open={Boolean(d)}
         onOpenChange={(o) => !o && setDialog(null)}
-        title={d ? m(d.kind === 'confirm' ? 'confirmTitle' : 'rejectTitle', { name: d.row.fileName }) : ''}
-        intro={d?.kind === 'confirm' ? m('confirmHelp') : undefined}
+        title={d ? m(`${d.kind}Title`, { name: d.row.fileName }) : ''}
+        intro={d && d.kind !== 'reject' ? m(`${d.kind}Help`, { code: d.row.code ?? '' }) : undefined}
         closeLabel={msg(locale, 'common.close')}
         footer={
           d && (
@@ -235,7 +274,7 @@ export function ScanDesk({
               </button>
               <button
                 type="button"
-                className={`btn ${d.kind === 'reject' ? 'btn-danger' : 'btn-primary'}`}
+                className={`btn ${d.kind === 'confirm' ? 'btn-primary' : 'btn-danger'}`}
                 data-action={`cert.${d.kind}.confirm`}
                 disabled={busy === 'dialog' || (d.kind === 'confirm' && (!member || (needsOverride && !canOverride)))}
                 title={d.kind === 'confirm' && needsOverride && !canOverride ? m('needApprover') : undefined}
@@ -243,7 +282,7 @@ export function ScanDesk({
               >
                 {busy === 'dialog'
                   ? msg(locale, 'membership.wiz.working')
-                  : m(d.kind === 'confirm' ? 'confirmOk' : 'reject')}
+                  : m({ confirm: 'confirmOk', reject: 'reject', withdraw: 'withdrawOk', remove: 'removeOk' }[d.kind])}
               </button>
             </>
           )
@@ -280,9 +319,9 @@ export function ScanDesk({
             )}
           </>
         )}
-        {(d?.kind === 'reject' || needsOverride) && (
+        {(d?.kind === 'reject' || d?.kind === 'withdraw' || d?.kind === 'remove' || needsOverride) && (
           <label className="form-field">
-            {m(d?.kind === 'reject' ? 'rejectReason' : 'overrideReason')}
+            {m(d?.kind === 'confirm' ? 'overrideReason' : d?.kind === 'reject' ? 'rejectReason' : 'whyReason')}
             <textarea rows={3} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} />
           </label>
         )}

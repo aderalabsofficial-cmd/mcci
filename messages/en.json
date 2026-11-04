@@ -1318,9 +1318,13 @@
       "yes": "Yes",
       "no": "No",
       "juris": {
-        "title": "Eligibility",
-        "q": "Is your business scope within the jurisdiction of the Multan Chamber (TOR 11 (b))?",
-        "blocked": "Membership is only granted to businesses within the Multan Chamber jurisdiction. Please contact the Membership Desk."
+        "title": "Declaration",
+        "q": "I declare that the scope of my business is within the jurisdiction of the Multan Chamber of Commerce & Industry (TOR 11 (b))."
+      },
+      "problems": {
+        "title": "Please complete these first",
+        "help": "Step {step} is not complete yet. The items marked in red below still need your attention.",
+        "show": "Show me"
       },
       "docs": {
         "kicker": "Instructions and requirements of membership",
@@ -1340,7 +1344,12 @@
         "rejected": "rejected",
         "photoName": "Passport photo (auto-cropped)",
         "fileHint": "PDF, JPG or PNG · up to 10 MB",
-        "noReturn": "Only the registration certificate is needed — no sales tax return."
+        "noReturn": "Only the registration certificate is needed — no sales tax return.",
+        "takePhoto": "Take photo",
+        "phoneCamera": "No soft copy? Use your phone camera",
+        "phoneQr": "QR code that opens this page on your phone",
+        "phoneHow": "Scan this code with your phone camera, sign in with the same account, and take a photo of each paper. Everything you add on the phone appears here.",
+        "neededNow": "Required: please upload or photograph this document."
       },
       "ai": {
         "title": "Let AI fill the form for you",
@@ -4201,7 +4210,9 @@
     "done": {
       "uploaded": "{n} scan(s) uploaded and read.",
       "confirmed": "Confirmed for {no}: reference {code} created. Now place the QR on a copy.",
-      "rejected": "Scan rejected."
+      "rejected": "Scan rejected.",
+      "withdrawn": "Confirmation withdrawn. The scan is back in review.",
+      "deleted": "Scan deleted."
     },
     "errors": {
       "notAllowed": "You are not allowed to do this.",
@@ -4219,7 +4230,8 @@
       "conflicts": "This scan has conflicts: tick the override and write the reason.",
       "reason_required": "Please write the reason.",
       "path": "Upload failed. Please try again.",
-      "noSigningKey": "Certificates cannot be issued yet: the QR signing key is not set on the server. Ask the IT Convener to set QR_SIGNING_KEY (docs/26)."
+      "noSigningKey": "Certificates cannot be issued yet: the QR signing key is not set on the server. Ask the IT Convener to set QR_SIGNING_KEY (docs/26).",
+      "withdraw_first": "This scan is confirmed: withdraw the confirmation first."
     },
     "stamp": {
       "placeTitle": "Place the QR on a copy",
@@ -4252,7 +4264,16 @@
       "originalAlt": "The original scan, unchanged",
       "qrAlt": "Large QR for {code}",
       "close": "Close"
-    }
+    },
+    "withdraw": "Withdraw confirmation",
+    "withdrawTitle": "Withdraw the confirmation of {name}",
+    "withdrawHelp": "Use this when the scan was confirmed for the wrong company. The QR reference {code} is revoked (a scan of it will say \"Revoked\"), the member's previous certificate becomes valid again, the QR copy is removed and the member is told. The scan goes back to review, so you can confirm it for the right member without uploading it again.",
+    "withdrawOk": "Withdraw",
+    "remove": "Delete scan",
+    "removeTitle": "Delete the scan {name}",
+    "removeHelp": "Use this for a scan uploaded by mistake, for example under the wrong company or not a certificate. The file is deleted; its record and history stay in the audit log, and the same file can be uploaded again.",
+    "removeOk": "Delete",
+    "whyReason": "Reason (kept in the audit log)"
   },
   "audit": {
     "title": "Audit Trail",

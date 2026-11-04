@@ -52,6 +52,8 @@ export default async function CertificatesPage({ params }: Props) {
       .select(
         'id, file_name, status, uploaded_at, extracted, conflicts, match_member, document_id, stamped_path, review_note, log',
       )
+      // a deleted scan keeps its record and log (audit), not its place in the list (0650)
+      .neq('status', 'removed')
       .order('uploaded_at', { ascending: false })
       .limit(100),
     supabase

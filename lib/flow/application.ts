@@ -202,6 +202,19 @@ export function missing(app: AppState, requirements: DocRequirement[], rules: Me
   return out;
 }
 
+/**
+ * The wizard step (0-based, lib/membership/reference.ts WIZARD_STEPS) where a missing item is completed: Next does not
+ * leave a step while one of its items is missing, and a refused submission goes back to the first one (owner, 4 Nov
+ * 2026: "this should not go on the next page").
+ */
+export function stepOfMissing(code: string): number {
+  if (['biz', 'category', 'aopReg', 'nature', 'juris'].includes(code)) return 0;
+  if (code.startsWith('doc:') || code === 'field:stWef') return 1;
+  if (code.startsWith('field:') || ['addr', 'partners', 'partnerContacts', 'partnerPhotos'].includes(code)) return 2;
+  if (['sign', 'stamp', 'decl'].includes(code)) return 4;
+  return 5;
+}
+
 /** a missing-item code in plain words */
 export function missingLabel(code: string, locale: Locale): string {
   if (code.startsWith('field:')) return msg(locale, `membership.fields.${code.slice(6)}`);

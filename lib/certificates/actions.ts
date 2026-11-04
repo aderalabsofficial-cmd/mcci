@@ -42,7 +42,7 @@ function fail(locale: Locale, error: unknown, what: string): CertResult {
   if (error instanceof z.ZodError) return { ok: false, message: t('fields') };
   const e = error as { code?: string; hint?: string; message?: string };
   if (e?.code === '42501') return { ok: false, message: t('notAllowed') };
-  const known = ['duplicate', 'wrong_stage', 'not_found', 'demo', 'conflicts', 'reason_required', 'path'];
+  const known = ['duplicate', 'wrong_stage', 'not_found', 'demo', 'conflicts', 'reason_required', 'path', 'withdraw_first'];
   if (e?.code === 'P0001' && e.hint && known.includes(e.hint)) return { ok: false, message: t(e.hint) };
   console.error(`${what} failed`, e?.code, e?.message);
   return { ok: false, message: t('generic') };
@@ -146,6 +146,48 @@ export async function rejectScan(locale: Locale, scanId: string, note: string): 
     return { ok: true, message: msg(locale, 'certs.done.rejected') };
   } catch (error) {
     return fail(locale, error, 'cert.reject');
+  }
+}
+
+/**
+ * cert.withdraw (approver, temp ≥ 3): a scan confirmed for the wrong member. Its QR reference is revoked, the member's
+ * previous certificate is valid again, and the scan goes back to review to be confirmed for the right member
+ * (migration 0650). The QR-stamped copy is deleted; the untouched original stays for the next confirmation.
+ */
+export async function withdrawScan(locale: Locale, scanId: string, note: string): Promise<CertResult> {
+  try {
+    await requirePermission('temp', 3);
+    const supabase = await createClient();
+    const { data: stamped, error } = await supabase
+      .schema('api')
+      .rpc('cert_scan_withdraw', { p_id: uuid.parse(scanId), p_note: z.string().trim().min(3).max(1000).parse(note) });
+    if (error) throw error;
+    if (stamped) await removeScan(stamped).catch((e) => console.error('cert.withdraw: stamped copy not deleted', e?.message));
+    refresh();
+    return { ok: true, message: msg(locale, 'certs.done.withdrawn') };
+  } catch (error) {
+    return fail(locale, error, 'cert.withdraw');
+  }
+}
+
+/**
+ * cert.remove (temp ≥ 2): a scan uploaded by mistake (wrong company, not a certificate) that is not confirmed. Its files
+ * are deleted; the record, its log and the audit trail stay, and the same file may be uploaded again (migration 0650).
+ */
+export async function deleteScan(locale: Locale, scanId: string, note: string): Promise<CertResult> {
+  try {
+    await requirePermission('temp', 2);
+    const supabase = await createClient();
+    const { data: paths, error } = await supabase
+      .schema('api')
+      .rpc('cert_scan_remove', { p_id: uuid.parse(scanId), p_note: z.string().trim().min(3).max(1000).parse(note) });
+    if (error) throw error;
+    for (const path of paths ?? [])
+      await removeScan(path).catch((e) => console.error('cert.remove: file not deleted', e?.message));
+    refresh();
+    return { ok: true, message: msg(locale, 'certs.done.deleted') };
+  } catch (error) {
+    return fail(locale, error, 'cert.remove');
   }
 }
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { Camera, Check, FileText, IdCard, Upload, X } from 'lucide-react';
+import { Camera, Check, FileText, IdCard, QrCode, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import type { Locale } from '@/i18n/routing';
 import { removeDocument, savePhoto, uploadDocument } from '@/lib/membership/actions';
 import { msg } from '@/lib/nav/model';
@@ -13,6 +13,11 @@ import { callAction } from '@/lib/client/call-action';
  * Document slots of the application (prototype slot(): one row per required document, in the form's order) with
  * upload / phone camera / drag-and-drop, preview, replace and remove (actions wiz.doc.upload, wiz.doc.view,
  * wiz.doc.remove, app.fix.upload, wiz.photo → photo.save). Files are checked again on the server (type, size).
+ *
+ * Paper only, no soft copy (owner, 4 Nov 2026): on a phone every slot also offers "Take photo", which opens the back
+ * camera (wiz.doc.camera); on a computer a QR code opens this same page on the applicant's phone (wiz.doc.phone),
+ * where they sign in and photograph the papers. Uploading a file stays on both. A required slot left empty when Next
+ * is pressed is marked red (`needed`).
  */
 
 export interface SlotDoc {
@@ -41,6 +46,7 @@ export function DocSlots({
   editable,
   onlyRejected = false,
   onMessage,
+  needed = [],
 }: {
   locale: Locale;
   appId: string;
@@ -50,6 +56,8 @@ export function DocSlots({
   editable: boolean;
   onlyRejected?: boolean;
   onMessage: (m: { ok: boolean; text: string }) => void;
+  /** required slots still empty when Next was pressed: shown red */
+  needed?: string[];
 }) {
   const t = (k: string, v?: Record<string, string>) => msg(locale, `membership.wiz.docs.${k}`, v);
   const router = useRouter();
@@ -59,15 +67,41 @@ export function DocSlots({
   const [drag, setDrag] = useState<string | null>(null);
   const [crop, setCrop] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  // a phone or tablet (touch first): the camera is offered on every slot; a computer gets the QR code instead
+  const [phone, setPhone] = useState(false);
+  const [qr, setQr] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)');
+    setPhone(mq.matches);
+    const on = () => setPhone(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  useEffect(() => {
+    if (!qrOpen || qr) return;
+    let live = true;
+    void import('qrcode').then((QRCode) =>
+      QRCode.toString(window.location.href, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }).then((svg) => {
+        if (live) setQr(svg);
+      }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [qrOpen, qr]);
   const [, start] = useTransition();
   const byKey = new Map(docs.map((d) => [d.key, d]));
   const rows = onlyRejected ? requirements.filter((r) => byKey.get(r.key)?.status === 'rejected') : requirements;
 
-  const pick = (key: string) => {
+  const pick = (key: string, camera = false) => {
     target.current = key;
     if (input.current) {
       input.current.value = '';
-      input.current.accept = key === 'photo' ? 'image/jpeg,image/png,image/heic,.heic' : ACCEPT;
+      input.current.accept = camera ? 'image/*' : key === 'photo' ? 'image/jpeg,image/png,image/heic,.heic' : ACCEPT;
+      // the back camera for papers, the front one for the applicant's own photo
+      if (camera) input.current.setAttribute('capture', key === 'photo' ? 'user' : 'environment');
+      else input.current.removeAttribute('capture');
       input.current.click();
     }
   };
@@ -133,6 +167,29 @@ export function DocSlots({
           if (f) void send(target.current, f);
         }}
       />
+      {editable && !onlyRejected && !phone && (
+        <div className="slot-phone" data-testid="phone-camera">
+          <button
+            type="button"
+            className="btn btn-w"
+            aria-expanded={qrOpen}
+            data-action="wiz.doc.phone"
+            onClick={() => setQrOpen((o) => !o)}
+          >
+            <QrCode size={16} aria-hidden /> {t('phoneCamera')}
+          </button>
+          {qrOpen && (
+            <div className="slot-qr">
+              {qr ? (
+                <span className="qr" role="img" aria-label={t('phoneQr')} dangerouslySetInnerHTML={{ __html: qr }} />
+              ) : (
+                <span className="qr" aria-hidden />
+              )}
+              <p>{t('phoneHow')}</p>
+            </div>
+          )}
+        </div>
+      )}
       <div className="slots">
         {rows.map((r) => {
           const doc = byKey.get(r.key);
@@ -140,11 +197,14 @@ export function DocSlots({
           const has = Boolean(doc);
           const rej = doc?.status === 'rejected';
           const short = msg(locale, `membership.docs.${r.key}`);
+          const need = !has && needed.includes(r.key);
           return (
             <div
               key={r.key}
               className={`slot ${has ? (rej ? 'bad' : 'ok') : ''} ${drag === r.key ? 'drag' : ''}`}
               data-doc={r.key}
+              data-problem={`doc:${r.key}`}
+              data-need={need || undefined}
               onDragOver={(e) => {
                 if (!editable) return;
                 e.preventDefault();
@@ -182,6 +242,7 @@ export function DocSlots({
                   {!r.required && <small className="opt"> {t('optional')}</small>}
                 </b>
                 <small>{r.label_en}</small>
+                {need && <em className="need-msg">{t('neededNow')}</em>}
                 {doc && (
                   <em>
                     {isPhoto ? t('photoName') : doc.file_name}
@@ -230,17 +291,31 @@ export function DocSlots({
                   </>
                 ) : (
                   editable && (
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-w"
-                      onClick={() => pick(r.key)}
-                      disabled={busy === r.key}
-                      data-action={isPhoto ? 'wiz.photo' : 'wiz.doc.upload'}
-                      aria-label={`${isPhoto ? t('addPhoto') : t('upload')}: ${short}`}
-                    >
-                      {isPhoto ? <Camera size={16} aria-hidden /> : <Upload size={16} aria-hidden />}{' '}
-                      {busy === r.key ? t('uploading') : isPhoto ? t('addPhoto') : t('upload')}
-                    </button>
+                    <>
+                      {phone && !isPhoto && (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-w"
+                          onClick={() => pick(r.key, true)}
+                          disabled={busy === r.key}
+                          data-action="wiz.doc.camera"
+                          aria-label={`${t('takePhoto')}: ${short}`}
+                        >
+                          <Camera size={16} aria-hidden /> {t('takePhoto')}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className={`btn ${phone && !isPhoto ? '' : 'btn-primary'} btn-w`}
+                        onClick={() => pick(r.key)}
+                        disabled={busy === r.key}
+                        data-action={isPhoto ? 'wiz.photo' : 'wiz.doc.upload'}
+                        aria-label={`${isPhoto ? t('addPhoto') : t('upload')}: ${short}`}
+                      >
+                        {isPhoto ? <Camera size={16} aria-hidden /> : <Upload size={16} aria-hidden />}{' '}
+                        {busy === r.key ? t('uploading') : isPhoto ? t('addPhoto') : t('upload')}
+                      </button>
+                    </>
                   )
                 )}
               </div>

@@ -36,6 +36,7 @@ import {
   type MembershipRules,
   missing,
   missingLabel,
+  stepOfMissing,
   particularsFromNature,
   activityLabel,
 } from '@/lib/flow/application';
@@ -191,6 +192,9 @@ export function Wizard({
   const [save, setSave] = useState<'idle' | 'saving' | 'saved' | 'error' | 'stale'>('idle');
   const [note, setNote] = useState<{ ok: boolean; text: string; failure?: ActionFailure } | null>(null);
   const [missingCodes, setMissingCodes] = useState<string[] | null>(null);
+  // what stopped Next or the submission: shown in a red pop-up, marked red where it is, until it is done
+  const [problems, setProblems] = useState<string[]>([]);
+  const [problemOpen, setProblemOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [pad, setPad] = useState(false);
   const [natQ, setNatQ] = useState('');
@@ -290,8 +294,21 @@ export function Wizard({
     return () => window.removeEventListener('pagehide', h);
   }, [flush]);
 
-  const go = async (n: number) => {
+  /** `check`: Next only. The step tabs and "Read with AI" may look ahead; Next and Submit stop at what is missing. */
+  const go = async (n: number, check = false) => {
     const to = Math.min(5, Math.max(0, n));
+    // Next passes a step only when it is complete: otherwise stay and show what is missing, marked red
+    if (check && to > step) {
+      const blocked = missingNow.filter((c) => stepOfMissing(c) >= step && stepOfMissing(c) < to);
+      if (blocked.length) {
+        const first = Math.min(...blocked.map(stepOfMissing));
+        return showProblems(
+          blocked.filter((c) => stepOfMissing(c) === first),
+          first,
+        );
+      }
+    }
+    setProblems([]);
     setStep(to);
     setNote(null);
     setForm({ step: to });
@@ -323,6 +340,31 @@ export function Wizard({
     [f, s.jurisdiction_ok, s.women, s.decl1, s.decl2, app.sign, app.stamp, docs, app.partners],
   );
   const missingNow = missing(state, app.requirements, rules);
+  // red marks stay only on what is still missing
+  const needNow = new Set(problems.filter((c) => missingNow.includes(c)));
+  const need = (...codes: string[]) => (codes.some((c) => needNow.has(c)) ? true : undefined);
+  const firstProblem = (codes: string[]) =>
+    codes.map((c) => document.querySelector<HTMLElement>(`[data-problem~="${CSS.escape(c)}"]`)).find(Boolean) ?? null;
+  const showProblems = (codes: string[], at: number) => {
+    setProblems(codes);
+    setProblemOpen(true);
+    if (at !== step) {
+      setStep(at);
+      setForm({ step: at });
+    }
+    // once the step is drawn: bring the first gap into view behind the pop-up
+    setTimeout(() => {
+      (firstProblem(codes) ?? document.querySelector('.wz-body'))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  };
+  const closeProblems = () => {
+    setProblemOpen(false);
+    const el = firstProblem(problems);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (el.matches('button, input') ? el : (el.querySelector<HTMLElement>('input, button') ?? el)).focus({ preventScroll: true });
+    }
+  };
   const reqs = applicableDocs(app.requirements, f);
 
   // ───────── pieces ─────────
@@ -459,7 +501,12 @@ export function Wizard({
     const required = REQUIRED_FIELDS.includes(k);
     const src = f.src?.[k];
     return (
-      <label key={k} className={`jf ${warn ? 'w' : ''} ${full ? 'full' : ''}`}>
+      <label
+        key={k}
+        className={`jf ${warn ? 'w' : ''} ${full ? 'full' : ''}`}
+        data-problem={`field:${k}`}
+        data-need={need(`field:${k}`)}
+      >
         {m(`fields.${k}`)}
         {required && <em className="rq"> *</em>}
         <input
@@ -559,7 +606,7 @@ export function Wizard({
           <Bi {...both('cat.title')} />
         </h2>
         <p className="muted">{m('cat.help')}</p>
-        <div className="biz two" data-testid="category">
+        <div className="biz two" data-testid="category" data-problem="category" data-need={need('category')}>
           {([true, false] as const).map((mfg) =>
             pickCard(
               f.manufacturing === mfg,
@@ -577,7 +624,7 @@ export function Wizard({
           <Bi {...both('wiz.type.title')} />
         </h3>
         <p className="muted">{m('wiz.type.help')}</p>
-        <div className="biz six">
+        <div className="biz six" data-problem="biz" data-need={need('biz')}>
           {BIZ_TYPES.map((b) =>
             pickCard(
               f.biz === b,
@@ -595,7 +642,7 @@ export function Wizard({
           )}
         </div>
         {f.biz === 'aop' && (
-          <div className="juris" style={{ marginTop: 12 }}>
+          <div className="juris" style={{ marginTop: 12 }} data-problem="aopReg" data-need={need('aopReg')}>
             <span>
               {msg('en', 'membership.wiz.type.aop.q')}
               <small lang="ur">{msg('ur', 'membership.wiz.type.aop.q')}</small>
@@ -675,7 +722,7 @@ export function Wizard({
             {!results.length && <p className="muted nat-none">{m('wiz.nature.none')}</p>}
           </div>
         )}
-        <div className="nat">
+        <div className="nat" data-problem="nature" data-need={need('nature')}>
           {SECTORS.map((x) => (
             <button
               key={x.k}
@@ -716,37 +763,26 @@ export function Wizard({
         <h3 className="wz-h2">
           <Bi {...both('wiz.juris.title')} />
         </h3>
-        <div className="juris">
+        {/* a declaration the applicant ticks, not a yes/no question (owner, 4 Nov 2026); Next waits for it */}
+        <button
+          type="button"
+          className={`decl ${s.jurisdiction_ok === true ? 'on' : ''}`}
+          aria-pressed={s.jurisdiction_ok === true}
+          data-action="wiz.juris"
+          data-problem="juris"
+          data-need={need('juris')}
+          onClick={() => {
+            const val = s.jurisdiction_ok === true ? null : true;
+            setS((p) => ({ ...p, jurisdiction_ok: val }));
+            queue({ jurisdiction_ok: val });
+          }}
+        >
+          <i>{s.jurisdiction_ok === true ? '✓' : ''}</i>
           <span>
             {msg('en', 'membership.wiz.juris.q')}
             <small lang="ur">{msg('ur', 'membership.wiz.juris.q')}</small>
           </span>
-          <div className="seg" role="group" aria-label={m('wiz.juris.title')}>
-            {[true, false].map((val) => (
-              <button
-                key={String(val)}
-                type="button"
-                className={s.jurisdiction_ok === val ? (val ? 'on' : 'on no') : ''}
-                aria-pressed={s.jurisdiction_ok === val}
-                data-action="wiz.juris"
-                onClick={() => {
-                  setS((p) => ({ ...p, jurisdiction_ok: val }));
-                  queue({ jurisdiction_ok: val });
-                }}
-              >
-                {val
-                  ? `${msg('en', 'membership.wiz.yes')} · ${msg('ur', 'membership.wiz.yes')}`
-                  : `${msg('en', 'membership.wiz.no')} · ${msg('ur', 'membership.wiz.no')}`}
-              </button>
-            ))}
-          </div>
-        </div>
-        {s.jurisdiction_ok === false && (
-          <div className="banner orange" style={{ marginTop: 10 }} role="status">
-            <Flag size={18} color="#2a1d05" aria-hidden />
-            <span>{m('wiz.juris.blocked')}</span>
-          </div>
-        )}
+        </button>
         {feeBox}
       </>
     );
@@ -766,7 +802,7 @@ export function Wizard({
           {f.manufacturing ? ` ${m('wiz.docs.mfg')}` : ''} <small>({m('wiz.docs.fileHint')})</small>
         </p>
         {f.salesTax && (
-          <div className="juris" style={{ margin: '10px 0' }}>
+          <div className="juris" style={{ margin: '10px 0' }} data-problem="field:stWef" data-need={need('field:stWef')}>
             <span>
               {msg('en', 'membership.fields.stWef')} <em className="rq">*</em>
               <small lang="ur">{msg('ur', 'membership.fields.stWef')}</small>
@@ -796,6 +832,7 @@ export function Wizard({
           photoUrl={app.photoUrl}
           editable
           onMessage={setNote}
+          needed={[...needNow].filter((c) => c.startsWith('doc:')).map((c) => c.slice(4))}
         />
         <div className="ai-cta">
           <Sparkles size={28} color="#c8963e" aria-hidden />
@@ -857,6 +894,8 @@ export function Wizard({
           className={`decl sm ${f.addrMatch ? 'on' : ''}`}
           aria-pressed={Boolean(f.addrMatch)}
           data-action="wiz.addr"
+          data-problem="addr"
+          data-need={need('addr')}
           onClick={() => setForm({ addrMatch: !f.addrMatch })}
         >
           <i>{f.addrMatch ? '✓' : ''}</i>
@@ -870,7 +909,11 @@ export function Wizard({
         {/* email and address side by side (owner, 29 Oct 2026: no empty half row) */}
         <div className="fg">{REP_FIELDS.map((k) => field(k, false))}</div>
         <p className="muted">{m('wiz.details.repPhoto')}</p>
-        <h4 className="jg">
+        <h4
+          className="jg"
+          data-problem="partners partnerContacts partnerPhotos"
+          data-need={need('partners', 'partnerContacts', 'partnerPhotos')}
+        >
           {msg('en', `membership.wiz.details.${partnersKey}`)} · {msg('ur', `membership.wiz.details.${partnersKey}`)}{' '}
           {f.biz === 'prop' && <small className="opt">{m('wiz.details.partnersOptional')}</small>}
         </h4>
@@ -959,7 +1002,7 @@ export function Wizard({
           </div>
         </div>
         <div className="g2c">
-          <div className="card">
+          <div className="card" data-problem="sign" data-need={need('sign')}>
             <div className="ch">
               <h3>
                 <Bi {...both('wiz.sign.signTitle')} />
@@ -997,7 +1040,7 @@ export function Wizard({
               </button>
             </div>
           </div>
-          <div className="card">
+          <div className="card" data-problem="stamp" data-need={need('stamp')}>
             <div className="ch">
               <h3>
                 <Bi {...both('wiz.sign.stampTitle')} />
@@ -1052,6 +1095,8 @@ export function Wizard({
             className={`decl ${s[k] ? 'on' : ''}`}
             aria-pressed={s[k]}
             data-action="wiz.declare"
+            data-problem="decl"
+            data-need={need('decl')}
             onClick={() => {
               setS((p) => ({ ...p, [k]: !p[k] }));
               queue({ [k]: !s[k] });
@@ -1076,8 +1121,8 @@ export function Wizard({
         </h2>
         <p className="muted">{m('wiz.review.help')}</p>
         {codes.length ? (
-          <div className="banner orange" style={{ margin: '12px 0' }} role="status" data-testid="missing">
-            <Flag size={18} color="#2a1d05" aria-hidden />
+          <div className="banner red" style={{ margin: '12px 0' }} role="alert" data-testid="missing">
+            <Flag size={18} color="#fff" aria-hidden />
             <span>
               <b>{m('wiz.review.stillNeeded')}</b> {codes.map((c) => missingLabel(c, locale)).join(' · ')}
             </span>
@@ -1201,7 +1246,7 @@ export function Wizard({
             type="button"
             className="btn btn-primary btn-big"
             data-action="wiz.next"
-            onClick={() => void go(step + 1)}
+            onClick={() => void go(step + 1, true)}
           >
             <Bi {...both('wiz.next')} /> <ArrowRight size={18} aria-hidden />
           </button>
@@ -1224,8 +1269,16 @@ export function Wizard({
               }
               setBusy(null);
               if (r && !r.ok) {
+                if (r.missing?.length) {
+                  // not a note at the top of the page: a pop-up, and back to where the first gap is
+                  setMissingCodes(r.missing);
+                  const first = Math.min(...r.missing.map(stepOfMissing));
+                  return showProblems(
+                    r.missing.filter((c) => stepOfMissing(c) === first),
+                    first,
+                  );
+                }
                 setNote({ ok: false, text: r.message ?? '' });
-                if (r.missing) setMissingCodes(r.missing);
               }
             }}
           >
@@ -1233,6 +1286,42 @@ export function Wizard({
           </button>
         )}
       </div>
+      {problemOpen && (
+        <div className="wz-pop" role="presentation" onClick={closeProblems}>
+          <div
+            className="wz-pop-card"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="wz-pop-h"
+            data-testid="problems"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.key === 'Escape' && closeProblems()}
+          >
+            <h3 id="wz-pop-h">
+              <Flag size={20} aria-hidden /> <Bi {...both('wiz.problems.title')} />
+            </h3>
+            <p>
+              <Bi {...both('wiz.problems.help', { step: String(stepOfMissing(problems[0] ?? '') + 1) })} />
+            </p>
+            <ul>
+              {problems.map((c) => (
+                <li key={c} data-code={c}>
+                  {missingLabel(c, 'en')} <small lang="ur">{missingLabel(c, 'ur')}</small>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="btn btn-primary btn-big"
+              data-action="wiz.problems.show"
+              autoFocus
+              onClick={closeProblems}
+            >
+              <Bi {...both('wiz.problems.show')} />
+            </button>
+          </div>
+        </div>
+      )}
       <SignaturePad
         open={pad}
         text={padText}

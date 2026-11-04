@@ -237,3 +237,51 @@ test('the Membership Officer reviews but cannot override a conflict; another mem
   await signInAs(page, 'member');
   expect((await page.request.get(`/api/certificates/${doc!.code}`)).status()).toBe(404);
 });
+
+test('a scan confirmed for the wrong company is withdrawn and goes back to review; a mistaken upload is deleted and can come again', async ({
+  page,
+  browser,
+}) => {
+  // owner, 4 Nov 2026: "admin can delete uploaded documents if any uploaded with a wrong company name by mistake"
+  test.setTimeout(150_000);
+  const clear = `clear-${tag}.png`;
+  const unknown = `unknown-${tag}.png`;
+  const { data: doc } = await admin.from('documents').select('code').eq('member_id', member).single();
+  const clearId = (await admin.from('certificate_scans').select('id').eq('file_name', clear).single()).data!.id as string;
+  await signInAs(page, 'sg');
+  await page.goto('/admin/temp');
+
+  // withdraw: a reason is needed; the QR reference is revoked, its QR copy deleted, the member told
+  await row(page, clear).locator('[data-action="cert.withdraw"]').click();
+  const d = page.getByRole('dialog');
+  await expect(d).toContainText(doc!.code);
+  await d.locator('[data-action="cert.withdraw.confirm"]').click();
+  await expect(d.getByRole('alert')).toBeVisible(); // no reason yet
+  await d.getByLabel('Reason (kept in the audit log)').fill('Uploaded under the wrong company');
+  await d.locator('[data-action="cert.withdraw.confirm"]').click();
+  await expect(page.getByRole('main').getByRole('status').first()).toContainText('Confirmation withdrawn');
+  await expect(row(page, clear)).toHaveAttribute('data-status', 'extracted');
+  await expect(row(page, clear).locator('[data-action="cert.confirm"]')).toBeVisible();
+  expect((await admin.from('documents').select('status').eq('code', doc!.code).single()).data!.status).toBe('Revoked');
+  const { data: files } = await admin.storage.from('certificates').list(`scans/${clearId}`);
+  expect((files ?? []).map((f) => f.name)).toEqual(['original.png']);
+  const { data: told } = await admin.from('notifications').select('title').eq('company_id', company);
+  expect((told ?? []).map((n) => n.title)).toContain('A certificate was withdrawn');
+  const pub = await (await browser.newContext()).newPage();
+  await pub.goto(`/verify/${doc!.code}`);
+  await expect(pub.getByRole('main')).toContainText('Revoked');
+  await pub.context().close();
+
+  // delete the rejected scan: gone from the list, its record kept as removed, the file deleted; it can be uploaded again
+  const unknownId = (await admin.from('certificate_scans').select('id').eq('file_name', unknown).single()).data!.id as string;
+  await row(page, unknown).locator('[data-action="cert.remove"]').click();
+  await d.getByLabel('Reason (kept in the audit log)').fill('Wrong company name on the scan');
+  await d.locator('[data-action="cert.remove.confirm"]').click();
+  await expect(page.getByRole('main').getByRole('status').first()).toContainText('Scan deleted');
+  await expect(row(page, unknown)).toHaveCount(0);
+  expect((await admin.from('certificate_scans').select('status').eq('id', unknownId).single()).data!.status).toBe('removed');
+  expect(((await admin.storage.from('certificates').list(`scans/${unknownId}`)).data ?? []).length).toBe(0);
+  await upload(page, [{ name: unknown, buffer: await scan(642, 3) }]);
+  await expect(row(page, unknown)).toBeVisible({ timeout: 60_000 });
+  await expect(row(page, unknown)).toHaveAttribute('data-status', 'extracted');
+});

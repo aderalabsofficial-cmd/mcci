@@ -145,8 +145,14 @@ export type Database = {
 "cert_scan_reject":
 { Args: { "p_id": string,"p_note": string }; Returns: undefined
                            },
+"cert_scan_remove":
+{ Args: { "p_id": string,"p_note": string }; Returns: (string)[]
+                           },
 "cert_scan_stamped":
 { Args: { "p_id": string,"p_path": string,"p_placement": Json }; Returns: undefined
+                           },
+"cert_scan_withdraw":
+{ Args: { "p_id": string,"p_note": string }; Returns: string
                            },
 "cert_view":
 { Args: { "p_code": string }; Returns: {
@@ -209,6 +215,12 @@ export type Database = {
                            },
 "declaration_submit":
 { Args: { "p_company": string,"p_context": string,"p_docs": Json,"p_fields": Json,"p_summary": string }; Returns: string
+                           },
+"demo_accounts_remove":
+{ Args: { "p_users": (string)[] }; Returns: (string)[]
+                           },
+"demo_accounts_setup":
+{ Args: { "p": Json }; Returns: Json
                            },
 "demo_add":
 { Args: { "p_class": Database["public"]['Enums']["member_class"],"p_company": string,"p_days"?: number,"p_kind": string,"p_owner_email": string,"p_owner_name": string,"p_rep": string }; Returns: {
@@ -392,6 +404,16 @@ export type Database = {
 "invite_staff":
 { Args: { "p_designation": string,"p_email": string,"p_full_name": string }; Returns: {
               "id": string,"token": string
+            }[]
+                           },
+"launch_cleanup_candidates":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "accounts": number,"company": string,"company_id": string,"drafts": string,"refused": string
+            }[]
+                           },
+"launch_cleanup_mark":
+{ Args: { "p_apply"?: boolean,"p_companies": (string)[] }; Returns: {
+              "accounts": number,"company": string,"company_id": string,"drafts": string,"refused": string
             }[]
                            },
 "member_add":
