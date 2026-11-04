@@ -5,7 +5,7 @@ import { redirect } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createStatelessClient } from '@/lib/supabase/server';
 import { normalizeMobile } from './identifier';
 import { signupUnfinished } from './signup';
 
@@ -13,7 +13,7 @@ import { signupUnfinished } from './signup';
  * Sign-up (owner, 4 Nov 2026; migration 0680), actions register.start, register.code, register.finish:
  *   1. mobile number and email → a 6-digit code by email (Auth's confirmation / magic-link templates carry the code,
  *      supabase/templates). When MCCI's SMS masking is approved the code goes to the mobile, and email becomes optional.
- *   2. the code → signed in; the page shows the welcome and opens "finish your sign-up".
+ *   2. the code → signed in, and on to "finish your sign-up", which opens with the welcome.
  *   3. name, password and "Are you an existing member of MCCI?": no → the dashboard; yes → class, the membership number
  *      in digits (or the company name) → a claim staff approve (api.claim_submit), and "ready within 6 to 12 hours".
  * The answers never say whether an email already has an account; the code proves the person owns the address.
@@ -22,9 +22,6 @@ export interface SignupState {
   error?: string;
   sentTo?: string;
   resent?: boolean;
-  /** the code was right: show the welcome, then go to `next` */
-  welcome?: boolean;
-  next?: string;
 }
 
 const email = z.string().trim().toLowerCase().email().max(254);
@@ -44,7 +41,9 @@ export async function startSignup(_: SignupState, form: FormData): Promise<Signu
   const address = email.safeParse(form.get('email'));
   if (!mobile) return { error: msg(locale, 'landing.au.err_mobile') };
   if (!address.success) return { error: msg(locale, 'landing.au.err_email') };
-  const supabase = await createClient();
+  // cookie-less: the code is checked by its digits, so no PKCE cookie is needed; a cookie written here made Next.js
+  // redraw the page with the answer, which reset the form on the owner's browser (4 Nov 2026) instead of showing step 2
+  const supabase = await createStatelessClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: address.data,
     options: { shouldCreateUser: true, data: { mobile, lang: locale, signup_started: true } },
@@ -71,7 +70,10 @@ export async function verifySignupCode(_: SignupState, form: FormData): Promise<
       error?.status === 429 ? msg(locale, 'auth.errors.rateLimited') : msg(locale, 'auth.signup.codeWrong');
     return { sentTo: address.data, error: text };
   }
-  return { welcome: true, next: signupUnfinished(data.user.user_metadata) ? '/register/details' : '/portal' };
+  // the next page is opened from here: the welcome plays there (/register/details?welcome=1), so nothing depends on this
+  // page surviving the redraw that the new session's cookies cause
+  redirect({ href: signupUnfinished(data.user.user_metadata) ? '/register/details?welcome=1' : '/portal', locale });
+  return {};
 }
 
 const finishSchema = z

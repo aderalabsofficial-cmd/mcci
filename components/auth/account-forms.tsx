@@ -1,7 +1,7 @@
 'use client';
 
 import { PasswordField } from '@/components/shared/password-field';
-import { type ReactNode, useActionState, useEffect, useState } from 'react';
+import { type ReactNode, useActionState, useState } from 'react';
 import { FieldIcon, FloatField } from '@/components/auth/login-panel';
 import { Link } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
@@ -251,7 +251,7 @@ function SignupSteps({ locale, at }: { locale: Locale; at: number }) {
   );
 }
 
-/** register.code: the 6 digits from the email; then the welcome, and on to "finish your sign-up" */
+/** register.code: the 6 digits from the email; a right code opens "finish your sign-up" (the server redirects) */
 function SignupCode({
   locale,
   email,
@@ -268,35 +268,6 @@ function SignupCode({
   const [state, action, pending] = useActionState<SignupState, FormData>(verifySignupCode, {});
   const [again, againAction, sending] = useActionState<SignupState, FormData>(startSignup, {});
   const t = (k: string) => msg(locale, `auth.signup.${k}`);
-  const next = state.welcome ? state.next : undefined;
-  useEffect(() => {
-    if (!next) return;
-    // a full page load: the new session's cookies are in place for the next page
-    const go = setTimeout(() => window.location.assign(`${locale === 'ur' ? '/ur' : ''}${next}`), 2600);
-    return () => clearTimeout(go);
-  }, [next, locale]);
-
-  if (state.welcome)
-    return (
-      <div className="au-done au-welcome" data-testid="welcome" role="status">
-        <div className="burst" aria-hidden>
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-        <svg className="tick" viewBox="0 0 80 80" aria-hidden>
-          <circle cx="40" cy="40" r="36" />
-          <path d="M24 41l11 11 22-24" />
-        </svg>
-        <h1>{t('welcome')}</h1>
-        <p className="au-sub">{t(next === '/portal' ? 'welcomeBack' : 'welcomeNext')}</p>
-      </div>
-    );
 
   return (
     <>

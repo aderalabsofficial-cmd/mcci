@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { passwordScore } from '@/components/auth/account-forms';
 import { FieldIcon, FloatField } from '@/components/auth/login-panel';
 import { PasswordField } from '@/components/shared/password-field';
@@ -14,8 +14,25 @@ import { msg } from '@/lib/nav/model';
  * MCCI-C- / MCCI-A- prefix); unsure of the number, they give the company name instead. Kept simple on purpose: big
  * choices, one question at a time, Urdu under each. lib/auth/signup-actions.ts checks everything again.
  */
-export function FinishSignupForm({ locale, email, name }: { locale: Locale; email: string; name: string }) {
+export function FinishSignupForm({
+  locale,
+  email,
+  name,
+  welcome = false,
+}: {
+  locale: Locale;
+  email: string;
+  name: string;
+  /** right after the emailed code: the welcome plays first, then the form */
+  welcome?: boolean;
+}) {
   const [state, action, pending] = useActionState<SignupState, FormData>(finishSignup, {});
+  const [greeting, setGreeting] = useState(welcome);
+  useEffect(() => {
+    if (!greeting) return;
+    const done = setTimeout(() => setGreeting(false), 2400);
+    return () => clearTimeout(done);
+  }, [greeting]);
   const [fullName, setFullName] = useState(name);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -32,6 +49,28 @@ export function FinishSignupForm({ locale, email, name }: { locale: Locale; emai
     </>
   );
   const score = passwordScore(password);
+
+  if (greeting)
+    return (
+      <div className="au-done au-welcome" data-testid="welcome" role="status">
+        <div className="burst" aria-hidden>
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
+        <svg className="tick" viewBox="0 0 80 80" aria-hidden>
+          <circle cx="40" cy="40" r="36" />
+          <path d="M24 41l11 11 22-24" />
+        </svg>
+        <h1>{t('welcome')}</h1>
+        <p className="au-sub">{t('welcomeNext')}</p>
+      </div>
+    );
 
   const check = (e: { preventDefault: () => void }) => {
     const message =

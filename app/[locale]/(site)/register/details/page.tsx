@@ -8,7 +8,7 @@ import { signupUnfinished } from '@/lib/auth/signup';
 import { msg } from '@/lib/nav/model';
 import { createClient } from '@/lib/supabase/server';
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ welcome?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'auth.signup.finishTitle'), robots: { index: false } };
@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
  * register.finish, step 3 of sign-up (owner, 4 Nov 2026): after the emailed code. Nobody signed in goes back to the
  * start; someone who finished already goes to the portal.
  */
-export default async function FinishSignupPage({ params }: Props) {
+export default async function FinishSignupPage({ params, searchParams }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const supabase = await createClient();
@@ -34,6 +34,7 @@ export default async function FinishSignupPage({ params }: Props) {
         locale={locale}
         email={data.user.email ?? ''}
         name={typeof meta.full_name === 'string' ? meta.full_name : ''}
+        welcome={(await searchParams).welcome === '1'}
       />
     </AuthSplit>
   );

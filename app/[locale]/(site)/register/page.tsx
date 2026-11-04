@@ -15,16 +15,15 @@ export async function generateMetadata({ params }: Props) {
 
 /**
  * register.start (owner, 4 Nov 2026): mobile and email, a 6-digit code by email, a welcome, then /register/details.
- * Everyone signed in who finished goes to the portal.
+ * Signed in: finished → the portal; the code but no password yet → /register/details.
  */
 export default async function RegisterPage({ params }: Props) {
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
-  // a finished account goes to the portal. One that is not finished stays: right after the emailed code this page is
-  // drawn again under the new session and must keep showing the welcome (its own link opens /register/details)
+  // signed in: a finished account goes to the portal, one with the code but no password yet to its last step
   if (await getSession()) {
     const { data } = await (await createClient()).auth.getUser();
-    if (!signupUnfinished(data.user?.user_metadata)) redirect({ href: '/portal', locale });
+    redirect({ href: signupUnfinished(data.user?.user_metadata) ? '/register/details' : '/portal', locale });
   }
   return <AuthSwitch locale={locale} mode="signup" />;
 }

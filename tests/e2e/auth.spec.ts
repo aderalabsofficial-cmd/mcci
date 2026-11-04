@@ -52,6 +52,7 @@ async function signUpWithCode(page: Page, mobile: string, email: string) {
     await expect(codeStep.or(page.locator('.au-err').filter({ hasText: /not available/ }))).toBeVisible({ timeout: 20_000 });
   }
   await expect(codeStep).toBeVisible();
+  await expect(page.getByText(email)).toBeVisible(); // the page says where the code went (4 Nov 2026: it reset instead)
   const mail = await mailTo(email);
   const code = /\b(\d{6})\b/.exec(mail.Text)?.[1];
   test.skip(!code, 'the local stack still sends the old confirmation email (link): load supabase/templates (restart)');
@@ -286,8 +287,10 @@ test.describe('with the local stack', () => {
     await expect(page.getByRole('main').getByRole('alert')).toContainText('not right');
     await page.getByLabel('6-digit code').fill(code);
     await page.locator('[data-action="register.code"]').click();
+    // the server opens the last step, which plays the welcome first, then shows the form
+    await expect(page).toHaveURL(/\/register\/details\?welcome=1$/, { timeout: 20_000 });
     await expect(page.getByTestId('welcome')).toContainText('Welcome to MCCI');
-    await expect(page).toHaveURL(/\/register\/details$/, { timeout: 20_000 });
+    await expect(page.getByLabel('Your full name')).toBeVisible({ timeout: 10_000 });
     // not finished: the portal sends them back here
     await page.goto('/portal');
     await expect(page).toHaveURL(/\/register\/details$/);
@@ -331,7 +334,7 @@ test.describe('with the local stack', () => {
       const code = await signUpWithCode(page, freshMobile(), email);
       await page.getByLabel('6-digit code').fill(code);
       await page.locator('[data-action="register.code"]').click();
-      await expect(page).toHaveURL(/\/register\/details$/, { timeout: 20_000 });
+      await expect(page).toHaveURL(/\/register\/details\?welcome=1$/, { timeout: 20_000 });
       await page.getByLabel('Your full name').fill('Claiming Owner');
       await page.getByLabel('Password (at least 10 characters)').fill('E2e-password-123');
       await page.getByLabel('Repeat the password').fill('E2e-password-123');
