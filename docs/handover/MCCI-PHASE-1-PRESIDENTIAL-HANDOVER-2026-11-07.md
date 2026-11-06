@@ -11,15 +11,15 @@ Prepared 6 November 2026 from the automated acceptance run of that day. Companio
 
 **Overall status: READY WITH DOCUMENTED LIMITATIONS**
 
-- The live platform (`https://app.mcci.aderalabs.tech`) runs release **`8668c7c`**, released on 6 Nov at about 13:25
-  PKT with the owner's authorisation, after a fresh verified backup. All 61 database migrations are applied. Every
+- The live platform (`https://app.mcci.aderalabs.tech`) runs release **`8d55447`** (6 Nov, about 15:05 PKT; the first release of the day was
+  `8668c7c` at about 13:25), each with the owner's authorisation and after a fresh verified backup. All 61 database migrations are applied. Every
   public page works in English and Urdu (111 visitor page tests: 110 PASS, 1 PARTIAL; 43/43 links answer). A visitor
   cannot reach any staff screen or protected API.
 - **Security rules hold where it matters most.** A fresh database build passes **1,235 / 1,235** database-security
   assertions (47 files). Each of the 12 configured designations signed in with its own account (password +
   authenticator) and opened all 47 staff pages by address (1,145 local page tests: 1,112 PASS, 33 PARTIAL, 0 FAIL). What each designation saw matched its configured limits:
   **0 mismatches**. All 173 server actions check the user on the server, except 10 that are public by design.
-- **8 application findings today: 5 defects fixed, retested and released; 1 fixed and tested but not yet released
+- **8 application findings today: 5 defects fixed, retested and released; 1 more fixed and released in the afternoon
   (DEF-008, WhatsApp composer: example text looked like typed values); 1 working as designed; 1 open** (DEF-004, an
   intermittent hydration warning with no visible effect, low). §9 has the details. The owner's committee report (M-0272) was **not** a document defect: it is a demo file,
   and demo files are never approved (owner's rule, confirmed 6 Nov). The real display glitch behind it ("9 / 10",
@@ -40,16 +40,16 @@ and courier APIs are outside Phase 1 (manual vouchers and tracking numbers).
 |---|---|---|
 | **A. Live production** | Read-only: health, release, migrations, backups, headers, open ports, DNS; visitor crawl of every page (EN + UR) and every link, before and after the release; refusal checks on every protected API | **None by the tests.** Audit-log rows of the morning came from a manual test from one outside address, not from this run |
 | **B. Local (same 61 migrations)** | All browser, role and workflow tests with synthetic accounts that the tests create and remove; all repairs | Local database only |
-| **C. Production release** | Owner authorised ("do what you are doing and release it", 6 Nov). Backup `mcci-20261106T082205Z` (7 files verified), then `release.sh 8668c7c` (health OK), then smoke tests and the visitor recrawl | App code only; no database change |
+| **C. Production release** | Owner authorised ("do what you are doing and release it", 6 Nov). Backup `mcci-20261106T082205Z` (7 files verified), then `release.sh 8668c7c` (health OK), then smoke tests and the visitor recrawl. Second release ~15:05: backup `mcci-20261106T100311Z`, `release.sh 8d55447` (DEF-008), smoke tests | App code only; no database change |
 
 ## 3. Production release baseline
 
 | Item | Before (6 Nov morning) | After (6 Nov, 13:25 PKT) |
 |---|---|---|
-| Live release | `cc3e5c9` (the brief's checkpoint `babd95f` was two releases older) | **`8668c7c`** · `/api/health` → `{"ok":true,"release":"8668c7c"}` |
-| Rollback releases | `1c9a29f`, `babd95f` | `cc3e5c9`, `1c9a29f` (`release.sh --rollback`) |
+| Live release | `cc3e5c9` (the brief's checkpoint `babd95f` was two releases older) | **`8d55447`** · `/api/health` → `{"ok":true,"release":"8d55447"}` (via `8668c7c` at 13:25) |
+| Rollback releases | `1c9a29f`, `babd95f` | `8668c7c`, `cc3e5c9` (`release.sh --rollback`) |
 | Migrations | 61 recorded (last `20261116000680_signup_claims`: 0650, 0660, 0670 **and** 0680 applied). A fresh database applies all 61 cleanly | unchanged |
-| Backups | 39 encrypted sets; newest 4 Nov 09:46 UTC (`cc3e5c9`) | **40**: + `mcci-20261106T082205Z` (verified). Still **no schedule, no off-site copy** (INF-002) |
+| Backups | 39 encrypted sets; newest 4 Nov 09:46 UTC (`cc3e5c9`) | **41**: + `mcci-20261106T082205Z` and `mcci-20261106T100311Z` (both verified). Still **no schedule, no off-site copy** (INF-002) |
 | Services | `mcci-web` active; 9 Supabase containers healthy; jobs timer not installed (by decision) | unchanged |
 | Data | 23 sign-in accounts, 16 companies (5 demo), 11 members (7 real, 4 demo unlisted), 5 applications, 0 vouchers, 2 QR documents (both revoked) | unchanged by this work |
 | HTTPS / headers | Let's Encrypt to 22 Jan 2027; HSTS, X-Frame-Options DENY, nosniff, Referrer-Policy; **no CSP** (INF-003) | unchanged |
@@ -130,7 +130,7 @@ Manager of the endorser company).
 | F. Events (publish → member registers once) | `engagement` | **PARTIAL** | **Attendance / check-in NOT IMPLEMENTED** (FEAT-001) |
 | G. CMS (draft hidden → publish → public page; post with photo and file; ticker) | `engagement`, `admin-updates`, `site` | **PASS** | |
 | H. Staff approvals (committee proposed by SG → approved by President; limits change with the SG's password; signing) | `committee`, `access`, `services` | **PASS** | |
-| I. Communications (consent → templates → audience → readiness → campaign) | `whatsapp` (13 tests) | **PASS against a stand-in provider** | Not verified against the live provider; no message sent; DEF-008 fixed on the branch, awaiting release |
+| I. Communications (consent → templates → audience → readiness → campaign) | `whatsapp` (13 tests) | **PASS against a stand-in provider** | Not verified against the live provider; no message sent; DEF-008 fixed and released (`8d55447`) |
 
 ## 9. Defects, repairs and retests
 
@@ -143,10 +143,10 @@ Manager of the endorser company).
 | DEF-005 | High (owner) | Optional document not uploaded counted as missing ("9 / 10", red ✗) | **RETESTED PASS**, live |
 | DEF-005b | — | Committee could not approve M-0272: **demo file, by design** (owner confirmed) | WORKING AS DESIGNED |
 | DEF-006 | Medium (owner) | Partner/director row: photo first; broken on phones | **RETESTED PASS**, live |
-| DEF-008 | Medium (owner) | WhatsApp composer: example text looked like typed values; the preview showed `[subject]` | FIXED on the branch (6 Nov, after the release), awaiting release |
+| DEF-008 | Medium (owner) | WhatsApp composer: example text looked like typed values; the preview showed `[subject]` | **RETESTED PASS**, released in `8d55447` |
 
-Commits: `a43cdd5` (fixes + regression tests), `8668c7c` (acceptance tooling), on `db/schema-proposal`; released as
-`8668c7c`. Root causes, files and tests: `MCCI-DEFECT-AND-REPAIR-REGISTER.md`.
+Commits: `a43cdd5` (fixes + regression tests), `8668c7c` (acceptance tooling), `1e77244` (integration tests), `64d3729`
+(DEF-008), on `db/schema-proposal`; released as `8668c7c` (13:25) and `8d55447` (15:05). Root causes, files and tests: `MCCI-DEFECT-AND-REPAIR-REGISTER.md`.
 
 ## 10. Test execution statistics (6 Nov 2026)
 
@@ -169,7 +169,7 @@ of the morning (run 1, run 2) are **not counted**: run 1 was corrupted by the te
 
 ## 11. President's review instructions (7 November 2026)
 
-**Where:** https://app.mcci.aderalabs.tech (release `8668c7c`). Staff sign in at `/staff/login`, which is not linked
+**Where:** https://app.mcci.aderalabs.tech (release `8d55447`). Staff sign in at `/staff/login`, which is not linked
 from the public site. Members sign in at `/login`.
 
 **Before the meeting (owner, about 15 minutes):**
@@ -209,7 +209,7 @@ from the public site. Members sign in at `/login`.
 | 5 | Who processes service requests: no Services Officer on production (CFG-003) | MCCI | Medium |
 | 6 | Remove test records before real members are invited (CFG-004) | Owner | Medium |
 | 7 | Event attendance: build it, or accept it as a limitation (FEAT-001) | MCCI | Medium |
-| 8 | Release the DEF-008 fix (WhatsApp composer); hydration warning (DEF-004: narrowed to a timing effect on signed-in pages, no visible effect; needs production error reporting to name the element) | Separate session | Medium / Low |
+| 8 | Hydration warning (DEF-004: narrowed to a timing effect on signed-in pages, no visible effect; needs production error reporting to name the element) | Separate session | Medium / Low |
 | 9 | Content-Security-Policy header (INF-003) | Next release | Medium |
 | 10 | System email from an MCCI domain (INF-004) | MCCI | Medium |
 | 11 | Domain `themcci.com.pk`, registrar ownership, `mcci.org.pk` handover | MCCI | Medium |
@@ -222,9 +222,10 @@ live checks; OpenAI key on the server for document reading.
 
 ## 14. Backup and rollback
 
-- Backup before the release: `mcci-20261106T082205Z` (encrypted; base backup + WAL, logical dump, storage, config,
-  runtime env; checksums verified). 40 sets in `/var/lib/mcci-selfhost/backups`; all on the same server (INF-002).
-- Roll back the app: `scripts/deploy/release.sh --rollback` (to `cc3e5c9`; `1c9a29f` also kept). No database step is
+- Backups before the releases: `mcci-20261106T082205Z` (before `8668c7c`) and `mcci-20261106T100311Z` (before
+  `8d55447`), each encrypted (base backup + WAL, logical dump, storage, config, runtime env) with checksums verified.
+  41 sets in `/var/lib/mcci-selfhost/backups`; all on the same server (INF-002).
+- Roll back the app: `scripts/deploy/release.sh --rollback` (to `8668c7c`; `cc3e5c9` also kept). No database step is
   needed: today's release changed no schema.
 - Database restore: `restore-drill.sh` on a set (docs/20); quarterly drill recommended.
 
