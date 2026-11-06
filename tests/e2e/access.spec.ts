@@ -189,7 +189,14 @@ test.describe('Company Profile', () => {
     const ctx = await browser.newContext();
     const colleague = await ctx.newPage();
     await activate(colleague, await invitationPath(email));
-    await expect(colleague).toHaveURL(/\/portal\/profile$/);
+    // a new company user first sees the optional WhatsApp welcome step (owner's brief, 6 Nov 2026)
+    await expect(colleague).toHaveURL(/\/portal\/whatsapp\?welcome=1$/);
+    await expect(colleague.locator('[data-section="wa-welcome"]')).toBeVisible();
+    await expect(colleague.locator('[data-section="wa-status"]')).toContainText('Only your company');
+    await expect(colleague.locator('[data-section="wa-contact"]')).toHaveCount(0);
+    await colleague.locator('[data-action="wa.prefs.skip"]').click();
+    await expect(colleague).toHaveURL(/\/portal$/);
+    await colleague.goto('/portal/profile');
     await expect(colleague.getByText(`E2E ${run} Traders`)).toBeVisible();
     await expect(colleague.getByText('Only your company’s authorized representative')).toBeVisible();
     await expect(colleague.locator('[data-action="user.invite"]')).toHaveCount(0);

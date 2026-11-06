@@ -600,3 +600,20 @@ Acceptance rule: every `Build` row has a server action or route handler, an auth
 | `wiz.submit` | Build | Submit application | `POST /api/applications/{id}/submit` | applications, application_events, notifications, audit_log | Applicant | Locks the form, issues token, starts SLA, sends email + portal receipt, notifies Membership Desk |
 | `wiz.photo.demo` | Demo | Use the sample passport photo | `—` | — | — | Not part of the built system |
 | `wiz.prop.demo` | Demo | Send demo requests to two members | `—` | — | — | Not part of the built system |
+
+## `wa.prefs.*` / `wa.card.*` (WhatsApp Preferences, member portal — migration 0690, docs/30 §12)
+
+| id | Phase | Label | Planned endpoint | Tables | Who | Behaviour in the real system |
+|---|---|---|---|---|---|---|
+| `wa.card.open` | Build | Set up / manage WhatsApp (dashboard and Company Profile card) | `GET /portal/whatsapp` | — | Company user | Opens WhatsApp Preferences; never blocks anything |
+| `wa.prefs.skip` | Build | Skip for now (welcome after invitation) | `GET /portal` | — | Company user | Goes to the dashboard |
+| `wa.prefs.suggest` | UI | Use a number MCCI already has | `—` | — | Owner | Fills the field only; nothing is saved until Save number |
+| `wa.prefs.contact` | Build | Save number | `api.wa_member_contact` | outreach_contacts, outreach_contact_history, outreach_consents | Owner | Normalised to +92; a changed number ends the old number's consent and keeps it in history |
+| `wa.prefs.remove` | Build | Remove this number | `api.wa_member_contact` | as above | Owner | Number to history; its consent ends |
+| `wa.prefs.consent` | Build | Give consent / update my choices | `api.wa_member_consent` | outreach_consents | Owner | Needs ≥ 1 category and the agreement box; only once MCCI has opened consent; after the member's own opt-out it waits for JOIN |
+| `wa.prefs.code` | Build | Get my code | `api.wa_join_code` | outreach_join_codes | Owner | One-time code, 30 minutes, only the hash stored |
+| `wa.prefs.open` | UI | Open WhatsApp | `https://wa.me/<MCCI>?text=JOIN …` | — | Owner | Opens the chat with the text filled in |
+| `wa.prefs.check` | UI | Check again | `—` | — | Owner | Reloads the status |
+| `wa.prefs.stop` / `.confirm` / `.cancel` | Build | Stop all WhatsApp messages | `api.wa_member_withdraw` | outreach_consents, outreach_suppressions | Owner | Immediate; only the member can subscribe again |
+| `reg.wa` | Build | Members Register WhatsApp filter | `GET /admin/members?wa=…` | api.wa_register_status | Staff `out` or `biz` ≥ 1 | Status only, never numbers |
+| `biz.consent.save` | Build | Record the member's decision | `api.wa_consent_record` | outreach_consents, outreach_suppressions | Staff `out` 2 | Method, evidence, explicit-yes box; refused over the member's own opt-out and before MCCI opens consent |

@@ -355,6 +355,7 @@ export async function createMasterCampaign(
       p_q: v.q,
       p_ids: v.ids as string[],
       p_excluded: v.excluded,
+      p_category: v.category,
     });
     if (error) throw error;
     refresh();
@@ -526,51 +527,7 @@ export async function linkConversation(_: ActionResult | null, form: FormData): 
   }
 }
 
-/* ---------- consent ---------- */
-
-const categories = (form: FormData) => z.array(z.enum(CATEGORIES)).min(1).parse(form.getAll('categories').map(String));
-
-export async function recordConsentByStaff(_: ActionResult | null, form: FormData): Promise<ActionResult> {
-  const locale = localeOf(form);
-  try {
-    await requirePermission('out', 2);
-    const status = text(form, 'status');
-    const db = await createClient();
-    const { error } = await db.schema('api').rpc('wa_consent_record', {
-      p_company: uuid.parse(text(form, 'company')),
-      p_status: status,
-      p_method: text(form, 'method'),
-      p_evidence: text(form, 'evidence'),
-      p_categories: status === 'withdrawn' ? [...CATEGORIES] : categories(form),
-    });
-    if (error) throw error;
-    revalidatePath('/[locale]/admin/business-directory', 'layout');
-    refresh();
-    return done(locale, 'consent');
-  } catch (error) {
-    return fail(locale, error, 'whatsapp consent');
-  }
-}
-
-export async function memberConsent(_: ActionResult | null, form: FormData): Promise<ActionResult> {
-  const locale = localeOf(form);
-  try {
-    const grant = text(form, 'grant') === 'on';
-    const db = await createClient();
-    const { error } = await db.schema('api').rpc('wa_member_consent', {
-      p_company: uuid.parse(text(form, 'company')),
-      p_name: text(form, 'name'),
-      p_phone: text(form, 'phone'),
-      p_grant: grant,
-      p_categories: grant ? categories(form) : [...CATEGORIES],
-    });
-    if (error) throw error;
-    revalidatePath('/[locale]/portal/profile', 'page');
-    return done(locale, grant ? 'memberGranted' : 'memberWithdrawn');
-  } catch (error) {
-    return fail(locale, error, 'whatsapp member consent');
-  }
-}
+/* consent: lib/whatsapp/consent-actions.ts (migration 0690) */
 
 /* ---------- settings ---------- */
 

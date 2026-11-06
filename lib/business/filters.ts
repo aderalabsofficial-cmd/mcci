@@ -24,6 +24,13 @@ export const FIELDS = {
   registration: { type: 'enum', options: ['prop', 'aop', 'pvt', 'mnc', 'public'] },
   whatsapp_available: { type: 'bool' },
   consent: { type: 'enum', options: ['granted', 'withdrawn', 'not_recorded', 'no_contact'] },
+  // WhatsApp consent centre (0690): one status, the categories consented to, and confirmation on WhatsApp
+  wa_status: {
+    type: 'enum',
+    options: ['no_number', 'not_collected', 'full', 'partial', 'awaiting_verification', 'opted_out', 'blocked'],
+  },
+  wa_categories: { type: 'enum', options: ['announcements', 'membership', 'events', 'opportunities', 'services'] },
+  wa_verified: { type: 'bool' },
   opted_out: { type: 'bool' },
   incomplete: { type: 'bool' },
   tags: { type: 'tags' },

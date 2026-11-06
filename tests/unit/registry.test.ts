@@ -18,9 +18,9 @@ const has = (tree: unknown, path: string) =>
   typeof path.split('.').reduce<unknown>((n, k) => (n as Record<string, unknown> | undefined)?.[k], tree) === 'string';
 
 describe('route registry', () => {
-  it('lists every catalogue screen with the catalogue route (76 screens)', () => {
+  it('lists every catalogue screen with the catalogue route (77 screens)', () => {
     const rows = catalogue();
-    expect(rows).toHaveLength(76);
+    expect(rows).toHaveLength(77);
     for (const row of rows) expect(screen(row.area, row.key).href, `${row.area}/${row.key}`).toBe(row.href);
     expect(SCREENS).toHaveLength(rows.length);
   });

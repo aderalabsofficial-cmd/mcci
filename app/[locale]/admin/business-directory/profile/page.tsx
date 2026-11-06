@@ -1,15 +1,17 @@
 import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { ConsentPanel, OutreachDetails, TagPanel } from '@/components/business/profile-panels';
+import { OutreachDetails, TagPanel } from '@/components/business/profile-panels';
 import { guardStaff } from '@/components/services/staff-page';
 import { BusinessWhatsappPanel } from '@/components/whatsapp/business-panel';
+import { StaffWhatsappSection } from '@/components/whatsapp/staff-section';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
 import { loadFacets, loadProfile } from '@/lib/business/load';
 import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
+import { loadStaffWhatsapp } from '@/lib/whatsapp/consent-load';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ id?: string }> };
 
@@ -59,6 +61,7 @@ export default async function BusinessProfilePage({ params, searchParams }: Prop
         })
       : '—';
   const out = staffLevel(session.access, 'out');
+  const wa = await loadStaffWhatsapp(p.company_id);
   const official: [string, string][] = [
     ['member_no', p.member_no],
     ['member_class', msg(locale, `biz.values.member_class.${p.member_class}`)],
@@ -130,12 +133,12 @@ export default async function BusinessProfilePage({ params, searchParams }: Prop
         </div>
         <TagPanel locale={locale} p={p} facets={await loadFacets()} canEdit={g.level >= 2} />
       </div>
-      {p.can_see_contacts && (
-        <div className="card" data-section="consent">
+      {wa && (
+        <div className="card">
           <div className="ch">
-            <h3>{m('consent')}</h3>
+            <h3>{msg(locale, 'wa.staff.title')}</h3>
           </div>
-          <ConsentPanel locale={locale} p={p} canManage={out >= 2} canLift={out >= 3} />
+          <StaffWhatsappSection locale={locale} company={p.company_id} data={wa} />
         </div>
       )}
       {out >= 2 && <BusinessWhatsappPanel locale={locale} p={p} />}

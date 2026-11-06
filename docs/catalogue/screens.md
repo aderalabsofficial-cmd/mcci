@@ -43,6 +43,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Events & Trade | `member/events/` | `/portal/events` | Calendar and event list with one-tap registration |
 | Trade opportunities | `member/opportunities/` | `/portal/opportunities` | Buyer inquiries shared by MCCI, post a requirement, my posts |
 | Company Profile | `member/profile/` | `/portal/profile` | Registered particulars (changes go to MCCI for approval, per form note 4), partners & cards, company users, preferences |
+| WhatsApp Preferences | `member/whatsapp/` | `/portal/whatsapp` | Not in the prototype (owner's brief, 6 Nov 2026; docs/30 §12): WhatsApp contact and number, five message categories, consent, confirmation on WhatsApp, withdrawal, history |
 | Endorsement requests | `member/endorse/` | `/portal/endorse` | Members receive proposer / seconder requests live, review the applicant and sign digitally or decline; history of endorsements and yearly limit |
 
 ## Admin panel (33 screens)

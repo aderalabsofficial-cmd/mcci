@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { expect, type Page, test } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
@@ -19,6 +20,12 @@ const SEGMENT = `E2E segment ${tag}`;
 let admin: SupabaseClient;
 const companies: string[] = [];
 const members: Record<string, string> = {};
+
+// MCCI's approval of the consent wording (settings.whatsapp.consentOpen, decision A of 6 Nov 2026), set for this test
+const consentOpen = (open: boolean) =>
+  execSync(process.env.MCCI_IT_SQL_CMD ?? 'false', {
+    input: `update private.settings set value = value || '{"consentOpen":${open}}'::jsonb where key = 'whatsapp';`,
+  });
 
 const nature = (v: string) =>
   `/admin/business-directory?f=${encodeURIComponent(JSON.stringify({ groups: [{ match: 'all', exclude: false, rules: [{ field: 'nature', op: 'in', value: [v] }] }] }))}`;
@@ -162,7 +169,11 @@ test('a profile keeps the official record apart; consent and opt-out work', asyn
   await page.locator('[data-action="biz.contact.save"]').click();
   await expect(page.locator('[data-consent-state="not_recorded"]')).toBeVisible();
 
-  // consent needs evidence, then counts; withdrawing blocks the number at once
+  // consent needs the member's confirmed yes and evidence, then counts; withdrawing blocks the number at once
+  consentOpen(true);
+  await page.reload();
+  await page.locator('[data-category="announcements"]').check();
+  await page.locator('[data-field="consent-confirmed"]').check();
   await page.locator('[data-action="biz.consent.save"]').click();
   await expect(page.locator('[data-section="consent"]').getByRole('alert')).toContainText('evidence');
   await page.locator('[data-field="consent-evidence"]').fill('Signed form 12');
@@ -170,15 +181,25 @@ test('a profile keeps the official record apart; consent and opt-out work', asyn
   await expect(page.locator('[data-consent-state="granted"]')).toBeVisible();
   await expect(page.locator('[data-consent-history] tbody tr')).toHaveCount(1);
 
+  // a withdrawal recorded for the member is the member's own: not even the Secretary General can lift it (decision C)
   await page.locator('[data-field="consent-status"]').selectOption('withdrawn');
   await page.locator('[data-action="biz.consent.save"]').click();
   await expect(page.locator('[data-consent-state="opted_out"]')).toBeVisible();
-  await expect(page.locator('[data-suppression]')).toContainText('Consent withdrawn');
+  await expect(page.locator('[data-member-optout]')).toBeVisible();
+  await expect(page.locator('[data-action="biz.unsuppress"]')).toHaveCount(0);
+  consentOpen(false);
 
-  await page.locator('[data-field="lift-reason"]').fill('Business asked to be contacted again');
+  // a block MCCI sets itself can be lifted, with a reason
+  await page.goto(`/admin/business-directory/profile?id=${members[TRADER]}`);
+  await page.locator('[data-field="contact-phone"]').fill(`+92301${PHONE.slice(6)}`);
+  await page.locator('[data-action="biz.contact.save"]').click();
+  await expect(page.locator('[data-consent-state="not_recorded"]')).toBeVisible();
+  await page.locator('[data-field="suppress-reason"]').fill('Wrong number reported');
+  await page.locator('[data-action="biz.suppress"]').click();
+  await expect(page.locator('[data-suppression]')).toContainText('Wrong number reported');
+  await page.locator('[data-field="lift-reason"]').fill('Number checked again');
   await page.locator('[data-action="biz.unsuppress"]').click();
   await expect(page.locator('[data-suppression]')).toHaveCount(0);
-  await expect(page.locator('[data-consent-state="withdrawn"]')).toBeVisible();
 });
 
 test('exports: preview, three formats, formula protection, and a log entry', async ({ page }) => {
@@ -256,7 +277,11 @@ test('permission boundaries: officer without sensitive columns, view-only staff 
   await signInAs(view, 'president');
   await view.goto(`/admin/business-directory/profile?id=${members[TEXTILE]}`);
   await expect(view.locator('[data-contacts-hidden]')).toBeVisible();
-  await expect(view.locator('[data-section="consent"]')).toHaveCount(0);
+  // the WhatsApp status is shown (0690), but never the number in full, and nothing can be changed
+  const wa = view.locator('[data-section="consent"]');
+  await expect(wa.locator('[data-wa-state]')).toBeVisible();
+  await expect(wa.locator('[data-wa-phone]')).not.toContainText(PHONE);
+  await expect(wa.locator('[data-action="biz.contact.save"], [data-action="biz.consent.save"]')).toHaveCount(0);
   await expect(view.getByText('061-1')).toHaveCount(0);
   await view.close();
 

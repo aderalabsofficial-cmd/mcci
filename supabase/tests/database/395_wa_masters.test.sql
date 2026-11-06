@@ -5,7 +5,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 select plan(34);
 
-update private.settings set value = value || '{"sendingEnabled":true,"approvalThreshold":100,"ratePerMinute":100,"dailyLimit":100}'::jsonb where key = 'whatsapp';
+update private.settings set value = value || '{"sendingEnabled":true,"consentOpen":true,"approvalThreshold":100,"ratePerMinute":100,"dailyLimit":100}'::jsonb where key = 'whatsapp';
 
 create temp table t on commit drop as
   select x.company_id as c1, x.member_id as m1, y.company_id as c2, y.member_id as m2
@@ -67,8 +67,8 @@ select throws_ok(format($$ select tests.exec_as(tests.id('mo'), %L) $$, format('
   '{"summary":"x","link":"https://example.org"}', (select m1 from t))), 'P0001', null, 'a required field cannot be left empty');
 
 -- ── audience groups: c1 consented with an open conversation, c2 consented without one
-select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 1'', array[''announcements''])', (select c1 from t)));
-select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 2'', array[''announcements''])', (select c2 from t)));
+select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 1'', array[''announcements''], true)', (select c1 from t)));
+select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 2'', array[''announcements''], true)', (select c2 from t)));
 insert into public.whatsapp_conversations (phone, company_id, last_inbound_at) values ('+923001110101', (select c1 from t), now() - interval '1 hour');
 create function pg_temp.bd(path text) returns bigint language sql as $f$
   select tests.num_as(tests.id('mo'), format('select (api.wa_audience_breakdown(''{}'', '''', array[%L, %L]::uuid[], null, ''announcements'') %s)::bigint',

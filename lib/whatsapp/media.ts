@@ -81,7 +81,8 @@ export const VARIABLES = [
   'renewal_date',
   'language',
 ] as const;
-export const CATEGORIES = ['announcements', 'membership', 'events', 'opportunities'] as const;
+/** campaign categories = the five consent categories (migration 0690) */
+export { CONSENT_CATEGORIES as CATEGORIES } from '@/lib/whatsapp/consent';
 
 export function renderPreview(text: string, values: Record<string, string | null | undefined>): string {
   return VARIABLES.reduce((t, k) => t.split(`{{${k}}}`).join(values[k] ?? ''), text);

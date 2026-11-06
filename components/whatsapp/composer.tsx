@@ -199,6 +199,20 @@ export function CampaignComposer({
       <p className="muted" data-sender={sender ?? ''}>
         {sender ? m('sender', { sender }) : m('senderUnknown')}
       </p>
+      <div className="wa-help" data-composer-help>
+        <div data-help="window">
+          <b>{m('windowTitle')}</b>
+          <small>{m('windowBody')}</small>
+        </div>
+        <div data-help="test">
+          <b>{m('testTitle')}</b>
+          <small>{m('testBody')}</small>
+        </div>
+        <div data-help="channel">
+          <b>{m('channelTitle')}</b>
+          <small>{m('channelBody')}</small>
+        </div>
+      </div>
       <div className="biz-rule">
         <label className="form-field">
           {m('name')}

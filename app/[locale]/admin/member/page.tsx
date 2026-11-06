@@ -14,6 +14,9 @@ import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
+import { StaffWhatsappSection } from '@/components/whatsapp/staff-section';
+import { STATUS_TONE } from '@/lib/whatsapp/consent';
+import { loadStaffWhatsapp } from '@/lib/whatsapp/consent-load';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ id?: string; tab?: string }> };
 
@@ -23,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic';
 
-const TABS = ['particulars', 'partners', 'documents', 'certificates', 'payments', 'history'] as const;
+const TABS = ['particulars', 'partners', 'documents', 'certificates', 'payments', 'whatsapp', 'history'] as const;
 type Tab = (typeof TABS)[number];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const TONE: Record<string, string> = {
@@ -164,6 +167,8 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
   const canAct = staffLevel(session.access, 'reg') >= 2;
   const canCerts = staffLevel(session.access, 'temp') >= 1;
+  // WhatsApp & Communication Preferences (0690): null when the person's limits do not include WhatsApp
+  const wa = staffLevel(session.access, 'out') >= 1 || staffLevel(session.access, 'biz') >= 1 ? await loadStaffWhatsapp(member.company_id) : null;
 
   const field = (label: string, value: ReactNode) => (
     <div className="mr-f">
@@ -309,6 +314,19 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
       </div>
     ) : (
       <p className="em">{m('none')}</p>
+    );
+  } else if (tab === 'whatsapp') {
+    body = (
+      <div data-section="whatsapp">
+        <div className="ch">
+          <h3 className="mr-h">{msg(locale, 'wa.staff.title')}</h3>
+        </div>
+        {wa ? (
+          <StaffWhatsappSection locale={locale} company={member.company_id} data={wa} />
+        ) : (
+          <p className="em">{msg(locale, 'wa.staff.noAccess')}</p>
+        )}
+      </div>
     );
   } else if (tab === 'payments') {
     const rows = vouchers.data ?? [];
@@ -491,6 +509,17 @@ export default async function MemberRecordPage({ params, searchParams }: Props) 
             <small>{m('f.restored')}</small>
             <b>{date(member.restored_at)}</b>
           </div>
+          {wa && (
+            <div data-wa-summary={wa.status}>
+              <small>{msg(locale, 'wa.staff.register.col')}</small>
+              <b>
+                <Link href={`/admin/member?id=${member.id}&tab=whatsapp`} className={`bd ${STATUS_TONE[wa.status]}`} data-action="member.tab">
+                  {msg(locale, `wa.wstatus.${wa.status}`)}
+                </Link>
+              </b>
+              <small>{wa.verified_at ? msg(locale, 'wa.staff.register.verified') : wa.phone ? msg(locale, 'wa.staff.register.notVerified') : ''}</small>
+            </div>
+          )}
         </div>
         <div className="pb" style={{ marginBottom: 14 }} data-member={member.member_no}>
           {c.email && (

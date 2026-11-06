@@ -1,4 +1,4 @@
-import { ChevronRight, Search } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Search } from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { ActionButton } from '@/components/admin/action-button';
@@ -16,8 +16,10 @@ import { msg } from '@/lib/nav/model';
 import { staffLevel } from '@/lib/permissions/levels';
 import { requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
+import { matchesRegisterFilter, REGISTER_FILTERS, STATUS_TONE, type RegisterFilter } from '@/lib/whatsapp/consent';
+import { loadRegisterWhatsapp } from '@/lib/whatsapp/consent-load';
 
-type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ q?: string; show?: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ q?: string; show?: string; wa?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: msg(asLocale((await params).locale), 'register.title') };
@@ -57,6 +59,9 @@ export default async function MembersPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const show: Show = (SHOW as readonly string[]).includes(sp.show ?? '') ? (sp.show as Show) : 'all';
   const q = (sp.q ?? '').trim().slice(0, 100);
+  // WhatsApp column and filters (0690): status only, never numbers; for staff whose limits include WhatsApp
+  const waRows = staffLevel(session.access, 'out') >= 1 || staffLevel(session.access, 'biz') >= 1 ? await loadRegisterWhatsapp() : null;
+  const waFilter = waRows && (REGISTER_FILTERS as readonly string[]).includes(sp.wa ?? '') ? (sp.wa as RegisterFilter) : null;
   const date = (iso: string | null) =>
     iso ? new Date(iso).toLocaleDateString(locale === 'ur' ? 'ur-PK' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   const supabase = await createClient();
@@ -124,6 +129,10 @@ export default async function MembersPage({ params, searchParams }: Props) {
     blacklisted: rows.filter((r) => r.blacklisted).length,
   };
   const needle = q.toLowerCase();
+  const waOf = (r: (typeof rows)[number]) => waRows?.[r.company_id] ?? { status: 'no_number' as const, verified: false, categories: [] };
+  const waCounts = Object.fromEntries(
+    REGISTER_FILTERS.map((f) => [f, rows.filter((r) => matchesRegisterFilter(f, waOf(r), !lapsed(r))).length]),
+  ) as Record<RegisterFilter, number>;
   const visible = rows.filter((r) => {
     if (show === 'corporate' && r.class !== 'Corporate') return false;
     if (show === 'associate' && r.class !== 'Associate') return false;
@@ -131,10 +140,13 @@ export default async function MembersPage({ params, searchParams }: Props) {
     if (show === 'lapsed' && !lapsed(r)) return false;
     if (show === 'noDate' && r.since) return false;
     if (show === 'blacklisted' && !r.blacklisted) return false;
+    if (waFilter && !matchesRegisterFilter(waFilter, waOf(r), !lapsed(r))) return false;
     return !needle || [r.member_no, name(r), r.rep_name].some((v) => v.toLowerCase().includes(needle));
   });
   const base = locale === 'ur' ? '/ur' : '';
-  const tabHref = (s: Show) => `/admin/members?${new URLSearchParams({ show: s, ...(q ? { q } : {}) })}`;
+  const tabHref = (s: Show) => `/admin/members?${new URLSearchParams({ show: s, ...(q ? { q } : {}), ...(waFilter ? { wa: waFilter } : {}) })}`;
+  const waHref = (f: RegisterFilter | null) =>
+    `/admin/members?${new URLSearchParams({ show, ...(q ? { q } : {}), ...(f ? { wa: f } : {}) })}`;
 
   return (
     <div className="proto">
@@ -183,6 +195,7 @@ export default async function MembersPage({ params, searchParams }: Props) {
           </div>
           <form method="get" action={`${base}/admin/members`} className="rep-filter" role="search">
             <input type="hidden" name="show" value={show} />
+            {waFilter && <input type="hidden" name="wa" value={waFilter} />}
             <label className="form-field reg-search">
               {m('search')}
               <input type="search" name="q" defaultValue={q} placeholder={m('searchHint')} data-field="reg-search" />
@@ -198,6 +211,19 @@ export default async function MembersPage({ params, searchParams }: Props) {
               </Link>
             ))}
           </nav>
+          {waRows && (
+            <nav className="pills" aria-label={msg(locale, 'wa.staff.register.filter')} data-wa-filters>
+              <span className="pill-label">{msg(locale, 'wa.staff.register.filter')}:</span>
+              <Link href={waHref(null)} className={`pill ${!waFilter ? 'on' : ''}`} aria-current={!waFilter ? 'true' : undefined} data-action="reg.wa" data-wa="all">
+                {msg(locale, 'wa.staff.register.all')}
+              </Link>
+              {REGISTER_FILTERS.map((f) => (
+                <Link key={f} href={waHref(f)} className={`pill ${waFilter === f ? 'on' : ''}`} aria-current={waFilter === f ? 'true' : undefined} data-action="reg.wa" data-wa={f}>
+                  {msg(locale, `wa.staff.register.filters.${f}`)} ({waCounts[f]})
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="tw" tabIndex={0} role="region" aria-label={m('table')}>
             <table>
               <thead>
@@ -207,6 +233,7 @@ export default async function MembersPage({ params, searchParams }: Props) {
                       {m(`cols.${c}`)}
                     </th>
                   ))}
+                  {waRows && <th scope="col">{msg(locale, 'wa.staff.register.col')}</th>}
                   <th scope="col">{m('cols.actions')}</th>
                 </tr>
               </thead>
@@ -245,6 +272,23 @@ export default async function MembersPage({ params, searchParams }: Props) {
                         </small>
                       </div>
                     </td>
+                    {waRows && (
+                      <td data-wa-cell={waOf(r).status}>
+                        <div>
+                          <span className={`bd ${STATUS_TONE[waOf(r).status]}`}>{msg(locale, `wa.wstatus.${waOf(r).status}`)}</span>
+                          {waOf(r).verified && (
+                            <small className="reg-sub" data-wa-verified>
+                              <CheckCircle2 size={12} aria-hidden /> {msg(locale, 'wa.staff.register.verified')}
+                            </small>
+                          )}
+                          {(waOf(r).status === 'full' || waOf(r).status === 'partial') && (
+                            <small className="reg-sub">
+                              {waOf(r).categories.map((c) => msg(locale, `wa.categories.${c}`)).join(' · ')}
+                            </small>
+                          )}
+                        </div>
+                      </td>
+                    )}
                     <td>
                       <div className="pb" data-member={r.member_no}>
                         <Link className="btn btn-w" href={`/admin/member?id=${r.id}`} data-action="member.open">
@@ -271,7 +315,7 @@ export default async function MembersPage({ params, searchParams }: Props) {
                 ))}
                 {!visible.length && (
                   <tr className="st">
-                    <td colSpan={7} className="em">
+                    <td colSpan={waRows ? 8 : 7} className="em">
                       {rows.length ? m('noMatch') : m('none')}
                     </td>
                   </tr>

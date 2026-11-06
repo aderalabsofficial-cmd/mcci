@@ -279,9 +279,9 @@ test('one message from a profile: no consent is refused; a template goes with th
   await expect(panel.getByRole('alert')).toContainText('No recorded consent');
   expect((await sent()).filter((m) => m.to === phone(0))).toHaveLength(0);
 
-  const consent = page.locator('[data-section="consent"]');
-  await consent.locator('[data-field="consent-evidence"]').fill('Signed form 7');
-  await consent.locator('[data-action="biz.consent.save"]').click();
+  // consent recorded as staff would after the member's yes (the form itself: wa-consent-centre.spec.ts)
+  await grant(0, ['membership']);
+  await page.reload();
   await expect(page.locator('[data-consent-state="granted"]')).toBeVisible();
 
   await panel.locator('[data-field="send-category"]').selectOption('membership');
@@ -769,46 +769,7 @@ test('campaign readiness: every figure says where it comes from; an administrato
   }
 });
 
-test('member opt-in: closed until MCCI opens it, then the member chooses and can withdraw', async ({
-  page,
-  browser,
-}) => {
-  test.skip(!accounts.companyId, 'needs the e2e member company');
-  const member = await browser.newPage();
-  await signInAs(member, 'member');
-  await member.goto('/portal/profile');
-  await expect(member.locator('[data-section="whatsapp-consent"]')).toHaveCount(0);
-
-  await signInAs(page, 'sg');
-  await setSettings(page, { consentOpen: true });
-  await member.reload();
-  const card = member.locator('[data-section="whatsapp-consent"]');
-  const number = phone(50);
-  await card.locator('[data-field="member-phone"]').fill(number);
-  await card.locator('[data-field="member-grant"]').check();
-  await card.locator('[data-category="opportunities"]').uncheck();
-  await card.locator('[data-action="wa.member.save"]').click();
-  await expect(card.getByRole('status')).toContainText('Your choice is saved');
-  const { data: yes } = await admin
-    .from('outreach_consents')
-    .select('status, method, categories, wording_version')
-    .eq('phone', number)
-    .order('id', { ascending: false })
-    .limit(1)
-    .single();
-  expect(yes).toMatchObject({ status: 'granted', method: 'member_portal', wording_version: 'draft-1' });
-  expect(yes!.categories).not.toContain('opportunities');
-
-  await card.locator('[data-field="member-grant"]').uncheck();
-  await card.locator('[data-action="wa.member.save"]').click();
-  await expect(card.getByRole('status')).toContainText('will not receive');
-  const { data: stop } = await admin.from('outreach_suppressions').select('active').eq('phone', number).single();
-  expect(stop!.active).toBe(true);
-  await member.close();
-  await admin.from('outreach_suppressions').delete().eq('phone', number);
-  await admin.from('outreach_consents').delete().eq('phone', number);
-  await setSettings(page, { consentOpen: false });
-});
+// member opt-in, consent gate, JOIN and opt-out: tests/e2e/wa-consent-centre.spec.ts (migration 0690)
 
 test('boundaries: members and outsiders are refused; view-only staff see figures, not messages', async ({
   page,

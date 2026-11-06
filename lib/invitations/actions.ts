@@ -35,7 +35,8 @@ function errorText(locale: Locale, error: AcceptError): string {
   }
 }
 
-const next = (kind: 'staff' | 'company_user') => (kind === 'staff' ? '/login/verify' : '/portal/profile');
+// a company user lands on the optional WhatsApp welcome step, with "Skip for now" (owner's brief, 6 Nov 2026)
+const next = (kind: 'staff' | 'company_user') => (kind === 'staff' ? '/login/verify' : '/portal/whatsapp?welcome=1');
 
 export async function activateInvitedAccount(_: InviteFormState, form: FormData): Promise<InviteFormState> {
   const locale = asLocale(String(form.get('locale') ?? 'en'));

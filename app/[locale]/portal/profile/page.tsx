@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 import { DeclarationForm } from '@/components/members/lifecycle';
 import { CompanyProfile, type Person } from '@/components/portal/company-profile';
-import { MemberConsentForm } from '@/components/whatsapp/forms';
+import { WhatsappCard } from '@/components/whatsapp/dashboard-card';
 import { WhatNowCard } from '@/components/portal/what-now-card';
 import { PageHeader } from '@/components/shared/page-header';
 import { asLocale } from '@/i18n/locale';
@@ -10,6 +10,7 @@ import { PARTICULAR_FIELDS } from '@/lib/company/fields';
 import { msg } from '@/lib/nav/model';
 import { requireUser } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
+import { loadMyWhatsapp } from '@/lib/whatsapp/consent-load';
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ company?: string }> };
 
@@ -50,8 +51,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
   }
 
   const canManage = company.levels.profile >= 3;
-  const { data: whatsappData } = await (await createClient()).schema('api').rpc('wa_my_consent', { p_company: company.id });
-  const whatsapp = whatsappData as unknown as { open: boolean; name: string | null; phone: string | null; status: string | null; categories: string[] | null } | null;
+  const whatsapp = await loadMyWhatsapp(company.id);
   const supabase = await createClient();
   const [details, people, invites, changes, me, declarations] = await Promise.all([
     supabase.from('companies').select(PARTICULAR_FIELDS.join(', ')).eq('id', company.id).single(),
@@ -134,12 +134,7 @@ export default async function ProfilePage({ params, searchParams }: Props) {
         title={both('access.company.whatNowTitle')}
         body={msg(locale, 'access.company.whatNowBody')}
       />
-      {whatsapp?.open && (
-        <section className="card mb-4" data-section="whatsapp-consent">
-          <h2 className="font-bold">{msg(locale, 'wa.member.title')}</h2>
-          <MemberConsentForm locale={locale} company={company.id} current={whatsapp} />
-        </section>
-      )}
+      {whatsapp && <WhatsappCard locale={locale} data={whatsapp} />}
       {canManage && (
         <section className="card mb-4" data-section="declare-change">
           <div className="ch">

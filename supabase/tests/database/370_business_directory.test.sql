@@ -3,6 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 select plan(38);
+update private.settings set value = value || '{"consentOpen":true}'::jsonb where key = 'whatsapp';
 
 -- two businesses with known details ('mo' = Membership Officer biz 2 out 2; 'sg' = biz 3 out 3)
 create temp table t_m on commit drop as
@@ -55,12 +56,12 @@ select lives_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('s
 select throws_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_contact_save(%L, ''A'', ''0300-123'')', (select c1 from t_ids))), 'P0001', null, 'a bad number is refused');
 select is((select coalesce(new_value, '{}'::jsonb) ? 'phone' from public.audit_log where object = 'outreach_contacts' order by id desc limit 1), false, 'the number stays out of the audit log');
 select is(tests.num_as(tests.id('mo'), format('select (api.biz_count(''{}'', %L)->>''eligible'')::bigint', 'Alpha')), 0::bigint, 'a contact without consent is not eligible');
-select throws_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_consent_record(%L, ''granted'', ''written'', '''')', (select c1 from t_ids))), 'P0001', null, 'consent needs evidence');
-select lives_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_consent_record(%L, ''granted'', ''written'', ''Signed form 12'')', (select c1 from t_ids))), 'consent recorded');
+select throws_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.wa_consent_record(%L, ''granted'', ''written'', '''', array[''membership''], true)', (select c1 from t_ids))), 'P0001', null, 'consent needs evidence');
+select lives_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Signed form 12'', array[''membership''], true)', (select c1 from t_ids))), 'consent recorded');
 select is(tests.num_as(tests.id('mo'), format('select (api.biz_count(''{}'', %L)->>''eligible'')::bigint', 'Alpha')), 1::bigint, 'now eligible');
-select lives_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_consent_record(%L, ''withdrawn'', ''written'', '''')', (select c1 from t_ids))), 'consent withdrawn');
+select lives_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.wa_consent_record(%L, ''withdrawn'', ''written'', '''', array[''membership''], true)', (select c1 from t_ids))), 'consent withdrawn');
 select is(tests.num_as(tests.id('mo'), format('select (api.biz_count(''{}'', %L)->>''optedOut'')::bigint', 'Alpha')), 1::bigint, 'withdrawing suppresses the number at once');
-select throws_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.biz_consent_record(%L, ''granted'', ''written'', ''Form 13'')', (select c1 from t_ids))), 'P0001', null, 'consent cannot be recorded over an opt-out');
+select throws_ok(format($$ select tests.exec_as(tests.id('sg'), %L) $$, format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 13'', array[''membership''], true)', (select c1 from t_ids))), 'P0001', null, 'consent cannot be recorded over an opt-out');
 
 -- ── exports: limits and log
 select throws_ok($$ select tests.exec_as(tests.id('mo'), 'select api.biz_export(''{}'', '''', null, null, array[''business_name'',''ntn''], ''csv'', ''because I can'', true)') $$, '42501', null, 'sensitive columns need level 3');

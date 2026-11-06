@@ -1,6 +1,6 @@
 'use client';
 
-import { Link2, MessageCircle, Save, Send } from 'lucide-react';
+import { Link2, Save, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { AttachmentPicker, type TemplateOption } from '@/components/whatsapp/composer';
@@ -12,8 +12,6 @@ import { msg } from '@/lib/nav/model';
 import {
   addNote,
   linkConversation,
-  memberConsent,
-  recordConsentByStaff,
   saveTemplate,
   saveWhatsappSettings,
   sendToBusiness,
@@ -374,123 +372,3 @@ export function SettingsForm({
   );
 }
 
-/** staff record consent only with evidence, for chosen categories */
-export function StaffConsentForm({ locale, company }: { locale: Locale; company: string }) {
-  const m = (k: string) => msg(locale, `biz.profile.${k}`);
-  const { notice, onDone } = useNotice();
-  return (
-    <ActionForm action={recordConsentByStaff} onDone={onDone} className="biz-form">
-      {(busy) => (
-        <>
-          <Hidden values={{ locale, company }} />
-          <label className="form-field">
-            {m('consentChange')}
-            <select name="status" defaultValue="granted" data-field="consent-status">
-              <option value="granted">{m('consentGrant')}</option>
-              <option value="withdrawn">{m('consentWithdraw')}</option>
-            </select>
-          </label>
-          <label className="form-field">
-            {m('consentMethod')}
-            <select name="method" defaultValue="written" data-field="consent-method">
-              {['written', 'event_form', 'email'].map((k) => (
-                <option key={k} value={k}>
-                  {m(`methods.${k}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <fieldset className="biz-values">
-            <legend>{msg(locale, 'wa.consent.categories')}</legend>
-            {CATEGORIES.map((c) => (
-              <label className="biz-check" key={c}>
-                <input type="checkbox" name="categories" value={c} defaultChecked data-category={c} />
-                {msg(locale, `wa.categories.${c}`)}
-              </label>
-            ))}
-          </fieldset>
-          <label className="form-field biz-wide">
-            {m('consentEvidence')}
-            <input name="evidence" maxLength={500} data-field="consent-evidence" />
-          </label>
-          <div className="pb biz-wide">
-            <button
-              className="btn btn-primary"
-              data-action="biz.consent.save"
-              disabled={busy}
-              title={wait(locale, busy)}
-            >
-              <Save size={15} aria-hidden /> {m('consentSave')}
-            </button>
-          </div>
-          {notice && <FormMessage result={notice} />}
-        </>
-      )}
-    </ActionForm>
-  );
-}
-
-/** the member's own choice, in the portal. Shown only once MCCI has approved the wording and opened it. */
-export function MemberConsentForm({
-  locale,
-  company,
-  current,
-}: {
-  locale: Locale;
-  company: string;
-  current: { name: string | null; phone: string | null; status: string | null; categories: string[] | null };
-}) {
-  const m = (k: string) => msg(locale, `wa.member.${k}`);
-  const { notice, onDone } = useNotice();
-  const on = current.status === 'granted';
-  return (
-    <ActionForm action={memberConsent} onDone={onDone} className="biz-form">
-      {(busy) => (
-        <>
-          <Hidden values={{ locale, company }} />
-          <p className="biz-wide">{m('wording')}</p>
-          <label className="form-field">
-            {m('name')}
-            <input name="name" maxLength={120} defaultValue={current.name ?? ''} data-field="member-name" />
-          </label>
-          <label className="form-field">
-            {m('phone')}
-            <input
-              name="phone"
-              dir="ltr"
-              maxLength={24}
-              placeholder="+923001234567"
-              defaultValue={current.phone ?? ''}
-              data-field="member-phone"
-            />
-          </label>
-          <fieldset className="biz-values">
-            <legend>{m('categories')}</legend>
-            {CATEGORIES.map((c) => (
-              <label className="biz-check" key={c}>
-                <input
-                  type="checkbox"
-                  name="categories"
-                  value={c}
-                  defaultChecked={!on || (current.categories ?? []).includes(c)}
-                  data-category={c}
-                />
-                {msg(locale, `wa.categories.${c}`)}
-              </label>
-            ))}
-          </fieldset>
-          <label className="biz-check biz-wide">
-            <input type="checkbox" name="grant" defaultChecked={on} data-field="member-grant" />
-            {m('agree')}
-          </label>
-          <div className="pb biz-wide">
-            <button className="btn btn-primary" data-action="wa.member.save" disabled={busy} title={wait(locale, busy)}>
-              <MessageCircle size={15} aria-hidden /> {m('save')}
-            </button>
-          </div>
-          {notice && <FormMessage result={notice} />}
-        </>
-      )}
-    </ActionForm>
-  );
-}

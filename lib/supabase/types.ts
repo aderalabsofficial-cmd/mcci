@@ -85,9 +85,6 @@ export type Database = {
               "action": string,"at": string,"new_value": Json,"object": string,"object_id": string,"old_value": Json,"reason": string,"result": string,"user_name": string
             }[]
                            },
-"biz_consent_record":
-{ Args: { "p_company": string,"p_evidence": string,"p_method": string,"p_status": string }; Returns: undefined
-                           },
 "biz_contact_save":
 { Args: { "p_company": string,"p_name": string,"p_phone": string }; Returns: undefined
                            },
@@ -729,7 +726,7 @@ export type Database = {
 { Args: { "p_attachment": string,"p_body": string,"p_category": string,"p_def": Json,"p_excluded": (string)[],"p_ids": (string)[],"p_kind": string,"p_mode": string,"p_name": string,"p_purpose": string,"p_q": string,"p_segment": string,"p_template": string }; Returns: string
                            },
 "wa_campaign_create_master":
-{ Args: { "p_body": string,"p_def": Json,"p_excluded": (string)[],"p_fields": Json,"p_ids": (string)[],"p_language": string,"p_master": string,"p_mixed": boolean,"p_mode": string,"p_name": string,"p_purpose": string,"p_q": string,"p_segment": string }; Returns: string
+{ Args: { "p_body": string,"p_category"?: string,"p_def": Json,"p_excluded": (string)[],"p_fields": Json,"p_ids": (string)[],"p_language": string,"p_master": string,"p_mixed": boolean,"p_mode": string,"p_name": string,"p_purpose": string,"p_q": string,"p_segment": string }; Returns: string
                            },
 "wa_campaign_decide":
 { Args: { "p_approve": boolean,"p_id": string,"p_reason": string }; Returns: undefined
@@ -756,7 +753,7 @@ export type Database = {
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "wa_consent_record":
-{ Args: { "p_categories": (string)[],"p_company": string,"p_evidence": string,"p_method": string,"p_status": string }; Returns: undefined
+{ Args: { "p_categories": (string)[],"p_company": string,"p_confirmed": boolean,"p_evidence": string,"p_method": string,"p_status": string }; Returns: undefined
                            },
 "wa_contact_companies":
 { Args: { "p_q": string }; Returns: string[]
@@ -776,6 +773,9 @@ export type Database = {
 "wa_health_mark":
 { Args: { "p_detail"?: Json,"p_error": string,"p_status": string,"p_steps": Json }; Returns: undefined
                            },
+"wa_join_code":
+{ Args: { "p_company": string }; Returns: Json
+                           },
 "wa_master_save":
 { Args: { "p_body": string,"p_footer": string,"p_header": string,"p_key": string,"p_language": string }; Returns: number
                            },
@@ -783,9 +783,18 @@ export type Database = {
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "wa_member_consent":
-{ Args: { "p_categories": (string)[],"p_company": string,"p_grant": boolean,"p_name": string,"p_phone": string }; Returns: undefined
+{ Args: { "p_agree": boolean,"p_categories": (string)[],"p_company": string }; Returns: string
                            },
-"wa_my_consent":
+"wa_member_contact":
+{ Args: { "p_company": string,"p_name": string,"p_phone": string }; Returns: undefined
+                           },
+"wa_member_whatsapp":
+{ Args: { "p_company": string }; Returns: Json
+                           },
+"wa_member_withdraw":
+{ Args: { "p_company": string }; Returns: undefined
+                           },
+"wa_my_whatsapp":
 { Args: { "p_company": string }; Returns: Json
                            },
 "wa_note_add":
@@ -805,6 +814,9 @@ export type Database = {
                            },
 "wa_reconcile_list":
 { Args: { "p_limit": number }; Returns: Json
+                           },
+"wa_register_status":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "wa_result":
 { Args: { "p_code": string,"p_detail": string,"p_id": string,"p_outcome": string,"p_provider_id": string,"p_wa_id": string }; Returns: undefined
@@ -2159,14 +2171,14 @@ isOneToOne: false
                   ]
                 },"outreach_consents": {
                   Row: {
-                    "categories": (string)[],"company_id": string,"evidence": string | null,"id": number,"method": string,"phone": string,"recorded_at": string,"recorded_by": string | null,"status": string,"wording_version": string | null
+                    "categories": (string)[],"company_id": string,"confirmed": boolean,"evidence": string | null,"id": number,"method": string,"phone": string,"recorded_at": string,"recorded_by": string | null,"status": string,"wording_version": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "categories"?: (string)[],"company_id": string,"evidence"?: string | null,"id"?: never,"method": string,"phone": string,"recorded_at"?: string,"recorded_by"?: string | null,"status": string,"wording_version"?: string | null
+                    "categories": (string)[],"company_id": string,"confirmed"?: boolean,"evidence"?: string | null,"id"?: never,"method": string,"phone": string,"recorded_at"?: string,"recorded_by"?: string | null,"status": string,"wording_version"?: string | null
                   }
                   Update: {
-                    "categories"?: (string)[],"company_id"?: string,"evidence"?: string | null,"id"?: never,"method"?: string,"phone"?: string,"recorded_at"?: string,"recorded_by"?: string | null,"status"?: string,"wording_version"?: string | null
+                    "categories"?: (string)[],"company_id"?: string,"confirmed"?: boolean,"evidence"?: string | null,"id"?: never,"method"?: string,"phone"?: string,"recorded_at"?: string,"recorded_by"?: string | null,"status"?: string,"wording_version"?: string | null
                   }
                   Relationships: [
                     {
@@ -2183,16 +2195,42 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"outreach_contacts": {
+                },"outreach_contact_history": {
                   Row: {
-                    "company_id": string,"language": string | null,"name": string | null,"phone": string,"updated_at": string,"updated_by": string | null
+                    "change": string,"changed_at": string,"changed_by": string | null,"company_id": string,"id": number,"name": string | null,"phone": string,"source": string,"verified_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "company_id": string,"language"?: string | null,"name"?: string | null,"phone": string,"updated_at"?: string,"updated_by"?: string | null
+                    "change": string,"changed_at"?: string,"changed_by"?: string | null,"company_id": string,"id"?: never,"name"?: string | null,"phone": string,"source": string,"verified_at"?: string | null
                   }
                   Update: {
-                    "company_id"?: string,"language"?: string | null,"name"?: string | null,"phone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "change"?: string,"changed_at"?: string,"changed_by"?: string | null,"company_id"?: string,"id"?: never,"name"?: string | null,"phone"?: string,"source"?: string,"verified_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_contact_history_changed_by_fkey"
+      columns: ["changed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_contact_history_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_contacts": {
+                  Row: {
+                    "company_id": string,"language": string | null,"name": string | null,"phone": string,"source": string,"updated_at": string,"updated_by": string | null,"verified_at": string | null,"verified_method": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "company_id": string,"language"?: string | null,"name"?: string | null,"phone": string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"verified_at"?: string | null,"verified_method"?: string | null
+                  }
+                  Update: {
+                    "company_id"?: string,"language"?: string | null,"name"?: string | null,"phone"?: string,"source"?: string,"updated_at"?: string,"updated_by"?: string | null,"verified_at"?: string | null,"verified_method"?: string | null
                   }
                   Relationships: [
                     {
@@ -2204,6 +2242,32 @@ isOneToOne: true
     },{
       foreignKeyName: "outreach_contacts_updated_by_fkey"
       columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_join_codes": {
+                  Row: {
+                    "cancelled_at": string | null,"code_hash": string,"company_id": string,"created_at": string,"created_by": string | null,"expires_at": string,"id": string,"phone": string,"used_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancelled_at"?: string | null,"code_hash": string,"company_id": string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string,"id"?: string,"phone": string,"used_at"?: string | null
+                  }
+                  Update: {
+                    "cancelled_at"?: string | null,"code_hash"?: string,"company_id"?: string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string,"id"?: string,"phone"?: string,"used_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_join_codes_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_join_codes_created_by_fkey"
+      columns: ["created_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -2278,6 +2342,32 @@ isOneToOne: false
       columns: ["created_by"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"outreach_verifications": {
+                  Row: {
+                    "at": string,"company_id": string | null,"id": number,"join_code_id": string | null,"outcome": string,"phone": string,"wa_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"company_id"?: string | null,"id"?: never,"join_code_id"?: string | null,"outcome": string,"phone": string,"wa_id"?: string | null
+                  }
+                  Update: {
+                    "at"?: string,"company_id"?: string | null,"id"?: never,"join_code_id"?: string | null,"outcome"?: string,"phone"?: string,"wa_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "outreach_verifications_company_id_fkey"
+      columns: ["company_id"]
+isOneToOne: false
+      referencedRelation: "companies"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "outreach_verifications_join_code_id_fkey"
+      columns: ["join_code_id"]
+isOneToOne: false
+      referencedRelation: "outreach_join_codes"
       referencedColumns: ["id"]
     }
                   ]

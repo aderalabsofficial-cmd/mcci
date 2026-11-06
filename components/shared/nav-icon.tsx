@@ -23,6 +23,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  MessageCircle,
   Mic,
   Newspaper,
   PenLine,
@@ -49,6 +50,7 @@ import {
 import type { IconName } from '@/lib/nav/registry';
 
 const ICONS: Record<IconName, LucideIcon> = {
+  chat: MessageCircle,
   home: House,
   award: Award,
   sign: Signature,

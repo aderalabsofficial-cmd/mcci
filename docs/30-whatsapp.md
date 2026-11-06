@@ -352,3 +352,78 @@ there is no room, consent and opt-out exclusions recorded, permissions.
 | Awaiting IQPigeon | Subscribe the `statuses` webhook field for MCCI's number (Meta Support finding); fix the open provider defects in §6 before a real campaign |
 | Awaiting member consent | No member has given WhatsApp consent; member opt-in stays closed until MCCI approves the consent wording |
 | Awaiting production acceptance | Not released; signed-in checks on the live site with an authorised staff account; no real bulk sending without the owner's explicit approval |
+
+## 12. Consent centre (owner's brief and decisions A–C of 6 Nov 2026; migration 0690)
+
+One consent system, extended; no second one. The member and staff screens read and write the same tables
+(`outreach_contacts`, `outreach_consents`, `outreach_suppressions`) through `api.*` functions that hold every rule.
+
+**Member** (`/portal/whatsapp`, "WhatsApp Preferences"; linked from the dashboard card, Company Profile and the menu).
+Always available, whatever `consentOpen` says (decision A). Every company user sees the status; only the account Owner
+(company area `profile` level 2, the authorized representative) changes anything. Four steps on one page:
+
+1. Contact person and WhatsApp number. Any common Pakistani form is accepted and stored as `+923XXXXXXXXX`
+   (`private.wa_phone`, mirrored by `normalizeWhatsapp`); a Pakistani landline is refused. Numbers from the register
+   (`companies.tel`, which holds the mobile for imported members such as MCCI-A-1905) and the user's own mobile are
+   offered as tap-to-use suggestions, never filled in.
+2. Five categories, each explained, **none ticked for the member**: announcements, membership & renewal, events,
+   business opportunities, and (new) service / application / certificate updates (`services`). Consent statement with
+   its version, an explicit "Yes — I agree" box, Give consent. Until MCCI opens consent the categories are shown
+   read-only with "Consent is awaiting MCCI's approval".
+3. Confirm the number on WhatsApp (JOIN, below). Optional; required to subscribe again after an opt-out.
+4. Stop all WhatsApp messages (confirmation dialog). Always allowed.
+
+Status, consent time, last update, confirmation and a history are on the page. A newly invited company user lands on
+the page once with a welcome note and "Skip for now". Imported members who already accepted their invitation see the
+same card; nothing new is sent to them.
+
+**Statuses** (`private.wa_status`, one per business): `no_number`, `not_collected`, `full` (all five), `partial`,
+`awaiting_verification` (fresh consent after the member's own opt-out, waiting for JOIN), `opted_out` (the member's
+own withdrawal or STOP), `blocked` (a block MCCI set). Confirmation on WhatsApp is shown beside it, separately.
+
+**Number change.** The old number and name go to `outreach_contact_history`; a granted consent for the old number ends
+with a `number_change` row; unused JOIN codes are cancelled; confirmation starts again. Consent is never carried to a
+new number (it was always keyed on company + number).
+
+**JOIN.** The member gets a six-character code (`api.wa_join_code`: 30 minutes, one use, at most five an hour; only a
+SHA-256 hash is stored) and sends `JOIN <code>` from WhatsApp (a `wa.me` link opens the chat with the text filled in).
+The webhook (`private.wa_join`) verifies the number only when the code is current and unused **and** the message comes
+from exactly the number the member saved with it; a code alone, or a contact record alone, never links a number.
+Every attempt is recorded in `outreach_verifications` (`verified`, `mismatch`, `expired`, `used`, `unknown_code`) with
+the WhatsApp message id; duplicate deliveries stop at the event id and the message id. JOIN proves control of the
+number; it is not consent, and nothing is sent back.
+
+**Opt-out and subscribing again (decision C).** STOP / UNSUBSCRIBE / OPT OUT (+ Urdu) and the member's own withdrawal
+(portal, or recorded by staff at the member's request) create a suppression with source `recipient` or `member`. Staff,
+including Approve level, cannot lift it (`api.biz_unsuppress` refuses) and cannot record consent over it
+(`api.wa_consent_record` refuses with `member_optout`). Only the member subscribes again: fresh categories (nothing
+restored), a new consent row with the current wording version, then a JOIN code made after that consent, sent from the
+same number; only that lifts the suppression. The STOP and withdrawal rows stay in the history. A block MCCI set itself
+(`staff`) can still be lifted by Approve level with a reason.
+
+**Staff** — "WhatsApp & Communication Preferences" on the Member Record (tab WhatsApp, with the status in the summary
+strip) and on the Business Directory profile: status, number (masked as `+92 300 •••• 567` without contact access),
+contact person, confirmation, categories, how consent was given, when, by whom, wording version, opt-out, full history.
+Staff with `out` 2 record the member's decision: method (phone call, signed form, in person, email, event sign-up,
+approved opt-in flow, other), evidence (3–500 characters) and a required box "the member clearly and freely agreed";
+new consent only once MCCI has opened it, for staff as for members. The Members Register has a WhatsApp column (status,
+confirmation, categories; never numbers) and filters: no number, consent not collected, full, partial, opted out,
+number not confirmed, active member without consent. Seen by staff with `out` ≥ 1 or `biz` ≥ 1.
+
+**Campaigns.** Five categories; the membership-update master can go as a service update ("Send as"). The audience
+builder filters on WhatsApp status, consented category and confirmation, besides status, class, sector, location,
+expiry and manual selection; counts are server-side and every recipient is checked again at dispatch. The composer
+explains the 24-hour window, how to send a test (a campaign of one consented business), and that a WhatsApp Channel is
+separate: neither IQPigeon nor Meta's Cloud API can post to a Channel, so it is never sent from here or counted.
+
+**Settings.** `consentOpen` now means "MCCI has approved the consent wording": it gates new consent only.
+
+**Dependency (production).** JOIN needs IQPigeon to deliver inbound `messages` events to `/api/webhooks/whatsapp`.
+The provider's own webhook test arrived on 3 Nov; no real inbound message has reached production yet. Until one does,
+members see "Not confirmed yet" and nothing claims otherwise; consent itself does not depend on JOIN except to
+subscribe again after the member's own opt-out.
+
+**Production state found on 6 Nov 2026 (read only).** `consentOpen` is **true** and `sendingEnabled` is **true** with
+wording version `draft-1`, contrary to decision A. Nothing can be sent (0 approved templates, 0 consents), but members
+can already give consent against the draft wording. Before or with the release of 0690: turn consent off in WhatsApp
+Settings until MCCI approves the wording (owner's action).

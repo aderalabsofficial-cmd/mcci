@@ -28,6 +28,7 @@ const HINTS = [
   'toomany',
   'approval',
   'limited',
+  'member_optout',
 ];
 
 function fail(locale: Locale, error: unknown, what: string): ActionResult {
@@ -41,7 +42,11 @@ function fail(locale: Locale, error: unknown, what: string): ActionResult {
   return { ok: false, message: t('generic') };
 }
 const done = (locale: Locale, k: string): ActionResult => ({ ok: true, message: msg(locale, `biz.done.${k}`) });
-const refresh = () => revalidatePath('/[locale]/admin/business-directory', 'layout');
+const refresh = () => {
+  revalidatePath('/[locale]/admin/business-directory', 'layout');
+  revalidatePath('/[locale]/admin/member', 'page');
+  revalidatePath('/[locale]/admin/members', 'page');
+};
 const localeOf = (form: FormData) => asLocale(String(form.get('locale') ?? 'en'));
 const text = (form: FormData, k: string) => String(form.get(k) ?? '');
 

@@ -55,7 +55,8 @@
       "payments": "Payments",
       "support": "Help & Support",
       "events": "Events & Trade",
-      "profile": "Company Profile"
+      "profile": "Company Profile",
+      "whatsapp": "WhatsApp"
     },
     "admin": {
       "dashboard": "Dashboard",
@@ -145,7 +146,8 @@
       "events": "Events & Trade",
       "opportunities": "Trade opportunities",
       "profile": "Company Profile",
-      "endorse": "Endorsement requests"
+      "endorse": "Endorsement requests",
+      "whatsapp": "WhatsApp Preferences"
     },
     "admin": {
       "dashboard": "Dashboard",
@@ -4377,7 +4379,8 @@
       "documents": "Documents",
       "certificates": "Certificates",
       "payments": "Payments",
-      "history": "History"
+      "history": "History",
+      "whatsapp": "WhatsApp"
     },
     "f": {
       "name": "Name of Business",
@@ -4763,7 +4766,10 @@
       "tags": "Internal tags",
       "previously_contacted": "Previously contacted",
       "campaigns": "Campaign participation",
-      "rep_name": "Representative"
+      "rep_name": "Representative",
+      "wa_status": "WhatsApp status",
+      "wa_categories": "Consented to (WhatsApp)",
+      "wa_verified": "Number confirmed on WhatsApp"
     },
     "values": {
       "business_category": {
@@ -4798,6 +4804,22 @@
         "withdrawn": "Withdrawn",
         "not_recorded": "Not recorded",
         "no_contact": "No contact"
+      },
+      "wa_status": {
+        "no_number": "No number",
+        "not_collected": "Consent not collected",
+        "full": "Full consent",
+        "partial": "Partial consent",
+        "awaiting_verification": "Awaiting WhatsApp confirmation",
+        "opted_out": "Opted out",
+        "blocked": "Blocked by MCCI"
+      },
+      "wa_categories": {
+        "announcements": "Official MCCI announcements",
+        "membership": "Membership and administrative updates",
+        "events": "Events and invitations",
+        "opportunities": "Business opportunities and initiatives",
+        "services": "Service, application and certificate updates"
       }
     },
     "filter": {
@@ -5012,7 +5034,7 @@
       "fields": "Please check the details and try again.",
       "filter": "One of the filters could not be read. Change it and try again.",
       "duplicate": "That name is already in use.",
-      "phone": "Enter the number in international format, such as +923001234567.",
+      "phone": "Enter a WhatsApp mobile number, such as 0300 1234567 or +92 300 1234567 (international format for other countries).",
       "nocontact": "Save a WhatsApp number first.",
       "evidence": "Enter the evidence for this consent.",
       "suppressed": "This number is blocked. The block must be lifted first.",
@@ -5021,7 +5043,8 @@
       "approval": "An export this large needs Approve level. Ask an approver or narrow the filters.",
       "limited": "Too many exports in the last hour. Try again later.",
       "pdffields": "A PDF can hold up to 8 columns.",
-      "generic": "That did not work. Please try again."
+      "generic": "That did not work. Please try again.",
+      "member_optout": "The member turned WhatsApp messages off. Only the member can turn them on again, from the member portal."
     },
     "done": {
       "segmentSaved": "Segment saved.",
@@ -5086,7 +5109,8 @@
       "announcements": "Official MCCI announcements",
       "membership": "Membership and administrative updates",
       "events": "Events and invitations",
-      "opportunities": "Business opportunities and initiatives"
+      "opportunities": "Business opportunities and initiatives",
+      "services": "Service, application and certificate updates"
     },
     "variables": {
       "business_name": "Business name",
@@ -5284,7 +5308,13 @@
       "advanced": "More detailed filters",
       "sender": "Sends from: {sender}",
       "senderUnknown": "The sending number is not confirmed yet. Run the connection test in Settings.",
-      "kindMaster": "MCCI master template"
+      "kindMaster": "MCCI master template",
+      "windowTitle": "Free text or template?",
+      "windowBody": "WhatsApp allows free text only within 24 hours after the member last wrote to MCCI. Outside that window only a template approved by Meta can be sent. “Check the audience” shows who is in which group.",
+      "testTitle": "Send a test first",
+      "testBody": "To test, select one business with consent (for example MCCI's own test contact) in the directory, create the campaign for it, and launch it. The same rules, approval and reports apply.",
+      "channelTitle": "WhatsApp Channel (separate)",
+      "channelBody": "A WhatsApp Channel post is a public, one-to-many update that MCCI publishes itself in the WhatsApp app. Neither IQPigeon nor Meta's API can post to a Channel, so it is not sent from here, needs no consent and is never counted among recipients. Use campaigns for members who consented."
     },
     "templates": {
       "title": "Message Templates",
@@ -5370,7 +5400,7 @@
       "maxCampaign": "Largest campaign",
       "threshold": "Audience size needing approval",
       "consentVersion": "Consent wording version",
-      "consentOpen": "Offer WhatsApp consent to members in the portal",
+      "consentOpen": "MCCI has approved the consent wording: members (and staff on their behalf) may give new consent. Members can always see the page, change their number and withdraw.",
       "save": "Save settings",
       "retryPolicy": "Retries use the same key: rate limits wait and try again; an unclear answer is tried up to 3 times, then marked unknown for a person to check.",
       "schedulingNote": "Scheduled sending needs the server timer, which is off until separately authorised. Until then, use Send next batch on the campaign.",
@@ -5595,7 +5625,8 @@
       "mixedBody": "Free-text message for those with an open conversation",
       "draftNote": "Creating the draft fixes the audience and each person’s message type. Nothing is sent until the campaign is started.",
       "capacityLine": "Capacity now: {room} new recipients (limit {limit} in 24 hours). Recipients beyond it wait for the next window.",
-      "capacityUnknown": "The account limit is not confirmed: the draft can be made, but template messages to new recipients will wait until it is."
+      "capacityUnknown": "The account limit is not confirmed: the draft can be made, but template messages to new recipients will wait until it is.",
+      "sendAs": "Send as"
     },
     "readiness": {
       "title": "Campaign Readiness",
@@ -5680,6 +5711,279 @@
       "beyond": "{n} more beyond these windows",
       "problem": "The account limit is not confirmed or out of date, so no template recipient can be scheduled. See Campaign Readiness.",
       "note": "An estimate at the confirmed limit. The dispatcher checks the capacity again before every batch."
+    },
+    "wstatus": {
+      "no_number": "No number",
+      "not_collected": "Consent not collected",
+      "full": "Full consent",
+      "partial": "Partial consent",
+      "awaiting_verification": "Awaiting WhatsApp confirmation",
+      "opted_out": "Opted out",
+      "blocked": "Blocked by MCCI"
+    },
+    "prefs": {
+      "title": "WhatsApp Preferences",
+      "intro": "Get MCCI's messages on WhatsApp — only the kinds you choose. You can change or stop at any time.",
+      "welcome": {
+        "title": "Welcome to the MCCI member portal",
+        "body": "Would you like MCCI's messages on WhatsApp? Add your number and choose what you want to receive. It takes a minute, and you can also do it later from your dashboard.",
+        "skip": "Skip for now"
+      },
+      "next": {
+        "no_number": {
+          "title": "Add your WhatsApp number",
+          "body": "Start with step 1 below: the contact person and the number that has WhatsApp."
+        },
+        "not_collected": {
+          "title": "Choose what you want to receive",
+          "body": "Your number is saved. In step 2, tick the kinds of message you want and give your consent."
+        },
+        "not_collected_closed": {
+          "title": "Your number is saved",
+          "body": "MCCI is finalising its consent wording. You can review the kinds of message below and give consent here as soon as MCCI opens it. Nothing is sent before you agree."
+        },
+        "active": {
+          "title": "You receive the messages you chose",
+          "body": "You can change your choices, confirm your number on WhatsApp, or stop at any time."
+        },
+        "awaiting_verification": {
+          "title": "Confirm your number on WhatsApp",
+          "body": "You chose to receive messages again. Send the code in step 3 from your WhatsApp to turn them on."
+        },
+        "opted_out": {
+          "title": "WhatsApp messages are off",
+          "body": "Nothing is sent to you. To turn messages on again, tick what you want in step 2, agree, and then confirm your number on WhatsApp."
+        },
+        "blocked": {
+          "title": "MCCI has paused messages to this number",
+          "body": "Please contact MCCI if you think this is wrong."
+        }
+      },
+      "state": {
+        "no_number": "Not set up",
+        "not_collected": "Number saved · consent pending",
+        "full": "Active",
+        "partial": "Active",
+        "awaiting_verification": "Waiting for your WhatsApp confirmation",
+        "opted_out": "Turned off",
+        "blocked": "Paused by MCCI"
+      },
+      "status": {
+        "heading": "Your WhatsApp status",
+        "number": "WhatsApp number",
+        "person": "Contact person",
+        "consentAt": "Consent given",
+        "withdrawnAt": "Turned off",
+        "updated": "Last updated",
+        "verified": "Number confirmed",
+        "verifiedOn": "Confirmed on WhatsApp, {date}",
+        "notVerified": "Not confirmed yet",
+        "categories": "You receive",
+        "none": "Nothing yet"
+      },
+      "step1": {
+        "title": "1. Your WhatsApp contact",
+        "help": "Use the number that has WhatsApp. A Pakistani mobile can be written as 0300 1234567: MCCI adds +92.",
+        "name": "Contact person",
+        "phone": "WhatsApp number",
+        "suggest": "Numbers MCCI already has for your business (tap to use):",
+        "useNumber": "Use {phone}",
+        "save": "Save number",
+        "remove": "Remove this number",
+        "changeNote": "Changing the number stops WhatsApp messages to the old number. You will give consent again for the new one."
+      },
+      "step2": {
+        "title": "2. What would you like to receive?",
+        "help": "Tick only what you want. Nothing is ticked for you.",
+        "statement": "Consent statement · version {version}",
+        "agree": "Yes — I agree to receive the WhatsApp messages I ticked above from MCCI's official number.",
+        "give": "Give consent",
+        "update": "Update my choices",
+        "needNumber": "Save your WhatsApp number first (step 1).",
+        "reconsent": "You turned WhatsApp messages off earlier. To turn them on again, tick what you want and agree; then confirm your number on WhatsApp (step 3). Your earlier choices are not restored.",
+        "closedTitle": "Consent is awaiting MCCI's approval",
+        "closedBody": "MCCI is finalising the consent wording. You can review the kinds of message below; you can give consent here as soon as MCCI opens it.",
+        "blocked": "MCCI has paused messages to this number, so consent cannot be given here. Please contact MCCI."
+      },
+      "catHelp": {
+        "announcements": "Official notices, circulars and news from MCCI.",
+        "membership": "Your membership: renewal reminders, fees and documents.",
+        "events": "Invitations to MCCI events, seminars and meetings.",
+        "opportunities": "Trade inquiries, exhibitions and business initiatives.",
+        "services": "Progress of your service requests, membership application and certificates."
+      },
+      "step3": {
+        "title": "3. Confirm the number on WhatsApp",
+        "help": "This proves the number is yours. It does not change what you agreed to receive.",
+        "optional": "Optional, but recommended.",
+        "required": "Needed to turn your messages back on.",
+        "get": "Get my code",
+        "again": "Get a new code",
+        "send": "From {phone}, send this message on WhatsApp:",
+        "open": "Open WhatsApp",
+        "noLink": "Send it to MCCI's official WhatsApp number.",
+        "expires": "The code works once and expires at {time}.",
+        "waiting": "This page shows “Confirmed” only after your message has reached MCCI. Open it again in a minute.",
+        "check": "Check again",
+        "done": "Confirmed on WhatsApp on {date}.",
+        "needNumber": "Save your WhatsApp number first (step 1)."
+      },
+      "outcome": {
+        "mismatch": "Your last message came from a different number. Send it from the number saved above.",
+        "expired": "The last code had expired. Get a new code.",
+        "used": "That code was already used.",
+        "verified": "Confirmed.",
+        "unknown_code": "MCCI did not recognise the code."
+      },
+      "stop": {
+        "title": "Stop WhatsApp messages",
+        "help": "MCCI stops at once. You can also reply STOP on WhatsApp. Only you can turn messages on again.",
+        "button": "Stop all WhatsApp messages",
+        "confirm": "Stop all WhatsApp messages from MCCI?",
+        "yes": "Yes, stop",
+        "cancel": "Cancel"
+      },
+      "history": {
+        "title": "History",
+        "empty": "Nothing yet."
+      },
+      "events": {
+        "consent_granted": "Consent given",
+        "consent_withdrawn": "Consent withdrawn",
+        "contact_number_changed": "Number changed",
+        "contact_removed": "Number removed",
+        "verification_verified": "Confirmed on WhatsApp",
+        "verification_mismatch": "JOIN from another number",
+        "verification_expired": "Expired code used",
+        "verification_used": "Code already used",
+        "verification_unknown_code": "Unknown code",
+        "suppression_member": "Turned off by the member",
+        "suppression_recipient": "STOP received on WhatsApp",
+        "suppression_staff": "Blocked by MCCI",
+        "suppression_provider": "Blocked by the provider"
+      },
+      "methods": {
+        "phone": "Phone call",
+        "written": "Signed form",
+        "in_person": "In person",
+        "email": "Email from the business",
+        "event_form": "Event sign-up",
+        "opt_in_flow": "Approved opt-in flow",
+        "other": "Other (documented)",
+        "member_portal": "Member portal",
+        "recipient": "WhatsApp reply",
+        "number_change": "Number changed",
+        "staff": "Staff",
+        "member": "Member portal",
+        "whatsapp_join": "WhatsApp JOIN"
+      },
+      "readOnly": "Only your company's authorized representative (the account Owner) can change WhatsApp settings. You can see the status here.",
+      "errors": {
+        "notAllowed": "This is outside your limits.",
+        "fields": "Please check the details and try again.",
+        "phone": "Enter a WhatsApp mobile number, such as 0300 1234567 or +92 300 1234567 (international format for other countries).",
+        "name": "Enter the contact person's name.",
+        "nocontact": "Save a WhatsApp number first.",
+        "closed": "Consent is awaiting MCCI's approval of the wording.",
+        "agree": "Tick the box to say you agree.",
+        "categories": "Tick at least one kind of message.",
+        "suppressed": "MCCI has paused messages to this number. Please contact MCCI.",
+        "member_optout": "The member turned WhatsApp messages off. Only the member can turn them on again, from the member portal.",
+        "join_limit": "Too many codes in the last hour. Please try again later.",
+        "evidence": "Enter the evidence: what the member said or signed, and when.",
+        "confirm_yes": "Confirm that the member clearly agreed.",
+        "reason": "Enter a reason.",
+        "generic": "That did not work. Please try again."
+      },
+      "done": {
+        "contact": "Your WhatsApp number is saved.",
+        "removed": "The number is removed.",
+        "consent": "Thank you. Your WhatsApp choices are saved.",
+        "consentConfirm": "Saved. Now confirm your number on WhatsApp (step 3) to turn messages on.",
+        "stopped": "WhatsApp messages are stopped.",
+        "staffGranted": "Consent recorded.",
+        "staffWithdrawn": "Withdrawal recorded. Only the member can turn messages on again."
+      },
+      "card": {
+        "title": "WhatsApp messages from MCCI",
+        "setup": "Set up WhatsApp",
+        "manage": "Manage WhatsApp",
+        "body": {
+          "no_number": "Add your WhatsApp number to get MCCI news, renewal reminders and updates.",
+          "not_collected": "Your number is saved. Choose what you want to receive.",
+          "not_collected_closed": "Your number is saved. Consent opens once MCCI approves its wording.",
+          "active": "You receive: {list}.",
+          "awaiting_verification": "Confirm your number on WhatsApp to turn messages on.",
+          "opted_out": "WhatsApp messages are off. You can turn them on again at any time.",
+          "blocked": "MCCI has paused messages to this number."
+        }
+      }
+    },
+    "staff": {
+      "title": "WhatsApp & Communication Preferences",
+      "status": "Status",
+      "number": "WhatsApp number",
+      "person": "Contact person",
+      "verified": "Number confirmed",
+      "verifiedVia": "By the member on WhatsApp (JOIN), {date}",
+      "notVerified": "Not confirmed",
+      "categories": "Categories",
+      "method": "How consent was given",
+      "consentAt": "Consent recorded",
+      "recordedBy": "Recorded by",
+      "version": "Wording version",
+      "confirmed": "Member's yes confirmed",
+      "updated": "Contact last updated",
+      "sourceMember": "by the member",
+      "sourceStaff": "by staff",
+      "optout": "Opt-out",
+      "none": "None",
+      "memberOptout": "The member turned WhatsApp off on {date} ({how}). Staff cannot override this; only the member can turn messages on again, from the member portal.",
+      "awaiting": "The member gave fresh consent after turning messages off. Messages stay off until the member confirms the number on WhatsApp.",
+      "closedNote": "Recording new consent waits for MCCI's approval of the consent wording (WhatsApp Settings). You can still save the number and record a withdrawal.",
+      "maskNote": "The number is partly hidden: your limits show the status only.",
+      "portal": "The member manages this in the member portal under WhatsApp Preferences.",
+      "noAccess": "Your limits do not include WhatsApp.",
+      "record": {
+        "title": "Record the member's decision",
+        "status": "Decision",
+        "grant": "The member agrees",
+        "withdraw": "The member asks to stop",
+        "method": "How the member told MCCI",
+        "categories": "Categories the member agreed to",
+        "evidence": "Evidence (who, when, what was said or signed)",
+        "confirm": "I confirm the member clearly and freely agreed to the categories ticked. Consent is never assumed from membership, a phone number, an invitation, a visit or an ordinary chat.",
+        "save": "Record"
+      },
+      "contact": {
+        "title": "WhatsApp contact",
+        "save": "Save contact",
+        "hint": "A changed number starts without consent; the old number stays in the history."
+      },
+      "history": "Consent history",
+      "cols": {
+        "date": "Date",
+        "event": "Event",
+        "detail": "Detail",
+        "number": "Number",
+        "by": "By"
+      },
+      "register": {
+        "col": "WhatsApp",
+        "filter": "WhatsApp",
+        "all": "All",
+        "verified": "Confirmed on WhatsApp",
+        "notVerified": "Not confirmed",
+        "filters": {
+          "no_number": "No number",
+          "not_collected": "Consent not collected",
+          "full": "Full consent",
+          "partial": "Partial consent",
+          "opted_out": "Opted out",
+          "not_verified": "Number not confirmed",
+          "active_no_consent": "Active member without consent"
+        }
+      }
     }
   },
   "voter": {

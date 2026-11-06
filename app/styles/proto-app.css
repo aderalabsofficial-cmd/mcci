@@ -341,3 +341,55 @@
 .proto .slot-qr .qr svg {width:100%;height:100%;display:block}
 .proto .slot-qr p {flex:1;min-width:200px;margin:0}
 .proto .slot-a {flex-wrap:wrap}
+
+/* ───── WhatsApp consent centre (0690): member preferences, dashboard card, staff section, composer help ───── */
+.proto .wa-prefs {display:grid;gap:14px}
+.proto .wa-prefs > .card, .proto .wa-card, .proto .wa-welcome {margin:0}
+.proto .wa-welcome {margin-bottom:14px;border-inline-start:5px solid #25d366}
+.proto .wa-card {display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;margin-bottom:18px}
+.proto .wa-card > i {width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#25d36622;color:#128c4a}
+.proto .wa-card h3 {margin:0;font-size:16px}
+.proto .wa-card p {margin:4px 0 0}
+.proto .wa-card-top {display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.proto .wa-cats {display:grid;gap:8px;border:0;padding:0;margin:10px 0;list-style:none}
+.proto .wa-cat {display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--b);border-radius:14px;background:var(--card2);cursor:pointer}
+.proto .wa-cats-read .wa-cat {cursor:default}
+.proto .wa-cat input {width:22px;height:22px;flex:none;margin-top:2px}
+.proto .wa-cat span {display:grid;gap:2px;min-width:0}
+.proto .wa-cat small {color:var(--m)}
+.proto .wa-cat:has(input:checked) {border-color:#25d366;background:#25d36612}
+.proto .wa-statement {border-inline-start:4px solid var(--gold);padding:10px 12px;border-radius:10px;background:var(--card2);margin:10px 0}
+.proto .wa-statement p {margin:4px 0 0}
+.proto .wa-agree {align-items:flex-start;font-weight:700;margin:6px 0 10px}
+.proto .wa-agree input {margin-top:2px}
+.proto .wa-inline {margin-top:8px}
+.proto .wa-code-box {display:grid;gap:6px;padding:14px;border:1px dashed #25d366;border-radius:14px;background:#25d36610}
+.proto .wa-code-box p {margin:0}
+.proto .wa-code {font:700 26px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.12em;user-select:all}
+.proto .wa-danger {color:#b91c1c;border-color:#f3c7c7}
+.proto .btn-primary.wa-danger {background:#b91c1c;color:#fff;border-color:#b91c1c}
+.proto .wa-history summary {display:flex;align-items:center;cursor:pointer;min-height:44px;list-style:none}
+.proto .wa-history summary h3 {margin:0}
+.proto .wa-history summary::after {content:"▾";margin-inline-start:auto;color:var(--m)}
+.proto .wa-history[open] summary::after {content:"▴"}
+.proto .wa-events {list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.proto .wa-events li {display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:2px 12px;padding:8px 0;border-top:1px solid var(--b)}
+.proto .wa-events li span {color:var(--m);font-size:13px;grid-row:span 2}
+.proto .wa-events li small {color:var(--m);overflow-wrap:anywhere}
+.proto .wa-staff .kv {margin-bottom:10px}
+.proto .wa-staff h4, .proto .wa-record h4 {margin:12px 0 0;font-size:14px}
+.proto .wa-help {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 14px}
+.proto .wa-help > div {display:grid;gap:4px;padding:10px 12px;border:1px solid var(--b);border-radius:12px;background:var(--card2)}
+.proto .wa-help small {color:var(--m)}
+.proto .wa-help [data-help="channel"] {border-style:dashed}
+.proto .pill-label {align-self:center;font-size:13px;font-weight:700;color:var(--m);padding-inline-end:4px}
+@media (max-width:640px) {
+  .proto .wa-card {grid-template-columns:auto minmax(0,1fr);gap:10px}
+  .proto .wa-card > .btn {grid-column:1 / -1;width:100%;justify-content:center}
+  .proto .wa-card > i {width:38px;height:38px}
+  .proto .wa-help {grid-template-columns:1fr}
+  .proto .wa-events li {grid-template-columns:1fr}
+  .proto .wa-events li span {grid-row:auto}
+  .proto .wa-code {font-size:22px}
+  .proto .wa-cat input {width:24px;height:24px}
+}

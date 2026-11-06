@@ -4,7 +4,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 select plan(55);
 
-update private.settings set value = value || '{"sendingEnabled":true,"approvalThreshold":1,"ratePerMinute":100}'::jsonb where key = 'whatsapp';
+update private.settings set value = value || '{"sendingEnabled":true,"consentOpen":true,"approvalThreshold":1,"ratePerMinute":100}'::jsonb where key = 'whatsapp';
 
 create temp table t on commit drop as
   select (select m.company_id from public.members m join public.companies c on c.id = m.company_id where not c.demo order by m.member_no limit 1) as c1,
@@ -29,7 +29,7 @@ select throws_ok(format($$ select tests.exec_as(tests.id('president'), %L) $$, f
 
 -- ── sending rules
 select throws_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_send_prepare(%L, ''template'', null, %L, null, ''membership'')', (select c1 from t), (select ok from tp))), 'P0001', null, 'no consent: blocked');
-select lives_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 1'', array[''membership''])', (select c1 from t))), 'consent recorded for one category');
+select lives_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 1'', array[''membership''], true)', (select c1 from t))), 'consent recorded for one category');
 select throws_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_send_prepare(%L, ''template'', null, %L, null, ''events'')', (select c1 from t), (select ok from tp))), 'P0001', null, 'another category: blocked');
 select throws_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_send_prepare(%L, ''template'', null, %L, null, ''membership'')', (select c1 from t), (select draft from tp))), 'P0001', null, 'an unapproved template: blocked');
 select throws_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_send_prepare(%L, ''text'', ''hello'', null, null, ''membership'')', (select c1 from t))), 'P0001', null, 'free text outside the 24-hour window: blocked');
@@ -71,9 +71,9 @@ select ok(exists (select 1 from public.outreach_suppressions where phone = '+923
 select throws_ok(format($$ select pg_temp.sg(%L) $$, format('select api.wa_send_prepare(%L, ''template'', null, %L, null, ''membership'')', (select c1 from t), (select ok from tp))), 'P0001', null, 'and nothing more can be prepared');
 
 -- ── campaign: snapshot, approval, recheck before dispatch
-select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 2'', array[''membership''])', (select c2 from t)));
+select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 2'', array[''membership''], true)', (select c2 from t)));
 update public.outreach_suppressions set active = false where phone = '+923001110001';
-select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 3'', array[''membership''])', (select c1 from t)));
+select pg_temp.sg(format('select api.wa_consent_record(%L, ''granted'', ''written'', ''Form 3'', array[''membership''], true)', (select c1 from t)));
 select tests.exec_as(tests.id('mo'), format('select api.wa_campaign_create(''C1'', ''Test'', ''campaign'', ''membership'', ''template'', %L, null, null, null, ''{}'', '''', null, null)', (select ok from tp)));
 create temp table tc on commit drop as select id from public.whatsapp_campaigns where name = 'C1';
 grant select on tc to authenticated, service_role;

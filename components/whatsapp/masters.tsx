@@ -120,6 +120,9 @@ export function MasterSection({
   const m = (k: string, v?: Record<string, string>) => msg(locale, `wa.masters.${k}`, v);
   const router = useRouter();
   const [key, setKey] = useState(masters[0]?.key ?? 'announcements');
+  // the membership-update master may also go as a service / application / certificate update (0690)
+  const [sendAs, setSendAs] = useState<'membership' | 'services'>('membership');
+  const category = key === 'membership' ? sendAs : key;
   const [language, setLanguage] = useState<MasterLanguage>(locale === 'ur' ? 'ur' : 'en');
   // the link starts as MCCI's own address (a real, editable value): an example only looked filled in (DEF-008)
   const startTyped = (): Record<string, string> => (/^https:\/\/\S{4,200}$/.test(appUrl) ? { link: appUrl } : {});
@@ -154,7 +157,7 @@ export function MasterSection({
 
   const check = () =>
     start(async () => {
-      const r = await callAction(locale, () => audienceBreakdown(locale, { ...audience, category: key }));
+      const r = await callAction(locale, () => audienceBreakdown(locale, { ...audience, category }));
       if (r.ok && 'breakdown' in r && r.breakdown) {
         setBreakdown(r.breakdown as Breakdown);
         setNote(null);
@@ -165,7 +168,7 @@ export function MasterSection({
       const r = await callAction(locale, () =>
         createMasterCampaign(locale, {
           ...audience,
-          category: key,
+          category,
           name,
           purpose,
           mode,
@@ -209,6 +212,15 @@ export function MasterSection({
             ))}
           </select>
         </label>
+        {key === 'membership' && (
+          <label className="form-field">
+            {m('sendAs')}
+            <select value={sendAs} data-field="master-send-as" onChange={(e) => (setSendAs(e.target.value as 'membership' | 'services'), reset())}>
+              <option value="membership">{msg(locale, 'wa.categories.membership')}</option>
+              <option value="services">{msg(locale, 'wa.categories.services')}</option>
+            </select>
+          </label>
+        )}
         <fieldset className="biz-values">
           <legend>{m('language')}</legend>
           {(['en', 'ur'] as const).map((l) => (

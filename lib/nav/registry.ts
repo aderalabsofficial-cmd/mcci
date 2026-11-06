@@ -33,6 +33,7 @@ export const BUILT: ReadonlySet<Milestone> = new Set<Milestone>([
 ]);
 
 export type IconName =
+  | 'chat'
   | 'home'
   | 'award'
   | 'sign'
@@ -129,6 +130,7 @@ export const SCREENS: readonly Screen[] = [
   s('portal', 'events', '/portal/events', 'M8a', 'calendar'),
   s('portal', 'opportunities', '/portal/opportunities', 'M8a', 'globe'),
   s('portal', 'profile', '/portal/profile', 'M1', 'building'), // colleagues + change requests (M1); cards and partners arrive with M3
+  s('portal', 'whatsapp', '/portal/whatsapp', 'M8a', 'chat'), // WhatsApp preferences: number, categories, consent (0690, docs/30 §12)
   s('portal', 'endorse', '/portal/endorse', 'M4', 'sign'),
 
   // Admin panel (29)
@@ -221,6 +223,7 @@ export const SIDEBAR: Record<'portal' | 'admin', NavSection[]> = {
       items: [
         { label: 'events', key: 'events', color: '#ff9ec4' },
         { label: 'profile', key: 'profile', color: '#cbd5e1' },
+        { label: 'whatsapp', key: 'whatsapp', color: '#86efac' },
       ],
     },
   ],
@@ -361,6 +364,6 @@ export const BOTTOM_TABS: Record<Area, BottomTab[]> = {
 /** Items of the "More" sheet, in the order of docs/15-mobile-app.md §5.3. */
 export const MORE_SHEET: Record<Area, string[]> = {
   site: ['membership', 'track', 'news', 'resources', 'about', 'contact', 'live', 'login'],
-  portal: ['membership', 'mtrack', 'payments', 'endorse', 'events', 'opportunities', 'profile', 'support', 'assistant'],
+  portal: ['membership', 'mtrack', 'payments', 'endorse', 'events', 'opportunities', 'profile', 'whatsapp', 'support', 'assistant'],
   admin: SCREENS.filter((x) => x.area === 'admin' && x.key !== 'members').map((x) => x.key),
 };

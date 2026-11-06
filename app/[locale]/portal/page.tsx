@@ -10,6 +10,8 @@ import { noteText } from '@/lib/membership/notes';
 import { msg, screenLink } from '@/lib/nav/model';
 import { getSession } from '@/lib/permissions/server';
 import { createClient } from '@/lib/supabase/server';
+import { WhatsappCard } from '@/components/whatsapp/dashboard-card';
+import { loadMyWhatsapp } from '@/lib/whatsapp/consent-load';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -102,6 +104,8 @@ export default async function PortalHomePage({ params }: Props) {
     );
   };
   const notifications = screenLink('portal', 'notifications', locale);
+  // every company user sees where they stand on WhatsApp (owner's brief, 6 Nov 2026); never blocking
+  const whatsapp = member ? await loadMyWhatsapp(member.company_id) : null;
   const requests = screenLink('portal', 'applications', locale);
 
   return (
@@ -134,6 +138,7 @@ export default async function PortalHomePage({ params }: Props) {
         </div>
       )}
       <HomeNext app={app} locale={locale} member={member} />
+      {whatsapp && <WhatsappCard locale={locale} data={whatsapp} />}
 
       {!asMember && app && app.stage !== 'draft' && app.stage !== 'withdrawn' && (
         <div className="card" style={{ marginBottom: 18 }}>
