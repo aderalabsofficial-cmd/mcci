@@ -19,9 +19,9 @@ Prepared 6 November 2026 from the automated acceptance run of that day. Companio
   assertions (47 files). Each of the 12 configured designations signed in with its own account (password +
   authenticator) and opened all 47 staff pages by address (1,145 local page tests: 1,112 PASS, 33 PARTIAL, 0 FAIL). What each designation saw matched its configured limits:
   **0 mismatches**. All 173 server actions check the user on the server, except 10 that are public by design.
-- **8 application findings today: 5 defects fixed, retested and released; 1 working as designed; 2 open.** DEF-004 (an
-  intermittent hydration warning, low) and DEF-008 (WhatsApp preview placeholders, reported by the owner, medium) are
-  open; §9 has the details. The owner's committee report (M-0272) was **not** a document defect: it is a demo file,
+- **8 application findings today: 5 defects fixed, retested and released; 1 fixed and tested but not yet released
+  (DEF-008, WhatsApp composer: example text looked like typed values); 1 working as designed; 1 open** (DEF-004, an
+  intermittent hydration warning with no visible effect, low). §9 has the details. The owner's committee report (M-0272) was **not** a document defect: it is a demo file,
   and demo files are never approved (owner's rule, confirmed 6 Nov). The real display glitch behind it ("9 / 10",
   red ✗ for the optional tax return) is fixed.
 - **Not software, but must be settled before real members' data goes in** (§12): the shared server's firewall
@@ -130,7 +130,7 @@ Manager of the endorser company).
 | F. Events (publish → member registers once) | `engagement` | **PARTIAL** | **Attendance / check-in NOT IMPLEMENTED** (FEAT-001) |
 | G. CMS (draft hidden → publish → public page; post with photo and file; ticker) | `engagement`, `admin-updates`, `site` | **PASS** | |
 | H. Staff approvals (committee proposed by SG → approved by President; limits change with the SG's password; signing) | `committee`, `access`, `services` | **PASS** | |
-| I. Communications (consent → templates → audience → readiness → campaign) | `whatsapp` (13 tests) | **PASS against a stand-in provider** | Not verified against the live provider; no message sent; DEF-008 open |
+| I. Communications (consent → templates → audience → readiness → campaign) | `whatsapp` (13 tests) | **PASS against a stand-in provider** | Not verified against the live provider; no message sent; DEF-008 fixed on the branch, awaiting release |
 
 ## 9. Defects, repairs and retests
 
@@ -143,7 +143,7 @@ Manager of the endorser company).
 | DEF-005 | High (owner) | Optional document not uploaded counted as missing ("9 / 10", red ✗) | **RETESTED PASS**, live |
 | DEF-005b | — | Committee could not approve M-0272: **demo file, by design** (owner confirmed) | WORKING AS DESIGNED |
 | DEF-006 | Medium (owner) | Partner/director row: photo first; broken on phones | **RETESTED PASS**, live |
-| DEF-008 | Medium (owner) | WhatsApp preview shows `[subject]`/`[details]` although filled | OPEN (separate session) |
+| DEF-008 | Medium (owner) | WhatsApp composer: example text looked like typed values; the preview showed `[subject]` | FIXED on the branch (6 Nov, after the release), awaiting release |
 
 Commits: `a43cdd5` (fixes + regression tests), `8668c7c` (acceptance tooling), on `db/schema-proposal`; released as
 `8668c7c`. Root causes, files and tests: `MCCI-DEFECT-AND-REPAIR-REGISTER.md`.
@@ -209,7 +209,7 @@ from the public site. Members sign in at `/login`.
 | 5 | Who processes service requests: no Services Officer on production (CFG-003) | MCCI | Medium |
 | 6 | Remove test records before real members are invited (CFG-004) | Owner | Medium |
 | 7 | Event attendance: build it, or accept it as a limitation (FEAT-001) | MCCI | Medium |
-| 8 | WhatsApp preview placeholders (DEF-008); hydration warning (DEF-004: narrowed to a timing effect on signed-in pages, no visible effect; needs production error reporting to name the element) | Separate session | Medium / Low |
+| 8 | Release the DEF-008 fix (WhatsApp composer); hydration warning (DEF-004: narrowed to a timing effect on signed-in pages, no visible effect; needs production error reporting to name the element) | Separate session | Medium / Low |
 | 9 | Content-Security-Policy header (INF-003) | Next release | Medium |
 | 10 | System email from an MCCI domain (INF-004) | MCCI | Medium |
 | 11 | Domain `themcci.com.pk`, registrar ownership, `mcci.org.pk` handover | MCCI | Medium |
