@@ -160,7 +160,7 @@ Commits: `a43cdd5` (fixes + regression tests), `8668c7c` (acceptance tooling), o
 | Acceptance crawl (17 personas) | 19 tests · 1,145 page tests · 5,162 elements | 19 · 1,112 · 3,981 | 0 · 0 · 0 | — | — | PARTIAL: 33 pages (DEF-004), 1,181 elements (outcome not exercised) |
 | Production visitor crawl (after release) | 111 page tests · 43 links | 110 · 43 | 0 | — | — | 1 PARTIAL (DEF-004) |
 | Production security probes | 23 API calls · headers · 14 ports | all refused as expected | — | — | — | INF-001, INF-003 recorded |
-| Integration (gateway, auth, storage, realtime; local CLI stack) | 44 run (55 listed) | 38 | **6**, none an app defect | — | 11 (soak + self-host-only) | 3 tests predate the 2-step rule of 0310 (TEST-004); 1 fixture predates "bank confirmed" (TEST-003; production confirmed); 2 local-stack differences: S3 endpoint (production: 404, off) and per-address limit header (ENV-004/005). Rerun after a 5-minute pause: same 4, so consistent |
+| Integration (gateway, auth, storage, realtime; local CLI stack) | 44 run (55 listed) | **42** (after updating 4 outdated tests, commit `1e77244`) | 2, none an app defect | — | 11 (soak + self-host-only) | First run: 38 passed, 6 failed. 4 tests predated the 2-step rule (0310) and the bank-confirmed rule (0340) and were updated (TEST-003/004). The 2 left check self-hosted settings the local CLI stack lacks: S3 endpoint (production: 404, off) and per-address limit header (ENV-004/005) |
 
 Skipped tests are not counted as passed; a test that passed only on a rerun is counted as **flaky**. WhatsApp and AI
 reading ran against local stand-ins (`fake-iqpigeon`, `fake-openai`), **not** the live services. Two regression runs
@@ -209,7 +209,7 @@ from the public site. Members sign in at `/login`.
 | 5 | Who processes service requests: no Services Officer on production (CFG-003) | MCCI | Medium |
 | 6 | Remove test records before real members are invited (CFG-004) | Owner | Medium |
 | 7 | Event attendance: build it, or accept it as a limitation (FEAT-001) | MCCI | Medium |
-| 8 | WhatsApp preview placeholders (DEF-008), hydration warning (DEF-004), 4 outdated integration tests (TEST-003/004) | Separate session | Medium / Low |
+| 8 | WhatsApp preview placeholders (DEF-008); hydration warning (DEF-004: narrowed to a timing effect on signed-in pages, no visible effect; needs production error reporting to name the element) | Separate session | Medium / Low |
 | 9 | Content-Security-Policy header (INF-003) | Next release | Medium |
 | 10 | System email from an MCCI domain (INF-004) | MCCI | Medium |
 | 11 | Domain `themcci.com.pk`, registrar ownership, `mcci.org.pk` handover | MCCI | Medium |
@@ -243,7 +243,7 @@ report: `MCCI-DOMAIN-MIGRATION-READINESS.md`.
 | 2 Browser acceptance: every discoverable feature has a result | **PASS**: 1,145 local + 111 production page tests; 5,162 element results (no FAIL; 1,181 PARTIAL stated) |
 | 3 Role acceptance: every configured designation tested on its own | **PASS**: 12 / 12; 0 mismatches. Vice President / Assistant Secretary: NOT CONFIGURED |
 | 4 Workflow acceptance | **PASS with limitations**: 8 of 9 workflows pass; F partial (attendance not built); I verified against a stand-in only |
-| 5 Repair and regression | **PASS**: 5 defects fixed, retested and released; 2 open (low/medium); 4 outdated integration tests to update |
+| 5 Repair and regression | **PASS**: 5 defects fixed, retested and released; 2 open (low/medium); 4 outdated integration tests updated (1e77244) |
 | 6 Production safety | **PASS**: tests read-only on production; one authorised release after a verified backup; no data, credential, DNS or permission change |
 | 7 Presidential handover | **PASS**: reports, limitations, checklist ready; demo staff 2-step enrolment is the owner's step |
 
