@@ -59,10 +59,11 @@ describe.skipIf(!env)('api.my_access through Auth + REST (lib/permissions)', () 
     expect(o.companies.map((c) => c.id)).not.toContain(companyA);
   });
 
-  it('staff get their designation levels; TOTP enrolment + verify gives totp_verified and an AAL2 session', async () => {
+  it('staff get their designation levels only after TOTP verify (AAL2); before it every level is 0', async () => {
     const before = await access(officer);
     expect(before.staff).toMatchObject({ designation: 'Membership Officer' });
-    expect(before.staff!.levels.mem).toBe(2);
+    // migration 0310: private.staff_level is 0 until the session is aal2 (password alone gives no staff powers)
+    expect(Object.values(before.staff!.levels).every((l) => l === 0)).toBe(true);
     expect(before.mfa.totp_verified).toBe(false);
 
     const enrolled = await officer.client.auth.mfa.enroll({ factorType: 'totp', friendlyName: `it-${w.run}` });
@@ -80,5 +81,6 @@ describe.skipIf(!env)('api.my_access through Auth + REST (lib/permissions)', () 
 
     const after = await access(officer);
     expect(after.mfa.totp_verified).toBe(true);
+    expect(after.staff!.levels.mem).toBe(2); // docs/06: Membership Officer, membership applications = edit
   });
 });

@@ -220,13 +220,31 @@ describe.skipIf(!env)('Storage API S1–S12', () => {
     expect((own.data ?? []).length).toBeGreaterThan(0);
   });
 
-  it('S10: a receipt can be uploaded only for an Unpaid voucher, by a user with payment rights', async () => {
+  it('S10: a receipt can be uploaded only for an Unpaid voucher, by a user with payment rights, once the bank is confirmed', async () => {
     const receipt = (v: string) => `${companyA}/vouchers/${v}/${randomUUID()}.pdf`;
+    // migration 0340: no receipt upload until MCCI's bank account is confirmed (settings.bank.confirmed); the setting is
+    // read and restored through the local SQL hook (private schema, not exposed over REST)
+    if (!sql) throw new Error('S10 needs MCCI_IT_SQL_CMD (local SQL hook) to confirm the bank account');
+    const was =
+      sql(`select coalesce(value->>'confirmed', 'false') from private.settings where key = 'bank'`) || 'false';
+    try {
+      sql(`update private.settings set value = jsonb_set(value, '{confirmed}', 'false') where key = 'bank'`);
+      expect((await upload(ownerA, 'receipts', receipt(vUnpaid), pdf('s10-unconfirmed'))).error).not.toBeNull();
+      sql(`update private.settings set value = jsonb_set(value, '{confirmed}', 'true') where key = 'bank'`);
+      await checkS10(receipt);
+    } finally {
+      sql(
+        `update private.settings set value = jsonb_set(value, '{confirmed}', '${was === 'true' ? 'true' : 'false'}') where key = 'bank'`,
+      );
+    }
+  });
+
+  async function checkS10(receipt: (v: string) => string) {
     expect((await upload(ownerA, 'receipts', receipt(vUnpaid), pdf('s10'))).error).toBeNull(); // control
     expect((await upload(ownerA, 'receipts', receipt(vPaid), pdf('s10-paid'))).error).not.toBeNull();
     expect((await upload(servicesA, 'receipts', receipt(vUnpaid), pdf('s10-services'))).error).not.toBeNull();
     expect((await upload(ownerB, 'receipts', receipt(vUnpaid), pdf('s10-other'))).error).not.toBeNull();
-  });
+  }
 
   it('S11: an anonymous client cannot list private buckets or their objects', async () => {
     const buckets = await w.anon.storage.listBuckets();

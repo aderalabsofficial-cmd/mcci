@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
+import { totp } from '../support/totp';
 import type { LocalEnv } from './local-env';
 
 /**
@@ -150,6 +151,19 @@ export async function buildWorld(env: LocalEnv): Promise<World> {
     return p;
   }
 
+  // Staff powers need a 2-step session (migration 0310: private.staff_level is 0 below aal2). Enrol and verify a TOTP
+  // factor, then give Realtime the stepped-up token.
+  async function stepUp(p: Persona) {
+    const enrolled = await p.client.auth.mfa.enroll({ factorType: 'totp', friendlyName: `rt-${run}` });
+    if (enrolled.error) throw new Error(`enrol ${p.email}: ${enrolled.error.message}`);
+    const { id: factorId, totp: t } = enrolled.data as { id: string; totp: { secret: string } };
+    const challenge = await p.client.auth.mfa.challenge({ factorId });
+    if (challenge.error) throw new Error(`challenge ${p.email}: ${challenge.error.message}`);
+    const verified = await p.client.auth.mfa.verify({ factorId, challengeId: challenge.data.id, code: totp(t.secret) });
+    if (verified.error) throw new Error(`verify ${p.email}: ${verified.error.message}`);
+    await p.client.realtime.setAuth(verified.data.access_token);
+  }
+
   try {
     const ownerA = await persona('owner-a');
     const servicesA = await persona('services-a');
@@ -186,6 +200,9 @@ export async function buildWorld(env: LocalEnv): Promise<World> {
       }),
       'deactivated staff',
     );
+    // both officers reach aal2, so the deactivated one differs from the active one only by staff.active
+    await stepUp(officer);
+    await stepUp(officerOff);
 
     must(
       await service.from('members').insert({
