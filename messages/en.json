@@ -5575,6 +5575,8 @@
         "link": "Information or registration link"
       },
       "previewTitle": "The message as it will arrive",
+      "eg": "e.g.",
+      "missing": "Not filled in yet: {fields}. The message cannot be prepared until they are.",
       "checkAudience": "Check the audience",
       "fieldNeeded": "Check the field: {field}.",
       "checkFirst": "Check the audience first.",

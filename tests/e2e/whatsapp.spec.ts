@@ -669,10 +669,17 @@ test('master templates: English and Urdu, approval only from the provider, field
   await expect(c.locator('[data-master-not-approved]')).toBeVisible();
   await expect(c.locator('[data-action="wa.master.create"]')).toBeDisabled();
   await c.locator('[data-field="master-language-en"]').check();
+  // DEF-008 (6 Nov 2026): examples looked like typed values while the preview said [subject]. Examples now read
+  // "e.g. …", an empty field shows by its label in the preview, and the note under it names what is still empty.
+  await expect(c.locator('[data-field="master-subject"]')).toHaveValue('');
+  await expect(c.locator('[data-field="master-subject"]')).toHaveAttribute('placeholder', /^e\.g\. /);
+  await expect(c.locator('[data-master-preview]')).toContainText('[Subject]');
+  await expect(c.locator('[data-master-missing]')).toContainText('Subject');
   await c.locator('[data-field="master-subject"]').fill('Revised office timings');
   await c.locator('[data-field="master-summary"]').fill('From 1 December the Secretariat opens 9:00 am to 4:00 pm.');
   await c.locator('[data-field="master-link"]').fill('https://example.org/news');
   await expect(c.locator('[data-master-preview]')).toContainText('Subject: Revised office timings');
+  await expect(c.locator('[data-master-missing]')).toHaveCount(0);
   await c.locator('[data-action="wa.master.audience"]').click();
   await expect(c.locator('[data-breakdown-total="4"]')).toBeVisible();
   await expect(c.locator('[data-group="free_text"]')).toHaveAttribute('data-count', '1');

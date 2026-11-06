@@ -121,7 +121,9 @@ export function MasterSection({
   const router = useRouter();
   const [key, setKey] = useState(masters[0]?.key ?? 'announcements');
   const [language, setLanguage] = useState<MasterLanguage>(locale === 'ur' ? 'ur' : 'en');
-  const [typed, setTyped] = useState<Record<string, string>>({});
+  // the link starts as MCCI's own address (a real, editable value): an example only looked filled in (DEF-008)
+  const startTyped = (): Record<string, string> => (/^https:\/\/\S{4,200}$/.test(appUrl) ? { link: appUrl } : {});
+  const [typed, setTyped] = useState<Record<string, string>>(startTyped);
   const [breakdown, setBreakdown] = useState<Breakdown | null>(null);
   const [mixed, setMixed] = useState(false);
   const [mixedBody, setMixedBody] = useState('');
@@ -135,7 +137,11 @@ export function MasterSection({
   const approved = version.status === 'APPROVED';
   const sample = breakdown?.rows.find((r) => r.group === 'free_text' || r.group === 'template_required');
   const recipient = sample?.values ?? Object.fromEntries(master.slots.filter((s) => s.source === 'recipient').map((s) => [s.key, language === 'ur' ? s.example_ur : s.example_en]));
-  const preview = fillMaster(version.body, master.slots, { ...recipient, ...fields });
+  // a field not filled in shows as [its label] in the preview and is listed under it (DEF-008, 6 Nov 2026)
+  const label = (k: string) => m(`fields.${k}`);
+  const shown = Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v || `[${label(k)}]`]));
+  const preview = fillMaster(version.body, master.slots, { ...recipient, ...shown });
+  const missing = fieldSlots(master).filter((s) => s.required !== false && !fields[s.key]).map((s) => label(s.key));
   const canMix = Boolean(breakdown && breakdown.groups.free_text > 0 && breakdown.groups.template_required > 0);
   const sendable = breakdown ? breakdown.groups.free_text + breakdown.groups.template_required : 0;
   const reset = () => (setBreakdown(null), setMixed(false));
@@ -195,7 +201,7 @@ export function MasterSection({
       <div className="biz-rule">
         <label className="form-field">
           {m('choose')}
-          <select value={key} data-field="master" onChange={(e) => (setKey(e.target.value as typeof key), setTyped({}), reset())}>
+          <select value={key} data-field="master" onChange={(e) => (setKey(e.target.value as typeof key), setTyped(startTyped()), reset())}>
             {masters.map((x) => (
               <option key={x.key} value={x.key}>
                 {msg(locale, `wa.categories.${x.key}`)}
@@ -231,7 +237,10 @@ export function MasterSection({
             {s.required === false ? ` (${m('optional')})` : ''}
             <input
               value={typed[s.key] ?? (s.key === 'link' ? '' : '')}
-              placeholder={s.key === 'link' ? appUrl : (language === 'ur' ? s.default_ur : s.default_en) ?? (language === 'ur' ? s.example_ur : s.example_en)}
+              placeholder={
+                (language === 'ur' ? s.default_ur : s.default_en) ??
+                `${m('eg')} ${s.key === 'link' ? appUrl : language === 'ur' ? s.example_ur : s.example_en}`
+              }
               maxLength={s.max}
               dir={s.key === 'link' ? 'ltr' : 'auto'}
               data-field={`master-${s.key}`}
@@ -248,6 +257,11 @@ export function MasterSection({
           {preview}
           {version.footer ? `\n\n${version.footer}` : ''}
         </p>
+        {missing.length > 0 && (
+          <p className="muted" data-master-missing>
+            {m('missing', { fields: missing.join(', ') })}
+          </p>
+        )}
       </div>
       <div className="pb">
         <button type="button" className="btn btn-w" data-action="wa.master.audience" disabled={pending} onClick={check}>
