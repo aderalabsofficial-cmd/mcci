@@ -118,6 +118,11 @@ test('officer returns a file, the applicant corrects it, the officer verifies it
   await page.getByRole('link', { name: token }).click();
   await expect(page).toHaveURL(new RegExp(`/admin/mreview\\?t=${token}$`));
 
+  // the income tax return is optional ("if applicable") and was not uploaded: it is not counted as missing and shows
+  // no red cross (acceptance DEF-005, 6 Nov 2026: "9 / 10 accepted" on a complete file)
+  await expect(page.locator('[data-doc="itr"]')).toContainText('optional, not needed to proceed');
+  await expect(page.locator('.kpi b', { hasText: /^\d+ \/ \d+$/ })).toHaveText('0 / 5');
+
   // start the review; reject the NTN certificate with a reason, accept the rest
   await page.locator('[data-action="adm.app.open"]').click();
   await expect(banner(page)).toContainText('Review started.');

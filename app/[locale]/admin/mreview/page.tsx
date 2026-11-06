@@ -100,6 +100,9 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const byKey = new Map(file.docs.map((d) => [d.key, d]));
   const cls = file.class ?? classOf(f);
   const accepted = file.docs.filter((d) => d.status === 'ok').length;
+  // an optional document ("if applicable", e.g. the income tax return) that was not uploaded is not missing: it does
+  // not count against the file (acceptance DEF-005, 6 Nov 2026: "9 / 10 accepted" with a red cross on a complete file)
+  const counted = reqs.filter((r) => r.required || byKey.has(r.key)).length;
   const days = file.submitted_at
     ? Math.max(0, Math.floor((Date.now() - new Date(file.submitted_at).getTime()) / 86_400_000))
     : 0;
@@ -177,7 +180,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     kpis: {
       time: m('days', { n: String(days) }),
       timeSub: m('kTimeSub', { n: String(settings.processDays) }),
-      docs: `${accepted} / ${reqs.length}`,
+      docs: `${accepted} / ${counted}`,
       cls: msg(locale, `membership.classes.${cls}`),
       clsSub: file.women ? m('kClassWomen') : m('kClassRule'),
       fee: f.biz

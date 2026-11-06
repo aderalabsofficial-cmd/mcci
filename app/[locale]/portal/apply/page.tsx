@@ -31,7 +31,11 @@ export default async function ApplyPage({ params, searchParams }: Props) {
   const session = await requireUser();
   const m = (k: string, v?: Record<string, string>) => msg(locale, `svc.apply.${k}`, v);
   const company = serviceCompany(session.access);
-  const [services, eligible, sp] = await Promise.all([loadServices(), company ? loadEligible(company.id) : Promise.resolve(false), searchParams]);
+  const [services, eligible, sp] = await Promise.all([
+    loadServices(),
+    company ? loadEligible(company.id) : Promise.resolve(false),
+    searchParams,
+  ]);
   const hours = services[0]?.sla_hours ?? 24;
 
   if (sp.r && company) {
@@ -62,6 +66,7 @@ export default async function ApplyPage({ params, searchParams }: Props) {
     }
   }
 
+  const canStart = !!company && (company.levels.svc ?? 0) >= 2;
   return (
     <div className="proto">
       <div className="ph">
@@ -73,7 +78,11 @@ export default async function ApplyPage({ params, searchParams }: Props) {
         </div>
       </div>
       {!eligible && (
-        <div className="banner orange" role="status" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+        <div
+          className="banner orange"
+          role="status"
+          style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}
+        >
           <Lock size={18} aria-hidden />
           <span style={{ flex: 1 }}>
             <b>{m('locked')}</b> {m('lockedSub')}
@@ -83,10 +92,25 @@ export default async function ApplyPage({ params, searchParams }: Props) {
           </Link>
         </div>
       )}
+      {/* a company user whose role cannot start requests (Viewer, Accounts) saw seven dead tiles with no reason
+          (acceptance DEF-002, 6 Nov 2026) */}
+      {eligible && !canStart && (
+        <div
+          className="banner orange"
+          role="status"
+          style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}
+        >
+          <Lock size={18} aria-hidden />
+          <span style={{ flex: 1 }}>
+            <b>{m('roleLocked')}</b> {m('roleLockedSub')}
+          </span>
+        </div>
+      )}
       <ServicePicker
         locale={locale}
         companyId={company?.id ?? ''}
-        open={eligible && !!company && (company.levels.svc ?? 0) >= 2}
+        open={eligible && canStart}
+        why={!eligible ? m('locked') : !canStart ? m('roleLocked') : undefined}
         services={services.map((s) => ({
           key: s.key,
           name: s.name_en,

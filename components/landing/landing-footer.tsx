@@ -32,7 +32,6 @@ export function LandingFooter({ locale }: { locale: Locale }) {
                 <Link href="/membership">{m('nav_join')}</Link>
                 <Link href="/services">{m('nav_services')}</Link>
                 <Link href="/verify">{m('verify_short')}</Link>
-                <Link href="/admin">{msg(locale, 'footer.staffPortal')}</Link>
               </div>
               <div>
                 <h4>{m('menu_hours')}</h4>

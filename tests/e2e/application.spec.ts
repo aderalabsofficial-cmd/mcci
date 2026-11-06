@@ -358,6 +358,10 @@ test('partners / directors: rows open (Managing Partner first), each with their 
   await expect(page.locator('.prow').nth(1).locator('.prole')).toHaveText('Partner');
   await page.getByLabel('Name 1', { exact: true }).fill('Bilal Ahmed');
   await page.getByLabel('CNIC 1', { exact: true }).fill('36302-1234567-1');
+  // the photo, extra card and remove sit under the fields, not before them (acceptance DEF-006, 6 Nov 2026)
+  const name1 = (await page.getByLabel('Name 1', { exact: true }).boundingBox())!;
+  const photo1 = (await page.locator('.prow').first().locator('[data-action="wiz.partner.photo"]').boundingBox())!;
+  expect(photo1.y).toBeGreaterThan(name1.y + name1.height);
   await saved(page);
   // partner 1's own photo, through the same 35 × 45 mm crop as the representative's
   await choose(

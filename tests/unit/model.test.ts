@@ -65,9 +65,12 @@ describe('nav model', () => {
     expect(moreSheetModel('admin', 'en')[0]).toMatchObject({ id: 'dashboard', href: '/admin' });
   });
 
-  it('links the footer Staff portal to the admin', () => {
-    const help = footerModel('en').find((c) => c.heading.en === 'Help')!;
-    expect(help.links.at(-1)).toMatchObject({ id: 'staffPortal', href: '/admin' });
+  it('has no Staff portal link in the public footer (visitors get "not found"; acceptance DEF-001)', () => {
+    for (const locale of ['en', 'ur'] as const) {
+      const links = footerModel(locale).flatMap((c) => c.links);
+      expect(links.map((l) => l.id)).not.toContain('staffPortal');
+      expect(links.some((l) => l.href?.includes('/admin'))).toBe(false);
+    }
   });
 
   it('reads messages with placeholders and fails loudly on a missing key', () => {

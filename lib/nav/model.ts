@@ -164,7 +164,8 @@ const FOOTER: { heading: string; links: { label: string; area: Area; key: string
       { label: 'verifyDocument', area: 'site', key: 'verify' },
       { label: 'trackToken', area: 'site', key: 'track' },
       { label: 'complaintDesk', area: 'site', key: 'contact' },
-      { label: 'staffPortal', area: 'admin', key: 'dashboard' },
+      // no Staff portal link: the admin answers "not found" to visitors, and the staff sign-in page is linked from
+      // nowhere on the public website (owner, 29 Oct 2026; lib/auth/staff-path.ts). Acceptance DEF-001, 6 Nov 2026.
     ],
   },
 ];

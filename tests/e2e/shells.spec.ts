@@ -47,10 +47,8 @@ test.describe('desktop shells', () => {
     await expect(home).toHaveClass(/scrolled/);
     await expect(home).toBeInViewport();
     await expect(page.getByRole('contentinfo')).toBeVisible();
-    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Staff portal' })).toHaveAttribute(
-      'href',
-      '/admin',
-    );
+    // no Staff portal link: the admin answers "not found" to visitors (owner, 29 Oct 2026; acceptance DEF-001)
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Staff portal' })).toHaveCount(0);
   });
 
   test('home header: the full menu on every laptop width, the toggle only below 1024 px, nothing off the edge', async ({

@@ -1413,32 +1413,93 @@ function PartnerRow({
       onChange(patch);
     }, 600);
   };
+  // number and role on top, then the fields, then photo · extra card · remove (acceptance DEF-006, 6 Nov 2026: the
+  // photo came first and the row broke apart on a phone)
   return (
     <div className="prow">
-      {/* the partner's own photo (owner, 29 Oct 2026), cropped like the representative's */}
-      <button
-        type="button"
-        className={`pph ${role ? 'r3' : ''} ${p.photoUrl ? 'on' : ''}`}
-        data-action="wiz.partner.photo"
-        aria-label={m(p.photoUrl ? 'partnerPhotoChange' : 'partnerPhotoAdd', { n: String(n) })}
-        title={m(p.photoUrl ? 'partnerPhotoChange' : 'partnerPhotoAdd', { n: String(n) })}
-        onClick={() => {
-          if (!input.current) return;
-          input.current.value = '';
-          input.current.click();
-        }}
-      >
-        {p.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed URL of a private file
-          <img src={p.photoUrl} alt="" />
-        ) : (
-          <>
-            <Camera size={18} aria-hidden />
-            <small>{m('partnerPhoto')}</small>
-          </>
-        )}
+      <div className="phead">
         <span className="pn">{n}</span>
-      </button>
+        {role && <small className="prole">{msg(locale, role)}</small>}
+      </div>
+      <div className="pfields">
+        <input
+          value={v.name}
+          placeholder={m('partnerName')}
+          aria-label={`${m('partnerName')} ${n}`}
+          onChange={(e) => edit('name', e.target.value)}
+        />
+        <input
+          value={v.cnic}
+          placeholder={m('partnerCnic')}
+          aria-label={`${m('partnerCnic')} ${n}`}
+          onChange={(e) => edit('cnic', e.target.value)}
+        />
+        <input
+          value={v.mobile}
+          placeholder={m('partnerMobile')}
+          aria-label={`${m('partnerMobile')} ${n}`}
+          onChange={(e) => edit('mobile', e.target.value)}
+        />
+        <input
+          type="email"
+          value={v.email}
+          placeholder={m('partnerEmail')}
+          aria-label={`${m('partnerEmail')} ${n}`}
+          aria-invalid={!valid('email', v.email)}
+          onChange={(e) => edit('email', e.target.value)}
+        />
+        <input
+          className="pa"
+          value={v.address}
+          placeholder={m('partnerAddress')}
+          aria-label={`${m('partnerAddress')} ${n}`}
+          onChange={(e) => edit('address', e.target.value)}
+        />
+      </div>
+      <div className="pfoot">
+        {/* the partner's own photo (owner, 29 Oct 2026), cropped like the representative's */}
+        <button
+          type="button"
+          className={`pph ${p.photoUrl ? 'on' : ''}`}
+          data-action="wiz.partner.photo"
+          aria-label={m(p.photoUrl ? 'partnerPhotoChange' : 'partnerPhotoAdd', { n: String(n) })}
+          title={m(p.photoUrl ? 'partnerPhotoChange' : 'partnerPhotoAdd', { n: String(n) })}
+          onClick={() => {
+            if (!input.current) return;
+            input.current.value = '';
+            input.current.click();
+          }}
+        >
+          {p.photoUrl ? (
+            <span className="pth">
+              {/* eslint-disable-next-line @next/next/no-img-element -- signed URL of a private file */}
+              <img src={p.photoUrl} alt="" />
+            </span>
+          ) : (
+            <Camera size={18} aria-hidden />
+          )}
+          <small>{m('partnerPhoto')}</small>
+        </button>
+        <button
+          type="button"
+          className={`chip ${p.extra_card ? 'on' : ''}`}
+          aria-pressed={p.extra_card}
+          title={m('cardTitle', { fee: cardFee.toLocaleString('en-PK') })}
+          data-action="wiz.partner.card"
+          onClick={() => onChange({ extra_card: !p.extra_card })}
+        >
+          <Ic name="card" size={14} /> {m('card')}
+        </button>
+        <button
+          type="button"
+          className="ib"
+          aria-label={m('removePartner', { n: String(n) })}
+          data-action="wiz.partner.del"
+          onClick={onRemove}
+        >
+          <Trash2 size={18} color="#ef4444" aria-hidden />
+        </button>
+      </div>
       <input
         ref={input}
         type="file"
@@ -1466,59 +1527,6 @@ function PartnerRow({
             .then((ok) => ok && setCrop(null))
             .finally(() => setSaving(false));
         }}
-      />
-      {role && <small className="prole">{msg(locale, role)}</small>}
-      <input
-        value={v.name}
-        placeholder={m('partnerName')}
-        aria-label={`${m('partnerName')} ${n}`}
-        onChange={(e) => edit('name', e.target.value)}
-      />
-      <input
-        value={v.cnic}
-        placeholder={m('partnerCnic')}
-        aria-label={`${m('partnerCnic')} ${n}`}
-        onChange={(e) => edit('cnic', e.target.value)}
-      />
-      <input
-        value={v.mobile}
-        placeholder={m('partnerMobile')}
-        aria-label={`${m('partnerMobile')} ${n}`}
-        onChange={(e) => edit('mobile', e.target.value)}
-      />
-      <input
-        type="email"
-        value={v.email}
-        placeholder={m('partnerEmail')}
-        aria-label={`${m('partnerEmail')} ${n}`}
-        aria-invalid={!valid('email', v.email)}
-        onChange={(e) => edit('email', e.target.value)}
-      />
-      <button
-        type="button"
-        className={`chip ${p.extra_card ? 'on' : ''}`}
-        aria-pressed={p.extra_card}
-        title={m('cardTitle', { fee: cardFee.toLocaleString('en-PK') })}
-        data-action="wiz.partner.card"
-        onClick={() => onChange({ extra_card: !p.extra_card })}
-      >
-        <Ic name="card" size={14} /> {m('card')}
-      </button>
-      <button
-        type="button"
-        className="ib"
-        aria-label={m('removePartner', { n: String(n) })}
-        data-action="wiz.partner.del"
-        onClick={onRemove}
-      >
-        <Trash2 size={18} color="#ef4444" aria-hidden />
-      </button>
-      <input
-        className="pa"
-        value={v.address}
-        placeholder={m('partnerAddress')}
-        aria-label={`${m('partnerAddress')} ${n}`}
-        onChange={(e) => edit('address', e.target.value)}
       />
     </div>
   );

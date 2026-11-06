@@ -371,18 +371,23 @@
 .proto .ai-cta>div {flex:1;min-width:200px}
 .proto .ai-cta b {display:block}
 .proto .ai-cta small {color:var(--m)}
-.proto .prow {display:grid;grid-template-columns:58px 1.4fr 1.2fr 1fr 1.3fr auto auto;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--b)}
-.proto .prow .prole {grid-column:2/-1;order:-1;font-size:12px;font-weight:700;color:var(--gt,#a8741e);text-transform:uppercase;letter-spacing:.06em}
-.proto .prow .pph {order:-2;grid-row:span 2;align-self:start;position:relative;width:54px;height:68px;border:1.5px dashed var(--b);border-radius:10px;background:var(--card2);display:grid;place-items:center;align-content:center;gap:2px;color:#94a3b8;overflow:hidden;cursor:pointer}
-.proto .prow .pph.r3 {grid-row:span 3}
-.proto .prow .pph.on {border-style:solid;border-color:#16a34a}
-.proto .prow .pph img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.proto .prow .pph small {font-size:10px;font-weight:700}
-.proto .prow .pph .pn {position:absolute;top:3px;left:3px;min-width:18px;height:18px;border-radius:6px;background:var(--nv,#0b2a5b);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+/* partner / director row (acceptance DEF-006): number + role · fields · photo, extra card, remove */
+.proto .prow {display:flex;flex-direction:column;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--b)}
+.proto .prow .phead {display:flex;align-items:center;gap:8px}
+.proto .prow .pn {flex:none;min-width:22px;height:22px;padding:0 6px;border-radius:7px;background:var(--nv,#0b2a5b);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center}
+.proto .prow .prole {font-size:12px;font-weight:700;color:var(--gt,#a8741e);text-transform:uppercase;letter-spacing:.06em}
+.proto .prow .pfields {display:grid;grid-template-columns:1.4fr 1.2fr 1fr 1.3fr;gap:8px}
+.proto .prow .pfields input.pa {grid-column:1/-1}
+.proto .prow input {background:var(--card2);border:1px solid var(--b);border-radius:10px;padding:9px 10px;width:100%;min-width:0}
+.proto .prow .pfoot {display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.proto .prow .pfoot .ib {margin-inline-start:auto}
+.proto .prow .pph {display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:4px 12px 4px 6px;border:1.5px dashed var(--b);border-radius:12px;background:var(--card2);color:#64748b;cursor:pointer}
+.proto .prow .pph small {font-size:12px;font-weight:700}
+.proto .prow .pph.on {border-style:solid;border-color:#16a34a;color:#15803d}
+.proto .prow .pph .pth {width:28px;height:36px;border-radius:6px;overflow:hidden;flex:none}
+.proto .prow .pph .pth img {width:100%;height:100%;object-fit:cover}
 .proto .rv .li .pphoto, .proto .li .pphoto {flex:none;width:40px;height:50px;border-radius:8px;overflow:hidden;border:1px solid var(--b)}
 .proto .li .pphoto img {width:100%;height:100%;object-fit:cover}
-.proto .prow input.pa {grid-column:2/-1}
-.proto .prow input {background:var(--card2);border:1px solid var(--b);border-radius:10px;padding:9px 10px;width:100%}
 .proto .pn {width:28px;height:28px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-weight:800}
 .proto .g2c {display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .proto .pcard {border:2px solid var(--b);border-radius:18px;padding:18px;background:var(--card2)}
@@ -594,9 +599,11 @@
 .proto .pfs {grid-template-columns:1fr}
   .proto .wz-steps {grid-template-columns:repeat(2,1fr)}
   .proto .wz-steps span {display:none}
-  .proto .prow {grid-template-columns:58px 1fr 1fr;}
-  .proto .prow input:nth-of-type(n+3) {grid-column:2/4}
-  .proto .prow .pph, .proto .prow .pph.r3 {grid-row:span 2}
+  .proto .prow .pfields {grid-template-columns:1fr 1fr}
+  .proto .prow .pfields input:nth-child(1), .proto .prow .pfields input:nth-child(4) {grid-column:1/-1}
+  .proto .prow input {min-height:44px;font-size:16px}
+  .proto .prow .pph, .proto .prow .chip {min-height:44px}
+  .proto .prow .ib {min-width:44px;min-height:44px}
   .proto .cert-meta {grid-template-columns:1fr 1fr}
   .proto .next {padding:18px}
   .proto .next-b h2 {font-size:20px}

@@ -26,6 +26,16 @@ const PAGES: [string, RegExp][] = [
   ['/contact', /Contact & Complaint Desk/],
 ];
 
+// acceptance DEF-001 (6 Nov 2026): every public page linked "Staff portal" to /admin, which answers "not found" to
+// visitors; the staff sign-in page is linked from nowhere on the public website (owner, 29 Oct 2026)
+test('no public page links visitors to the admin or the staff sign-in', async ({ page }) => {
+  for (const [path] of PAGES)
+    for (const prefix of ['', '/ur']) {
+      await page.goto(`${prefix}${path === '/' && prefix ? '' : path}`);
+      await expect(page.locator('a[href*="/admin"], a[href*="/staff/login"]')).toHaveCount(0);
+    }
+});
+
 test('every public page opens in English and Urdu, with the Urdu page right-to-left', async ({ page }) => {
   for (const [path, heading] of PAGES) {
     await page.context().clearCookies(); // the language choice is remembered in a cookie

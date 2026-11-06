@@ -32,7 +32,20 @@ export interface PickService {
 }
 
 /** svc.new: the seven services as big tiles (prototype .btg.svc); locked until the membership is active */
-export function ServicePicker({ locale, companyId, services, open }: { locale: Locale; companyId: string; services: PickService[]; open: boolean }) {
+export function ServicePicker({
+  locale,
+  companyId,
+  services,
+  open,
+  why,
+}: {
+  locale: Locale;
+  companyId: string;
+  services: PickService[];
+  open: boolean;
+  /** why the tiles are locked, shown on each (docs/10: a disabled control says why; acceptance DEF-002) */
+  why?: string;
+}) {
   const m = (k: string, v?: Record<string, string>) => msg(locale, `svc.apply.${k}`, v);
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -49,6 +62,7 @@ export function ServicePicker({ locale, companyId, services, open }: { locale: L
             data-action="svc.new"
             data-service={s.key}
             disabled={!open || busy !== null}
+            title={!open ? why : undefined}
             aria-label={m('start', { service: s.name })}
             onClick={async () => {
               setBusy(s.key);

@@ -189,7 +189,15 @@ export function SigningQueue({ locale, rows, canSign }: { locale: Locale; rows: 
     <>
       {canSign && (
         <div className="pb" style={{ marginBottom: 12 }}>
-          <button type="button" className="btn btn-primary" data-action="svc.signAll" disabled={a.locked || ready === 0} onClick={() => setAll(true)}>
+          {/* a disabled control says why (docs/10; acceptance DEF-003, 6 Nov 2026) */}
+          <button
+            type="button"
+            className="btn btn-primary"
+            data-action="svc.signAll"
+            disabled={a.locked || ready === 0}
+            title={ready === 0 ? (rows.length ? m('feeWaiting') : m('none')) : undefined}
+            onClick={() => setAll(true)}
+          >
             <PenTool size={16} aria-hidden /> {m('all')} ({ready})
           </button>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Clock, Pencil, Send, X } from 'lucide-react';
+import { Check, Clock, Minus, Pencil, Send, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useEffect, useState, useTransition } from 'react';
 import { Ic } from '@/components/membership/ui';
@@ -242,7 +242,10 @@ export function ReviewScreen({
   }
 
   const docIcon = (d: ReviewDoc) =>
-    !d.file ? (
+    !d.file && !d.required ? (
+      // an optional document ("if applicable") that was not uploaded is not missing (acceptance DEF-005)
+      <Minus size={16} color="#94a3b8" aria-hidden />
+    ) : !d.file ? (
       <X size={16} color="#ef4444" aria-hidden />
     ) : d.status === 'ok' ? (
       <Check size={16} color="#1fa34a" aria-hidden />
@@ -521,7 +524,9 @@ export function ReviewScreen({
                 <small>
                   {x.file
                     ? `${x.file}${x.reason ? ` — ${x.reason}` : ''}${x.reuploaded ? ` (${m('reuploaded')})` : ''} · ${x.status === 'ok' ? m('accepted') : x.status === 'rejected' ? m('rejected') : m('pending')}`
-                    : m('notProvided')}
+                    : x.required
+                      ? m('notProvided')
+                      : m('notProvidedOptional')}
                 </small>
               </div>
               {x.file && (

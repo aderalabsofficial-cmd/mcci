@@ -57,7 +57,7 @@
 .proto .eav {
   background: linear-gradient(135deg, #003d24, #007845);
 }
-.proto .prow .pph .pn {
+.proto .prow .pn {
   background: var(--nv, #005c35);
 }
 .proto .paper:after {
