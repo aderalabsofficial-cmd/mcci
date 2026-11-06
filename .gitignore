@@ -40,5 +40,8 @@ supabase/.migrate-tmp/
 # local crawl screenshots: only pages with a problem are kept in git (the rest stay on the tester's disk)
 /docs/acceptance/evidence/crawl/**/*.jpg
 !/docs/acceptance/evidence/crawl/**/*PROBLEM*.jpg
+# baseline (before the 6 Nov fixes): only the shots that document a fixed defect (DEF-002, DEF-003, TEST-002)
 /docs/acceptance/evidence/baseline-before-fixes/**/*.jpg
-!/docs/acceptance/evidence/baseline-before-fixes/**/*PROBLEM*.jpg
+!/docs/acceptance/evidence/baseline-before-fixes/**/*portal-apply-PROBLEM.jpg
+!/docs/acceptance/evidence/baseline-before-fixes/**/*admin-approvals-PROBLEM.jpg
+!/docs/acceptance/evidence/baseline-before-fixes/**/*campaigns-new-PROBLEM.jpg
