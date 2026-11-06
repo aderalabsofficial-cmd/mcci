@@ -64,3 +64,35 @@ type the subject, details, deadline and link once, and choose the audience with 
 | TEST-004 | Low (test suite) | Integration `access.test.ts` ("staff get their designation levels…") and `realtime.test.ts` (2 staff tests) sign staff in **without** the 2-step code and expect staff levels or staff events. Since migration 0310 (25 Oct), `private.staff_level` gives **0 until the session is `aal2`**, so these sessions correctly get nothing. The tests predate the stricter rule; the rule is right. Same result after a 5-minute rate-limit pause (consistent, not load). | Tests now complete the TOTP step (access: all levels 0 before, edit after; realtime fixture steps both officers up), commit `1e77244`. Integration on the local stack: **42 passed**, 11 skipped, 2 failed (A10, D-M24: self-host settings, ENV-004/005) | RETESTED PASS |
 | ENV-005 | — (environment) | Integration A10 (per-address sign-in limits): GoTrue applies them only when `GOTRUE_RATE_LIMIT_HEADER` names a header with a value, as on the self-hosted stack behind nginx. The local CLI stack does not set it, so no 429 appears. A10 passed on the self-hosted stack (docs/18, 23 Oct); **not re-checked on production today** (it would mean deliberately tripping production's sign-in limit). | None locally; re-check on staging if needed. | N/A |
 | TEST-001 | Low | `tests/unit/selfhost-scripts.test.ts`: 2 tests time out (5 s) when all 33 unit files run in parallel on this 4-core PC; the file passes 79/79 alone. | None yet (flaky under load; candidate: a longer timeout for those two shell-spawning tests). | FLAKY |
+
+## E. Revalidation of the open items, 6 Nov 2026, 16:20 PKT (read only; nothing changed on the server)
+
+Checked again rather than carried over: SSH to the VPS (`ss`, `systemctl`, backup folder), port probes and headers from
+outside, public DNS, and one read-only, rolled-back SQL transaction on production (counts only, no personal data).
+Production runs release `8d55447`; last migration `20261116000680`.
+
+| ID | Checked | Result now | Status | Needed (owner / MCCI) |
+|---|---|---|---|---|
+| INF-001 | `ss -ltn`; TCP connect from this PC to 169.58.124.24 | 3306 (`*:3306`) and 3001 (`0.0.0.0:3001`) still listen on all addresses and **accept connections from the internet**; `firewalld` and `ufw` inactive | **Still open — Critical** | Approval to bind both to `127.0.0.1` or enable a firewall allowing 22/80/443; coordinate with the other sites on the host |
+| INF-002 | `/var/lib/mcci-selfhost/backups`; timers; cron | Two new sets today (`mcci-20261106T082205Z`, `mcci-20261106T100311Z`, taken by hand for the releases); **still no timer or cron**, no off-site copy, no WAL archiving | **Still open — High** | Approve a nightly `backup.sh` timer, an off-site target and key holders |
+| INF-003 | `curl -I https://app.mcci.aderalabs.tech/` | HSTS, X-Frame-Options DENY, nosniff, Referrer-Policy present; **no Content-Security-Policy** | Still open — Medium | A CSP, report-only first, in a release |
+| INF-004 | `EMAIL_FROM` domain in `/etc/mcci-web/env` | `@aderalabs.tech` | Still blocked — MCCI | MCCI sender domain with SPF/DKIM/DMARC |
+| INF-005 | `_dmarc.mcci.org.pk` via 8.8.8.8 | Non-existent | Still blocked — MCCI | DMARC once MCCI controls the zone |
+| CFG-001 | `public.designations` | 12 designations; **no Vice President, no Assistant Secretary** | Still blocked — MCCI | Their limits, then the SG creates them |
+| CFG-002 | verified authenticators of active staff | **7 of 8** active staff have 2-step sign-in set up (was 0 of the demo staff) | Mostly resolved | The one remaining staff account enrols at its next sign-in |
+| CFG-003 | active staff per designation | Unchanged: Auditor, Committee Secretary, Deputy Secretary — Membership, Front Desk, Committee Member, Services Officer have nobody | Still blocked — MCCI | Who processes service requests (`svc` 2) |
+| CFG-004 | companies/applications created 6 Nov 04:30–05:00 UTC; demo companies | **0** test companies or applications in that window now (cleaned); 5 demo companies remain (unlisted, not verifiable) | Partly resolved | `demo-purge.mjs` before real members are invited (after a backup) |
+| FEAT-001 | code; `event_registrations` | No check-in screen; 0 check-ins of 0 registrations on production | Not implemented | Scope decision (QR check-in, docs/15 §6, or accept) |
+| DEF-004 | — (document only, owner) | See telemetry plan below; no speculative fix made | Open, low | Approve the telemetry endpoint |
+| DEF-008 | — | Released in `8d55447`; not redone | Closed | — |
+| Domain | `themcci.com.pk` via 8.8.8.8 | Still **non-existent**; `mcci.org.pk` unchanged | Blocked — MCCI | Register the domain in MCCI's name; then MCCI-DOMAIN-MIGRATION-READINESS.md §2 |
+| **WA-CFG-1 (new)** | `private.settings` key `whatsapp` | **`consentOpen` = true, `sendingEnabled` = true, wording `draft-1`** (docs/30 §9 recorded both off). Nothing can be sent today (0 approved templates, 0 consents, 0 contacts), but members can give consent against draft wording, against decision A | **Open — High** | Owner: WhatsApp Settings → untick consent (and sending) until MCCI approves the wording |
+| **WA-DEP-1 (new)** | `whatsapp_health`, `whatsapp_webhook_events` | Provider webhook test received 3 Nov; **no real inbound message has ever reached production** | Open — dependency | IQPigeon: confirm `messages` (and `statuses`) are subscribed for MCCI's number; then one JOIN test from a staff phone |
+
+**DEF-004 telemetry plan (not implemented; needs approval).** A hydration mismatch (React #418) is recoverable and
+invisible, so only telemetry can name the element. Plan: (1) in the root client entry, pass `onRecoverableError` to
+`hydrateRoot` through Next's `instrumentation-client.ts`, sending `{ path, digest, componentStack (first 2 KB), build }`
+with `navigator.sendBeacon` to a new `POST /api/telemetry/hydration` route; (2) the route rate-limits by address (10 a
+minute), stores nothing personal (no cookies, no user id, no query string), and appends to a capped table or the server
+log; (3) on for one week in production, then read the component stacks, fix the named component, and remove or keep
+the beacon. No change until approved; no fix is attempted without a named cause.
