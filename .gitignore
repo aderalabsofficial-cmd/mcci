@@ -34,3 +34,11 @@ mcci-digital-prototypes/
 
 # scripts/selfhost/migrate.sh working files
 supabase/.migrate-tmp/
+
+# Phase 1 acceptance crawl output (tests/e2e/acceptance.spec.ts)
+/acceptance-results/
+# local crawl screenshots: only pages with a problem are kept in git (the rest stay on the tester's disk)
+/docs/acceptance/evidence/crawl/**/*.jpg
+!/docs/acceptance/evidence/crawl/**/*PROBLEM*.jpg
+/docs/acceptance/evidence/baseline-before-fixes/**/*.jpg
+!/docs/acceptance/evidence/baseline-before-fixes/**/*PROBLEM*.jpg
