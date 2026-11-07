@@ -76,6 +76,7 @@ function toPublicHost(request: NextRequest, response: NextResponse): NextRespons
 }
 
 export const config = {
-  // everything except API routes, Next internals and files with an extension
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  // everything except API routes, Next internals, files with an extension and the launch-day show (/launch, a
+  // static page in public/launch, owner 7 Nov 2026)
+  matcher: ['/((?!api|_next|_vercel|launch|.*\\..*).*)'],
 };

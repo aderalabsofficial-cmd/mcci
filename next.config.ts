@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: '11mb' } },
   // native image processing (passport photo, signature, stamp) stays a Node dependency, not bundled
   serverExternalPackages: ['sharp', '@react-pdf/renderer'],
+  // the launch-day show (owner, 7 Nov 2026): a self-contained page in public/launch, at /launch
+  async rewrites() {
+    return [{ source: '/launch', destination: '/launch/index.html' }];
+  },
   async headers() {
     return [
       {
