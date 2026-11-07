@@ -797,6 +797,9 @@ export type Database = {
 "wa_consent_wording":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"my_mfa_exempt":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "wa_my_whatsapp":
 { Args: { "p_company": string }; Returns: Json
                            },

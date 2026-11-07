@@ -46,9 +46,16 @@ export const getSession = cache(async (): Promise<Session | null> => {
   if (rpcError) throw new Error(`api.my_access failed: ${rpcError.message}`);
   const access = accessSchema.parse(data);
   if (access.user_id !== userData.user.id) throw new Error('api.my_access returned another user');
+  let aal = (aalData?.currentLevel ?? null) as Session['aal'];
+  // demo staff only, until the owner's expiry (migration 0710): the database decides and applies the same rule to
+  // every staff policy, so a password-only demo session counts as 2-step verified here too
+  if (access.staff && aal === 'aal1') {
+    const { data: exempt } = await supabase.schema('api').rpc('my_mfa_exempt');
+    if (exempt === true) aal = 'aal2';
+  }
   return {
     userId: userData.user.id,
-    aal: (aalData?.currentLevel ?? null) as Session['aal'],
+    aal,
     access,
     signupUnfinished: signupUnfinished(userData.user.user_metadata),
   };
