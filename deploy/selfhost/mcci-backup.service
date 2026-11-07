@@ -1,0 +1,33 @@
+# Nightly encrypted backup of the self-hosted MCCI stack (INF-002, 6 Nov 2026). Online and non-disruptive:
+# scripts/selfhost/backup.sh writes a NEW set under /var/lib/mcci-selfhost/backups and verifies it (decrypt +
+# checksums); after a successful run, prune-backups.sh applies the retention (30 days, never fewer than 7 sets, never a
+# set holding a KEEP file).
+#
+# It runs as root (the passphrase file is root's), so it runs from a ROOT-OWNED checkout: /opt/mcci-backup-tool is a
+# symlink to the release tooling clone /opt/mcci-deploy-<sha> (root:root), never /opt/mcci-web (owned by the app user,
+# which must not be able to change what root runs).
+#
+# Install (root):  ln -sfn /opt/mcci-deploy-<sha> /opt/mcci-backup-tool
+#                  cp /opt/mcci-backup-tool/deploy/selfhost/mcci-backup.{service,timer} /etc/systemd/system/
+#                  systemctl daemon-reload && systemctl enable --now mcci-backup.timer
+# After a release: ln -sfn /opt/mcci-deploy-<new sha> /opt/mcci-backup-tool
+# Rollback:        systemctl disable --now mcci-backup.timer
+[Unit]
+Description=MCCI encrypted nightly backup (backup.sh + verify + retention)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+Environment=MCCI_SELFHOST_RUNTIME=/var/lib/mcci-selfhost/recovery-new
+Environment=MCCI_BACKUP_DIR=/var/lib/mcci-selfhost/backups
+Environment=MCCI_BACKUP_PASSPHRASE_FILE=/root/.config/mcci-backup/passphrase
+Environment=MCCI_BACKUP_KEEP_DAYS=30
+Environment=MCCI_BACKUP_KEEP_MIN=7
+WorkingDirectory=/opt/mcci-backup-tool
+ExecStart=/usr/bin/bash /opt/mcci-backup-tool/scripts/selfhost/backup.sh
+ExecStartPost=/usr/bin/bash /opt/mcci-backup-tool/scripts/selfhost/prune-backups.sh
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

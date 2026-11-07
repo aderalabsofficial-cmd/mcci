@@ -1,0 +1,13 @@
+[Unit]
+Description=Drop public access to MariaDB 3306 and TaxDesk worker 3001 (INF-001); local and nginx access unaffected
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/shared-port-guard.sh apply
+ExecStop=/usr/local/sbin/shared-port-guard.sh remove
+
+[Install]
+WantedBy=multi-user.target
