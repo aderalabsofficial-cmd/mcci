@@ -189,8 +189,10 @@ test.describe('Company Profile', () => {
     const ctx = await browser.newContext();
     const colleague = await ctx.newPage();
     await activate(colleague, await invitationPath(email));
-    // a new company user first sees the optional WhatsApp welcome step (owner's brief, 6 Nov 2026)
-    await expect(colleague).toHaveURL(/\/portal\/whatsapp\?welcome=1$/);
+    // a new account first sees "Preparing your account", then the optional WhatsApp welcome step (6 Nov 2026)
+    await expect(colleague).toHaveURL(/\/welcome\?next=/);
+    await expect(colleague.locator('.pa .stage')).toBeVisible();
+    await expect(colleague).toHaveURL(/\/portal\/whatsapp\?welcome=1$/, { timeout: 30_000 });
     await expect(colleague.locator('[data-section="wa-welcome"]')).toBeVisible();
     await expect(colleague.locator('[data-section="wa-status"]')).toContainText('Only your company');
     await expect(colleague.locator('[data-section="wa-contact"]')).toHaveCount(0);

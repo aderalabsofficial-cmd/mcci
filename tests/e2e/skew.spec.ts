@@ -49,30 +49,30 @@ test('an open tab from an older release loads the page afresh; its form is not s
   await page.goto('/about');
   await mark(page);
   const own = page.waitForRequest((r) => r.headers()['rsc'] === '1');
-  await page.locator('.xcrumb a[href="/"]').click();
+  await page.locator('.crumbs a[href="/"]').click();
   expect((await own).headers()['x-deployment-id']).toBe(CURRENT);
   await expect(page).toHaveURL(/\/$/);
   expect(await marked(page)).toBe(true);
 
   // the same tab after a release: a link opens its page with a full load
   await playOldTab(page);
-  await page.locator('#committees a[href="/about#leadership"]').click();
+  await page.locator('.qa[href="/about#structure"]').click();
   await expect(page).toHaveURL(/\/about/);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('About MCCI');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('About the Chamber');
   expect(await marked(page)).toBe(false);
 
   // a form sent from it: the page reloads, nothing is created
   await page.goto('/contact');
   await mark(page);
   const tag = `skew${randomUUID().slice(0, 6)}`;
-  await page.getByLabel('Name').fill(`Visitor ${tag}`);
-  await page.getByLabel('Mobile / email').fill(`${tag}@test.local`);
-  await page.getByLabel('Subject').fill('Sent from an old tab');
-  await page.getByLabel('Message').fill('This must not become a ticket.');
+  await page.getByLabel('Suggestion').check();
+  await page.getByLabel('Your name').fill(`Visitor ${tag}`);
+  await page.getByLabel('Mobile or email').fill(`${tag}@test.local`);
+  await page.getByLabel('Your message').fill('This must not become a ticket.');
   await page.locator('[data-action="contact.send"]').click();
   await expect.poll(() => marked(page).catch(() => false)).toBe(false);
   await expect(page).toHaveURL(/\/contact$/);
-  await expect(page.getByLabel('Name')).toHaveValue('');
+  await expect(page.getByLabel('Your name')).toHaveValue('');
   await expect(page.locator('[data-outcome="ok"]')).toHaveCount(0);
   if (env) {
     const admin = createClient(env.url, env.secretKey, { auth: { persistSession: false, autoRefreshToken: false } });

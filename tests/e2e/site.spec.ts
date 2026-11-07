@@ -14,29 +14,33 @@ test.beforeEach(({}, info) => test.skip(info.project.name !== 'desktop', 'deskto
 
 const PAGES: [string, RegExp][] = [
   ['/', /Multan/],
-  ['/about', /About MCCI/],
+  ['/about', /About the Chamber/],
+  ['/leadership', /Leadership of the chamber/],
   ['/membership', /Membership/],
-  ['/services', /Digital Services/],
+  ['/services', /Chamber services/],
   ['/service?s=co', /Certificate of Origin/],
   ['/directory', /Business Directory/],
   ['/track', /Track a Token/],
   ['/live', /Live Board/],
-  ['/news', /News & Events/],
+  ['/news', /News & Notifications/],
   ['/resources', /Resources/],
-  ['/contact', /Contact & Complaint Desk/],
+  ['/contact', /Contact the chamber/],
 ];
 
 // acceptance DEF-001 (6 Nov 2026): every public page linked "Staff portal" to /admin, which answers "not found" to
 // visitors; the staff sign-in page is linked from nowhere on the public website (owner, 29 Oct 2026)
 test('no public page links visitors to the admin or the staff sign-in', async ({ page }) => {
+  // 24 page loads; the links are in the server-rendered HTML, so the page need not finish loading its photos
+  test.setTimeout(180_000);
   for (const [path] of PAGES)
     for (const prefix of ['', '/ur']) {
-      await page.goto(`${prefix}${path === '/' && prefix ? '' : path}`);
+      await page.goto(`${prefix}${path === '/' && prefix ? '' : path}`, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('a[href*="/admin"], a[href*="/staff/login"]')).toHaveCount(0);
     }
 });
 
 test('every public page opens in English and Urdu, with the Urdu page right-to-left', async ({ page }) => {
+  test.setTimeout(180_000); // 24 full page loads, photos included
   for (const [path, heading] of PAGES) {
     await page.context().clearCookies(); // the language choice is remembered in a cookie
     await page.goto(path);
@@ -49,23 +53,20 @@ test('every public page opens in English and Urdu, with the Urdu page right-to-l
   }
 });
 
-test('about: office-bearers and Secretariat by name, history, objectives and facilities from the earlier site', async ({
+test('about and leadership: the structure, sub-committees, Secretariat and office-bearers by name', async ({
   page,
 }) => {
   await page.goto('/about');
-  await expect(page.locator('[data-group="bearers"] h3')).toHaveText([
-    'Dr. Muhammad Shafiq Khan Pitafi',
-    'Azhar Mumtaz Tipu',
-    'Abdul Wahab',
-  ]);
-  await expect(page.locator('[data-group="secretariat"] .pc')).toHaveCount(4);
-  await expect(page.locator('#history li')).toHaveCount(5);
-  await expect(page.locator('#history')).toContainText('1959');
-  await expect(page.locator('#objectives .sc')).toHaveCount(6);
-  await expect(page.locator('#facilities')).toContainText('Mughis A. Sheikh Trade Library');
-  await expect(page.locator('#facilities')).toContainText('SMEDA');
+  for (const id of ['intro', 'objectives', 'structure', 'subcommittees', 'secretariat', 'documents'])
+    await expect(page.locator(`#${id}`), id).toBeVisible();
+  await expect(page.locator('#subcommittees tbody tr')).toHaveCount(15);
+  await expect(page.locator('#secretariat')).toContainText('Secretary General');
+  await page.goto('/leadership');
+  await expect(page.locator('#president')).toContainText('Dr. Muhammad Shafiq Khan Pitafi');
+  await expect(page.locator('#bearers')).toContainText('Mr. Azhar Mumtaz Tipu');
+  await expect(page.locator('#bearers')).toContainText('Sheikh Abdul Wahab');
   await page.goto('/contact');
-  await expect(page.locator('#touch')).toContainText('Sunday closed');
+  await expect(page.locator('#contact')).toContainText('Sunday closed');
 });
 
 test('home: the hero stats, services and fees; the live panels show tokens, never company names', async ({ page }) => {
@@ -75,12 +76,13 @@ test('home: the hero stats, services and fees; the live panels show tokens, neve
   await expect(page.locator('.hero-live [data-stat="open"]')).toHaveText(/^[\d,]+$/);
   await expect(page.locator('.kpi')).toHaveCount(4);
   await expect(page.locator('.svc[href^="/service?s="]')).toHaveCount(7);
-  await expect(page.locator('#fee-table tbody tr')).toHaveCount(3);
+  // the class fees are MCCI's settings, each opening the Membership page
+  await expect(page.locator('#classes a.fee[href="/membership#classes"]')).toHaveCount(3);
   await expect(page.locator('[data-read-failed]')).toHaveCount(0);
-  // office-bearers: President, Senior Vice President, Vice President and the Secretary General, no empty place
-  await expect(page.locator('.bearers .person')).toHaveCount(4);
-  await expect(page.locator('[data-bearer="role_sg"]')).toContainText('Muhammad Shafiq');
-  await expect(page.locator('[data-bearer="role_sg"]')).toContainText('Secretary General');
+  // the President's message with the three office-bearers, as in the design
+  await expect(page.locator('#bearers .person')).toHaveCount(3);
+  // the English hero title animates letter by letter but keeps its words for screen readers
+  await expect(page.getByRole('heading', { level: 1, name: /Multan to the World/ })).toBeVisible();
   for (const panel of ['.hero-live', '.desk-feed']) {
     await expect(page.locator(panel)).not.toContainText('Company A');
     await expect(page.locator(panel)).not.toContainText('DEMO');
@@ -107,29 +109,25 @@ test('home: every way in goes to a real page', async ({ page }) => {
     if (!href.startsWith('/') || href === '/admin') continue; // tel:, mailto:, the credit; /admin answers 404 when signed out
     expect((await page.request.get(href)).status(), href).toBe(200);
   }
-  // Member login leads to the sign-in page; Become a member to sign-up
+  // Member login leads to the sign-in page; Become a member to the Membership page and from there to sign-up
   await page.locator('.hdr-login').click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto('/');
-  await page.locator('.qa[href="/register"]').click();
-  await expect(page).toHaveURL(/\/register$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Create your account');
+  await page.locator('.qa[href="/membership"]').click();
+  await expect(page).toHaveURL(/\/membership$/);
 });
 
-test('membership: fees add up, documents change with the business type, FAQ opens', async ({ page }) => {
+test('membership: the fees come from the settings, and the documents change with the business type', async ({ page }) => {
   await page.goto('/membership');
-  await expect(page.locator('[data-class="Corporate"]')).toContainText('PKR 17,500');
-  await expect(page.locator('[data-class="Associate"]')).toContainText('PKR 11,500');
-  const panel = page.getByRole('tabpanel');
-  const prop = await panel.locator('li').count();
-  await page.getByRole('tab', { name: 'Ltd. / Pvt. Ltd Co.' }).click();
-  await expect(panel).toHaveAttribute('data-biz', 'pvt');
-  expect(await panel.locator('li').count()).toBeGreaterThan(prop);
-  const q = page.locator('[data-action="faq.toggle"]').first();
-  await expect(q).toHaveAttribute('aria-expanded', 'false');
-  await q.click();
-  await expect(q).toHaveAttribute('aria-expanded', 'true');
-  await expect(q.locator('p')).toBeVisible();
+  const fees = page.locator('[data-fees="membership"]');
+  await expect(fees).toContainText('17,500');
+  await expect(fees).toContainText('11,500');
+  await expect(fees).toContainText('7,500');
+  await expect(page.locator('#d-prop')).toBeVisible();
+  await page.locator('#t-pvt').click();
+  await expect(page.locator('#t-pvt')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#d-pvt')).toBeVisible();
+  await expect(page.locator('#d-prop')).toBeHidden();
 });
 
 test('service detail: documents and fields from the service list; Apply now leads to sign-in and the request', async ({
@@ -177,7 +175,7 @@ test.describe('with the local database', () => {
     try {
       // home: the bar sits on top, the sticky header directly under it, and a post opens on the News page
       await page.goto('/');
-      const bar = page.locator('[data-ticker]');
+      const bar = page.locator('#topbar[data-ticker]');
       const item = bar.locator(`a[data-post="${post!.id}"]:not([tabindex="-1"])`);
       await expect(item).toContainText(`Ticker notice ${tag}`);
       await expect(item).toContainText('Notice');
@@ -185,8 +183,8 @@ test.describe('with the local database', () => {
       const hb = (await page.locator('.lp .hdr').boundingBox())!;
       expect(tb.y).toBe(0);
       expect(Math.abs(hb.y - (tb.y + tb.height))).toBeLessThanOrEqual(1);
-      const run = bar.locator('.tk-run');
-      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('tk-run');
+      const run = bar.locator('.tb-track');
+      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('lp-marquee');
 
       // pause (WCAG 2.2.2): the button says what it does next
       const pause = bar.locator('[data-action="ticker.pause"]');
@@ -197,26 +195,24 @@ test.describe('with the local database', () => {
       await expect(item).toHaveAttribute('href', `/news?post=${post!.id}#post`);
       await expect(bar.locator('[data-action="ticker.all"]')).toHaveAttribute('href', '/news#latest');
 
-      // an inner page in Urdu: the Urdu title, right to left, inside the fixed header, the hero clear of both
+      // an inner page in Urdu: the Urdu title, right to left, above the header, the page title clear of both
       await page.goto('/ur/about');
       await expect(bar.locator(`a[data-post="${post!.id}"]:not([tabindex="-1"])`)).toContainText(`ٹکر اعلان ${tag}`);
-      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('tk-run-rtl');
-      await expect(page.locator('header [data-ticker]')).toHaveCount(1);
-      const header = (await page.locator('header:has([data-ticker])').boundingBox())!;
+      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('lp-marqueeRtl');
+      const header = (await page.locator('.lp .hdr').boundingBox())!;
       const h1 = (await page.getByRole('heading', { level: 1 }).boundingBox())!;
       expect(h1.y).toBeGreaterThanOrEqual(header.y + header.height);
 
-      // reduced motion, in Urdu as well as English: nothing moves, no copy, no pause button
+      // reduced motion, in Urdu as well as English: the bar stands still (paused, and says so)
       await page.emulateMedia({ reducedMotion: 'reduce' });
-      await page.goto('/ur/about');
-      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('none');
-      await page.goto('/en/about');
-      expect(await run.evaluate((e) => getComputedStyle(e).animationName)).toBe('none');
-      await expect(bar.locator('.tk-list[aria-hidden]')).toBeHidden();
-      await expect(bar.locator('[data-action="ticker.pause"]')).toBeHidden();
-      // standing still, the newest post is first in the bar: it opens on the News page
+      for (const path of ['/ur/about', '/en/about']) {
+        await page.goto(path);
+        await expect(bar.locator('[data-action="ticker.pause"]')).toHaveAttribute('aria-pressed', 'true');
+        expect(await run.evaluate((e) => getComputedStyle(e).animationPlayState)).toBe('paused');
+      }
+      // the newest post is first in the bar: it opens on the News page
       await bar.locator(`a[data-post="${post!.id}"]:not([tabindex="-1"])`).click();
-      await expect(page).toHaveURL(new RegExp(`/news\\?post=${post!.id}`));
+      await expect(page).toHaveURL((url) => url.pathname === '/news' && url.searchParams.get('post') === post!.id);
       await expect(page.getByRole('main')).toContainText(`Ticker notice ${tag}`);
     } finally {
       await admin.from('posts').delete().eq('id', post!.id);
@@ -272,24 +268,21 @@ test.describe('with the local database', () => {
     test.use({
       extraHTTPHeaders: { 'x-real-ip': `10.${randomInt(0, 255)}.${randomInt(0, 255)}.${randomInt(1, 254)}` },
     });
-    test('contact: a message and a complaint each create a ticket; the number is emailed', async ({ page }) => {
+    test('contact: a suggestion and a complaint each create a ticket; the number is emailed', async ({ page }) => {
       const tag = `t${randomUUID().slice(0, 6)}`;
       const email = `contact-${tag}@test.local`;
-      await page.goto('/contact');
-      await page.getByLabel('Name').fill(`Visitor ${tag}`);
-      await page.getByLabel('Mobile / email').fill(email);
-      await page.getByLabel('Subject').fill('Membership question');
-      await page.getByLabel('Message').fill('How long does the temporary membership last?');
-      await page.locator('[data-action="contact.send"]').click();
+      await page.goto('/contact#complaints');
+      const form = page.locator('#complaints');
+      await form.getByLabel('Suggestion').check();
+      await form.getByLabel('Your name').fill(`Visitor ${tag}`);
+      await form.getByLabel('Mobile or email').fill(email);
+      await form.getByLabel('Your message').fill('Please add evening hours for certificates.');
+      await form.locator('[data-action="contact.send"]').click();
       const ok = page.locator('[data-outcome="ok"]');
-      await expect(ok).toContainText(/your ticket number is TK-\d{4}-\d{4}/);
+      await expect(ok).toContainText(/ticket number is TK-\d{4}-\d{4}/);
       const ticket = /TK-\d{4}-\d{4}/.exec((await ok.textContent()) ?? '')![0];
-      const { data: t } = await admin
-        .from('tickets')
-        .select('subject, email, status, created_by')
-        .eq('id', ticket)
-        .single();
-      expect(t).toMatchObject({ subject: 'Membership question', email, status: 'Open', created_by: null });
+      const { data: t } = await admin.from('tickets').select('subject, email, status, created_by').eq('id', ticket).single();
+      expect(t).toMatchObject({ subject: 'Suggestion', email, status: 'Open', created_by: null });
       await expect
         .poll(async () => {
           const list = await (
@@ -299,18 +292,14 @@ test.describe('with the local database', () => {
         })
         .toBe(true);
 
-      await page.getByRole('tab', { name: 'Complaint desk' }).click();
-      await page.getByLabel('Name').fill(`Visitor ${tag}`);
-      await page.getByLabel('Mobile / email').fill('0300-1234567');
-      await page.getByLabel('Complaint about').selectOption('delay');
-      await page.getByLabel('Details').fill('My request is waiting for a reply.');
-      await page.locator('[data-action="contact.send"]').click();
+      await page.goto('/contact#complaints');
+      await form.getByLabel('Complaint').check();
+      await form.getByLabel('Your name').fill(`Visitor ${tag}`);
+      await form.getByLabel('Mobile or email').fill('0300-1234567');
+      await form.getByLabel('Your message').fill('My request is waiting for a reply.');
+      await form.locator('[data-action="contact.send"]').click();
       await expect(page.locator('[data-outcome="ok"]')).toContainText(/ticket number is TK-/);
-      const { data: c } = await admin
-        .from('tickets')
-        .select('subject')
-        .eq('name', `Visitor ${tag}`)
-        .eq('subject', 'Complaint: Service delay');
+      const { data: c } = await admin.from('tickets').select('subject').eq('name', `Visitor ${tag}`).like('subject', 'Complaint%');
       expect(c).toHaveLength(1);
       await admin.from('tickets').delete().eq('name', `Visitor ${tag}`);
     });
@@ -327,17 +316,6 @@ test.describe('with the local database', () => {
     await expect(page.locator('.hero-live [data-stat="open"]')).toHaveText(stats.services_open.toLocaleString('en-US'));
     await expect(page.locator('[data-kpi="k1"] .kpi-num')).toHaveText(stats.services_issued.toLocaleString('en-US'));
     await expect(page.locator('[data-kpi="k4"] .kpi-num')).toHaveText(stats.members.toLocaleString('en-US'));
-  });
-
-  test('home: a complaint from the form becomes a ticket', async ({ page }) => {
-    const tag = `t${randomUUID().slice(0, 6)}`;
-    await page.goto('/#complaints');
-    await page.getByLabel('Your name').fill(`Visitor ${tag}`);
-    await page.getByLabel('Mobile or email').fill('0300-1234567');
-    await page.getByLabel('Your message').fill('My request is waiting for a reply.');
-    await page.locator('[data-contact="home"] [data-action="contact.send"]').click();
-    await expect(page.locator('[data-outcome="ok"]')).toContainText(/ticket number is TK-/);
-    await admin.from('tickets').delete().eq('name', `Visitor ${tag}`);
   });
 
   test('live board: figures and the anonymised feed', async ({ page }) => {

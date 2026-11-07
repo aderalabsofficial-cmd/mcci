@@ -4,12 +4,12 @@ import type { ReactNode } from 'react';
 import { usePathname } from '@/i18n/navigation';
 
 /**
- * Which frame a public page gets: the owner's design on the home page, none on the sign-in pages (their design has its
- * own "Back to website" and language switch), the regular header and footer on every other page. A client component so
+ * The website's header, menu and footer appear on every public page except the sign-in pages, whose design has its
+ * own "Back to website" and language switch (and the account-preparation screen after sign-up). A client component so
  * a Link between them swaps the frame without a full reload.
  */
-export function SiteChrome({ landing, site }: { landing: ReactNode; site: ReactNode }) {
+export function SiteChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  if (/^\/(login|register|invite)(\/|$)/.test(pathname)) return null;
-  return <>{pathname === '/' ? landing : site}</>;
+  if (/^\/(login|register|invite|welcome)(\/|$)/.test(pathname)) return null;
+  return <>{children}</>;
 }

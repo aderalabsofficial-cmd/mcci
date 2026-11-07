@@ -8,6 +8,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 |---|---|---|---|
 | Home | `site/home/` | `/` | Full-width MCCI hero under a transparent header, live activity, counters, membership journey, member-to-member endorsement, temporary → permanent, services, verify, news, Urdu launch countdown |
 | About | `site/about/` | `/about` | Mission, leadership and Secretariat, history, objectives, facilities (library, facilitation desks) |
+| Leadership | `site/leadership/` | `/leadership` | Not in the prototype (owner's website design, 6 Nov 2026): the President, the office-bearers and the Executive Committee 2026-28 |
 | Membership | `site/membership/` | `/membership` | Classes & class rule, fee schedule from the form, documents by business type, 8-step journey with temporary membership, FAQ |
 | Services | `site/services/` | `/services` | The seven chamber services |
 | Service detail | `site/service/` | `/service` | Requirements and how it works for one service; apply |
@@ -20,6 +21,7 @@ Generated from the v10 prototype registry (`M.META`). Every screen below exists 
 | Resources | `site/resources/` | `/resources` | Downloads: blank official form, checklists, guides |
 | Contact | `site/contact/` | `/contact` | Contact form and complaint desk (create tickets) |
 | Login | `site/login/` | `/login` | Member login (password / email code), register (start application), staff login |
+| Preparing your account | `site/welcome/` | `/welcome` | Not in the prototype (owner's design, 6 Nov 2026): shown once after a new account is created, then the person's first screen |
 | Finish sign-up | — (owner, 4 Nov 2026) | `/register/details` | After the emailed code: name, password, "Are you an existing member of MCCI?" (class, number in digits or company name). Only for an account that has not finished; the portal sends such an account here |
 | Claim pending | — (owner, 4 Nov 2026) | `/register/pending` | "Your account will be ready within 6 to 12 hours", then the home page |
 

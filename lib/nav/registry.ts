@@ -101,6 +101,7 @@ export const SCREENS: readonly Screen[] = [
   // Public website (13)
   s('site', 'home', '/', 'M0', 'home'),
   s('site', 'about', '/about', 'M2', 'info'),
+  s('site', 'leadership', '/leadership', 'M2', 'team'), // owner's website design, 6 Nov 2026
   s('site', 'membership', '/membership', 'M2', 'award'),
   s('site', 'services', '/services', 'M2', 'list'),
   s('site', 'service', '/service', 'M2', 'file'),
@@ -112,6 +113,7 @@ export const SCREENS: readonly Screen[] = [
   s('site', 'resources', '/resources', 'M2', 'book'),
   s('site', 'contact', '/contact', 'M2', 'phone'),
   s('site', 'login', '/login', 'M1', 'login'),
+  s('site', 'welcome', '/welcome', 'M1', 'sparkles'), // "Preparing your account" after a new account (6 Nov 2026)
 
   // Member portal (17)
   s('portal', 'dashboard', '/portal', 'M0', 'home'),

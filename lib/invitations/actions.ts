@@ -54,7 +54,11 @@ export async function activateInvitedAccount(_: InviteFormState, form: FormData)
     console.error('invited account: sign-in after activation failed', error.status, error.code);
     redirect({ href: '/login', locale });
   }
-  redirect({ href: next(created.kind), locale });
+  // a newly created account sees "Preparing your account" first (owner's design, 6 Nov 2026)
+  redirect({
+    href: created.kind === 'staff' ? next(created.kind) : `/welcome?next=${encodeURIComponent(next(created.kind))}`,
+    locale,
+  });
   return {};
 }
 

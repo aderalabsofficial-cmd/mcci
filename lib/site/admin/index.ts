@@ -35,11 +35,20 @@ export interface Tracked {
 
 export const TOKEN = /^MCCI-\d{4}-(M-)?\d{4,6}$/;
 
+/**
+ * A read whose request never reached the database (no Postgres error code: a dropped connection or a timeout) is
+ * tried once more before the page says the figures could not be read; a database error is reported at once.
+ */
+async function once<T extends { error: { code?: string; message: string } | null }>(read: () => PromiseLike<T>) {
+  const first = await read();
+  return first.error && !first.error.code ? await read() : first;
+}
+
 /** null when the figures could not be read: a page says so, never shows zeros it does not know */
 export const siteStats = cache(async (): Promise<SiteStats | null> => {
-  const { data, error } = await createAdminClient().schema('api').rpc('site_stats');
+  const { data, error } = await once(() => createAdminClient().schema('api').rpc('site_stats'));
   if (error) {
-    console.error('site.stats failed', error.code);
+    console.error('site.stats failed', error.code || error.message);
     return null;
   }
   return (data?.[0] as SiteStats | undefined) ?? null;
@@ -47,9 +56,9 @@ export const siteStats = cache(async (): Promise<SiteStats | null> => {
 
 /** null when the feed could not be read, so "no activity yet" is said only when it is true */
 export const siteFeed = cache(async (limit = 8): Promise<FeedRow[] | null> => {
-  const { data, error } = await createAdminClient().schema('api').rpc('site_feed', { p_limit: limit });
+  const { data, error } = await once(() => createAdminClient().schema('api').rpc('site_feed', { p_limit: limit }));
   if (error) {
-    console.error('site.feed failed', error.code);
+    console.error('site.feed failed', error.code || error.message);
     return null;
   }
   return (data ?? []) as FeedRow[];

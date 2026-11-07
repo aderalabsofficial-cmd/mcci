@@ -32,14 +32,13 @@ test.describe('desktop shells', () => {
     await expect(page.locator('[data-action="lang.toggle"]:visible')).toHaveCount(0);
   });
 
-  test('public: the inner pages keep the header that turns solid; the home page has the design one, which stays', async ({
-    page,
-  }) => {
+  test('public: every page has the design header, which stays and gains its shadow on scroll', async ({ page }) => {
     await open(page, '/about');
-    const header = page.locator('header').first();
-    await expect(header).not.toHaveAttribute('data-solid');
+    const header = page.locator('header.hdr');
+    await expect(header).not.toHaveClass(/scrolled/);
     await page.mouse.wheel(0, 600);
-    await expect(header).toHaveAttribute('data-solid', 'true');
+    await expect(header).toHaveClass(/scrolled/);
+    await expect(header).toBeInViewport();
     await open(page, '/');
     const home = page.locator('header.hdr');
     await expect(home).not.toHaveClass(/scrolled/);
@@ -149,11 +148,15 @@ test.describe('public site on a phone browser', () => {
   test('menu sheet opens and closes; footer stays', async ({ page }) => {
     await open(page, '/');
     await expect(page.locator('html')).toHaveAttribute('data-shell', 'web');
-    await page.getByRole('button', { name: 'Menu' }).click();
-    const sheet = page.getByRole('dialog', { name: 'Menu' });
-    await expect(sheet.getByRole('link', { name: 'Home' })).toBeVisible();
-    await sheet.getByRole('button', { name: 'Close' }).click();
-    await expect(sheet).toBeHidden();
+    // the design's menu: the same button opens and closes it, and the page behind cannot be reached meanwhile
+    const button = page.getByRole('button', { name: 'Menu' });
+    await button.click();
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
+    const menu = page.locator('#menu');
+    await expect(menu).toHaveAttribute('aria-hidden', 'false');
+    await expect(menu.getByRole('link', { name: 'Home' })).toBeVisible();
+    await button.click();
+    await expect(menu).toHaveAttribute('aria-hidden', 'true');
     await expect(page.getByRole('contentinfo')).toBeAttached();
     await expect(bottomNav(page)).toHaveCount(0);
   });

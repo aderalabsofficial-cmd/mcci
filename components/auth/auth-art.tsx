@@ -6,7 +6,7 @@ import { Logo } from '@/components/landing/logo';
 import type { Locale } from '@/i18n/routing';
 import { msg } from '@/lib/nav/model';
 
-const PHOTOS = ['chamber-building', 'agm', 'delegation', 'multan-aerial'];
+const PHOTOS = ['chamber-hq', 'agm', 'delegation', 'multan-aerial'];
 
 /**
  * The design's photo panel: a slow slideshow behind the chamber's name and one headline. On /login and /register the

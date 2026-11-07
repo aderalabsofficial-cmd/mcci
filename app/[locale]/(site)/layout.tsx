@@ -3,16 +3,12 @@ import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { LangToggle } from '@/components/shared/lang-toggle';
 import { BottomTabs } from '@/components/shell/bottom-tabs';
-import { LandingFooter } from '@/components/landing/landing-footer';
-import { LandingHeader } from '@/components/landing/landing-header';
 import { SiteChrome } from '@/components/site/site-chrome';
-import { SiteFooter } from '@/components/site/site-footer';
-import { SiteFx } from '@/components/site/site-fx';
-import { NewsTicker } from '@/components/site/news-ticker';
-import { SiteHeader } from '@/components/site/site-header';
+import { webChrome } from '@/components/web/web-chrome';
+import { WebFx } from '@/components/web/web-fx';
 import { Link } from '@/i18n/navigation';
 import { asLocale } from '@/i18n/locale';
-import { bottomTabsModel, loginModel, moreSheetModel, msg, siteNavModel } from '@/lib/nav/model';
+import { bottomTabsModel, moreSheetModel, msg } from '@/lib/nav/model';
 import { getShell } from '@/lib/shell/server';
 import '@/app/styles/proto.css';
 import '@/app/styles/proto-app.css';
@@ -37,6 +33,22 @@ export default async function SiteLayout({
   const locale = asLocale((await params).locale);
   setRequestLocale(locale);
   const shell = await getShell();
+  const c = (k: string) => msg(locale, `landing.city_${k}`);
+  // the design's effects; inside the app nothing moves (WebFx reads data-shell)
+  const fx = (
+    <WebFx
+      cities={{
+        london: c('london'),
+        riyadh: c('riyadh'),
+        dubai: c('dubai'),
+        beijing: c('beijing'),
+        guangzhou: c('guangzhou'),
+        kl: c('kl'),
+      }}
+      multan={c('multan')}
+      ur={locale === 'ur'}
+    />
+  );
 
   if (shell === 'app') {
     return (
@@ -49,10 +61,14 @@ export default async function SiteLayout({
             </Link>
           </div>
         </header>
-        <main id="main" className="pb-[calc(var(--bottomnav-h)+env(safe-area-inset-bottom))]">
-          {children}
-        </main>
-        <SiteFx />
+        {/* the pages are the owner's design (scoped to .lp); the app keeps its own bar and bottom tabs */}
+        <div className="lp">
+          <main id="main" className="pb-[calc(var(--bottomnav-h)+env(safe-area-inset-bottom))]">
+            {children}
+          </main>
+        </div>
+        <MobileTables />
+        {fx}
         <BottomTabs
           tabs={bottomTabsModel('site', locale)}
           more={moreSheetModel('site', locale)}
@@ -65,38 +81,17 @@ export default async function SiteLayout({
     );
   }
 
-  const ticker = <NewsTicker locale={locale} />;
+  const chrome = await webChrome(locale);
   return (
-    <>
-      <SiteChrome
-        landing={
-          <>
-            {ticker}
-            <LandingHeader locale={locale} />
-          </>
-        }
-        site={
-          <SiteHeader
-            locale={locale}
-            ticker={ticker}
-            nav={siteNavModel(locale)}
-            login={loginModel(locale)}
-            text={{
-              name: msg(locale, 'brand.name'),
-              tagline: msg(locale, 'brand.digitalChamber'),
-              chamberUr: msg('ur', 'brand.chamber'),
-              menu: msg(locale, 'common.menu'),
-              close: msg(locale, 'common.close'),
-              logoAlt: msg(locale, 'brand.logoAlt'),
-              mainMenu: msg(locale, 'common.mainMenu'),
-            }}
-          />
-        }
-      />
+    <div className="lp">
+      <SiteChrome>
+        {chrome.ticker}
+        {chrome.header}
+      </SiteChrome>
       <main id="main">{children}</main>
       <MobileTables />
-      <SiteChrome landing={<LandingFooter locale={locale} />} site={<SiteFooter locale={locale} />} />
-      <SiteFx />
-    </>
+      <SiteChrome>{chrome.footer}</SiteChrome>
+      {fx}
+    </div>
   );
 }

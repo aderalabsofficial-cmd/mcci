@@ -71,6 +71,7 @@ const config = [
       '.next/**',
       '.claude/**',
       'Login Page Design/**',
+      'Website front MCCI/**',
       'node_modules/**',
       'reference/**',
       'mcci-digital-prototypes/**',

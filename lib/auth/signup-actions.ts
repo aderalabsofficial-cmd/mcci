@@ -143,7 +143,9 @@ export async function finishSignup(_: SignupState, form: FormData): Promise<Sign
     if (error.code === 'weak_password') return { error: msg(locale, 'auth.registerPage.weak') };
     return { error: mailError(locale, error) ?? msg(locale, 'auth.errors.unavailable') };
   }
-  redirect({ href: v.member === 'yes' ? '/register/pending' : '/portal', locale });
+  // a new account sees "Preparing your account" first (owner's design, 6 Nov 2026), then its first screen
+  const first = v.member === 'yes' ? '/register/pending' : '/portal';
+  redirect({ href: `/welcome?next=${encodeURIComponent(first)}`, locale });
   return {};
 }
 

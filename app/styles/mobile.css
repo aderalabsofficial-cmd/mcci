@@ -87,7 +87,7 @@
   .site .sh p {font-size: 13.5px}
   .site .xhero.home {padding: calc(var(--xh) + var(--tk, 0px) + 14px) 0 48px}
   .site .xhero.home h1 {font-size: 30px; line-height: 1.15}
-  .site .xhero.sub {padding: calc(var(--xh) + var(--tk, 0px) + 14px) 0 40px}
+  .site .xhero.inner {padding: calc(var(--xh) + var(--tk, 0px) + 14px) 0 40px}
   .site .g2, .site .g3, .site .g4 {grid-template-columns: 1fr 1fr; gap: 8px}
   .site .g2.about-stack {grid-template-columns: 1fr} /* About's facility cards carry lists: too narrow side by side */
   .site .sc {padding: 12px; border-radius: 14px}

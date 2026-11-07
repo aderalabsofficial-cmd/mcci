@@ -35,7 +35,7 @@ export function PageHero({
   const other = locale === 'en' ? 'ur' : 'en';
   const t = text ?? { title: msg(locale, title), other: msg(other, title), sub: msg(locale, sub) };
   return (
-    <section className="xhero sub">
+    <section className="xhero inner">
       <div className="hero-bg" aria-hidden />
       <div className="hero-ov" aria-hidden />
       <div className="wr w-full">
