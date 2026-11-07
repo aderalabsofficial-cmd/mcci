@@ -12,7 +12,8 @@ import nodemailer from 'nodemailer';
  *   EMAIL_TRANSPORT  smtp (default) | mailpit (local development and tests only: the Supabase CLI mail catcher's HTTP
  *                    API; refused when NODE_ENV=production, except for the Playwright run of the production build —
  *                    MCCI_E2E=1, set by playwright.config.ts — and only with a loopback MAILPIT_URL)
- *   EMAIL_FROM       sender address, default mcci@aderalabs.tech;  EMAIL_FROM_NAME, default "MCCI"
+ *   EMAIL_FROM       sender address, default no-reply@themcci.com.pk;  EMAIL_FROM_NAME, default "MCCI Digital Chamber"
+ *                    (official policy of 7 Nov 2026, docs/deployment/EMAIL-CONFIGURATION.md)
  *   EMAIL_REPLY_TO   optional Reply-To (e.g. a no-reply sender with replies going to the MCCI mailbox)
  *   SMTP_HOST, SMTP_PORT (587), SMTP_SECURE (1 = implicit TLS, e.g. 465), SMTP_USER, SMTP_PASS
  *   MAILPIT_URL      e.g. http://127.0.0.1:54324 (from `supabase status`)
@@ -34,7 +35,7 @@ export interface EmailConfig {
 
 export function emailConfig(env: NodeJS.ProcessEnv = process.env): EmailConfig {
   const transport = (env.EMAIL_TRANSPORT || 'smtp') as EmailConfig['transport'];
-  const from = { address: env.EMAIL_FROM || 'mcci@aderalabs.tech', name: env.EMAIL_FROM_NAME || 'MCCI' };
+  const from = { address: env.EMAIL_FROM || 'no-reply@themcci.com.pk', name: env.EMAIL_FROM_NAME || 'MCCI Digital Chamber' };
   const replyTo = env.EMAIL_REPLY_TO || undefined;
   if (transport === 'mailpit') {
     if (!env.MAILPIT_URL) throw new Error('MAILPIT_URL is required with EMAIL_TRANSPORT=mailpit');

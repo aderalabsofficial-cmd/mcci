@@ -7,7 +7,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('app email configuration (lib/email/send.ts)', () => {
   it('defaults to SMTP with the initial MCCI sender, switchable by configuration only', () => {
     const c = emailConfig(env({ SMTP_HOST: 'smtp.example' }));
-    expect(c).toMatchObject({ transport: 'smtp', from: { address: 'mcci@aderalabs.tech', name: 'MCCI' } });
+    expect(c).toMatchObject({ transport: 'smtp', from: { address: 'no-reply@themcci.com.pk', name: 'MCCI Digital Chamber' } });
     expect(c.smtp).toMatchObject({ host: 'smtp.example', port: 587, secure: false });
     const official = emailConfig(
       env({ SMTP_HOST: 'smtp.mcci.org.pk', EMAIL_FROM: 'no-reply@mcci.org.pk', SMTP_PORT: '465', SMTP_SECURE: '1' }),
@@ -66,7 +66,7 @@ describe('app email configuration (lib/email/send.ts)', () => {
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(String(url)).toBe('http://127.0.0.1:54324/api/v1/send');
     expect(JSON.parse(init.body)).toMatchObject({
-      From: { Email: 'mcci@aderalabs.tech' },
+      From: { Email: 'no-reply@themcci.com.pk' },
       To: [{ Email: 'a@test.local' }],
       Subject: 'S',
     });
