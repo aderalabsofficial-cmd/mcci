@@ -68,9 +68,20 @@ sudo systemctl restart mcci-web                            # the app reads /etc/
 
 ## 5. SPF / DKIM / DMARC
 
-Mail sent through the cPanel mailbox leaves from the cPanel server, which signs with cPanel's DKIM key, and the
-existing SPF already lists that server (`111.221.46.41`). So **no DNS change is needed** as long as the relay is cPanel.
-Compare with cPanel → **Email Deliverability** before touching any record; change SPF only if that page says so.
+**Found on 7 Nov 2026:** the cPanel host (`sgvip5.noc401.com`, `111.221.46.41`) hands outbound mail to
+**MailChannels** (`relay.mailchannels.net`, seen sending from `23.83.221.25`). Gmail then rejected the sign-up code with
+`550 5.7.26 … DKIM = did not pass, SPF [themcci.com.pk] with ip 23.83.221.25 = did not pass`, because the SPF record
+(`v=spf1 +mx +a +ip4:111.221.46.41 ~all`) lists only the cPanel server, not MailChannels.
+
+Fix (owner, in Cloudflare DNS; first confirm the exact record in cPanel → **Email Deliverability** → `themcci.com.pk`):
+
+- **SPF:** edit the one existing SPF TXT record (do not add a second) to
+  `v=spf1 +mx +a +ip4:111.221.46.41 include:relay.mailchannels.net ~all`.
+- **DKIM:** if Email Deliverability says the DKIM record is not valid, replace the TXT value of
+  `default._domainkey` with the one that page shows (cPanel signs with that key; a stale copy in Cloudflare fails).
+- DMARC (`p=none`), MX and the mail A record stay as they are.
+
+After the change: send a new code, then check Gmail → **Show original**: `SPF: PASS`, `DKIM: PASS`, `DMARC: PASS`.
 
 ## 6. Fallback when the cPanel relay refuses outside mail
 
@@ -86,6 +97,7 @@ The sender stays `no-reply@themcci.com.pk`; mailboxes stay on cPanel.
 |---|---|
 | "Sign-in is not available" on Send code | Auth log: `docker logs supabase-auth 2>&1 \| grep -i smtp` (wrong password, port, TLS) |
 | Code email never arrives | cPanel → Track Delivery; spam folder; MailChannels refusal (§6) |
+| Bounce `550 5.7.26 … sender is unauthenticated` from `relay.mailchannels.net` | SPF lacks `include:relay.mailchannels.net` or the DKIM key is stale (§5) |
 | Invitation not sent | `journalctl -u mcci-web \| grep -i email` |
 | `dkim=fail` | sender address not on `themcci.com.pk`, or relay not verified for the domain |
 
