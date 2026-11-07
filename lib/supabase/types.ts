@@ -794,6 +794,9 @@ export type Database = {
 "wa_member_withdraw":
 { Args: { "p_company": string }; Returns: undefined
                            },
+"wa_consent_wording":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "wa_my_whatsapp":
 { Args: { "p_company": string }; Returns: Json
                            },

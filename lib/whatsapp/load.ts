@@ -74,6 +74,7 @@ export async function loadSettings() {
     staleMinutes: number;
     consentOpen: boolean;
     consentVersion: string;
+    consentWording?: { en?: string; ur?: string };
   };
 }
 

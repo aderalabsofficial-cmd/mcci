@@ -280,7 +280,9 @@ function ConsentStep({ locale, company, data }: { locale: Locale; company: strin
               </fieldset>
               <div className="wa-statement" data-wa-version={data.version ?? ''}>
                 <small>{t('step2.statement', { version: data.version ?? '—' })}</small>
-                <p>{msg(locale, 'wa.member.wording')}</p>
+                <p data-wa-wording={data.wording?.[locale] ? 'mcci' : 'built-in'}>
+                  {data.wording?.[locale] ?? msg(locale, 'wa.member.wording')}
+                </p>
               </div>
               <label className="biz-check wa-agree">
                 <input

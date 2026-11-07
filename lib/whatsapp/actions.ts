@@ -40,6 +40,7 @@ const HINT = [
   'not_approved',
   'locked',
   'wording',
+  'version',
 ];
 
 function fail(locale: Locale, error: unknown, what: string): ActionResult {
@@ -556,6 +557,8 @@ export async function saveWhatsappSettings(_: ActionResult | null, form: FormDat
         sendingEnabled: text(form, 'sendingEnabled') === 'on',
         consentOpen: text(form, 'consentOpen') === 'on',
         consentVersion: text(form, 'consentVersion'),
+        consentWordingEn: text(form, 'consentWordingEn'),
+        consentWordingUr: text(form, 'consentWordingUr'),
       } as unknown as Json,
     });
     if (error) throw error;

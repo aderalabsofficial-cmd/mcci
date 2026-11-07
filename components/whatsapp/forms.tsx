@@ -300,6 +300,7 @@ export function SettingsForm({
     approvalThreshold: number;
     consentOpen: boolean;
     consentVersion: string;
+    consentWording?: { en?: string; ur?: string };
   };
 }) {
   const m = (k: string) => msg(locale, `wa.settings.${k}`);
@@ -350,6 +351,29 @@ export function SettingsForm({
           <label className="form-field">
             {m('consentVersion')}
             <input name="consentVersion" maxLength={40} defaultValue={s.consentVersion} data-field="consent-version" />
+          </label>
+          <p className="muted biz-wide">{m('consentWordingHelp')}</p>
+          <label className="form-field biz-wide">
+            {m('consentWordingEn')}
+            <textarea
+              name="consentWordingEn"
+              rows={4}
+              maxLength={1500}
+              defaultValue={s.consentWording?.en ?? ''}
+              data-field="consent-wording-en"
+            />
+          </label>
+          <label className="form-field biz-wide">
+            {m('consentWordingUr')}
+            <textarea
+              name="consentWordingUr"
+              rows={4}
+              maxLength={1500}
+              dir="rtl"
+              lang="ur"
+              defaultValue={s.consentWording?.ur ?? ''}
+              data-field="consent-wording-ur"
+            />
           </label>
           <label className="biz-check biz-wide">
             <input type="checkbox" name="consentOpen" defaultChecked={s.consentOpen} data-field="consent-open" />

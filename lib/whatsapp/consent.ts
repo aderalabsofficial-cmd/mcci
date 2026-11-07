@@ -116,6 +116,8 @@ export interface MyWhatsapp {
   official: string | null;
   suggestions: string[];
   history: { at: string; event: string; detail: string | null; phone: string | null; categories: string[] | null }[];
+  /** MCCI's own consent statement (api.wa_consent_wording, 0700); null in a language → the built-in text */
+  wording?: { en: string | null; ur: string | null };
 }
 
 /** what api.wa_member_whatsapp returns for staff (number masked without contact access) */

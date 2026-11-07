@@ -5815,6 +5815,9 @@
       "threshold": "Audience size needing approval",
       "consentVersion": "Consent wording version",
       "consentOpen": "MCCI has approved the consent wording: members (and staff on their behalf) may give new consent. Members can always see the page, change their number and withdraw.",
+      "consentWordingHelp": "The consent statement members agree to. MCCI can change the wording here at any time; give it a new version above when you do, so every consent records the exact wording it was given under. Leave a language empty to use the standard text.",
+      "consentWordingEn": "Consent statement (English)",
+      "consentWordingUr": "Consent statement (Urdu)",
       "save": "Save settings",
       "retryPolicy": "Retries use the same key: rate limits wait and try again; an unclear answer is tried up to 3 times, then marked unknown for a person to check.",
       "schedulingNote": "Scheduled sending needs the server timer, which is off until separately authorised. Until then, use Send next batch on the campaign.",
@@ -5907,7 +5910,8 @@
       "field": "Check the field: {field}. It must be filled in, on one line, and not too long.",
       "not_approved": "Meta has not approved this template version yet.",
       "locked": "This wording is held by Meta and cannot change here.",
-      "wording": "The wording does not follow the template rules."
+      "wording": "The wording does not follow the template rules.",
+      "version": "The consent wording changed: give it a new version number too."
     },
     "done": {
       "accepted": "Accepted by the provider. Delivery updates will appear here.",
