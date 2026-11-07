@@ -1,4 +1,32 @@
-# MCCI Digital — domain migration readiness (6 Nov 2026)
+# MCCI Digital — domain migration readiness (6 Nov 2026, updated 7 Nov 2026)
+
+## Update, 7 Nov 2026: domain registered, server side staged, cutover NOT done
+
+| Item | Finding (7 Nov, read-only) |
+|---|---|
+| `themcci.com.pk` | **Registered, DNS at Cloudflare** (NS `anton.ns.cloudflare.com`, `arya.ns.cloudflare.com`). Apex `A 109.199.96.52`, which is **not** MCCI's server (`169.58.124.24`) and not a Cloudflare proxy address; it does not answer HTTPS. `www` → CNAME to the apex. `app.themcci.com.pk` does not exist. |
+| MCCI server | No nginx site, no certificate for the new name; the app still uses `https://app.mcci.aderalabs.tech` (`APP_URL`, `VERIFY_BASE_URL`). |
+| Staged (not installed) | `deploy/web/nginx/themcci.com.pk.http-only.conf` (certificate stage) and `deploy/web/nginx/themcci.com.pk.conf` (same app + gateway as today, `www` → apex, noindex until launch). The second passed `nginx -t` against a throwaway copy of the server's nginx configuration; the live configuration was not changed. |
+| Owner's rule | DNS and Cloudflare stay unchanged until the release is verified. |
+
+### Cutover runbook (each step needs the owner's go-ahead)
+1. **Owner, Cloudflare:** `themcci.com.pk` and `www` → `A 169.58.124.24`, **DNS only (grey cloud)**, TTL 300.
+   (A proxied, orange-cloud setup needs a Cloudflare Origin Certificate or a DNS-01 token instead of step 2.)
+   Check what currently serves `109.199.96.52` before replacing it.
+2. Server: install `themcci.com.pk.http-only.conf`, `nginx -t`, reload; then
+   `certbot certonly --webroot -w /var/www/letsencrypt -d themcci.com.pk -d www.themcci.com.pk`.
+3. Server: replace it with `themcci.com.pk.conf`, `nginx -t`, reload. Both hosts now serve the same app.
+4. Backup (`scripts/selfhost/backup.sh`), then Supabase runtime `.env`: add `https://themcci.com.pk/**` to
+   `ADDITIONAL_REDIRECT_URLS` (keep the old one); recreate the Auth container (owner approval).
+5. `/etc/mcci-web/env`: `APP_URL`, `VERIFY_BASE_URL`, `NEXT_PUBLIC_SUPABASE_URL` → `https://themcci.com.pk`; then
+   `release.sh <commit>` (the browser bundle carries the Supabase URL, so this must be a rebuild, not just a restart).
+   **Do this before the first real certificate is printed** (QR codes carry `VERIFY_BASE_URL`).
+6. Smoke test on the new host: health, sign-in (member + staff 2-step), password-reset email link, `/verify` and a QR
+   scan, file view, WhatsApp webhook (re-point it at IQPigeon), Urdu pages.
+7. Supabase `SITE_URL`, `API_EXTERNAL_URL`, `SUPABASE_PUBLIC_URL` → new host; recreate Auth.
+8. Old host: `return 307 https://themcci.com.pk$request_uri;` in `app.mcci.aderalabs.tech.conf` (path + query kept);
+   308 after 30 quiet days. Remove noindex at launch.
+Rollback at any step: the old host keeps working until step 8; restore the previous env files and `release.sh --rollback`.
 
 **Status: NOT READY TO SWITCH — blocked on MCCI.** The application side is ready: one setting per place, listed below.
 Two things are missing: `themcci.com.pk` does not resolve in public DNS yet, and `mcci.org.pk` is still controlled by
